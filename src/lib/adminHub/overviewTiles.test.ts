@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { HUB_THUMB_EDGE } from '@/lib/freePreview/hubAssets';
+import { betterButtonText, siteBackgroundHex } from '@/lib/adminHub/colour';
+import {
+  ADMIN_HUB_COLOURS_DRAFT,
+  ADMIN_HUB_COLOURS_DRAFT_HINT,
+  ADMIN_HUB_COLOURS_EMPTY,
+  ADMIN_HUB_COLOURS_FOUND,
+  ADMIN_HUB_COLOURS_HINT,
+  ADMIN_HUB_COLOURS_KERSIVO,
+  ADMIN_HUB_COLOURS_MINUTE,
+  ADMIN_HUB_COLOURS_NO_LOGO,
+  ADMIN_HUB_COLOURS_NOT_SENT,
+  ADMIN_HUB_COLOURS_SAVED,
+  ADMIN_HUB_COLOURS_SENT,
+} from './copy';
 import {
   logoNeedsLightPlate,
+  OVERVIEW_PALETTE_CAP,
+  overviewColours,
   OVERVIEW_CONTENT_PHOTO_CAP,
   OVERVIEW_THUMB_EDGE,
   overviewImageSize,
@@ -167,5 +183,158 @@ describe('logoNeedsLightPlate', () => {
   it('ignores fully transparent images', () => {
     expect(logoNeedsLightPlate(image([[0, 0, 0, 0]]))).toBe(false);
     expect(logoNeedsLightPlate({ data: new Uint8ClampedArray(), width: 0, height: 0 })).toBe(false);
+  });
+});
+
+describe('overviewColours — Brand colours tile (O4)', () => {
+  const palette = [
+    { hex: '#1F6F6B', share: 0.42 },
+    { hex: '#C9A24A', share: 0.24 },
+    { hex: '#141414', share: 0.18 },
+    { hex: '#F2E8D5', share: 0.1 },
+    { hex: '#8A2D2D', share: 0.06 },
+  ];
+
+  it('no logo: Materials → Logo link, amber "Not sent yet", nothing invented', () => {
+    expect(overviewColours({ hasLogo: false })).toMatchObject({
+      state: 'no_logo',
+      palette: [],
+      main: null,
+      accent: null,
+      look: null,
+      headline: ADMIN_HUB_COLOURS_NO_LOGO,
+      statusLabel: ADMIN_HUB_COLOURS_NOT_SENT,
+      guidance: ADMIN_HUB_COLOURS_EMPTY,
+      href: '/admin?app=materials&item=logo',
+      locked: false,
+      submittedAt: null,
+    });
+  });
+
+  it('logo, not started: links to Brand colours with "Takes about a minute"', () => {
+    expect(overviewColours({ hasLogo: true })).toMatchObject({
+      state: 'not_started',
+      palette: [],
+      look: null,
+      headline: ADMIN_HUB_COLOURS_HINT,
+      statusLabel: ADMIN_HUB_COLOURS_NOT_SENT,
+      guidance: ADMIN_HUB_COLOURS_MINUTE,
+      href: '/admin?app=colours',
+    });
+  });
+
+  it('draft: saved colours without brandColoursSentAt, Main / Accent named, look card from the colour helpers', () => {
+    const tile = overviewColours({
+      hasLogo: true,
+      brandPrimaryColour: '#1f6f6b',
+      brandSecondaryColour: '#C9A24A',
+      brandColoursSource: 'LOGO',
+      brandBackgroundTone: 'LIGHT',
+      brandPaletteExtracted: palette,
+    });
+    expect(tile.state).toBe('draft');
+    expect(tile.statusLabel).toBe(ADMIN_HUB_COLOURS_DRAFT);
+    expect(tile.guidance).toBe(ADMIN_HUB_COLOURS_DRAFT_HINT);
+    expect(tile.locked).toBe(false);
+    expect(tile.main).toMatchObject({ hex: '#1F6F6B', name: 'Teal' });
+    expect(tile.accent).toMatchObject({ hex: '#C9A24A', name: 'Brass' });
+    expect(tile.look).toEqual({
+      background: siteBackgroundHex('LIGHT', '#1F6F6B'),
+      header: { css: '#1F6F6B', text: betterButtonText('#1F6F6B') },
+      button: { css: '#C9A24A', text: betterButtonText('#C9A24A') },
+    });
+    expect(tile.palette.map((chip) => [chip.hex, chip.share])).toEqual(palette.map((row) => [row.hex, row.share]));
+    // A saved draft with only a Main colour (or only a source) is still a draft.
+    expect(overviewColours({ hasLogo: false, brandPrimaryColour: '#1F6F6B' }).state).toBe('draft');
+    expect(overviewColours({ hasLogo: true, brandColoursSource: 'MANUAL' }).state).toBe('draft');
+  });
+
+  it('sent: locked, dated guidance; KERSIVO chooses gets its own pill', () => {
+    expect(
+      overviewColours({
+        hasLogo: true,
+        brandPrimaryColour: '#1F6F6B',
+        brandColoursSource: 'LOGO',
+        brandColoursSentAt: '2026-11-02T10:00:00.000Z',
+      }),
+    ).toMatchObject({
+      state: 'sent',
+      statusLabel: ADMIN_HUB_COLOURS_SENT,
+      guidance: 'Sent on 2 November 2026. Message us to change it.',
+      locked: true,
+      href: '/admin?app=colours',
+    });
+    expect(
+      overviewColours({
+        hasLogo: true,
+        brandColoursSource: 'KERSIVO_CHOOSES',
+        brandColoursSentAt: new Date('2026-10-31T12:00:00.000Z'),
+      }),
+    ).toMatchObject({
+      state: 'kersivo',
+      statusLabel: ADMIN_HUB_COLOURS_KERSIVO,
+      guidance: 'Sent on 31 October 2026. Message us to change it.',
+      main: null,
+      accent: null,
+      look: null,
+      locked: true,
+    });
+    // Sent wins over "no logo": the tile still opens Brand colours (locked view).
+    expect(overviewColours({ hasLogo: false, brandColoursSentAt: '2026-11-02T10:00:00.000Z' }).href).toBe('/admin?app=colours');
+  });
+
+  it('headline count always equals the chips rendered (cap 5, duplicates and bad values dropped)', () => {
+    const seven = [...palette, { hex: '#334455', share: 0.03 }, { hex: '#AABBCC', share: 0.02 }];
+    const capped = overviewColours({ hasLogo: true, brandColoursSource: 'LOGO', brandPaletteExtracted: seven });
+    expect(capped.palette).toHaveLength(OVERVIEW_PALETTE_CAP);
+    expect(capped.headline).toBe(ADMIN_HUB_COLOURS_FOUND(capped.palette.length));
+
+    // The old tile said "5 colours found" next to 4 chips when Main / Accent took chip slots.
+    const roles = overviewColours({
+      hasLogo: true,
+      brandPrimaryColour: '#8A2D2D',
+      brandSecondaryColour: '#C9A24A',
+      brandPaletteExtracted: palette,
+    });
+    expect(roles.palette).toHaveLength(5);
+    expect(roles.headline).toBe(ADMIN_HUB_COLOURS_FOUND(5));
+
+    const messy = overviewColours({
+      hasLogo: true,
+      brandPaletteExtracted: [
+        { hex: '#1f6f6b', share: 0.5 },
+        { hex: '#1F6F6B', share: 0.2 },
+        { hex: 'not-a-colour', share: 0.2 },
+        { hex: '#141414' },
+      ],
+    });
+    expect(messy.palette.map((chip) => [chip.hex, chip.share])).toEqual([
+      ['#1F6F6B', 0.5],
+      ['#141414', null],
+    ]);
+    expect(messy.headline).toBe(ADMIN_HUB_COLOURS_FOUND(2));
+
+    // No palette: the count is the Main / Accent rows actually shown.
+    expect(overviewColours({ hasLogo: true, brandPrimaryColour: '#1F6F6B', brandSecondaryColour: '#1f6f6b' })).toMatchObject({
+      accent: null,
+      headline: ADMIN_HUB_COLOURS_SAVED(1),
+    });
+  });
+
+  it('black-and-white logo: Ink / Cream names and readable button text', () => {
+    const tile = overviewColours({
+      hasLogo: true,
+      brandPrimaryColour: '#111111',
+      brandSecondaryColour: '#F5F5F5',
+      brandPaletteExtracted: [
+        { hex: '#111111', share: 0.7 },
+        { hex: '#F5F5F5', share: 0.3 },
+      ],
+    });
+    expect(tile.main?.name).toBe('Ink');
+    expect(tile.accent?.name).toBe('Cream');
+    expect(tile.look?.button?.text).toBe(betterButtonText('#F5F5F5'));
+    expect(tile.look?.header?.text).toBe(betterButtonText('#111111'));
+    expect(tile.headline).toBe(ADMIN_HUB_COLOURS_FOUND(2));
   });
 });

@@ -32,6 +32,7 @@ import {
   ADMIN_HUB_COLOURS_EMPTY,
   ADMIN_HUB_COLOURS_HINT,
   ADMIN_HUB_COLOURS_KERSIVO,
+  ADMIN_HUB_COLOURS_NO_LOGO,
   ADMIN_HUB_COLOURS_NOT_SENT,
   ADMIN_HUB_COLOURS_SAVED,
   ADMIN_HUB_COLOURS_SENT,
@@ -175,74 +176,28 @@ describe('overview view-model', () => {
     expect(Object.values(hrefs).every((href) => href.startsWith('/admin'))).toBe(true);
   });
 
-  it('uses extracted palette count and sent / KERSIVO status', () => {
+  it('re-exports the Brand colours tile model (states live in overviewTiles.test.ts)', () => {
     expect(overviewColours({ hasLogo: false })).toMatchObject({
-      swatches: [],
-      headline: ADMIN_HUB_COLOURS_EMPTY,
-      status: 'not_sent',
+      state: 'no_logo',
+      palette: [],
+      main: null,
+      accent: null,
+      headline: ADMIN_HUB_COLOURS_NO_LOGO,
+      guidance: ADMIN_HUB_COLOURS_EMPTY,
       statusLabel: ADMIN_HUB_COLOURS_NOT_SENT,
     });
-    expect(overviewColours({ hasLogo: true })).toMatchObject({
-      headline: ADMIN_HUB_COLOURS_HINT,
-      swatches: [],
-    });
-    const withBrand = overviewColours({
-      hasLogo: true,
-      brandPrimaryColour: '#1f6f6b',
-      brandSecondaryColour: '#c9a24a',
-    });
-    expect(withBrand.headline).toBe(ADMIN_HUB_COLOURS_SAVED(2));
-    expect(withBrand.swatches.map((swatch) => [swatch.hex, swatch.css, swatch.role])).toEqual([
-      ['#1F6F6B', '#1F6F6B', 'Main'],
-      ['#C9A24A', '#C9A24A', 'Accent'],
-    ]);
+    expect(overviewColours({ hasLogo: true }).headline).toBe(ADMIN_HUB_COLOURS_HINT);
     expect(
-      overviewColours({
-        hasLogo: true,
-        brandPrimaryColour: 'rgb(31, 111, 107)',
-      }).swatches.map((swatch) => swatch.hex),
-    ).toEqual(['#1F6F6B']);
+      overviewColours({ hasLogo: true, brandPrimaryColour: '#1f6f6b', brandSecondaryColour: '#c9a24a' }).headline,
+    ).toBe(ADMIN_HUB_COLOURS_SAVED(2));
     expect(
-      overviewColours({
-        hasLogo: true,
-        brandPrimaryColour: 'not-a-colour',
-        brandPaletteExtracted: [{ hex: 'oklch(0.5 0.1 20)' }],
-      }).swatches,
-    ).toEqual([]);
-    expect(withBrand.statusLabel).toBe(ADMIN_HUB_COLOURS_NOT_SENT);
-    expect(
-      overviewColours({
-        hasLogo: true,
-        brandColoursSentAt: new Date('2026-10-31'),
-        brandColoursSource: 'KERSIVO_CHOOSES',
-      }).statusLabel,
+      overviewColours({ hasLogo: true, brandColoursSentAt: new Date('2026-10-31'), brandColoursSource: 'KERSIVO_CHOOSES' })
+        .statusLabel,
     ).toBe(ADMIN_HUB_COLOURS_KERSIVO);
     expect(
-      overviewColours({
-        hasLogo: true,
-        brandColoursSentAt: new Date('2026-10-31'),
-        brandColoursSource: 'LOGO',
-      }),
-    ).toMatchObject({
-      statusLabel: ADMIN_HUB_COLOURS_SENT,
-      locked: true,
-      submittedAt: new Date('2026-10-31').toISOString(),
-    });
-    expect(overviewColours({ hasLogo: true }).locked).toBe(false);
+      overviewColours({ hasLogo: true, brandColoursSentAt: new Date('2026-10-31'), brandColoursSource: 'LOGO' }),
+    ).toMatchObject({ statusLabel: ADMIN_HUB_COLOURS_SENT, locked: true, submittedAt: new Date('2026-10-31').toISOString() });
     expect(formatBrandSubmittedDate('2026-11-02T12:00:00.000Z')).toBe('2 November 2026');
-    expect(
-      overviewColours({
-        hasLogo: true,
-        brandPaletteExtracted: [
-          { hex: '#1F6F6B', share: 0.5 },
-          { hex: '#C9A24A', share: 0.3 },
-          { hex: '#141414', share: 0.14 },
-          { hex: '#F2E8D5', share: 0.06 },
-        ],
-        brandPrimaryColour: '#1F6F6B',
-        brandSecondaryColour: '#C9A24A',
-      }).headline,
-    ).toBe('4 colours found in your logo');
   });
 
   it('counts change buckets and keeps the two latest', () => {

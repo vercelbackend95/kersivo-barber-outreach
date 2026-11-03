@@ -70,13 +70,15 @@ export {
   shopInitials,
 } from './overviewTiles';
 export type {
-  OverviewColoursStatus,
+  OverviewColoursLook,
+  OverviewColoursState,
   OverviewContentAsset,
   OverviewContentStatus,
   OverviewContentStatusId,
   OverviewContentImage,
   OverviewContentLogo,
-  OverviewSwatch,
+  OverviewPaletteChip,
+  OverviewRoleColour,
 } from './overviewTiles';
 
 export function isOverviewTerminal(stage: HubStage): boolean {

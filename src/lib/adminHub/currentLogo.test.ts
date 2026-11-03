@@ -157,7 +157,7 @@ describe('logo display CSS', () => {
     expect(booking).toContain('.admin-mobile-drawer-head .admin-sidebar-monogram');
   });
 
-  it('pads the Brand colours mini mark so wordmarks are not edge-to-edge', () => {
-    expect(hub).toMatch(/\.admin-hub-logo-mini__mark img \{[^}]*object-fit: contain;[^}]*padding: 4px;/);
+  it('pads the Brand colours logo plates so wordmarks are not edge-to-edge', () => {
+    expect(hub).toMatch(/\.admin-hub-colours-plate img \{[^}]*object-fit: contain;[^}]*padding: 4px;/);
   });
 });

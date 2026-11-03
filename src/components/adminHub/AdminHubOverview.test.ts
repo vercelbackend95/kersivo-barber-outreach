@@ -48,7 +48,7 @@ describe('AdminHubOverview', () => {
     expect(hubCss).not.toMatch(/\.admin-hub-content-empty \{[^}]*margin-top: auto/);
     // Swatches render inside the live colours tile (P7); the old island is gone.
     expect(src).not.toContain('AdminHubSwatches');
-    expect(coloursTile).toContain('admin-hub-swatches');
+    expect(coloursTile).toContain('admin-hub-palette');
     expect(src).toContain('AdminHubOverviewAnnouncer');
     expect(src).toContain('AdminHubActivityFeed');
     expect(src).not.toContain('admin-hub-sw--empty');
@@ -100,8 +100,9 @@ describe('AdminHubOverview', () => {
     const colours = coloursTile;
     expect(colours).not.toContain('admin-hub-tile__hit');
     expect(colours).not.toContain('<button');
-    expect(colours).toContain('<div className="admin-hub-logo-mini">');
-    expect(colours).toContain("logoSrc ? '' : ' admin-hub-skel'");
+    expect(colours).toContain('className="admin-hub-colours-logos"');
+    expect(colours).toContain('admin-hub-palette--loading');
+    expect(colours).toContain('colours?.href ?? overviewTileHrefs().colours');
     expect(colours).toContain('colours.locked');
     expect(colours).toContain('data-locked');
     expect(colours).toContain("event.key === ' '");

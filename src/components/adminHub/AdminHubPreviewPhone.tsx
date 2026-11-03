@@ -4,14 +4,15 @@ import { useHubState } from '@/lib/adminHub/hubStore';
 import { shopInitials } from '@/lib/adminHub/overviewTiles';
 import { overviewColoursFromLive } from './AdminHubColoursTile';
 
-/** Preview tile phone: logo / initials on the main brand colour, from the hub store. */
+/** Preview tile phone: logo / initials on the Main brand colour (neutral surface until Main is set), from the hub store. */
 export function AdminHubPreviewPhone(props: {
   initialState: AdminHubLiveState;
   shopName: string;
   screenshotSrc?: string | null;
 }) {
   const live = useHubState(props.initialState) ?? props.initialState;
-  const previewColour = overviewColoursFromLive(live).swatches[0]?.css || 'var(--color-brand)';
+  const main = overviewColoursFromLive(live).main;
+  const previewColour = main?.css ?? 'var(--surface-3)';
   const logoSrc = live.currentLogo?.src ?? null;
   return (
     <div className="admin-hub-phonewrap" style={{ '--admin-hub-brand': previewColour } as CSSProperties}>
