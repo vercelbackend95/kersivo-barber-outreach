@@ -607,6 +607,16 @@ describe('ColoursApp (O5)', () => {
     expect(slot.style.color).not.toBe('rgb(255, 255, 255)');
   });
 
+  it('Main and Accent never show the same name for different colours; the preview is the shared one', () => {
+    render(<Harness overrides={{ details: { ...base(), brandPrimaryColour: '#401010', brandSecondaryColour: '#742A27' } }} />);
+    expect(screen.getByTestId('admin-hub-role-main').querySelector('.admin-hub-role__v')?.textContent).toBe('Dark copper');
+    expect(screen.getByTestId('admin-hub-role-accent').querySelector('.admin-hub-role__v')?.textContent).toBe('Copper');
+    const preview = screen.getByTestId('admin-hub-colours-preview');
+    expect(preview.className).toBe('admin-hub-livep');
+    expect(preview.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByTestId('admin-hub-colours-preview-compact').className).toBe('admin-hub-livep admin-hub-livep--compact');
+  });
+
   it('one role control with pressed state (no tabs), Swap, No accent and the same-hex guard', () => {
     render(<Harness />);
     expect(document.querySelector('[role="tablist"], [role="tab"]')).toBeNull();

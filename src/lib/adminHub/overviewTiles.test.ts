@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { HUB_THUMB_EDGE } from '@/lib/freePreview/hubAssets';
-import { betterButtonText, siteBackgroundHex } from '@/lib/adminHub/colour';
 import {
   ADMIN_HUB_COLOURS_DRAFT,
   ADMIN_HUB_COLOURS_DRAFT_HINT,
@@ -296,11 +295,8 @@ describe('overviewColours — Brand colours tile (O4)', () => {
     expect(tile.locked).toBe(false);
     expect(tile.main).toMatchObject({ hex: '#1F6F6B', name: 'Teal' });
     expect(tile.accent).toMatchObject({ hex: '#C9A24A', name: 'Brass' });
-    expect(tile.look).toEqual({
-      background: siteBackgroundHex('LIGHT', '#1F6F6B'),
-      header: { css: '#1F6F6B', text: betterButtonText('#1F6F6B') },
-      button: { css: '#C9A24A', text: betterButtonText('#C9A24A') },
-    });
+    // The tile preview paints from the same three inputs as the Brand colours app.
+    expect(tile.look).toEqual({ mainHex: '#1F6F6B', accentHex: '#C9A24A', tone: 'LIGHT' });
     expect(tile.palette.map((chip) => [chip.hex, chip.share])).toEqual(palette.map((row) => [row.hex, row.share]));
     // A saved draft with only a Main colour (or only a source) is still a draft.
     expect(overviewColours({ hasLogo: false, brandPrimaryColour: '#1F6F6B' }).state).toBe('draft');
@@ -391,8 +387,19 @@ describe('overviewColours — Brand colours tile (O4)', () => {
     });
     expect(tile.main?.name).toBe('Ink');
     expect(tile.accent?.name).toBe('Cream');
-    expect(tile.look?.button?.text).toBe(betterButtonText('#F5F5F5'));
-    expect(tile.look?.header?.text).toBe(betterButtonText('#111111'));
+    expect(tile.look).toEqual({ mainHex: '#111111', accentHex: '#F5F5F5', tone: 'DARK' });
     expect(tile.headline).toBe(ADMIN_HUB_COLOURS_FOUND(2));
+  });
+
+  it('Main and Accent with the same table name get a lightness word', () => {
+    const tile = overviewColours({ hasLogo: true, brandPrimaryColour: '#401010', brandSecondaryColour: '#742A27' });
+    expect(tile.main?.name).toBe('Dark copper');
+    expect(tile.accent?.name).toBe('Copper');
+    // Accent only (no Main): the preview still gets its inputs, Main stays empty.
+    expect(overviewColours({ hasLogo: true, brandSecondaryColour: '#C9A24A' }).look).toEqual({
+      mainHex: null,
+      accentHex: '#C9A24A',
+      tone: 'DARK',
+    });
   });
 });
