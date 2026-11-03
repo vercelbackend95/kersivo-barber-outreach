@@ -19,8 +19,6 @@ import {
   ADMIN_HUB_ADD_SERVICE_HINT,
   ADMIN_HUB_ADD_TEAM,
   ADMIN_HUB_ADD_TEAM_HINT,
-  ADMIN_HUB_ADD_TEAM_PHOTOS,
-  ADMIN_HUB_ADD_TEAM_PHOTOS_HINT,
   ADMIN_HUB_ADD_TEXT,
   ADMIN_HUB_ADD_TEXT_HINT,
 } from './copy';
@@ -37,7 +35,6 @@ export const ADMIN_HUB_ADD_WEBSITE_ITEMS = [
   'photos',
   'logo',
   'text',
-  'team-photos',
   'price-list',
   'other',
 ] as const;
@@ -57,6 +54,10 @@ export function parseAdminHubAddItem(raw: string | null | undefined): AdminHubAd
   return ITEM_SET.has(id) ? (id as AdminHubAddItemId) : null;
 }
 
+/**
+ * Unknown ids (incl. the removed 'team-photos' from old links, emails and bookmarks; barber photos now live on
+ * Team) return null: Materials opens at the top with nothing highlighted.
+ */
 export function parseAdminHubAddWebsiteItem(
   raw: string | null | undefined,
 ): AdminHubAddWebsiteItem | null {
@@ -105,12 +106,6 @@ const WEBSITE_ITEMS: Array<{
   { id: 'photos', title: ADMIN_HUB_ADD_PHOTOS, hint: ADMIN_HUB_ADD_PHOTOS_HINT, needs: 'upload' },
   { id: 'logo', title: ADMIN_HUB_ADD_LOGO, hint: ADMIN_HUB_ADD_LOGO_HINT, needs: 'upload' },
   { id: 'text', title: ADMIN_HUB_ADD_TEXT, hint: ADMIN_HUB_ADD_TEXT_HINT, needs: 'details' },
-  {
-    id: 'team-photos',
-    title: ADMIN_HUB_ADD_TEAM_PHOTOS,
-    hint: ADMIN_HUB_ADD_TEAM_PHOTOS_HINT,
-    needs: 'upload',
-  },
   { id: 'price-list', title: ADMIN_HUB_ADD_PRICE, hint: ADMIN_HUB_ADD_PRICE_HINT, needs: 'upload' },
   { id: 'other', title: ADMIN_HUB_ADD_OTHER, hint: ADMIN_HUB_ADD_OTHER_HINT, needs: 'upload' },
 ];

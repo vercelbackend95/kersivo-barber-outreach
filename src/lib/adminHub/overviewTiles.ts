@@ -8,7 +8,6 @@ import {
   ADMIN_HUB_ADD_LOGO,
   ADMIN_HUB_ADD_OTHER,
   ADMIN_HUB_ADD_PHOTOS,
-  ADMIN_HUB_ADD_TEAM_PHOTOS,
   ADMIN_HUB_ADD_TEXT,
   ADMIN_HUB_COLOURS_DRAFT,
   ADMIN_HUB_COLOURS_DRAFT_HINT,
@@ -204,7 +203,7 @@ export const OVERVIEW_THUMB_EDGE = 480;
 /** Website content tile shows at most this many shop photos (2 rows × 4 in the widest container). */
 export const OVERVIEW_CONTENT_PHOTO_CAP = 8;
 
-export type OverviewContentStatusId = 'logo' | 'photos' | 'team-photos' | 'text' | 'other';
+export type OverviewContentStatusId = 'logo' | 'photos' | 'text' | 'other';
 
 export type OverviewContentStatus = {
   id: OverviewContentStatusId;
@@ -270,7 +269,6 @@ export function overviewWebsiteContent(input: {
   status: OverviewContentStatus[];
 } {
   const photos = input.assets.filter((asset) => asset.kind === 'SHOP_PHOTO');
-  const teamPhotos = input.assets.filter((asset) => asset.kind === 'TEAM_PHOTO');
   const others = input.assets.filter((asset) => asset.kind === 'OTHER');
   const currentLogo = currentHubLogo(input.assets, input.logoOptions);
   const hasLogo = Boolean(currentLogo);
@@ -308,13 +306,6 @@ export function overviewWebsiteContent(input: {
       done: photos.length > 0,
     },
     {
-      id: 'team-photos',
-      label: ADMIN_HUB_ADD_TEAM_PHOTOS,
-      href: adminHubMaterialsHref('team-photos'),
-      value: String(teamPhotos.length),
-      done: teamPhotos.length > 0,
-    },
-    {
       id: 'text',
       label: ADMIN_HUB_ADD_TEXT,
       href: adminHubMaterialsHref('text'),
@@ -332,7 +323,7 @@ export function overviewWebsiteContent(input: {
     });
   }
   return {
-    empty: !hasLogo && photos.length === 0 && teamPhotos.length === 0 && !hasText && others.length === 0 && !hasPriceList,
+    empty: !hasLogo && photos.length === 0 && !hasText && others.length === 0 && !hasPriceList,
     logo,
     photos: photoImages,
     photoTotal: photos.length,

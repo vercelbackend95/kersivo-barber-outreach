@@ -7,7 +7,6 @@ import {
   ADMIN_HUB_ADD_PRODUCT,
   ADMIN_HUB_ADD_SERVICE,
   ADMIN_HUB_ADD_TEAM,
-  ADMIN_HUB_ADD_TEAM_PHOTOS_HINT,
   ADMIN_HUB_ADD_TEXT,
 } from './copy';
 import {
@@ -49,11 +48,17 @@ describe('add menu view-model', () => {
 
   it('parses allowlisted item ids only', () => {
     expect(parseAdminHubAddItem('photos')).toBe('photos');
-    expect(parseAdminHubAddItem('team-photos')).toBe('team-photos');
     expect(parseAdminHubAddItem('service')).toBe('service');
     expect(parseAdminHubAddWebsiteItem('service')).toBeNull();
     expect(parseAdminHubAddItem('email')).toBeNull();
     expect(parseAdminHubAddItem('<script>')).toBeNull();
+  });
+
+  it('treats the removed team-photos item from old links as no highlight (O8)', () => {
+    expect(() => parseAdminHubAddWebsiteItem('team-photos')).not.toThrow();
+    expect(parseAdminHubAddWebsiteItem('team-photos')).toBeNull();
+    expect(parseAdminHubAddItem('team-photos')).toBeNull();
+    expect(parseAdminHubAddWebsiteItem('photos')).toBe('photos');
   });
 
   it('uses in-place materials hrefs and shop ?add=1 links', () => {
@@ -65,21 +70,19 @@ describe('add menu view-model', () => {
     expect(adminHubAddShopHref('product')).toBe('/admin/products?add=1');
   });
 
-  it('uses the real logo types and team-photo website hint', () => {
+  it('uses the real logo types and lists no separate team photos', () => {
     const { groups } = overviewAddMenu({ canUpload: true, canEditDetails: true, canAddShop: true });
     const website = groups.find((group) => group.id === 'website')!.items;
     expect(website.map((item) => item.id)).toEqual([
       'photos',
       'logo',
       'text',
-      'team-photos',
       'price-list',
       'other',
     ]);
+    expect(website.map((item) => item.title)).not.toContain('Team photos');
     expect(website.find((item) => item.id === 'logo')?.hint).toBe(ADMIN_HUB_ADD_LOGO_HINT);
     expect(ADMIN_HUB_ADD_LOGO_HINT).toBe('JPG, PNG, WEBP, SVG or PDF');
-    expect(website.find((item) => item.id === 'team-photos')?.hint).toBe(ADMIN_HUB_ADD_TEAM_PHOTOS_HINT);
-    expect(ADMIN_HUB_ADD_TEAM_PHOTOS_HINT).toBe('Shown with each barber');
     expect(website.find((item) => item.id === 'photos')?.title).toBe(ADMIN_HUB_ADD_PHOTOS);
     expect(website.find((item) => item.id === 'text')?.title).toBe(ADMIN_HUB_ADD_TEXT);
   });
@@ -90,7 +93,6 @@ describe('add menu view-model', () => {
     expect(uploadOnly.groups[0]!.items.map((item) => item.id)).toEqual([
       'photos',
       'logo',
-      'team-photos',
       'price-list',
       'other',
     ]);

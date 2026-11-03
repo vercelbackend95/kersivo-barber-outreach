@@ -95,7 +95,7 @@ describe('HubYourShop', () => {
     expect(document.getElementById('photos')).toBeTruthy();
     expect(document.getElementById('logo')).toBeTruthy();
     expect(document.getElementById('text')).toBeTruthy();
-    expect(document.getElementById('team-photos')).toBeTruthy();
+    expect(document.getElementById('team-photos')).toBeNull();
     expect(document.getElementById('price-list')).toBeTruthy();
     expect(document.getElementById('other')).toBeTruthy();
     expect(document.getElementById('photos')?.className).toContain('is-hub-add-target');
@@ -168,6 +168,64 @@ describe('HubYourShop', () => {
     expect(screen.getByRole('button', { name: 'Photos 1' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Logo ✓' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Text ✓' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Team photos/ })).toBeNull();
+  });
+
+  it('shows only unassigned legacy team photos under Shop photos, without an uploader (O8)', () => {
+    const teamPhoto = (id: string, barberId: string | null, caption: string | null) => ({
+      id,
+      kind: 'TEAM_PHOTO' as const,
+      originalFileName: `${id}.jpg`,
+      contentType: 'image/jpeg',
+      sizeBytes: 12,
+      width: 10,
+      height: 10,
+      caption,
+      sortOrder: 0,
+      barberId,
+      uploadedBy: 'OWNER' as const,
+      createdAt: '2026-10-01T12:00:00.000Z',
+      hasThumb: true,
+    });
+    const details = { brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null };
+    for (const focus of ['materials', undefined] as const) {
+      render(
+        <HubYourShop
+          token={'A'.repeat(43)}
+          apiBase="/api/admin-hub"
+          canUpload
+          canEditDetails
+          focus={focus}
+          details={details}
+          assets={[teamPhoto('legacy', null, 'Whole team'), teamPhoto('barber', 'barber_1', null)]}
+        />,
+      );
+      expect(document.getElementById('team-photos')).toBeNull();
+      const earlier = screen.getByTestId('hub-earlier-team-photos');
+      expect(document.getElementById('photos')?.contains(earlier)).toBe(true);
+      expect(screen.getByRole('heading', { name: 'Earlier team photos' })).toBeTruthy();
+      expect(earlier.querySelectorAll('img')).toHaveLength(1);
+      expect(earlier.querySelector('img')?.getAttribute('src')).toBe('/api/admin-hub/assets/legacy?size=thumb');
+      expect(document.querySelector('img[src*="/assets/barber"]')).toBeNull();
+      expect(earlier.querySelector('input[type="file"]')).toBeNull();
+      expect((earlier.querySelector('input.input') as HTMLInputElement).value).toBe('Whole team');
+      expect(earlier.querySelectorAll('button')).toHaveLength(1);
+      expect(earlier.querySelector('button')?.textContent).toBe('Delete');
+      cleanup();
+    }
+
+    render(
+      <HubYourShop
+        token={'A'.repeat(43)}
+        canUpload
+        canEditDetails
+        focus="materials"
+        details={details}
+        assets={[teamPhoto('barber', 'barber_1', null)]}
+      />,
+    );
+    expect(screen.queryByTestId('hub-earlier-team-photos')).toBeNull();
+    expect(screen.queryByText('Earlier team photos')).toBeNull();
   });
 
   it('marks the newest logo as current', () => {

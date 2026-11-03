@@ -356,7 +356,6 @@ describe('overview view-model', () => {
     expect(filled.status.map((row) => [row.id, row.value, row.href, row.done])).toEqual([
       ['logo', '✓', '/admin?app=materials&item=logo', true],
       ['photos', '3', '/admin?app=materials&item=photos', true],
-      ['team-photos', '1', '/admin?app=materials&item=team-photos', true],
       ['text', '✓', '/admin?app=materials&item=text', true],
       ['other', '1', '/admin?app=materials&item=other', true],
     ]);

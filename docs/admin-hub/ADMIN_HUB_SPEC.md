@@ -95,7 +95,7 @@ Header control labelled **Add** (`aria-haspopup="menu"`, `aria-label` on the men
 
 | Group | Items | Destination |
 |---|---|---|
-| **Your website** | Shop photos · Logo · Text for your website · Team photos · Price list · Other files | `?app=materials&item=` (`photos`, `logo`, `text`, `team-photos`, `price-list`, `other`) — in-place app |
+| **Your website** | Shop photos · Logo · Text for your website · Price list · Other files | `?app=materials&item=` (`photos`, `logo`, `text`, `price-list`, `other`) — in-place app. Barber photos are added with the barber on Team (O8); an old `item=team-photos` link opens Materials at the top. |
 | **Your shop** | Team member · Service · Product | `/admin/team?add=1` · `/admin/services?add=1` · `/admin/products?add=1` — only in requested / designing / review |
 
 Website items follow `canUpload` / `canEditDetails`. Shop items follow the H1 draft-shop stages. Keyboard: Arrow / Home / End, `Escape` returns focus to **Add**. Opening a website item from the menu, then closing the app, returns focus to **Add** (the menuitem unmounts). Analytics: `hub_add_menu_open`, `hub_add_menu_item` (allowlisted `item` only) via `POST /api/admin-hub/event`.
