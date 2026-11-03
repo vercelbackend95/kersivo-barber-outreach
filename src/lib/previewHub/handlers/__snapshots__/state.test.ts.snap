@@ -1,0 +1,76 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GET /api/admin-hub/state > returns only the session shop: assets, details and the current logo 1`] = `
+{
+  "assets": [
+    {
+      "barberId": null,
+      "caption": null,
+      "contentType": "image/png",
+      "createdAt": "2026-10-01T10:00:00.000Z",
+      "hasThumb": true,
+      "height": 300,
+      "id": "logo_old",
+      "kind": "LOGO",
+      "originalFileName": "logo_old.png",
+      "sizeBytes": 100,
+      "sortOrder": 0,
+      "uploadedBy": "OWNER",
+      "width": 400,
+    },
+    {
+      "barberId": null,
+      "caption": null,
+      "contentType": "image/png",
+      "createdAt": "2026-10-02T10:00:00.000Z",
+      "hasThumb": true,
+      "height": 300,
+      "id": "logo_new",
+      "kind": "LOGO",
+      "originalFileName": "logo_new.png",
+      "sizeBytes": 100,
+      "sortOrder": 0,
+      "uploadedBy": "OWNER",
+      "width": 400,
+    },
+    {
+      "barberId": null,
+      "caption": null,
+      "contentType": "image/png",
+      "createdAt": "2026-10-03T10:00:00.000Z",
+      "hasThumb": true,
+      "height": 300,
+      "id": "photo_1",
+      "kind": "SHOP_PHOTO",
+      "originalFileName": "photo_1.png",
+      "sizeBytes": 100,
+      "sortOrder": 0,
+      "uploadedBy": "OWNER",
+      "width": 400,
+    },
+  ],
+  "currentLogo": {
+    "id": "logo_new",
+    "src": "/api/admin-hub/assets/logo_new?size=thumb",
+  },
+  "details": {
+    "aboutText": "About us",
+    "brandBackgroundTone": "DARK",
+    "brandColoursSentAt": null,
+    "brandColoursSource": "LOGO",
+    "brandLocked": false,
+    "brandPaletteExtracted": [
+      {
+        "hex": "#1F6F6B",
+        "share": 0.5,
+      },
+    ],
+    "brandPrimaryColour": "#1F6F6B",
+    "brandSecondaryColour": null,
+    "instagramUrl": null,
+    "snapshotLogoAssetId": null,
+    "styleNotes": null,
+    "websiteExtraText": null,
+  },
+}
+`;

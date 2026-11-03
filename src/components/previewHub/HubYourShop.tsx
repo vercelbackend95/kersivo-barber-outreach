@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import type { PreviewHubAssetKind } from '@prisma/client';
 import { extractLogoHexes, HEX_COLOUR_RE } from '@/lib/freePreview/extractLogoColours';
 import {
@@ -106,6 +107,7 @@ async function patchAsset(apiRoot: string, id: string, body: Record<string, unkn
   });
   const payload = (await response.json()) as { ok?: boolean; error?: string };
   if (!response.ok || !payload.ok) throw new Error(payload.error || HUB_SAVE_FAILED);
+  emitHubDataChanged('sortOrder' in body ? 'asset-reordered' : 'asset-updated');
 }
 
 async function deleteAsset(apiRoot: string, id: string) {
@@ -114,6 +116,7 @@ async function deleteAsset(apiRoot: string, id: string) {
   });
   const payload = (await response.json()) as { ok?: boolean; error?: string };
   if (!response.ok || !payload.ok) throw new Error(payload.error || HUB_SAVE_FAILED);
+  emitHubDataChanged('asset-deleted');
 }
 
 function SaveHint({ state }: { state: SaveState }) {
@@ -318,6 +321,8 @@ export function HubYourShop(props: {
   const [pendingDelete, setPendingDelete] = useState<{ id: string; label: string } | null>(null);
   const knownAssets = useRef<HubUploadedAsset[]>(props.assets);
   const deleteTimer = useRef<number | null>(null);
+  /** Delete waiting out the undo window; committed on unmount so closing the app never drops it. */
+  const pendingDeleteId = useRef<string | null>(null);
   const saveTimer = useRef<number | null>(null);
   const dragId = useRef<string | null>(null);
 
@@ -352,9 +357,11 @@ export function HubYourShop(props: {
     knownAssets.current = [...knownAssets.current.filter((row) => row.id !== asset.id), asset];
     setAssets((current) => [...current, asset]);
     setError(null);
+    // Kept for the Activity feed; the hub store listens to admin-hub:data-changed.
     window.dispatchEvent(
       new CustomEvent('admin-hub:asset-uploaded', { detail: { kind: asset.kind, asset } }),
     );
+    emitHubDataChanged('asset-added');
   };
 
   const persistDetails = useCallback(
@@ -386,6 +393,7 @@ export function HubYourShop(props: {
         }
         if (!response.ok || !payload.ok || !payload.details) throw new Error(payload.error || HUB_SAVE_FAILED);
         setDetails((current) => ({ ...current, ...payload.details }));
+        emitHubDataChanged('details-saved');
         if (payload.details.instagramUrl !== undefined) {
           setInstagramUrl(payload.details.instagramUrl ?? '');
         }
@@ -410,7 +418,10 @@ export function HubYourShop(props: {
   useEffect(() => () => {
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
-  }, []);
+    const id = pendingDeleteId.current;
+    pendingDeleteId.current = null;
+    if (id) void deleteAsset(apiRoot, id).catch(() => undefined);
+  }, [apiRoot]);
 
   const onHex = (field: 'brandPrimaryColour' | 'brandSecondaryColour', raw: string, setter: (v: string) => void) => {
     setter(raw);
@@ -455,9 +466,12 @@ export function HubYourShop(props: {
 
   const requestDelete = (asset: HubUploadedAsset) => {
     if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
+    if (pendingDeleteId.current && pendingDeleteId.current !== asset.id) void commitDelete(pendingDeleteId.current);
+    pendingDeleteId.current = asset.id;
     setPendingDelete({ id: asset.id, label: asset.originalFileName });
     setAssets((current) => current.filter((item) => item.id !== asset.id));
     deleteTimer.current = window.setTimeout(() => {
+      pendingDeleteId.current = null;
       void commitDelete(asset.id);
       setPendingDelete(null);
     }, UNDO_MS);
@@ -466,6 +480,7 @@ export function HubYourShop(props: {
   const undoDelete = () => {
     if (!pendingDelete) return;
     if (deleteTimer.current) window.clearTimeout(deleteTimer.current);
+    pendingDeleteId.current = null;
     const restored = knownAssets.current.find((asset) => asset.id === pendingDelete.id);
     if (restored) setAssets((current) => [...current, restored].sort((a, b) => a.sortOrder - b.sortOrder));
     setPendingDelete(null);

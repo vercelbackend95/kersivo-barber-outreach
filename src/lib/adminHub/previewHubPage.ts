@@ -1,9 +1,9 @@
 import type { APIContext } from 'astro';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { adminHubAppMeta } from './apps';
-import { parseBrandPalette } from './brandColours';
-import { brandLockState } from './brandLock';
-import { parseBrandSnapshotLogoAssetId } from './currentLogo';
+import type { parseBrandPalette } from './brandColours';
+import type { AdminHubLiveState } from './liveState';
+import { buildAdminHubLiveState } from './liveState.server';
 import {
   ADMIN_PRIVATE_HEADERS,
   adminSessionShopFor,
@@ -25,6 +25,8 @@ export type PreviewHubPageData = {
   view: AdminHubView;
   location: ReturnType<typeof parseAdminHubLocation>;
   appCtx: AdminHubAppContext;
+  /** Seeds the client hub store (`hubStore.ts`); same object GET /api/admin-hub/state returns. */
+  liveState: AdminHubLiveState;
   shopName: string;
   logoSrc: string | null;
   sitePreviewUrl: string | null;
@@ -130,9 +132,8 @@ export async function preparePreviewHubPage(input: {
 
   const view = await loadAdminHubView(ctx, location, now);
   const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
-  const logoSrc = view.logo?.hasThumb
-    ? `${ADMIN_HUB_API_BASE}/assets/${encodeURIComponent(view.logo.id)}?size=thumb`
-    : null;
+  const liveState = buildAdminHubLiveState({ request: ctx.request, assets: view.assets });
+  const logoSrc = liveState.currentLogo?.src ?? null;
   const sessionShop = await adminSessionShopFor(context as unknown as APIContext);
   const canEditLaunch = Boolean(
     !ctx.isOperator &&
@@ -159,14 +160,8 @@ export async function preparePreviewHubPage(input: {
                 : HUB_NAV.overview;
   const initialDraft =
     location.draft === 'reopen' ? HUB_DRAFT_REOPEN : location.draft === 'message' ? HUB_DRAFT_DECLINED : '';
-  const rawTone = ctx.request.brandBackgroundTone;
-  const brandBackgroundTone: 'DARK' | 'LIGHT' | null =
-    rawTone === 'DARK' || rawTone === 'LIGHT' ? rawTone : null;
-  const rawSource = ctx.request.brandColoursSource;
-  const brandColoursSource: 'LOGO' | 'MANUAL' | 'KERSIVO_CHOOSES' | null =
-    rawSource === 'LOGO' || rawSource === 'MANUAL' || rawSource === 'KERSIVO_CHOOSES' ? rawSource : null;
-  const brandPaletteExtracted = parseBrandPalette(ctx.request.brandPaletteExtracted);
-  const brandLock = brandLockState(ctx.request.brandColoursSentAt);
+  const brandColoursSource = liveState.details.brandColoursSource ?? null;
+  const brandPaletteExtracted = liveState.details.brandPaletteExtracted ?? null;
   const appCtx: AdminHubAppContext = {
     apiBase: ADMIN_HUB_API_BASE,
     canUpload: caps.canUpload,
@@ -174,20 +169,7 @@ export async function preparePreviewHubPage(input: {
     canReview: caps.canReview,
     canEditLaunch,
     stage: ctx.state.stage,
-    details: {
-      brandPrimaryColour: ctx.request.brandPrimaryColour,
-      brandSecondaryColour: ctx.request.brandSecondaryColour,
-      styleNotes: ctx.request.styleNotes,
-      aboutText: ctx.request.aboutText,
-      instagramUrl: ctx.request.instagramUrl,
-      websiteExtraText: ctx.request.websiteExtraText,
-      brandBackgroundTone,
-      brandColoursSource,
-      brandPaletteExtracted,
-      brandColoursSentAt: brandLock.submittedAt,
-      brandLocked: brandLock.locked,
-      snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
-    },
+    details: liveState.details,
     assets: view.assets,
     reviews: view.reviews,
     reviewShop: view.reviewShop,
@@ -217,6 +199,7 @@ export async function preparePreviewHubPage(input: {
       view,
       location,
       appCtx,
+      liveState,
       shopName,
       logoSrc,
       sitePreviewUrl,

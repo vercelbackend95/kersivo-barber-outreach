@@ -6,6 +6,9 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
+import { __resetHubStoreForTests } from '@/lib/adminHub/hubStore';
+import { emitHubDataChanged, type AdminHubLiveState } from '@/lib/adminHub/liveState';
+import type { AdminHubAppBodyProps } from './apps/types';
 import type { AdminHubAppContext } from './apps/types';
 
 function stubMatchMedia(mobile = false) {
@@ -68,6 +71,7 @@ function renderHost(initialApp: 'logo' | 'materials' | null = 'logo') {
 }
 
 beforeEach(() => {
+  __resetHubStoreForTests();
   stubMatchMedia(false);
   window.history.replaceState(null, '', '/admin');
 });
@@ -277,5 +281,63 @@ describe('AppHost', () => {
     expect(dialog.getAttribute('data-app')).toBe('colours');
     expect(new URL(window.location.href).searchParams.get('app')).toBe('colours');
     expect(dialog.closest('.admin-hub-app-root')?.parentElement).toBe(document.body);
+  });
+
+  it('opens the next app with fresh hub data after a change, with one state request per close', async () => {
+    const fresh: AdminHubLiveState = {
+      assets: [
+        {
+          id: 'logo_1',
+          kind: 'LOGO',
+          originalFileName: 'logo.png',
+          contentType: 'image/png',
+          sizeBytes: 10,
+          width: 100,
+          height: 100,
+          caption: null,
+          sortOrder: 0,
+          barberId: null,
+          uploadedBy: 'OWNER',
+          createdAt: '2026-11-01T10:00:00.000Z',
+          hasThumb: true,
+        },
+      ],
+      details: { brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: 'New text' },
+      currentLogo: { id: 'logo_1', src: '/api/admin-hub/assets/logo_1?size=thumb' },
+    };
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ ok: true, state: fresh })));
+    __resetHubStoreForTests({ fetcher, seed: { assets: [], details: ctx.details, currentLogo: null } });
+    const seen: string[] = [];
+    function CountingApp({ ctx: appCtx }: AdminHubAppBodyProps) {
+      seen.push(`${appCtx.assets.length}:${appCtx.details.aboutText ?? ''}`);
+      return <p>Counting body</p>;
+    }
+    render(
+      <div>
+        <a href="/admin?app=logo">Open logo</a>
+        <AppHost initialApp={null} ctx={ctx} loadApp={async () => ({ default: CountingApp })} />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Open logo' }));
+    await screen.findByText('Counting body');
+    expect(seen.at(-1)).toBe('0:');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(new URL(window.location.href).searchParams.get('app')).toBeNull());
+    expect(fetcher).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Open logo' }));
+    await screen.findByText('Counting body');
+    emitHubDataChanged('asset-added');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(new URL(window.location.href).searchParams.get('app')).toBeNull());
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+
+    seen.length = 0;
+    fireEvent.click(screen.getByRole('link', { name: 'Open logo' }));
+    await waitFor(() => expect(seen.at(-1)).toBe('1:New text'));
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 });

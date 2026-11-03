@@ -24,6 +24,8 @@ import {
 import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
 import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
+import { flushHubDirty, setHubAppOpen, useHubSnapshot } from '@/lib/adminHub/hubStore';
+import { mergeLiveStateIntoAppCtx } from '@/lib/adminHub/liveState';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './apps/AppChrome';
@@ -128,6 +130,20 @@ export function AppHost(props: {
   const loader = props.loadApp ?? loadAdminHubApp;
   const portalTarget = useClientPortalTarget();
   useAdminHubScrollLock(Boolean(app && portalTarget));
+  const hub = useHubSnapshot();
+  // Each open gets the latest hub data once (waiting for a refresh already under way); an open app is never re-fed.
+  const ctxRef = useRef<{ app: AdminHubAppId; ctx: AdminHubAppContext } | null>(null);
+  if (!app) ctxRef.current = null;
+  else if (ctxRef.current?.app !== app && !hub.pending) {
+    ctxRef.current = { app, ctx: mergeLiveStateIntoAppCtx(props.ctx, hub.state) };
+  }
+  const appCtx = app && ctxRef.current?.app === app ? ctxRef.current.ctx : null;
+
+  useEffect(() => {
+    setHubAppOpen(Boolean(app));
+  }, [app]);
+
+  useEffect(() => () => setHubAppOpen(false), []);
 
   useEffect(() => {
     const below = (app ? adminHubAppMeta(app).sheetBelow : undefined) ?? 1024;
@@ -177,6 +193,8 @@ export function AppHost(props: {
   }, []);
 
   const close = useCallback(() => {
+    // Something changed while the app was open: refresh the Overview once (no-op otherwise).
+    void flushHubDirty();
     const usedHistory = pushedRef.current;
     pushedRef.current = false;
     if (usedHistory) history.back();
@@ -194,6 +212,8 @@ export function AppHost(props: {
         writeLocation(target.id, nextItem, false);
         return;
       }
+      // Switching apps: start the refresh first so the next app waits for fresh data.
+      void flushHubDirty();
       writeLocation(target.id, nextItem, push);
       withTransition(() => setApp(target.id));
     },
@@ -203,6 +223,7 @@ export function AppHost(props: {
   useEffect(() => {
     const onPop = () => {
       const next = appFromLocation();
+      void flushHubDirty();
       setApp(next);
       pushedRef.current = false;
       if (!next) queueMicrotask(() => restoreOpenerFocus(openerRef.current));
@@ -336,9 +357,9 @@ export function AppHost(props: {
         <div className="admin-hub-app__body">
           {loadError ? (
             <AppStatus state="error" onRetry={() => setRetry((n) => n + 1)} />
-          ) : Body ? (
+          ) : Body && appCtx ? (
             <AppChromeProvider setChrome={setChrome}>
-              <Body ctx={props.ctx} />
+              <Body ctx={appCtx} />
             </AppChromeProvider>
           ) : (
             <AppStatus state="loading" />

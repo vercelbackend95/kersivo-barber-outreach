@@ -2867,3 +2867,21 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
     transition: none;
   }
 }
+
+/* Live Overview refresh (hubStore): only thumbs that arrive after first paint fade in. */
+@keyframes admin-hub-thumb-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.admin-hub-thumbs .admin-hub-thumb--new img {
+  animation: admin-hub-thumb-in 160ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-hub-thumbs .admin-hub-thumb--new img {
+    animation: none;
+  }
+}
