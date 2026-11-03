@@ -74,7 +74,8 @@ export type {
   OverviewContentAsset,
   OverviewContentStatus,
   OverviewContentStatusId,
-  OverviewContentThumb,
+  OverviewContentImage,
+  OverviewContentLogo,
   OverviewSwatch,
 } from './overviewTiles';
 

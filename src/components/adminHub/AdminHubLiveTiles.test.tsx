@@ -118,8 +118,11 @@ describe('Overview live tiles', () => {
     expect(screen.getByTestId('admin-hub-content-tile')).toBe(tile);
     const logoRow = tile.querySelector('[data-content-item="logo"]');
     expect(logoRow?.textContent).toContain(ADMIN_HUB_CONTENT_DONE);
-    const thumb = tile.querySelector('.admin-hub-thumbs li');
-    expect(thumb?.className).toBe('admin-hub-thumb--new');
+    const thumb = tile.querySelector('[data-testid="admin-hub-content-photos"] li');
+    expect(thumb?.className).toBe('admin-hub-photo admin-hub-thumb--new');
+    expect(tile.querySelector('[data-testid="admin-hub-content-logo"] img')?.getAttribute('src')).toBe(
+      '/api/admin-hub/assets/logo_1?size=thumb',
+    );
     expect(document.querySelector('.admin-hub-logo-mini__mark img')?.getAttribute('src')).toBe(
       '/api/admin-hub/assets/logo_1?size=thumb',
     );

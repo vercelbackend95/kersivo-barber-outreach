@@ -2569,23 +2569,298 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 }
 
 /* ───────── Overview Add menu ───────── */
-.admin-hub-thumbs {
+/* Website content tile (O3): logo slot + adaptive photo grid, laid out by container width (no JS measuring). */
+.admin-hub-content-body {
+  container: hub-content / inline-size;
+}
+.admin-hub-content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.admin-hub-content-media {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-hub-content-photos {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* 420–720 px: logo beside the photos, status list below. */
+@container hub-content (min-width: 420px) {
+  .admin-hub-content-media {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+/* > 720 px: photos take the left column; logo and status list stack in a right-hand column. */
+@container hub-content (min-width: 721px) {
+  .admin-hub-content-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    column-gap: 24px;
+    row-gap: 14px;
+  }
+  .admin-hub-content-media {
+    display: contents;
+  }
+  .admin-hub-content-photos {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .admin-hub-content-logo {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .admin-hub-content-layout > .admin-hub-status {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .admin-hub-content-layout--no-logo > .admin-hub-status {
+    grid-row: 1 / span 2;
+  }
+  /* Logo only: logo on the left, status list fills the rest. */
+  .admin-hub-content-layout--no-photos {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  .admin-hub-content-layout--no-photos .admin-hub-content-logo {
+    grid-column: 1;
+  }
+  .admin-hub-content-layout--no-photos > .admin-hub-status {
+    grid-row: 1;
+  }
+  .admin-hub-content-layout--no-photos.admin-hub-content-layout--no-logo > .admin-hub-status {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin-hub-content-logo {
+  --admin-hub-logo-box: 88px;
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: max-content;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+}
+@container hub-content (min-width: 721px) {
+  .admin-hub-content-logo {
+    --admin-hub-logo-box: 120px;
+  }
+}
+.admin-hub-content-logo__box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--admin-hub-logo-box);
+  height: var(--admin-hub-logo-box);
+  padding: 11px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--admin-hub-hair);
+  background: #1a1a1c;
+  color: var(--muted);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.admin-hub-content-logo--light .admin-hub-content-logo__box {
+  background: #f4f4f2;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+/* width/height attrs give the intrinsic size; auto + max-* = contain, never cropped, never upscaled. */
+.admin-hub-content-logo__box img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.admin-hub-content-logo__caption {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.admin-hub-content-logo:hover .admin-hub-content-logo__box,
+.admin-hub-content-logo:focus-visible .admin-hub-content-logo__box {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.admin-hub-content-logo:hover .admin-hub-content-logo__caption,
+.admin-hub-content-logo:focus-visible .admin-hub-content-logo__caption {
+  color: #fff;
+}
+.admin-hub-content-logo:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.admin-hub-photos {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin: 0 0 14px;
+  margin: 0;
   padding: 0;
+  position: relative;
+  z-index: 2;
 }
-.admin-hub-thumbs img {
-  display: block;
-  width: 100%;
+.admin-hub-photo {
+  position: relative;
+  min-width: 0;
   aspect-ratio: 1;
-  height: auto;
-  object-fit: cover;
+}
+.admin-hub-photo__link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
   border-radius: 10px;
   border: 1px solid var(--admin-hub-hair);
   background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+.admin-hub-photo__link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.admin-hub-photo__link:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.admin-hub-photo__link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.admin-hub-photo__name,
+.admin-hub-photo__more-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.admin-hub-photo__more {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 8, 9, 0.74);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 1 photo: 16:10, full width. */
+.admin-hub-photos--one {
+  grid-template-columns: minmax(0, 1fr);
+}
+.admin-hub-photos--one .admin-hub-photo {
+  aspect-ratio: 16 / 10;
+}
+/* 2 photos: two 4:3 columns. */
+.admin-hub-photos--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-hub-photos--two .admin-hub-photo {
+  aspect-ratio: 4 / 3;
+}
+/* 3 photos, narrow: one 16:10 on top, two 4:3 below. */
+.admin-hub-photos--three {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-hub-photos--three .admin-hub-photo {
+  aspect-ratio: 4 / 3;
+}
+.admin-hub-photos--three .admin-hub-photo:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 16 / 10;
+}
+/* 4+ photos, narrow: 2×2 (cells 5–8 wait for wider containers). */
+.admin-hub-photos--many {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-hub-photo--from-mid,
+.admin-hub-photo--from-wide {
+  display: none;
+}
+.admin-hub-photo[data-more~='narrow'] .admin-hub-photo__more {
+  display: flex;
+}
+.admin-hub-photo[data-more~='narrow'] .admin-hub-photo__name {
+  display: none;
+}
+@container hub-content (min-width: 420px) {
+  /* 3 photos: lead spans two rows on the left, two stacked 4:3 on the right (height follows the right column). */
+  .admin-hub-photos--three {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+  .admin-hub-photos--three .admin-hub-photo:first-child {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    aspect-ratio: auto;
+  }
+  /* 4+: three per row, two rows. */
+  .admin-hub-photos--many {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .admin-hub-photo--from-mid {
+    display: block;
+  }
+  .admin-hub-photo[data-more~='narrow'] .admin-hub-photo__more {
+    display: none;
+  }
+  .admin-hub-photo[data-more~='narrow'] .admin-hub-photo__name {
+    display: inline;
+  }
+  .admin-hub-photo[data-more~='mid'] .admin-hub-photo__more {
+    display: flex;
+  }
+  .admin-hub-photo[data-more~='mid'] .admin-hub-photo__name {
+    display: none;
+  }
+}
+@container hub-content (min-width: 721px) {
+  /* 4+: four per row, two rows. */
+  .admin-hub-photos--many {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .admin-hub-photo--from-wide {
+    display: block;
+  }
+  .admin-hub-photo[data-more~='mid'] .admin-hub-photo__more {
+    display: none;
+  }
+  .admin-hub-photo[data-more~='mid'] .admin-hub-photo__name {
+    display: inline;
+  }
+  .admin-hub-photo[data-more~='wide'] .admin-hub-photo__more {
+    display: flex;
+  }
+  .admin-hub-photo[data-more~='wide'] .admin-hub-photo__name {
+    display: none;
+  }
 }
 .admin-hub-status {
   list-style: none;
@@ -2641,6 +2916,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   flex: 1;
 }
 
@@ -2877,11 +3153,14 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
     opacity: 1;
   }
 }
-.admin-hub-thumbs .admin-hub-thumb--new img {
+.admin-hub-photos .admin-hub-thumb--new img {
   animation: admin-hub-thumb-in 160ms ease-out both;
 }
 @media (prefers-reduced-motion: reduce) {
-  .admin-hub-thumbs .admin-hub-thumb--new img {
+  .admin-hub-photos .admin-hub-thumb--new img {
     animation: none;
+  }
+  .admin-hub-content-logo__box {
+    transition: none;
   }
 }
