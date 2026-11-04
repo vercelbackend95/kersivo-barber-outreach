@@ -1,5 +1,7 @@
 .admin-barbershop-settings {
   display: grid;
+  /* minmax(0, 1fr): one wide card must not widen the whole column past a phone screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   width: 100%;
   max-width: 44rem;
@@ -13,11 +15,13 @@
 
 .admin-barbershop-settings__stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 
 .admin-barbershop-settings__card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.85rem;
   padding: 1rem 1.05rem 1.1rem;
   border: var(--admin-premium-surface-border, 1px solid var(--border));
@@ -173,4 +177,16 @@
   .admin-barbershop-settings__pause-dates {
     grid-template-columns: 1fr;
   }
+}
+
+/* Long button labels (e.g. the Starter upgrade link) wrap on small phones instead of overflowing. */
+.admin-barbershop-settings__card .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+/* Long URLs (the public booking link) break instead of widening the card. */
+.admin-barbershop-settings__card a {
+  overflow-wrap: anywhere;
 }

@@ -374,6 +374,8 @@
   position: fixed;
   inset: 0;
   z-index: var(--admin-z-modal-sheet, 270);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 .admin-hub-app__scrim {
   position: absolute;
@@ -406,6 +408,7 @@
   left: 50%;
   width: min(1120px, calc(100vw - 320px));
   max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - 64px);
   margin-left: 128px;
   border-radius: 22px;
   transform: translate(-50%, -50%);
@@ -421,10 +424,24 @@
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   animation: admin-hub-sheet-in 160ms ease;
 }
+/*
+ * Phones: a full-screen sheet. It must not inherit the bottom sheet's max-height (that left a 12 px
+ * strip of the page showing at the bottom), and it uses the dynamic viewport so the browser toolbar
+ * never covers the header or leaves a gap.
+ */
 .admin-hub-app--sheet.admin-hub-app--fullscreen {
+  inset: 0;
   top: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
   padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  border: 0;
   border-radius: 0;
+  animation-name: admin-hub-fullscreen-in;
 }
 .admin-hub-app--sheet.admin-hub-app--fullscreen .admin-hub-app__grab {
   display: none;
@@ -437,11 +454,21 @@
   margin: 8px auto 2px;
 }
 .admin-hub-app__bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   padding: 14px 16px 14px 20px;
   border-bottom: 1px solid var(--admin-hub-hair-2);
+  background: inherit;
+}
+.admin-hub-app__heading {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .admin-hub-app--sheet .admin-hub-app__bar {
   padding: 8px 16px 12px;
@@ -461,16 +488,23 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .admin-hub-app__crumb {
   margin: 2px 0 0;
   font-size: 12.5px;
   color: var(--admin-hub-muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .admin-hub-app__close {
   margin-left: auto;
-  width: 34px;
-  height: 34px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   display: grid;
   place-items: center;
@@ -490,14 +524,32 @@
 }
 .admin-hub-app__body {
   padding: 22px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   flex: 1;
+  min-width: 0;
   min-height: 0;
 }
+.admin-hub-app__body > * {
+  min-width: 0;
+}
 .admin-hub-app--sheet .admin-hub-app__body {
-  padding: 16px;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+/* Touch layouts: a 44 px close target. */
+.admin-hub-app--sheet .admin-hub-app__close {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.admin-hub-app--sheet .admin-hub-app__foot {
+  flex-wrap: wrap;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 }
 .admin-hub-app__foot {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -588,6 +640,14 @@
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes admin-hub-fullscreen-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 @keyframes admin-hub-sheet-in {
@@ -841,6 +901,38 @@ a.admin-hub-tile__open:focus-visible {
 .admin-hub-bento__activity {
   grid-area: activity;
   min-height: 220px;
+}
+/* Website content and Activity share a row from 768 px: same height, nothing spills out. */
+.admin-hub-bento__content,
+.admin-hub-bento__activity {
+  min-width: 0;
+  height: 100%;
+}
+.admin-hub-bento__activity .admin-hub-feed-wrap {
+  min-width: 0;
+}
+.admin-hub-feed li > span:not(.admin-hub-fdot) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-hub-tile__viewall {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.admin-hub-tile__viewall:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .admin-hub-progress {
@@ -1701,16 +1793,15 @@ a.admin-hub-tile__open:focus-visible {
     grid-template-areas:
       "progress progress progress progress progress progress"
       "preview preview preview colours colours colours"
-      "changes changes changes content content content"
-      "activity activity activity activity activity activity";
+      "changes changes changes changes changes changes"
+      "content content content activity activity activity";
     gap: 14px;
   }
   .admin-hub-bento--no-changes {
     grid-template-areas:
       "progress progress progress progress progress progress"
       "preview preview preview colours colours colours"
-      "content content content content content content"
-      "activity activity activity activity activity activity";
+      "content content content activity activity activity";
   }
   .admin-hub-progress__label {
     font-size: 12.5px;
@@ -1730,15 +1821,14 @@ a.admin-hub-tile__open:focus-visible {
     grid-template-areas:
       "progress progress progress progress progress progress progress progress preview preview preview preview"
       "colours colours colours colours colours colours colours colours preview preview preview preview"
-      "changes changes changes changes changes changes changes changes content content content content"
-      "activity activity activity activity activity activity activity activity activity activity activity activity";
+      "changes changes changes changes changes changes changes changes changes changes changes changes"
+      "content content content content content content activity activity activity activity activity activity";
   }
   .admin-hub-bento--no-changes {
     grid-template-areas:
       "progress progress progress progress progress progress progress progress preview preview preview preview"
       "colours colours colours colours colours colours colours colours preview preview preview preview"
-      "content content content content content content content content content content content content"
-      "activity activity activity activity activity activity activity activity activity activity activity activity";
+      "content content content content content content activity activity activity activity activity activity";
   }
   .admin-hub-bento__preview {
     min-height: 520px;
@@ -3527,49 +3617,6 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   outline: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
 }
-/* Sticky inside the app body (the scroll container); -22px / -16px cancel the body padding. */
-.hub-jump {
-  position: sticky;
-  top: -22px;
-  z-index: 3;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding: 10px 4px 12px;
-  margin: -10px -4px 16px;
-  background: linear-gradient(180deg, #0d0d0e 78%, rgba(13, 13, 14, 0));
-  scrollbar-width: none;
-}
-.hub-jump::-webkit-scrollbar {
-  display: none;
-}
-.admin-hub-app--sheet .hub-jump {
-  top: -16px;
-}
-.hub-jump__chip {
-  flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: #f4f4f5;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-.hub-jump__chip.is-done {
-  border-color: color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.08));
-}
-.hub-jump__chip[aria-current='true'] {
-  background: #f4f4f5;
-  border-color: #f4f4f5;
-  color: #0d0d0e;
-}
-.hub-jump__chip:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
 .hub-charcount {
   text-align: right;
 }
@@ -3613,5 +3660,395 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   }
   .admin-hub-content-logo__mark {
     transition: none;
+  }
+}
+
+/* ───────── Overview › Add to your website: guided setup flow (one column) ───────── */
+/* Premium card tokens from /starter (near-black gradient, 1px hairline, inset highlight, red top line). */
+.admin-hub-app[data-app='materials'] .admin-hub-app__body {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.ks-setup {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
+  margin: 0 auto;
+  padding-bottom: 8px;
+}
+.ks-setup__head {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-setup__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+.ks-setup__intro,
+.ks-setup__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.ks-setup__hint {
+  font-size: 13px;
+  color: var(--admin-hub-muted-2, var(--muted));
+}
+.ks-setup__progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ks-setup__progress-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ks-setup__meter {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.ks-setup__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 200ms ease;
+}
+.ks-setup-card,
+.ks-setup-files {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 40px -18px rgba(0, 0, 0, 0.9);
+  scroll-margin-top: 16px;
+  transition: border-color 160ms ease;
+}
+.ks-setup-card::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 40%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.ks-setup-card.has-error {
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+}
+.ks-setup-card.is-hub-add-target {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+@media (min-width: 640px) {
+  .ks-setup-card {
+    padding: 24px;
+  }
+}
+.ks-setup-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ks-setup-card__title,
+.ks-setup-files__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ks-setup-card__desc {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.ks-setup-card__error,
+.ks-row__error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+.ks-setup-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ks-setup-status.is-done {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--success) 45%, transparent);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+.ks-setup-note {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin: 0;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  font-size: 14px;
+  color: var(--muted);
+}
+.ks-setup-note p {
+  margin: 0;
+}
+.ks-setup-grid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.ks-setup-grid > * {
+  min-width: 0;
+}
+@media (min-width: 640px) {
+  .ks-setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ks-setup-grid > .ks-setup-field--wide,
+  .ks-setup-grid > .ks-check {
+    grid-column: 1 / -1;
+  }
+}
+.ks-setup-count {
+  margin: 0;
+  text-align: right;
+}
+/* Photos, logo and files: a heading over the existing upload cards (no card-in-card). */
+.ks-setup-files {
+  gap: 8px;
+  padding: 8px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.ks-setup-files .hub-details {
+  min-width: 0;
+}
+.ks-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ks-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.ks-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.ks-check input:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Compact lists: services, team, products */
+.ks-rows-wrap {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-row {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 8px 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 160ms ease;
+}
+.ks-row.is-open {
+  border-color: rgba(255, 255, 255, 0.18);
+  padding-bottom: 16px;
+}
+.ks-row.is-off .ks-row__name {
+  color: var(--muted);
+}
+.ks-row__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-row__main {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ks-row__name {
+  font-size: 14.5px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.ks-row__meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.ks-row__tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ks-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+.ks-icon-btn:hover:not(:disabled) {
+  color: var(--fg);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.ks-icon-btn:focus-visible,
+.ks-row__edit:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.ks-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ks-row__edit {
+  min-height: 44px;
+}
+.ks-row__form {
+  display: grid;
+  gap: 8px;
+  padding: 8px 8px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+.ks-row__form-foot {
+  display: flex;
+  justify-content: flex-start;
+}
+.ks-rows-empty {
+  margin: 0;
+  max-width: none;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  font-size: 13.5px;
+  color: var(--muted);
+  text-align: center;
+}
+.ks-rows-add {
+  justify-self: start;
+  gap: 8px;
+  min-height: 44px;
+}
+@media (max-width: 339px) {
+  .ks-row__line {
+    flex-wrap: wrap;
+  }
+  .ks-row__tools {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Save bar: lives in the app footer (outside the scroll area, so nothing is covered). */
+.ks-savebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  animation: ks-savebar-in 160ms ease-out;
+}
+.ks-savebar__msg {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  min-width: 0;
+}
+.ks-savebar__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.ks-savebar__actions .btn {
+  min-height: 44px;
+}
+@keyframes ks-savebar-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ks-setup__meter span,
+  .ks-setup-card,
+  .ks-row,
+  .ks-icon-btn {
+    transition: none;
+  }
+  .ks-savebar {
+    animation: none;
   }
 }

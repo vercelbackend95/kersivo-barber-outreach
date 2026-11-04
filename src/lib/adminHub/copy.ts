@@ -21,6 +21,7 @@ export function adminHubPillTone(stage: HubStage): AdminHubPillTone {
 }
 
 export const ADMIN_HUB_APP_CLOSE = 'Close';
+export const ADMIN_HUB_VIEW_ALL = 'View all';
 export const ADMIN_HUB_APP_LOADING = 'Loading…';
 export const ADMIN_HUB_APP_RETRY = 'Try again';
 export const ADMIN_HUB_APP_ERROR = 'Something went wrong. Try again.';

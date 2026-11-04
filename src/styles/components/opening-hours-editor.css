@@ -1,0 +1,258 @@
+/*
+ * OpeningHoursEditor (src/components/admin/OpeningHoursEditor.tsx).
+ * Below 1024 px: one row per day (day | switch | times). From 1024 px: one row of seven day cards.
+ * Premium card tokens (near-black, 1px rgba(255,255,255,.08), hairlines); 8 px spacing scale.
+ */
+.ks-hours {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-hours__tools {
+  display: flex;
+  justify-content: flex-end;
+}
+.ks-hours__copy {
+  min-height: 44px;
+}
+.ks-hours__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-hours__day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  grid-template-areas:
+    'head times'
+    'error error';
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  padding: 8px 8px 8px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.ks-hours__day.has-error {
+  border-color: color-mix(in srgb, var(--danger) 60%, transparent);
+}
+.ks-hours__head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.ks-hours__name {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--fg);
+}
+.ks-hours__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ks-hours__switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  cursor: pointer;
+}
+.ks-hours__switch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.ks-hours__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: background-color 160ms ease;
+}
+.ks-hours__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  transition: transform 160ms ease;
+}
+.ks-hours__switch input:checked + .ks-hours__track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ks-hours__switch input:checked + .ks-hours__track .ks-hours__thumb {
+  transform: translateX(16px);
+}
+.ks-hours__switch input:focus-visible + .ks-hours__track {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.ks-hours__switch input:disabled {
+  cursor: not-allowed;
+}
+.ks-hours__switch input:disabled + .ks-hours__track {
+  opacity: 0.5;
+}
+.ks-hours__state {
+  font-size: 12.5px;
+  color: var(--muted);
+  min-width: 3.5em;
+}
+.ks-hours__times {
+  grid-area: times;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+.ks-hours__time {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+/* Visible "Opens / Closes" only in the seven-column layout; the list keeps them for screen readers. */
+.ks-hours__time-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.ks-hours .ks-hours__select {
+  min-height: 44px;
+  padding: 8px 28px 8px 12px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+.ks-hours .ks-hours__day.is-closed .ks-hours__select {
+  opacity: 0.45;
+}
+.ks-hours__error {
+  grid-area: error;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--danger);
+}
+.ks-hours__error:empty {
+  display: none;
+}
+
+/* Very narrow phones: the times move under the day. */
+@media (max-width: 379px) {
+  .ks-hours__day {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'times'
+      'error';
+  }
+}
+
+@media (min-width: 1024px) {
+  .ks-hours__grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .ks-hours__day {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'times'
+      'error';
+    align-content: start;
+    align-items: start;
+    gap: 8px;
+    padding: 12px 6px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .ks-hours__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .ks-hours__name {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Narrow day cards (the hub column is 720 px): the Open/Closed text sits under the switch. */
+  .ks-hours__switch {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 0;
+  }
+  .ks-hours__state {
+    min-width: 0;
+    font-size: 12px;
+  }
+  .ks-hours__times {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .ks-hours__time-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .ks-hours .ks-hours__select {
+    width: 100%;
+    padding: 8px 15px 8px 6px;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+    /* The native arrow is too wide for a 1/7 column; a small chevron replaces it. */
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 8px 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-hours__day,
+  .ks-hours__track,
+  .ks-hours__thumb {
+    transition: none;
+  }
+}

@@ -35,6 +35,8 @@ import * as domainSearch from './domain-search';
 import * as brandColours from './brand-colours';
 import * as draftShop from './draft-shop';
 import * as state from './state';
+import * as openingHours from './opening-hours';
+import * as profile from './profile';
 
 type Handler = (context: never) => Promise<Response> | Response;
 const ROUTES: Array<[string, Record<string, unknown>]> = [
@@ -53,8 +55,10 @@ const ROUTES: Array<[string, Record<string, unknown>]> = [
   ['brand-colours', brandColours],
   ['draft-shop', draftShop],
   ['state', state],
+  ['opening-hours', openingHours],
+  ['profile', profile],
 ];
-const METHODS = ['GET', 'POST', 'PATCH', 'DELETE'] as const;
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
 
 const cases = ROUTES.flatMap(([path, module]) =>
   METHODS.filter((method) => typeof module[method] === 'function').map(

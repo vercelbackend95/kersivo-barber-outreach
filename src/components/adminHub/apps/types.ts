@@ -43,6 +43,8 @@ export type AdminHubAppContext = {
   websiteHref: string;
   bookingHref: string;
   launch: AdminHubLaunchFlags | null;
+  /** False before the hub's draft shop exists (business details, hours and lists need it). */
+  hasDraftShop?: boolean;
 };
 
 export type AdminHubAppBodyProps = {

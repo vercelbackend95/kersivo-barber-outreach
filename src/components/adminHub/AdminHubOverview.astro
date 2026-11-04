@@ -13,6 +13,7 @@ import {
   ADMIN_HUB_TILE_CHANGES,
   ADMIN_HUB_TILE_PREVIEW,
   ADMIN_HUB_TILE_PROGRESS,
+  ADMIN_HUB_VIEW_ALL,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import { AdminHubAddMenu } from './AdminHubAddMenu';
@@ -80,7 +81,10 @@ const changes = overviewChanges({
   includedChangeRounds: request.includedChangeRounds,
   changeRoundsUsed: request.changeRoundsUsed,
 });
-const feed = overviewActivityFeed(activity, new Date());
+// Half-width tile next to Website content: a few rows, then "View all" (no overflow).
+const ACTIVITY_TILE_ROWS = 4;
+const feed = overviewActivityFeed(activity, new Date(), ACTIVITY_TILE_ROWS);
+const activityHasMore = activity.length > ACTIVITY_TILE_ROWS;
 const headerPrimary = primary && !overviewHideAddMaterialsPrimary(state.stage) ? primary : null;
 const addMenu = overviewAddMenuFromHub({ stage: state.stage, capabilities: state.capabilities });
 const terminal = isOverviewTerminal(state.stage);
@@ -318,7 +322,13 @@ const terminal = isOverviewTerminal(state.stage);
               <ArrowUpRight width={15} height={15} strokeWidth={1.8} aria-hidden="true" />
             </a>
           </div>
-          <AdminHubActivityFeed client:load groups={feed} />
+          <AdminHubActivityFeed client:load groups={feed} limit={ACTIVITY_TILE_ROWS} />
+          {activityHasMore ? (
+            <a class="admin-hub-tile__viewall" href={hrefs.activity} data-testid="admin-hub-activity-all">
+              {ADMIN_HUB_VIEW_ALL}
+              <span class="admin-hub-sr-only"> activity</span>
+            </a>
+          ) : null}
         </section>
       </div>
     )

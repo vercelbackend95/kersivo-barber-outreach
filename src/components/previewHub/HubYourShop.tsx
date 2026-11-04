@@ -27,11 +27,6 @@ import {
   HUB_DETAILS_STYLE_LABEL,
   HUB_DETAILS_TEAM_TITLE,
   HUB_DETAILS_TITLE,
-  HUB_JUMP_LOGO,
-  HUB_JUMP_OTHER,
-  HUB_JUMP_PHOTOS,
-  HUB_JUMP_PRICE,
-  HUB_JUMP_TEXT,
   HUB_WEBSITE_EXTRA_COUNT,
   HUB_WEBSITE_EXTRA_HINT,
   HUB_WEBSITE_EXTRA_LABEL,
@@ -172,19 +167,8 @@ function HexField(props: {
   );
 }
 
-const JUMP_CHIPS: Array<{ id: AdminHubAddWebsiteItem; label: string; check?: boolean }> = [
-  { id: 'photos', label: HUB_JUMP_PHOTOS },
-  { id: 'logo', label: HUB_JUMP_LOGO, check: true },
-  { id: 'text', label: HUB_JUMP_TEXT, check: true },
-  { id: 'price-list', label: HUB_JUMP_PRICE },
-  { id: 'other', label: HUB_JUMP_OTHER },
-];
-
-/** How long a chip click owns aria-current while its smooth scroll settles. */
-const JUMP_PIN_MS = 1000;
-
 /**
- * Scrolls a card to the top of the app body (respecting its scroll-margin-top, below the sticky chips) and moves
+ * Scrolls a card to the top of the app body (respecting its scroll-margin-top) and moves
  * focus to its heading. Only the app body scrolls: scrollIntoView would also scroll the app window's own box and
  * push its title bar out of view. Outside the hub it falls back to scrollIntoView.
  */
@@ -207,115 +191,6 @@ function scrollToCard(node: HTMLElement) {
     heading.tabIndex = -1;
     heading.focus({ preventScroll: true });
   }
-}
-
-function JumpChips({
-  counts,
-  highlight,
-}: {
-  counts: Record<AdminHubAddWebsiteItem, number>;
-  /** `?item=`: that card is scrolled to, so its chip starts as the current one. */
-  highlight?: AdminHubAddWebsiteItem | null;
-}) {
-  const navRef = useRef<HTMLElement | null>(null);
-  const [current, setCurrent] = useState<AdminHubAddWebsiteItem>(highlight ?? JUMP_CHIPS[0]!.id);
-  const pinned = useRef(0);
-
-  useEffect(() => {
-    if (!highlight) return;
-    pinned.current = Date.now() + JUMP_PIN_MS;
-    setCurrent(highlight);
-  }, [highlight]);
-
-  // aria-current follows the section under the chips: a 1px IntersectionObserver band just below the sticky
-  // chips fires whenever a section edge crosses it; scrollend covers the bottom of the list.
-  useEffect(() => {
-    const nav = navRef.current;
-    if (!nav || typeof IntersectionObserver === 'undefined') return;
-    const scroller = nav.closest<HTMLElement>('.admin-hub-app__body');
-    const sections = JUMP_CHIPS.map((chip) => document.getElementById(chip.id)).filter(
-      (node): node is HTMLElement => Boolean(node),
-    );
-    if (!sections.length) return;
-    let frame = 0;
-    let observer: IntersectionObserver | null = null;
-    const compute = () => {
-      frame = 0;
-      if (Date.now() < pinned.current) return;
-      const view = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
-      const line = nav.getBoundingClientRect().bottom + 24;
-      const atEnd = scroller
-        ? scroller.scrollTop > 0 && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2
-        : false;
-      let next = sections[0]!;
-      if (atEnd) {
-        for (const section of sections) if (section.getBoundingClientRect().top < view.bottom - 48) next = section;
-      } else {
-        // The section that most recently passed under the chips; side-by-side cards keep DOM order.
-        let best = -Infinity;
-        for (const section of sections) {
-          const top = section.getBoundingClientRect().top;
-          if (top <= line && top > best + 1) {
-            best = top;
-            next = section;
-          }
-        }
-      }
-      setCurrent(next.id as AdminHubAddWebsiteItem);
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(compute);
-    };
-    const build = () => {
-      observer?.disconnect();
-      const height = scroller ? scroller.clientHeight : window.innerHeight;
-      const offset = Math.round(nav.offsetHeight + 24);
-      observer = new IntersectionObserver(schedule, {
-        root: scroller,
-        rootMargin: `-${offset}px 0px -${Math.max(0, height - offset - 1)}px 0px`,
-        threshold: 0,
-      });
-      for (const section of sections) observer.observe(section);
-    };
-    build();
-    const target: HTMLElement | Window = scroller ?? window;
-    target.addEventListener('scrollend', schedule);
-    window.addEventListener('resize', build);
-    return () => {
-      observer?.disconnect();
-      target.removeEventListener('scrollend', schedule);
-      window.removeEventListener('resize', build);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  const jump = (id: AdminHubAddWebsiteItem) => {
-    const node = document.getElementById(id);
-    if (!node) return;
-    pinned.current = Date.now() + JUMP_PIN_MS;
-    setCurrent(id);
-    scrollToCard(node);
-  };
-  return (
-    <nav ref={navRef} className="hub-jump" aria-label="Add to your website" data-testid="hub-jump">
-      {JUMP_CHIPS.map((chip) => {
-        const count = counts[chip.id];
-        const mark = chip.check ? (count > 0 ? ' ✓' : '') : count > 0 ? ` ${count}` : '';
-        return (
-          <button
-            key={chip.id}
-            type="button"
-            className={`hub-jump__chip${count > 0 ? ' is-done' : ''}`}
-            aria-current={current === chip.id ? 'true' : undefined}
-            onClick={() => jump(chip.id)}
-          >
-            {chip.label}
-            {mark}
-          </button>
-        );
-      })}
-    </nav>
-  );
 }
 
 function cardStatus(count: number, kind: 'count' | 'check') {
@@ -437,10 +312,10 @@ export function HubYourShop(props: {
   const chrome = props.chrome !== false && !focus;
   const showLogo = !focus || focus === 'logo' || focus === 'materials';
   const showPhotos = !focus || focus === 'photos' || focus === 'materials';
-  const showAbout = !focus || focus === 'about' || focus === 'materials';
+  // Materials (Overview › Add to your website): the text fields live in the setup flow's own sections.
+  const showAbout = !focus || focus === 'about';
   const showPrice = !focus || focus === 'photos' || focus === 'materials';
   const showOther = focus === 'materials';
-  const showJump = focus === 'materials';
   const showReviews = !focus;
   const showBrandExtras = showLogo && !focus;
   const apiRoot = hubApiRoot(props);
@@ -1070,28 +945,13 @@ export function HubYourShop(props: {
         </section>
       ) : null}
 
-      {showJump ? (
-        <JumpChips
-          highlight={props.highlight}
-          counts={{
-            photos: photos.length,
-            logo: logos.length,
-            text: textCount,
-            'price-list': prices.length,
-            other: others.length,
-          }}
-        />
-      ) : null}
 
       {focus === 'materials' ? (
         <div className="hub-materials">
-          <div className="hub-materials__main">{photosCard}</div>
-          <div className="hub-materials__side">
-            {logoCard}
-            {textCard}
-            {priceCard}
-            {otherCard}
-          </div>
+          {photosCard}
+          {logoCard}
+          {priceCard}
+          {otherCard}
         </div>
       ) : (
         <>

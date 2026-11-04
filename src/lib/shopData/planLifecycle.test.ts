@@ -134,6 +134,22 @@ vi.mock('@/lib/setup/shopPublicBookingGate', () => ({
 }));
 vi.mock('@/lib/adminHub/ownerEditEvents', () => ({ recordDebouncedPreviewRequestEvent: async () => undefined }));
 vi.mock('@/lib/freePreview/hubFilesNotify', () => ({ maybeNotifyOpsOfHubFiles: async () => undefined }));
+// The hub "Add to your website" endpoints run for real; only the cookie/session lookup is stubbed.
+vi.mock('@/lib/freePreview/hubApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/freePreview/hubApi')>();
+  return {
+    ...actual,
+    enforceHubDetailsRate: async () => null,
+    resolveHubApiContext: async () => ({
+      ok: true,
+      ctx: {
+        request: { id: 'req_1', draftShopId: 'shop_lifecycle' },
+        state: { stage: 'designing', capabilities: { canEditDetails: true } },
+        isOperator: false,
+      },
+    }),
+  };
+});
 
 const { saveClientOnboardingDraft } = await import('@/lib/admin/clientOnboarding/service');
 const { saveHubDetails } = await import('@/lib/freePreview/hubDetails');
@@ -141,6 +157,9 @@ const { replaceShopOpeningHours } = await import('@/lib/admin/shopOpeningHours')
 const { loadSiteDataForShop } = await import('@/lib/siteData/getSiteData');
 const { handlePublicSiteData } = await import('@/lib/siteData/api');
 const { HUB_ADMIN_API_ALLOWLIST } = await import('@/lib/adminHub/hubAdminAccess');
+const { createHubOpeningHoursHandlers, createHubProfileHandlers } = await import('@/lib/previewHub/handlers/shopSetup');
+const { cookieSourceOf } = await import('@/lib/freePreview/hubApi');
+const { defaultOpeningWeek } = await import('@/lib/shopData/openingHours');
 
 const SHOP_ID = 'shop_lifecycle';
 
@@ -229,6 +248,66 @@ describe('hub and dashboard share one canonical record', () => {
     expect(paths).toEqual(
       expect.arrayContaining(['POST /api/admin/services', 'PATCH /api/admin/services/:id', 'POST /api/admin/barbers']),
     );
+  });
+});
+
+describe('hub setup flow (Add to your website) writes the canonical records', () => {
+  beforeEach(seedShop);
+
+  function hubCall(method: 'PUT' | 'PATCH', path: string, body: unknown) {
+    return {
+      request: new Request(`http://localhost/api/admin-hub/${path}`, {
+        method,
+        headers: { origin: 'http://localhost', 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+      params: {},
+    } as never;
+  }
+
+  it('hours and business details saved in the hub are what the Full site and dashboard read after upgrade', async () => {
+    plan.state = 'FREE_BOOKING';
+    const hours = createHubOpeningHoursHandlers(cookieSourceOf);
+    const profile = createHubProfileHandlers(cookieSourceOf);
+
+    const week = defaultOpeningWeek().map((day) => (day.dayOfWeek === 6 ? { ...day, opens: '08:00', closes: '16:00' } : day));
+    const putRes = await hours.PUT(hubCall('PUT', 'opening-hours', { days: week }));
+    expect(putRes.status).toBe(200);
+    expect(await putRes.json()).toMatchObject({ ok: true, saved: true });
+
+    const patchRes = await profile.PATCH(
+      hubCall('PATCH', 'profile', { addressLine1: '2 Example Road', postcode: 'M1 1AE', phone: '0161 496 0000' }),
+    );
+    expect(patchRes.status).toBe(200);
+
+    // Same rows the dashboard's settings page edits (ShopOpeningHours) and the launch wizard edits (ShopPublicProfile).
+    expect(table('shopOpeningHours').filter((r) => r.shopId === SHOP_ID)).toHaveLength(7);
+    expect(table('shopPublicProfile')).toHaveLength(1);
+    const stored = snapshotStoredData();
+
+    const starter = (await loadSiteDataForShop(SHOP_ID))!;
+    plan.state = 'FULL_KERSIVO';
+    const full = (await loadSiteDataForShop(SHOP_ID))!;
+    expect(full.openingHours).toEqual(starter.openingHours);
+    expect(full.location.address.formatted).toContain('2 Example Road');
+    expect(JSON.stringify(full)).toContain('0161 496 0000');
+    expect(JSON.stringify(full.openingHours)).toContain('16:00');
+    expect(snapshotStoredData()).toBe(stored);
+  });
+
+  it('refuses to save a week with every day closed', async () => {
+    const hours = createHubOpeningHoursHandlers(cookieSourceOf);
+    const closed = defaultOpeningWeek().map((day) => ({ ...day, isOpen: false }));
+    const res = await hours.PUT(hubCall('PUT', 'opening-hours', { days: closed }));
+    expect(res.status).toBe(400);
+    expect(table('shopOpeningHours')).toHaveLength(0);
+  });
+
+  it('rejects fields the hub does not edit', async () => {
+    const profile = createHubProfileHandlers(cookieSourceOf);
+    const res = await profile.PATCH(hubCall('PATCH', 'profile', { description: 'Not via this route.' }));
+    expect(res.status).toBe(400);
+    expect(table('shopPublicProfile')).toHaveLength(0);
   });
 });
 

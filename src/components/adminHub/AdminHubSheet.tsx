@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, type ComponentType, type KeyboardEvent, type 
 import { createPortal } from 'react-dom';
 import { MessageCircle, X } from '@/components/lucide-react';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
-import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
+import { useAdminHubScrollLock, useClientPortalTarget, useHubOverlayMode } from '@/lib/adminHub/hubOverlay';
 
 type SheetIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -30,10 +30,9 @@ export function AdminHubSheet(props: {
   const closeRef = useRef<HTMLButtonElement>(null);
   const Icon = props.icon ?? MessageCircle;
   const portalTarget = useClientPortalTarget();
-  const sheet =
-    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(max-width: 1023px)').matches
-      : false;
+  const mode = useHubOverlayMode();
+  const sheet = mode !== 'window';
+  const fullscreen = mode === 'fullscreen';
 
   useAdminHubScrollLock(Boolean(portalTarget));
 
@@ -78,7 +77,7 @@ export function AdminHubSheet(props: {
       <div className="admin-hub-app__scrim" aria-hidden="true" onClick={props.onClose} />
       <div
         ref={dialogRef}
-        className={`admin-hub-app${sheet ? ' admin-hub-app--sheet' : ' admin-hub-app--window'}`}
+        className={`admin-hub-app${sheet ? ' admin-hub-app--sheet' : ' admin-hub-app--window'}${fullscreen ? ' admin-hub-app--fullscreen' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -87,12 +86,12 @@ export function AdminHubSheet(props: {
         style={sheet ? undefined : { maxWidth: 720 }}
         onKeyDown={onKeyDown}
       >
-        {sheet ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
+        {sheet && !fullscreen ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
         <header className="admin-hub-app__bar">
           <span className="admin-hub-app__icon" aria-hidden="true">
             <Icon width={16} height={16} strokeWidth={1.8} />
           </span>
-          <div>
+          <div className="admin-hub-app__heading">
             <h2 className="admin-hub-app__title" id={titleId}>
               {props.title}
             </h2>

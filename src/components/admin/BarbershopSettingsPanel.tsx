@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { WorkingHourRow } from './barbersTypes';
-import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
+import { OpeningHoursEditor } from './OpeningHoursEditor';
 import AdminSectionHeader from './AdminSectionHeader';
 import QrKitSettingsCard from './QrKitSettingsCard';
 import LeaveKersivoCard from './LeaveKersivoCard';
@@ -13,9 +13,17 @@ import {
 } from '@/lib/admin/launchContextRefresh';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
+import {
+  isOpeningWeekValid,
+  openingRowsFromWeek,
+  openingWeekFromRows,
+  type OpeningDay,
+} from '@/lib/shopData/openingHours';
 import '@/styles/components/admin-barbershop-settings.css';
+import '@/styles/components/opening-hours-editor.css';
 
-const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const HOURS_AUTOSAVE_MS = 600;
+const HOURS_NONE_OPEN = 'Open the barbershop on at least one day.';
 
 type Identity = {
   name: string;
@@ -160,6 +168,10 @@ export default function BarbershopSettingsPanel({
   const [hours, setHours] = useState<WorkingHourRow[]>([]);
   const [hoursSaving, setHoursSaving] = useState(false);
   const [hoursError, setHoursError] = useState('');
+  const [hoursStatus, setHoursStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const hoursTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoursSeq = useRef(0);
+  const hoursWeek = useMemo(() => openingWeekFromRows(hours), [hours]);
 
   const [pause, setPause] = useState<PauseState>(EMPTY_PAUSE);
   const [pauseFrom, setPauseFrom] = useState('');
@@ -755,7 +767,7 @@ export default function BarbershopSettingsPanel({
           typeof payload?.error === 'string' ? payload.error : 'Could not save opening hours.',
         );
       }
-      if (payload?.hours) setHours(payload.hours);
+      // The editor already shows what was sent; the echo is not applied so typing during a save is kept.
       return true;
     } catch (error) {
       setHoursError(error instanceof Error ? error.message : 'Could not save opening hours.');
@@ -763,6 +775,38 @@ export default function BarbershopSettingsPanel({
     } finally {
       setHoursSaving(false);
     }
+  }
+
+  useEffect(
+    () => () => {
+      if (hoursTimer.current) clearTimeout(hoursTimer.current);
+    },
+    [],
+  );
+
+  function changeHours(next: OpeningDay[]) {
+    const rows = openingRowsFromWeek(next);
+    setHours(rows);
+    setHoursError('');
+    if (hoursTimer.current) clearTimeout(hoursTimer.current);
+    // Inline errors show in the editor; nothing is saved until the week is valid again.
+    if (!isOpeningWeekValid(next)) {
+      setHoursStatus('idle');
+      return;
+    }
+    if (!next.some((day) => day.isOpen)) {
+      setHoursStatus('error');
+      setHoursError(HOURS_NONE_OPEN);
+      return;
+    }
+    const seq = ++hoursSeq.current;
+    hoursTimer.current = setTimeout(() => {
+      setHoursStatus('saving');
+      void saveHours(rows).then((ok) => {
+        if (seq !== hoursSeq.current) return;
+        setHoursStatus(ok ? 'saved' : 'error');
+      });
+    }, HOURS_AUTOSAVE_MS);
   }
 
   async function applyPause(body: Record<string, unknown>) {
@@ -950,19 +994,17 @@ export default function BarbershopSettingsPanel({
           <p className="admin-barbershop-settings__card-copy">
             Staff working hours cannot go outside these times. Changes auto-save.
           </p>
-          <BarberWorkingHoursEditor
-            weekDays={WEEK_DAYS}
-            workingHours={hours}
-            loading={false}
-            saving={hoursSaving}
-            saveError={hoursError}
-            onSetWorkingHours={setHours}
-            onSave={saveHours}
-            persistToServer
-            hideHeader
-            layout="profile"
-            helperText="Tap any day to set open hours or mark closed."
-          />
+          {hours.length ? (
+            <OpeningHoursEditor value={hoursWeek} onChange={changeHours} label="Opening hours" />
+          ) : null}
+          <p
+            className={hoursError ? 'admin-inline-error' : 'admin-barbershop-settings__card-copy'}
+            role="status"
+            aria-live="polite"
+            data-testid="bbs-hours-status"
+          >
+            {hoursError || (hoursSaving || hoursStatus === 'saving' ? 'Saving…' : hoursStatus === 'saved' ? 'Saved' : '')}
+          </p>
         </section>
 
         <section className="admin-barbershop-settings__card" aria-labelledby="bbs-pause-title">

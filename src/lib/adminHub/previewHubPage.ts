@@ -190,6 +190,7 @@ export async function preparePreviewHubPage(input: {
     websiteHref: ADMIN_HUB_LINKS.website,
     bookingHref: ADMIN_HUB_LINKS.booking,
     launch: view.launchFlags,
+    hasDraftShop: Boolean(ctx.request.draftShopId),
   };
 
   return {

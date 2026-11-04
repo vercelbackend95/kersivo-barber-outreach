@@ -23,7 +23,7 @@ import {
 } from '@/lib/adminHub/apps';
 import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
-import { useAdminHubScrollLock, useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
+import { useAdminHubScrollLock, useClientPortalTarget, useHubOverlayMode } from '@/lib/adminHub/hubOverlay';
 import { flushHubDirty, setHubAppOpen, useHubSnapshot } from '@/lib/adminHub/hubStore';
 import { mergeLiveStateIntoAppCtx } from '@/lib/adminHub/liveState';
 import { useHubToast } from '@/lib/adminHub/hubToast';
@@ -123,7 +123,6 @@ export function AppHost(props: {
   const [app, setApp] = useState<AdminHubAppId | null>(
     props.initialApp ? adminHubAppOpenTarget(props.initialApp).id : null,
   );
-  const [sheet, setSheet] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [Body, setBody] = useState<ComponentType<AdminHubAppBodyProps> | null>(null);
@@ -147,14 +146,8 @@ export function AppHost(props: {
 
   useEffect(() => () => setHubAppOpen(false), []);
 
-  useEffect(() => {
-    const below = (app ? adminHubAppMeta(app).sheetBelow : undefined) ?? 1024;
-    const mq = window.matchMedia(`(max-width: ${below - 1}px)`);
-    const sync = () => setSheet(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, [app]);
+  const mode = useHubOverlayMode((app ? adminHubAppMeta(app).sheetBelow : undefined) ?? 1024);
+  const sheet = mode !== 'window';
 
   useEffect(() => {
     if (!app) {
@@ -324,7 +317,7 @@ export function AppHost(props: {
   if (!app) return createPortal(<>{toastRegion}{null}</>, portalTarget);
   const meta = adminHubAppMeta(app);
   const Icon = ICONS[resolveAdminHubApp(app)];
-  const fullscreen = Boolean(sheet && (meta.sheetBelow ?? 1024) <= 640);
+  const fullscreen = mode === 'fullscreen';
 
   return createPortal(
     <>
@@ -343,12 +336,12 @@ export function AppHost(props: {
         style={sheet ? undefined : { maxWidth: meta.maxWidth }}
         onKeyDown={onKeyDown}
       >
-        {sheet ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
+        {sheet && !fullscreen ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
         <header className="admin-hub-app__bar">
           <span className="admin-hub-app__icon" aria-hidden="true">
             <Icon width={16} height={16} strokeWidth={1.8} />
           </span>
-          <div>
+          <div className="admin-hub-app__heading">
             <h2 className="admin-hub-app__title" id={titleId}>
               {meta.title}
             </h2>

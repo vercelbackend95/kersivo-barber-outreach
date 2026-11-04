@@ -265,3 +265,29 @@ export const BUSINESS_PROFILE_FIELDS = [
   'brandPrimaryColour',
   'brandSecondaryColour',
 ] as const satisfies ReadonlyArray<keyof BusinessProfilePatch>;
+
+// ---------------------------------------------------------------------------
+// Pounds ↔ pence for price inputs (owners type £, storage is integer pence)
+// ---------------------------------------------------------------------------
+
+const POUNDS_INPUT_RE = /^\d{1,6}(\.\d{1,2})?$/;
+
+/**
+ * "12", "12.5", "12.50" or "£12.50" → 1250. Returns null for anything else (negative, more than
+ * two decimal places, letters, empty). Never uses floating-point multiplication.
+ */
+export function parsePoundsToPence(raw: string | null | undefined): number | null {
+  if (raw === null || raw === undefined) return null;
+  const value = raw.trim().replace(/^£\s*/, '').replace(/,/g, '');
+  if (!POUNDS_INPUT_RE.test(value)) return null;
+  const [whole, fraction = ''] = value.split('.');
+  return Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+}
+
+/** 1250 → "12.50", 1200 → "12" (for a price input's value). */
+export function penceToPoundsInput(pence: number): string {
+  if (!Number.isFinite(pence) || pence < 0) return '';
+  const whole = Math.floor(pence / 100);
+  const rest = Math.round(pence % 100);
+  return rest === 0 ? String(whole) : `${whole}.${String(rest).padStart(2, '0')}`;
+}
