@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const resolveHubApiContext = vi.fn();
 const enforceHubStateGetRate = vi.fn();
 const loadActiveHubAssets = vi.fn();
+const loadDraftShopSetupCounts = vi.fn();
 
 vi.mock('@/lib/freePreview/hubApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/freePreview/hubApi')>();
@@ -17,11 +18,16 @@ vi.mock('@/lib/freePreview/hubAssets', async (importOriginal) => {
   return { ...actual, loadActiveHubAssets: (...args: unknown[]) => loadActiveHubAssets(...args) };
 });
 
+vi.mock('@/lib/adminHub/draftShopSetupCounts', () => ({
+  loadDraftShopSetupCounts: (...args: unknown[]) => loadDraftShopSetupCounts(...args),
+}));
+
 import { GET } from '@/pages/api/admin-hub/state';
 import { hubJson } from '@/lib/freePreview/hubApi';
 
 const request = {
   id: 'req_1',
+  draftShopId: 'shop_1',
   shopName: 'Fade Room',
   email: 'owner@example.com',
   brandPrimaryColour: '#1F6F6B',
@@ -61,7 +67,13 @@ function get() {
 
 beforeEach(() => {
   enforceHubStateGetRate.mockReset().mockResolvedValue(null);
-  resolveHubApiContext.mockReset().mockResolvedValue({ ok: true, ctx: { request, isOperator: false } });
+  resolveHubApiContext.mockReset().mockResolvedValue({
+    ok: true,
+    ctx: { request, isOperator: false, state: { kind: 'hub', stage: 'review' } },
+  });
+  loadDraftShopSetupCounts
+    .mockReset()
+    .mockResolvedValue({ activeServices: 0, activeBarbers: 0, products: 0, openingHoursSaved: true });
   loadActiveHubAssets.mockReset().mockResolvedValue([
     row('logo_old', 'LOGO', '2026-10-01T10:00:00Z'),
     row('logo_new', 'LOGO', '2026-10-02T10:00:00Z'),
@@ -92,13 +104,13 @@ describe('GET /api/admin-hub/state', () => {
     expect(limited.headers.get('cache-control')).toBe('private, no-store');
   });
 
-  it('returns only the session shop: assets, details and the current logo', async () => {
+  it('returns only the session shop: assets, details, the current logo and the setup card', async () => {
     const response = await get();
     expect(response.status).toBe(200);
     expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
     expect(loadActiveHubAssets).toHaveBeenCalledWith('req_1');
     const body = (await response.json()) as { ok: boolean; state: Record<string, unknown> };
-    expect(Object.keys(body.state).sort()).toEqual(['assets', 'currentLogo', 'details']);
+    expect(Object.keys(body.state).sort()).toEqual(['assets', 'currentLogo', 'details', 'setup']);
     expect(body.state.currentLogo).toEqual({ id: 'logo_new', src: '/api/admin-hub/assets/logo_new?size=thumb' });
     // The Website content tile sizes its cells from these (O3): width/height ride along with every asset.
     expect((body.state.assets as Array<Record<string, unknown>>).map((a) => [a.id, a.width, a.height])).toEqual([
@@ -106,6 +118,11 @@ describe('GET /api/admin-hub/state', () => {
       ['logo_new', 400, 300],
       ['photo_1', 400, 300],
     ]);
+    // The sidebar setup card refreshes from here after a save: hours come from the draft shop's saved rows.
+    expect(loadDraftShopSetupCounts).toHaveBeenCalledWith('shop_1');
+    const setup = body.state.setup as { done: number; total: number; items: Array<{ id: string; done: boolean }> };
+    expect(setup.items.find((item) => item.id === 'hours')?.done).toBe(true);
+    expect([setup.done, setup.total]).toEqual([3, 5]);
     expect(body.state).toMatchSnapshot();
     const json = JSON.stringify(body);
     expect(json).not.toContain('owner@example.com');

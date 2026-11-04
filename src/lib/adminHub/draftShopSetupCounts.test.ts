@@ -11,14 +11,18 @@ describe('draftShopCountsOrZero', () => {
       activeServices: 0,
       activeBarbers: 0,
       products: 0,
+      openingHoursSaved: false,
     });
   });
 
   it('passes through a loaded count', () => {
-    expect(draftShopCountsOrZero({ activeServices: 2, activeBarbers: 1, products: 4 })).toEqual({
+    expect(
+      draftShopCountsOrZero({ activeServices: 2, activeBarbers: 1, products: 4, openingHoursSaved: true }),
+    ).toEqual({
       activeServices: 2,
       activeBarbers: 1,
       products: 4,
+      openingHoursSaved: true,
     });
   });
 });

@@ -320,7 +320,6 @@ test.describe('Admin Hub batch 1 — real stack', () => {
       'photos',
       'services',
       'team',
-      'hours',
       'about',
       'setup',
       'activity',
@@ -380,13 +379,13 @@ test.describe('Admin Hub batch 1 — real stack', () => {
     await expect(requestedToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(requestedSetup.locator('a[href="/admin/services"]')).toBeVisible();
     await expect(requestedSetup.locator('a[href="/admin/team"]')).toBeVisible();
-    await expect(requestedSetup.locator('a[href="/admin?app=hours"]')).toContainText('From your links');
+    await expect(requestedSetup.locator('a[href="/admin?app=materials&item=hours"]')).toContainText('Opening hours');
     await page.screenshot({ path: join(shotDir2, 'requested-card-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'requested-card-390.png'), fullPage: true });
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/admin?app=hours');
-    await expect(page.getByTestId('admin-hub-app')).toContainText("you'll check them when your preview is ready");
+    await page.goto('/admin?app=materials&item=hours');
+    await expect(page.getByTestId('setup-hours')).toBeVisible();
     await page.screenshot({ path: join(shotDir2, 'requested-hours-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: join(shotDir2, 'requested-hours-390.png'), fullPage: true });
@@ -837,7 +836,7 @@ test.describe('Admin Hub batch 6 — Phase 3 and real journey', () => {
     await page.goto('/admin/changes');
     await expect(page.getByTestId('admin-hub-changes')).toBeVisible();
     await shots6(page, 'screen-changes', widths);
-    for (const app of ['logo', 'photos', 'materials', 'hours', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
+    for (const app of ['logo', 'photos', 'materials', 'about', 'colours', 'messages', 'activity', 'setup'] as const) {
       await page.goto(`/admin?app=${app}`);
       await expect(page.getByTestId('admin-hub-app')).toBeVisible();
       await shots6(page, `app-${app}`, widths);

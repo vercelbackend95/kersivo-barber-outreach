@@ -13,10 +13,7 @@ import { PREVIEW_HUB_PATHS } from './previewHubPaths';
 export const SETUP_PHASE1_TITLE = 'Help us build your site';
 export const SETUP_PHASE2_TITLE = "Let's put you live";
 export const SETUP_PHASE3_TITLE = 'Get the most from KERSIVO';
-export const SETUP_FROM_LINKS_TAG = 'From your links';
 export const SETUP_OPTIONAL_TAG = 'Optional';
-export const SETUP_FROM_LINKS_BODY =
-  "We'll fill these from your links — you'll check them when your preview is ready";
 export const SETUP_LAUNCH_SIGN_IN = 'Sign in to finish these steps.';
 export const SETUP_PHASE3_DISMISS = 'Dismiss';
 export const SETUP_PHASE3_RETAIL_HREF = '/admin/retail-onboarding';
@@ -126,7 +123,20 @@ export type SetupShopCounts = {
   activeServices: number;
   activeBarbers: number;
   products: number;
+  /** Saved opening hours on the draft shop meet `openingHoursComplete`. */
+  openingHoursSaved: boolean;
 };
+
+/** Saved opening-hours rows (minutes from midnight), as stored in ShopOpeningHours. */
+export type SavedOpeningHoursRow = { active: boolean; startMinutes: number; endMinutes: number };
+
+/**
+ * Opening hours count as set up once at least one open day has a closing time after its opening time.
+ * Closed days are fine; a week with no open day is not set up.
+ */
+export function openingHoursComplete(rows: readonly SavedOpeningHoursRow[]): boolean {
+  return rows.some((row) => row.active && row.endMinutes > row.startMinutes);
+}
 
 export type SetupItem = {
   id: SetupCardItemId;
@@ -134,7 +144,6 @@ export type SetupItem = {
   href: string;
   done: boolean;
   optional: boolean;
-  fromLinks: boolean;
   /** Shop counts moved off the retired Overview "Your shop" tile. */
   detail?: string;
 };
@@ -166,7 +175,7 @@ function phase1Href(id: SetupItemId, addFirst = false): string {
   if (id === 'logo') return adminHubMaterialsHref('logo');
   if (id === 'photos') return adminHubMaterialsHref('photos');
   if (id === 'about') return adminHubMaterialsHref('text');
-  return adminHubAppHref(id);
+  return adminHubMaterialsHref('hours');
 }
 
 function shopCountDetail(id: SetupItemId, counts: SetupShopCounts): string | undefined {
@@ -189,12 +198,6 @@ const PHASE3_LABELS: Record<SetupPhase3ItemId, string> = {
   retail: 'Set up retail',
 };
 
-export type ReviewState = 'CONFIRMED' | 'CORRECTIONS_SENT' | 'APPLIED' | 'DISMISSED' | null;
-
-export function reviewStepDone(state: ReviewState | undefined): boolean {
-  return state === 'CONFIRMED' || state === 'CORRECTIONS_SENT' || state === 'APPLIED';
-}
-
 export function isSetupPhase1Stage(stage: HubStage): boolean {
   return stage === 'requested' || stage === 'designing' || stage === 'review';
 }
@@ -204,47 +207,56 @@ export function isSetupPhase2Stage(stage: HubStage): boolean {
 }
 
 function pickNext(items: SetupItem[]): SetupCardItemId | null {
-  const required = items.find((item) => !item.done && !item.optional && !item.fromLinks);
+  const required = items.find((item) => !item.done && !item.optional);
   if (required) return required.id;
-  const rest = items.find((item) => !item.done && !item.fromLinks);
+  const rest = items.find((item) => !item.done);
   return rest?.id ?? null;
 }
 
-function pack(phase: SetupCardPhase, title: string, status: (done: number, total: number) => string, items: SetupItem[]): SetupCardModel {
-  const done = items.filter((item) => item.done).length;
-  return { phase, title, status: status(done, items.length), items, done, total: items.length, nextId: pickNext(items) };
+/**
+ * `requiredOnly`: optional rows stay on the list but do not count towards progress, so the card completes once
+ * every required row is done (phase 1: About and Products). Launch keeps counting Payments (done = connected or skipped).
+ */
+function pack(
+  phase: SetupCardPhase,
+  title: string,
+  status: (done: number, total: number) => string,
+  items: SetupItem[],
+  options: { requiredOnly?: boolean } = {},
+): SetupCardModel {
+  const counted = options.requiredOnly ? items.filter((item) => !item.optional) : items;
+  const done = counted.filter((item) => item.done).length;
+  const total = counted.length;
+  return { phase, title, status: status(done, total), items, done, total, nextId: pickNext(items) };
 }
 
 export function setupPhase1Items(input: {
   stage: HubStage;
   assetKinds: readonly string[];
   aboutText: string | null | undefined;
-  reviewStates: { SERVICES?: ReviewState; TEAM?: ReviewState; HOURS?: ReviewState };
   shopCounts?: SetupShopCounts | null;
 }): SetupCardModel {
-  const beforeReview = input.stage === 'requested' || input.stage === 'designing';
   const has = (kind: string) => input.assetKinds.includes(kind);
-  const counts = input.shopCounts ?? { activeServices: 0, activeBarbers: 0, products: 0 };
+  const counts = input.shopCounts ?? { activeServices: 0, activeBarbers: 0, products: 0, openingHoursSaved: false };
   const items: SetupItem[] = (
     [
-      ['logo', has('LOGO'), false, false],
-      ['photos', has('SHOP_PHOTO'), false, false],
-      ['services', counts.activeServices > 0, false, false],
-      ['team', counts.activeBarbers > 0, false, false],
-      ['hours', reviewStepDone(input.reviewStates.HOURS), false, beforeReview],
-      ['about', Boolean(input.aboutText?.trim()), true, false],
-      ['products', counts.products > 0, true, false],
+      ['logo', has('LOGO'), false],
+      ['photos', has('SHOP_PHOTO'), false],
+      ['services', counts.activeServices > 0, false],
+      ['team', counts.activeBarbers > 0, false],
+      ['hours', counts.openingHoursSaved, false],
+      ['about', Boolean(input.aboutText?.trim()), true],
+      ['products', counts.products > 0, true],
     ] as const
-  ).map(([id, done, optional, fromLinks]) => ({
+  ).map(([id, done, optional]) => ({
     id,
     label: PHASE1_LABELS[id],
     href: phase1Href(id, !done && (id === 'services' || id === 'team' || id === 'products')),
     done,
     optional,
-    fromLinks,
     detail: shopCountDetail(id, counts),
   }));
-  return pack(1, SETUP_PHASE1_TITLE, setupPhase1Status, items);
+  return pack(1, SETUP_PHASE1_TITLE, setupPhase1Status, items, { requiredOnly: true });
 }
 
 export function setupPhase2Items(input: {
@@ -265,7 +277,6 @@ export function setupPhase2Items(input: {
     href: adminHubAppHref(id satisfies AdminHubAppId),
     done,
     optional,
-    fromLinks: false,
   }));
   return pack(2, SETUP_PHASE2_TITLE, setupPhase2Status, items);
 }
@@ -288,7 +299,6 @@ export function setupPhase3Items(input: {
     href,
     done,
     optional,
-    fromLinks: false,
   }));
   return pack(3, SETUP_PHASE3_TITLE, setupPhase3Status, items);
 }
@@ -297,7 +307,6 @@ export function setupCardForStage(input: {
   stage: HubStage;
   assetKinds: readonly string[];
   aboutText: string | null | undefined;
-  reviewStates: { SERVICES?: ReviewState; TEAM?: ReviewState; HOURS?: ReviewState };
   shopCounts?: SetupShopCounts | null;
   launch?: {
     businessDone: boolean;

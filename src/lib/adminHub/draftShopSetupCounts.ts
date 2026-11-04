@@ -1,13 +1,14 @@
 import { prisma } from '@/lib/db/client';
-import type { SetupShopCounts } from './setupCard';
+import { openingHoursComplete, type SetupShopCounts } from './setupCard';
 
 export const EMPTY_DRAFT_SHOP_COUNTS: SetupShopCounts = {
   activeServices: 0,
   activeBarbers: 0,
   products: 0,
+  openingHoursSaved: false,
 };
 
-/** One query per page load: active services, active team members, and products on the draft shop. */
+/** One query per page load: active services, active team members, products and saved opening hours on the draft shop. */
 export async function loadDraftShopSetupCounts(shopId: string | null | undefined): Promise<SetupShopCounts | null> {
   if (!shopId) return null;
   const shop = await prisma.shopSettings.findUnique({
@@ -20,6 +21,7 @@ export async function loadDraftShopSetupCounts(shopId: string | null | undefined
           products: true,
         },
       },
+      openingHours: { select: { active: true, startMinutes: true, endMinutes: true } },
     },
   });
   if (!shop) return null;
@@ -27,6 +29,7 @@ export async function loadDraftShopSetupCounts(shopId: string | null | undefined
     activeServices: shop._count.services,
     activeBarbers: shop._count.barbers,
     products: shop._count.products,
+    openingHoursSaved: openingHoursComplete(shop.openingHours),
   };
 }
 

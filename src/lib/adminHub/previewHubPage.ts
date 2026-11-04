@@ -132,7 +132,7 @@ export async function preparePreviewHubPage(input: {
 
   const view = await loadAdminHubView(ctx, location, now);
   const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
-  const liveState = buildAdminHubLiveState({ request: ctx.request, assets: view.assets });
+  const liveState = buildAdminHubLiveState({ request: ctx.request, assets: view.assets, setup: view.setup });
   const logoSrc = liveState.currentLogo?.src ?? null;
   const sessionShop = await adminSessionShopFor(context as unknown as APIContext);
   const canEditLaunch = Boolean(

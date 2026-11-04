@@ -42,6 +42,41 @@ export function parseAdminHubLocation(url: URL): {
   };
 }
 
+type HubLaunchProgress = Awaited<ReturnType<typeof loadHubLaunchProgress>>;
+
+function launchFlagsFrom(launchProgress: HubLaunchProgress | null) {
+  return launchProgress
+    ? {
+        businessDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'business')?.done),
+        domainDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'domain')?.done),
+        paymentsDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'payments')?.done),
+        approveDone: Boolean(launchProgress.launchApproved),
+      }
+    : null;
+}
+
+/**
+ * The sidebar setup card on its own, for GET /state (the sidebar refreshes after a save without a reload).
+ * Same inputs and rules as the page load below.
+ */
+export async function loadAdminHubSetupCard(
+  ctx: HubPageContext,
+  assetKinds: readonly string[],
+): Promise<SetupCardModel | null> {
+  const stage = ctx.state.stage;
+  const [shopCounts, launchProgress] = await Promise.all([
+    loadDraftShopSetupCounts(ctx.request.draftShopId),
+    isSetupPhase2Stage(stage) ? loadHubLaunchProgress(ctx.request.id) : Promise.resolve(null),
+  ]);
+  return setupCardForStage({
+    stage,
+    assetKinds,
+    aboutText: ctx.request.aboutText,
+    shopCounts,
+    launch: launchFlagsFrom(launchProgress),
+  });
+}
+
 export async function loadAdminHubView(
   ctx: HubPageContext,
   location: { section: AdminHubSection; app: AdminHubAppId | null },
@@ -60,7 +95,6 @@ export async function loadAdminHubView(
     location.app === 'logo' ||
     location.app === 'photos' ||
     location.app === 'materials' ||
-    location.app === 'hours' ||
     location.app === 'about' ||
     location.app === 'colours';
   const wantsLaunch = isSetupPhase2Stage(stage) || location.app === 'business' || location.app === 'domain' || location.app === 'payments' || location.app === 'approve';
@@ -87,24 +121,12 @@ export async function loadAdminHubView(
       brandLocked: Boolean(ctx.request.brandColoursSentAt),
       snapshotLogoAssetId: parseBrandSnapshotLogoAssetId(ctx.request.brandSubmittedSnapshot),
     }) ?? null;
-  const launchFlags = launchProgress
-    ? {
-        businessDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'business')?.done),
-        domainDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'domain')?.done),
-        paymentsDone: Boolean(launchProgress.yourSteps.find((step) => step.id === 'payments')?.done),
-        approveDone: Boolean(launchProgress.launchApproved),
-      }
-    : null;
+  const launchFlags = launchFlagsFrom(launchProgress);
 
   const setup: SetupCardModel | null = setupCardForStage({
     stage,
     assetKinds: assets.map((asset) => asset.kind),
     aboutText: ctx.request.aboutText,
-    reviewStates: {
-      SERVICES: reviews.SERVICES?.state ?? null,
-      TEAM: reviews.TEAM?.state ?? null,
-      HOURS: reviews.HOURS?.state ?? null,
-    },
     shopCounts,
     launch: launchFlags,
   });
