@@ -77,6 +77,10 @@ export const ADMIN_HUB_ADD = 'Add';
 export const ADMIN_HUB_ADD_MENU = 'Add to your website or shop';
 export const ADMIN_HUB_ADD_GROUP_WEBSITE = 'Your website';
 export const ADMIN_HUB_ADD_GROUP_SHOP = 'Your shop';
+export const ADMIN_HUB_ADD_BUSINESS = 'Business details';
+export const ADMIN_HUB_ADD_BUSINESS_HINT = 'Name, address, phone and email';
+export const ADMIN_HUB_ADD_HOURS = 'Opening hours';
+export const ADMIN_HUB_ADD_HOURS_HINT = 'When customers can visit and book';
 export const ADMIN_HUB_ADD_PHOTOS = 'Shop photos';
 export const ADMIN_HUB_ADD_PHOTOS_HINT = 'Inside, outside, chairs and cuts';
 export const ADMIN_HUB_ADD_LOGO = 'Logo';
@@ -247,3 +251,9 @@ export const ADMIN_HUB_CHANGES_SUB = 'Tell us what to change on your preview.';
 export const ADMIN_HUB_CHANGES_SELF_EDIT =
   'Prices, services, team and products: edit them yourself in the menu — they update your booking preview straight away.';
 export const ADMIN_HUB_BOOKING_EMPTY = "We're still adding services and barbers to this booking page.";
+
+/** Leaving an app window with unsaved edits (AppHost). */
+export const ADMIN_HUB_LEAVE_TITLE = 'Leave without saving?';
+export const ADMIN_HUB_LEAVE_BODY = "Your changes on this page haven't been saved yet.";
+export const ADMIN_HUB_LEAVE_KEEP = 'Keep editing';
+export const ADMIN_HUB_LEAVE_DISCARD = 'Discard changes';

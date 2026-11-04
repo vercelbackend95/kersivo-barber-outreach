@@ -2,7 +2,8 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNod
 import { Check } from '@/components/lucide-react';
 import { OpeningHoursEditor } from '@/components/admin/OpeningHoursEditor';
 import { HubYourShop } from '@/components/previewHub/HubYourShop';
-import { useAppChrome } from '@/components/adminHub/apps/AppChrome';
+import { useAppChrome, useAppLeaveGuard } from '@/components/adminHub/apps/AppChrome';
+import { highlightHubAddTarget } from '@/components/previewHub/hubAddTarget';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { hubCanAddShopItems, type AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
@@ -46,6 +47,7 @@ import {
 const EXTRA_MAX = 2000;
 const ABOUT_MAX = 600;
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
+const ignoreHoursChange = () => undefined;
 
 /** Each card loads on its own: one failing request never blanks the rest of the screen. */
 type SectionLoad<T> = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; saved: T };
@@ -120,7 +122,8 @@ function SectionCard(props: {
       data-testid={props.id}
     >
       <header className="ks-setup-card__head">
-        <h2 className="ks-setup-card__title" id={titleId}>
+        {/* Focus target for deep links (?item=business|hours). */}
+        <h2 className="ks-setup-card__title" id={titleId} tabIndex={-1}>
           {props.title}
         </h2>
         {props.done === undefined ? null : <StatusPill done={props.done} />}
@@ -308,8 +311,9 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
   const dirty = useMemo(
     () => ({
       business: canEdit && Boolean(savedBusiness && businessDirty(savedBusiness, business)),
-      // Defaults shown for a shop with no hours count as a change: they are not saved yet.
-      hours: canEdit && Boolean(savedHours && (!savedHours.saved || !sameOpeningWeek(savedHours.days, hours))),
+      // Against what is on screen as the baseline: the saved week, or the suggested defaults when nothing is
+      // saved yet. Untouched suggestions are not an edit (the hours card offers "Use these hours" instead).
+      hours: canEdit && Boolean(savedHours && !sameOpeningWeek(savedHours.days, hours)),
       text: ctx.canEditDetails && textDirty(savedText, text),
     }),
     [business, canEdit, ctx.canEditDetails, hours, savedBusiness, savedHours, savedText, text],
@@ -320,6 +324,39 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
   const status = setupSectionStatus(savedState);
   const completion =
     businessLoad.kind === 'loading' || hoursLoad.kind === 'loading' ? null : setupCompletion(savedState);
+
+  const suggestedHours = canEdit && Boolean(savedHours && !savedHours.saved);
+  const [confirmingHours, setConfirmingHours] = useState(false);
+
+  /** "Use these hours": saves the week on screen (hours only), whatever else is unsaved. */
+  const confirmHours = useCallback(async () => {
+    if (confirmingHours || saving || !canEdit) return;
+    if (!isOpeningWeekValid(hours)) {
+      setErrors((current) => ({ ...current, hours: 'Check the highlighted days.' }));
+      return;
+    }
+    if (!hours.some((day) => day.isOpen)) {
+      setErrors((current) => ({ ...current, hours: OPENING_HOURS_NONE_OPEN }));
+      return;
+    }
+    setConfirmingHours(true);
+    setErrors((current) => ({ ...current, hours: undefined }));
+    try {
+      if (!hasShop) {
+        await request(`${ADMIN_HUB_API_BASE}/draft-shop`, { method: 'POST' });
+        setHasShop(true);
+      }
+      await request(`${ADMIN_HUB_API_BASE}/opening-hours`, { method: 'PUT', body: JSON.stringify({ days: hours }) });
+      const fresh = await reloadHours();
+      if (fresh) setHours(fresh.days);
+      emitHubDataChanged('details-saved');
+      showHubToast(SETUP_COPY.hoursSaved);
+    } catch (error) {
+      setErrors((current) => ({ ...current, hours: error instanceof Error ? error.message : GENERIC_ERROR }));
+    } finally {
+      setConfirmingHours(false);
+    }
+  }, [canEdit, confirmingHours, hasShop, hours, reloadHours, saving]);
 
   const discard = useCallback(() => {
     if (savedBusiness) setBusiness(savedBusiness);
@@ -449,6 +486,17 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
   }, [anyDirty, saveState, saving]);
   useAppChrome({ headerAction: null, footer });
 
+  // Closing the app, switching app or going Back with unsaved edits asks first (AppHost's dialog).
+  useAppLeaveGuard(anyDirty);
+
+  // Deep links to the sections this screen owns: scroll once both have their final height.
+  const highlight = props.highlight;
+  const sectionsLoading = businessLoad.kind === 'loading' || hoursLoad.kind === 'loading';
+  useEffect(() => {
+    if (sectionsLoading || (highlight !== 'business' && highlight !== 'hours')) return undefined;
+    return highlightHubAddTarget(highlight === 'business' ? 'setup-business' : 'setup-hours') ?? undefined;
+  }, [highlight, sectionsLoading]);
+
   // Leaving the page with unsaved edits asks first (the browser's own prompt).
   useEffect(() => {
     if (!anyDirty) return undefined;
@@ -529,16 +577,22 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
       <SectionCard
         id="setup-hours"
         title={SETUP_COPY.sections.hours.title}
-        description={
-          savedHours && !savedHours.saved && canEdit
-            ? `${SETUP_COPY.sections.hours.description} ${SETUP_COPY.hoursDefaults}`
-            : SETUP_COPY.sections.hours.description
-        }
+        description={SETUP_COPY.sections.hours.description}
         done={hoursLoad.kind === 'ready' ? status.hours : undefined}
         error={errors.hours}
       >
         {hoursLoad.kind === 'ready' ? (
-          <OpeningHoursEditor value={hours} onChange={setHours} disabled={fieldsDisabled} label="Opening hours" />
+          <OpeningHoursEditor
+            value={hours}
+            // Read-only only when the stage locks editing; while a save is in flight edits are ignored, so the
+            // layout does not switch to the read-only view and back.
+            onChange={saving || confirmingHours ? ignoreHoursChange : setHours}
+            disabled={!canEdit}
+            label="Opening hours"
+            suggested={suggestedHours}
+            onConfirmSuggested={() => void confirmHours()}
+            confirming={confirmingHours}
+          />
         ) : (
           <SectionLoadNote kind={hoursLoad.kind} message={SETUP_COPY.loadFailed.hours} onRetry={retryHours} />
         )}
@@ -600,8 +654,9 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
           details={ctx.details}
           assets={ctx.assets}
           focus="materials"
-          // Scroll to the deep-linked card only once the sections above it have their final height.
-          highlight={businessLoad.kind === 'loading' || hoursLoad.kind === 'loading' ? null : props.highlight}
+          // Scroll to the deep-linked card only once the sections above it have their final height. Business
+          // details and opening hours are this screen's own sections (handled above).
+          highlight={sectionsLoading || highlight === 'business' || highlight === 'hours' ? null : highlight}
           chrome={false}
         />
       </div>

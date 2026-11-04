@@ -32,7 +32,7 @@ export const SETUP_COPY = {
     hours: 'We could not load your opening hours.',
   },
   retry: 'Try again',
-  hoursDefaults: "We've filled in common hours. Check them and save.",
+  hoursSaved: 'Opening hours saved.',
   sections: {
     business: { title: 'Business details', description: 'The details customers see on your website.' },
     hours: { title: 'Opening hours', description: 'When customers can visit and book.' },

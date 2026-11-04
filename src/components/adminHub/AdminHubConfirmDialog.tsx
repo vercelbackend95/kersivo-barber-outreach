@@ -24,12 +24,16 @@ export function AdminHubConfirmDialog(props: {
   onConfirm: () => void;
   onClose: () => void;
   testId?: string;
+  /** Which button gets focus when the dialog opens (default: the primary one). */
+  initialFocus?: 'primary' | 'secondary';
 }) {
   const titleId = useId();
   const bodyId = useId();
   const errorId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const primaryRef = useRef<HTMLButtonElement>(null);
+  const secondaryRef = useRef<HTMLButtonElement>(null);
+  const focusSecondary = props.initialFocus === 'secondary';
   const onCloseRef = useRef(props.onClose);
   onCloseRef.current = props.onClose;
   const busy = Boolean(props.busy);
@@ -39,7 +43,9 @@ export function AdminHubConfirmDialog(props: {
   useEffect(() => {
     if (!portalTarget) return;
     const previous = document.activeElement;
-    const frame = window.requestAnimationFrame(() => primaryRef.current?.focus());
+    const frame = window.requestAnimationFrame(() =>
+      (focusSecondary ? secondaryRef.current : primaryRef.current)?.focus(),
+    );
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -69,7 +75,7 @@ export function AdminHubConfirmDialog(props: {
       document.removeEventListener('keydown', onKey, true);
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
     };
-  }, [busy, portalTarget]);
+  }, [busy, focusSecondary, portalTarget]);
 
   if (!portalTarget) return null;
 
@@ -106,7 +112,7 @@ export function AdminHubConfirmDialog(props: {
           </p>
         ) : null}
         <div className="admin-hub-confirm__actions">
-          <button type="button" className="btn btn--outline" disabled={busy} onClick={props.onClose}>
+          <button ref={secondaryRef} type="button" className="btn btn--outline" disabled={busy} onClick={props.onClose}>
             {props.secondaryLabel}
           </button>
           <button

@@ -3,8 +3,12 @@
  * Client-safe. Stage gates match hub capabilities and H1 draft-shop access.
  */
 import {
+  ADMIN_HUB_ADD_BUSINESS,
+  ADMIN_HUB_ADD_BUSINESS_HINT,
   ADMIN_HUB_ADD_GROUP_SHOP,
   ADMIN_HUB_ADD_GROUP_WEBSITE,
+  ADMIN_HUB_ADD_HOURS,
+  ADMIN_HUB_ADD_HOURS_HINT,
   ADMIN_HUB_ADD_LOGO,
   ADMIN_HUB_ADD_LOGO_HINT,
   ADMIN_HUB_ADD_OTHER,
@@ -32,6 +36,8 @@ const HUB_ADD_SHOP_STAGES = new Set<HubStage>(['requested', 'designing', 'review
 export const ADMIN_HUB_LOCATION_EVENT = 'admin-hub:location';
 
 export const ADMIN_HUB_ADD_WEBSITE_ITEMS = [
+  'business',
+  'hours',
   'photos',
   'logo',
   'text',
@@ -103,6 +109,9 @@ const WEBSITE_ITEMS: Array<{
   hint: string;
   needs: 'upload' | 'details';
 }> = [
+  // What the Add to your website screen collects first (WebsiteSetupFlow scrolls to these itself).
+  { id: 'business', title: ADMIN_HUB_ADD_BUSINESS, hint: ADMIN_HUB_ADD_BUSINESS_HINT, needs: 'details' },
+  { id: 'hours', title: ADMIN_HUB_ADD_HOURS, hint: ADMIN_HUB_ADD_HOURS_HINT, needs: 'details' },
   { id: 'photos', title: ADMIN_HUB_ADD_PHOTOS, hint: ADMIN_HUB_ADD_PHOTOS_HINT, needs: 'upload' },
   { id: 'logo', title: ADMIN_HUB_ADD_LOGO, hint: ADMIN_HUB_ADD_LOGO_HINT, needs: 'upload' },
   { id: 'text', title: ADMIN_HUB_ADD_TEXT, hint: ADMIN_HUB_ADD_TEXT_HINT, needs: 'details' },

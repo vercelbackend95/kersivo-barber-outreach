@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Camera,
   ChevronDown,
+  Clock,
   ImagePlus,
   NotebookPen,
   Package,
@@ -10,6 +11,7 @@ import {
   Plus,
   Scissors,
   StickyNote,
+  Store,
   Users,
 } from '@/components/lucide-react';
 import {
@@ -34,6 +36,8 @@ const INLINE_SHEET_MQ = '(max-width: 640px)';
 const HEADER_SHEET_MQ = `(max-width: ${ADMIN_MOBILE_CHROME_MAX_PX}px)`;
 
 const ICONS: Record<AdminHubAddItemId, typeof Camera> = {
+  business: Store,
+  hours: Clock,
   photos: Camera,
   logo: ImagePlus,
   text: NotebookPen,

@@ -6,11 +6,16 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppHost } from './AppHost';
+import { useAppLeaveGuard } from './apps/AppChrome';
 import { __resetHubStoreForTests } from '@/lib/adminHub/hubStore';
 import { emitHubDataChanged, type AdminHubLiveState } from '@/lib/adminHub/liveState';
 import { showHubToast } from '@/lib/adminHub/hubToast';
 import type { AdminHubAppBodyProps } from './apps/types';
 import type { AdminHubAppContext } from './apps/types';
+import { navigateAppPath } from '@/lib/navigation/clientNavigate';
+
+// Astro's ClientRouter is not available under vitest.
+vi.mock('@/lib/navigation/clientNavigate', () => ({ navigateAppPath: vi.fn(async () => undefined) }));
 
 function stubMatchMedia(mobile = false) {
   Object.defineProperty(window, 'matchMedia', {
@@ -352,5 +357,123 @@ describe('AppHost', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Open logo' }));
     await waitFor(() => expect(seen.at(-1)).toBe('1:New text'));
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  describe('leave guard (unsaved edits)', () => {
+    function DirtyApp() {
+      const [dirty, setDirty] = useState(false);
+      useAppLeaveGuard(dirty);
+      return (
+        <button type="button" onClick={() => setDirty(true)}>
+          Make an edit
+        </button>
+      );
+    }
+    const loadDirty = async () => ({ default: DirtyApp });
+
+    function renderGuarded() {
+      return render(
+        <div className="admin-shell">
+          <a href="/admin?app=materials">Open materials</a>
+          <a href="/admin?app=logo">Open logo</a>
+          <AppHost initialApp={null} ctx={ctx} loadApp={loadDirty} />
+        </div>,
+      );
+    }
+
+    async function openDirty() {
+      renderGuarded();
+      fireEvent.click(screen.getByRole('link', { name: 'Open materials' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Make an edit' }));
+    }
+
+    it('closes straight away when nothing is unsaved', async () => {
+      renderGuarded();
+      fireEvent.click(screen.getByRole('link', { name: 'Open materials' }));
+      await screen.findByRole('button', { name: 'Make an edit' });
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(screen.queryByTestId('admin-hub-app')).toBeNull());
+      expect(screen.queryByTestId('admin-hub-leave-confirm')).toBeNull();
+    });
+
+    it('asks before closing; Keep editing (default focus, Esc) keeps the app and returns focus', async () => {
+      await openDirty();
+      const close = screen.getByRole('button', { name: 'Close' });
+      close.focus();
+      fireEvent.click(close);
+      const confirm = await screen.findByTestId('admin-hub-leave-confirm');
+      expect(confirm.getAttribute('role')).toBe('dialog');
+      expect(confirm.textContent).toContain('Leave without saving?');
+      expect(confirm.textContent).toContain("Your changes on this page haven't been saved yet.");
+      const keep = screen.getByRole('button', { name: 'Keep editing' });
+      expect(screen.getByRole('button', { name: 'Discard changes' })).toBeTruthy();
+      await waitFor(() => expect(document.activeElement).toBe(keep));
+      fireEvent.keyDown(document, { key: 'Escape' });
+      await waitFor(() => expect(screen.queryByTestId('admin-hub-leave-confirm')).toBeNull());
+      expect(screen.getByTestId('admin-hub-app')).toBeTruthy();
+      expect(document.activeElement).toBe(close);
+    });
+
+    it('Discard changes closes the app', async () => {
+      await openDirty();
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
+      fireEvent.popState(window);
+      await waitFor(() => expect(screen.queryByTestId('admin-hub-app')).toBeNull());
+    });
+
+    it('asks before switching app from the sidebar, then switches on Discard', async () => {
+      await openDirty();
+      fireEvent.click(screen.getByRole('link', { name: 'Open logo' }));
+      await screen.findByTestId('admin-hub-leave-confirm');
+      expect(screen.getByTestId('admin-hub-app').getAttribute('data-app')).toBe('materials');
+      expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+      await waitFor(() => expect(screen.getByTestId('admin-hub-app').getAttribute('data-app')).toBe('logo'));
+    });
+
+    it('asks on Back and puts the app URL back while asking', async () => {
+      await openDirty();
+      window.history.replaceState(null, '', '/admin');
+      fireEvent.popState(window);
+      await screen.findByTestId('admin-hub-leave-confirm');
+      expect(new URL(window.location.href).searchParams.get('app')).toBe('materials');
+      expect(screen.getByTestId('admin-hub-app')).toBeTruthy();
+    });
+
+    it('Escape on the app with unsaved edits asks instead of closing', async () => {
+      await openDirty();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(await screen.findByTestId('admin-hub-leave-confirm')).toBeTruthy();
+      expect(screen.getByTestId('admin-hub-app')).toBeTruthy();
+    });
+
+    it("stalls Astro's soft navigation from a link while unsaved, and continues it on Discard", async () => {
+      await openDirty();
+      vi.mocked(navigateAppPath).mockClear();
+      const prep = Object.assign(new Event('astro:before-preparation'), {
+        navigationType: 'push',
+        to: new URL('/admin/team', window.location.origin),
+        loader: async () => undefined,
+      });
+      document.dispatchEvent(prep);
+      const loading = prep.loader();
+      const settled = await Promise.race([loading.then(() => 'loaded'), new Promise((r) => setTimeout(() => r('stalled'), 30))]);
+      expect(settled).toBe('stalled');
+      fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
+      await waitFor(() => expect(navigateAppPath).toHaveBeenCalledWith(`${window.location.origin}/admin/team`));
+    });
+
+    it("leaves Astro's navigation alone when nothing is unsaved", async () => {
+      renderGuarded();
+      const prep = Object.assign(new Event('astro:before-preparation'), {
+        navigationType: 'push',
+        to: new URL('/admin/team', window.location.origin),
+        loader: async () => 'own',
+      });
+      document.dispatchEvent(prep);
+      expect(await prep.loader()).toBe('own');
+      expect(screen.queryByTestId('admin-hub-leave-confirm')).toBeNull();
+    });
   });
 });
