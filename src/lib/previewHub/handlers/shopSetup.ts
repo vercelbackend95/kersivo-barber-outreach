@@ -1,11 +1,15 @@
 /**
  * Hub "Add to your website" writes for the draft shop's canonical records
  * (docs/site-data-contract.md §6): opening hours → ShopOpeningHours, business details →
- * ShopPublicProfile. Same writers and the same shared schema as the paid dashboard, so the data is
- * already in place when the shop upgrades (the draft shop row becomes the live shop).
+ * ShopPublicProfile, barbershop name / town → ShopSettings. Same writers and the same shared schema as
+ * the paid dashboard, so the data is already in place when the shop upgrades (the draft shop row becomes
+ * the live shop).
  *
- * Services, team and products are not here: the hub calls the dashboard's own /api/admin/* handlers
- * (HUB_ADMIN_API_ALLOWLIST).
+ * Renaming never changes a URL: ShopSettings.bookingSlug is allocated once and never re-derived from the
+ * name (src/lib/booking/bookingSlug.ts), and hub/preview links use the request token, not the name.
+ *
+ * Services, team and products are not here: they have their own hub tabs, which call the dashboard's
+ * /api/admin/* handlers (HUB_ADMIN_API_ALLOWLIST).
  */
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
@@ -30,7 +34,13 @@ import { OPENING_HOURS_NONE_OPEN, openingRowsFromWeek, type OpeningDay } from '@
 
 export const HUB_SHOP_NOT_READY = 'Set up your shop first.';
 
-/** Business details the hub edits directly. Description and Instagram go through /details (legacy mirror). */
+export const HUB_SHOP_NAME_MAX = 120;
+export const HUB_TOWN_CITY_MAX = 120;
+
+/**
+ * Business details the hub edits directly: the profile fields plus the barbershop name and town, which
+ * live on the draft ShopSettings row. Description and Instagram go through /details (legacy mirror).
+ */
 export const hubProfilePatchSchema = businessProfilePatchSchema
   .pick({
     tagline: true,
@@ -42,7 +52,21 @@ export const hubProfilePatchSchema = businessProfilePatchSchema
     facebookUrl: true,
     tiktokUrl: true,
   })
+  .extend({
+    shopName: z
+      .string()
+      .trim()
+      .min(1, 'Enter your barbershop name.')
+      .max(HUB_SHOP_NAME_MAX, `Keep the barbershop name to ${HUB_SHOP_NAME_MAX} characters or fewer.`)
+      .optional(),
+    townCity: z
+      .union([z.string().trim().max(HUB_TOWN_CITY_MAX, `Keep the town or city to ${HUB_TOWN_CITY_MAX} characters or fewer.`), z.null()])
+      .optional()
+      .transform((v) => (v === undefined ? undefined : v === null ? null : v || null)),
+  })
   .strict();
+
+export type HubProfilePatch = z.infer<typeof hubProfilePatchSchema>;
 
 export const hubOpeningHoursBodySchema = z.object({ days: openingHoursWeekSchema }).strict();
 
@@ -58,6 +82,10 @@ export type HubProfilePublic = {
   facebookUrl: string | null;
   tiktokUrl: string | null;
 };
+
+function requestNames(ctx: HubPageContext): HubRequestNames {
+  return { shopName: ctx.request.shopName, townCity: ctx.request.townCity };
+}
 
 function editableShopId(ctx: HubPageContext): string | null {
   if (!ctx.request.draftShopId) return null;
@@ -94,14 +122,35 @@ export async function loadHubOpeningWeek(shopId: string): Promise<{ saved: boole
   return { saved: rows.some((row) => row.active), days };
 }
 
-export async function loadHubProfile(shopId: string): Promise<HubProfilePublic> {
+/** What the owner typed in the preview form: the prefill before the draft shop has its own name. */
+type HubRequestNames = { shopName?: string | null; townCity?: string | null };
+
+export function emptyHubProfile(fallback: HubRequestNames = {}): HubProfilePublic {
+  return {
+    shopName: fallback.shopName?.trim() ?? '',
+    townCity: fallback.townCity?.trim() || null,
+    tagline: null,
+    addressLine1: null,
+    addressLine2: null,
+    postcode: null,
+    phone: null,
+    email: null,
+    facebookUrl: null,
+    tiktokUrl: null,
+  };
+}
+
+export async function loadHubProfile(shopId: string, fallback: HubRequestNames = {}): Promise<HubProfilePublic> {
   const [shop, profile] = await Promise.all([
     prisma.shopSettings.findUnique({ where: { id: shopId }, select: { name: true, townCity: true } }),
     prisma.shopPublicProfile.findUnique({ where: { shopId } }),
   ]);
+  const shopName = shop?.name?.trim() ?? '';
   return {
-    shopName: shop?.name ?? '',
-    townCity: shop?.townCity ?? null,
+    // A draft shop with no name yet falls back to the owner's own preview request (both together, so the
+    // town always belongs to the name it came with).
+    shopName: shopName || fallback.shopName?.trim() || '',
+    townCity: shopName ? (shop?.townCity ?? null) : fallback.townCity?.trim() || shop?.townCity || null,
     tagline: profile?.tagline ?? null,
     addressLine1: profile?.addressLine1 ?? null,
     addressLine2: profile?.addressLine2 ?? null,
@@ -171,8 +220,10 @@ export function createHubProfileHandlers(sourceOf: HubSourceOf): { GET: APIRoute
     const resolved = await resolveHubApiContext({ request, source: sourceOf(params), mutation: false });
     if (!resolved.ok) return resolved.response;
     const shopId = resolved.ctx.request.draftShopId;
-    if (!shopId) return hubJson({ ok: true, ready: false, profile: null });
-    return hubJson({ ok: true, ready: true, profile: await loadHubProfile(shopId) });
+    const names = requestNames(resolved.ctx);
+    // No draft shop yet: the form still opens, prefilled from the preview request only.
+    if (!shopId) return hubJson({ ok: true, ready: false, profile: emptyHubProfile(names) });
+    return hubJson({ ok: true, ready: true, profile: await loadHubProfile(shopId, names) });
   };
 
   const PATCH: APIRoute = async ({ request, params }) => {
@@ -193,8 +244,29 @@ export function createHubProfileHandlers(sourceOf: HubSourceOf): { GET: APIRoute
       return hubJson({ ok: false, error: parsed.error.issues[0]?.message || 'Invalid request body.' }, 400);
     }
 
+    const { shopName, townCity, ...profileFields } = parsed.data;
     try {
-      await writeShopPublicProfile(prisma, shopId, parsed.data);
+      await prisma.$transaction(async (tx) => {
+        if (shopName !== undefined || townCity !== undefined) {
+          await tx.shopSettings.update({
+            where: { id: shopId },
+            data: {
+              ...(shopName !== undefined ? { name: shopName } : {}),
+              ...(townCity !== undefined ? { townCity } : {}),
+            },
+          });
+          // Keep the preview request (hub header, ops queue, emails) on the name the owner now uses.
+          // PreviewRequest.townCity is required, so a cleared town leaves the request's own value.
+          const requestData = {
+            ...(shopName !== undefined ? { shopName } : {}),
+            ...(townCity ? { townCity } : {}),
+          };
+          if (Object.keys(requestData).length) {
+            await tx.previewRequest.update({ where: { id: resolved.ctx.request.id }, data: requestData });
+          }
+        }
+        await writeShopPublicProfile(tx, shopId, profileFields);
+      });
       if (!resolved.ctx.isOperator) {
         await recordDebouncedPreviewRequestEvent({
           previewRequestId: resolved.ctx.request.id,
@@ -202,7 +274,7 @@ export function createHubProfileHandlers(sourceOf: HubSourceOf): { GET: APIRoute
           meta: { fields: Object.keys(parsed.data) },
         });
       }
-      return hubJson({ ok: true, ready: true, profile: await loadHubProfile(shopId) });
+      return hubJson({ ok: true, ready: true, profile: await loadHubProfile(shopId, requestNames(resolved.ctx)) });
     } catch (error) {
       console.error('[admin-hub] business details save failed', {
         token: hubLogRef(source),

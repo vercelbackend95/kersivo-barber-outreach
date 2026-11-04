@@ -1,115 +1,112 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BUSINESS_FIELD_SPEC,
+  BUSINESS_FIELDS,
   businessComplete,
+  businessDirty,
+  businessDraftFromApi,
+  businessFieldErrors,
   businessPatch,
-  BUSINESS_PROFILE_FIELDS,
-  changedRows,
-  durationLabel,
   emptyBusinessDraft,
-  listsEqual,
-  moveRow,
-  newRows,
-  orderChanged,
-  productRowError,
-  productRowFromApi,
-  SERVICE_FIELDS,
-  serviceRowError,
-  serviceRowFromApi,
   SETUP_COPY,
+  SETUP_SECTION_IDS,
   setupCompletion,
-  teamRowError,
-  teamRowFromApi,
-  type ServiceRow,
+  textDirty,
+  textDraftFromDetails,
+  textPatch,
 } from './websiteSetup';
 
-const service = (over: Partial<ServiceRow> = {}): ServiceRow => ({
-  key: 's1',
-  id: 's1',
-  name: 'Skin fade',
-  price: '22',
-  priceFrom: false,
-  durationMinutes: 45,
-  category: 'featured',
-  isActive: true,
-  ...over,
-});
+const complete = {
+  ...emptyBusinessDraft(),
+  shopName: 'Fade Room',
+  postcode: 'M1 1AE',
+  phone: '0161 496 0000',
+};
 
 describe('website setup view-model', () => {
-  it('uses British copy with an honest save hint (no instant-publish claim)', () => {
+  it('has two sections and British copy with an honest save hint', () => {
+    expect(SETUP_SECTION_IDS).toEqual(['business', 'hours']);
     expect(SETUP_COPY.hint).toBe('Saved changes show on your website preview the next time it loads.');
-    expect(SETUP_COPY.progress(2, 5)).toBe('2 of 5 sections complete');
-    expect(Object.values(SETUP_COPY.sections).map((s) => s.title).slice(0, 5)).toEqual([
+    expect(SETUP_COPY.progress(1, 2)).toBe('1 of 2 sections complete');
+    expect(SETUP_COPY.sections.business.description).toBe('The details customers see on your website.');
+    expect(Object.values(SETUP_COPY.sections).map((s) => s.title)).toEqual([
       'Business details',
       'Opening hours',
-      'Services',
-      'Team',
-      'Products',
+      'Website text',
+      'Photos, logo and files',
     ]);
   });
 
+  it('lists the business fields in form order with the agreed labels and limits', () => {
+    expect(BUSINESS_FIELDS.map((f) => BUSINESS_FIELD_SPEC[f].label)).toEqual([
+      'Barbershop name',
+      'Town or city (optional)',
+      'Address line 1',
+      'Address line 2 (optional)',
+      'Postcode',
+      'Phone',
+      'Email',
+    ]);
+    expect(BUSINESS_FIELD_SPEC.shopName).toMatchObject({ maxLength: 120, required: true });
+    expect(BUSINESS_FIELD_SPEC.addressLine1.autoComplete).toBe('address-line1');
+    expect(BUSINESS_FIELD_SPEC.postcode).toMatchObject({ maxLength: 16, autoComplete: 'postal-code' });
+    expect(BUSINESS_FIELD_SPEC.phone).toMatchObject({ type: 'tel', maxLength: 40 });
+    expect(BUSINESS_FIELD_SPEC.email).toMatchObject({ type: 'email', maxLength: 320 });
+  });
+
+  it('completes business details with a name, an address line or postcode, and a phone or email', () => {
+    expect(businessComplete(complete)).toBe(true);
+    expect(businessComplete({ ...complete, shopName: '  ' })).toBe(false);
+    expect(businessComplete({ ...complete, postcode: '' })).toBe(false);
+    expect(businessComplete({ ...complete, postcode: '', addressLine1: '1 High St' })).toBe(true);
+    expect(businessComplete({ ...complete, phone: '' })).toBe(false);
+    expect(businessComplete({ ...complete, phone: '', email: 'hello@fade.co.uk' })).toBe(true);
+    // Town and address line 2 are optional and never required.
+    expect(businessComplete({ ...complete, townCity: '', addressLine2: '' })).toBe(true);
+  });
+
   it('counts completion from saved data only', () => {
-    const empty = { business: emptyBusinessDraft(), hoursSaved: false, services: [], team: [], products: [] };
-    expect(setupCompletion(empty)).toEqual({ done: 0, total: 5, label: '0 of 5 sections complete' });
-    const some = {
-      business: { ...emptyBusinessDraft(), postcode: 'M1 1AE', phone: '0161 496 0000' },
-      hoursSaved: true,
-      services: [service(), { ...service(), key: 'new', id: null }],
-      team: [{ key: 'b', id: 'b', isActive: false }],
-      products: [{ key: 'new', id: null, isActive: true }],
-    };
-    // Inactive team members and unsaved products do not count.
-    expect(setupCompletion(some).done).toBe(3);
-  });
-
-  it('needs an address and a way to get in touch for business details', () => {
-    expect(businessComplete({ ...emptyBusinessDraft(), addressLine1: '1 High St' })).toBe(false);
-    expect(businessComplete({ ...emptyBusinessDraft(), addressLine1: '1 High St', email: 'a@b.co.uk' })).toBe(true);
-  });
-
-  it('sends only changed business fields, with null for cleared ones', () => {
-    const saved = { ...emptyBusinessDraft(), phone: '0161', postcode: 'M1 1AE' };
-    const draft = { ...saved, phone: '  ', tagline: 'Sharp cuts', postcode: 'M1 1AE ' };
-    expect(businessPatch(saved, draft, BUSINESS_PROFILE_FIELDS)).toEqual({ phone: null, tagline: 'Sharp cuts' });
-  });
-
-  it('maps API rows with prices in pence to pound inputs and back', () => {
-    expect(serviceRowFromApi({ id: 's', name: 'Cut', pricePence: 1250, durationMinutes: 30, category: null, isActive: true })).toMatchObject({
-      price: '12.50',
-      category: '',
-      priceFrom: false,
+    expect(setupCompletion({ business: null, hoursSaved: false })).toEqual({
+      done: 0,
+      total: 2,
+      label: '0 of 2 sections complete',
     });
-    expect(teamRowFromApi({ id: 'b', name: 'Jo', active: false })).toMatchObject({ title: '', showOnWebsite: true, isActive: false });
-    const product = productRowFromApi({ id: 'p', name: 'Clay', pricePence: 1500, active: true, inStock: false, description: 'Matte' });
-    expect(product).toMatchObject({ price: '15', inStock: false, isActive: true, rest: { description: 'Matte' } });
+    expect(setupCompletion({ business: complete, hoursSaved: false }).label).toBe('1 of 2 sections complete');
+    expect(setupCompletion({ business: complete, hoursSaved: true }).done).toBe(2);
   });
 
-  it('validates rows before anything is sent', () => {
-    expect(serviceRowError(service())).toBeNull();
-    expect(serviceRowError(service({ name: ' ' }))).toBe('Enter a service name.');
-    expect(serviceRowError(service({ price: '12.345' }))).toMatch(/price in pounds/);
-    // Older saved services may have no category; new ones must choose one.
-    expect(serviceRowError(service({ category: '' }))).toBeNull();
-    expect(serviceRowError(service({ id: null, category: '' }))).toBe('Choose a category.');
-    expect(teamRowError({ key: 'b', id: null, isActive: true, name: 'Jo', title: 'x'.repeat(61), showOnWebsite: true })).toMatch(/60 characters/);
-    expect(productRowError({ key: 'p', id: null, isActive: true, name: 'Clay', price: '0', inStock: true, rest: {} })).toMatch(/price/);
+  it('maps the profile API to form values', () => {
+    expect(businessDraftFromApi({ shopName: 'Fade Room', townCity: null, phone: '0161' })).toEqual({
+      ...emptyBusinessDraft(),
+      shopName: 'Fade Room',
+      phone: '0161',
+    });
+    expect(businessDraftFromApi(null)).toEqual(emptyBusinessDraft());
   });
 
-  it('tracks changed, new and reordered rows', () => {
-    const saved = [service(), service({ key: 's2', id: 's2', name: 'Beard trim' })];
-    expect(listsEqual(saved, saved, SERVICE_FIELDS)).toBe(true);
-    const edited = [service({ price: '24' }), saved[1]!];
-    expect(changedRows(saved, edited, SERVICE_FIELDS).map((r) => r.id)).toEqual(['s1']);
-    const added = [...saved, service({ key: 'tmp', id: null, name: 'Kids cut' })];
-    expect(newRows(added).map((r) => r.name)).toEqual(['Kids cut']);
-    const moved = moveRow(saved, 0, 1);
-    expect(moved.map((r) => r.id)).toEqual(['s2', 's1']);
-    expect(orderChanged(saved, moved)).toBe(true);
-    expect(moveRow(saved, 0, -1)).toEqual(saved);
+  it('sends only changed fields, null for cleared ones, and never an empty name', () => {
+    const saved = { ...complete, townCity: 'Leeds' };
+    const draft = { ...saved, phone: '  ', townCity: '', addressLine1: '2 Example Road', postcode: 'M1 1AE ' };
+    expect(businessPatch(saved, draft)).toEqual({ phone: null, townCity: null, addressLine1: '2 Example Road' });
+    expect(businessPatch(saved, { ...saved, shopName: ' Fade Room North ' })).toEqual({ shopName: 'Fade Room North' });
+    expect(businessPatch(saved, { ...saved, shopName: '' })).toEqual({});
+    expect(businessDirty(saved, { ...saved, postcode: 'M1 1AE ' })).toBe(false);
+    expect(businessDirty(saved, { ...saved, email: 'a@b.co.uk' })).toBe(true);
   });
 
-  it('labels durations in hours and minutes', () => {
-    expect(durationLabel(45)).toBe('45 min');
-    expect(durationLabel(60)).toBe('1 hr');
-    expect(durationLabel(75)).toBe('1 hr 15 min');
+  it('maps and diffs Website text (about, Instagram, anything else)', () => {
+    const saved = textDraftFromDetails({ aboutText: 'Family-run since 2009.', instagramUrl: null, websiteExtraText: 'Walk-ins' });
+    expect(saved).toEqual({ aboutText: 'Family-run since 2009.', instagramUrl: '', websiteExtraText: 'Walk-ins' });
+    expect(textDirty(saved, { ...saved, aboutText: 'Family-run since 2009. ' })).toBe(false);
+    const draft = { ...saved, instagramUrl: '@faderoom', websiteExtraText: ' ' };
+    expect(textDirty(saved, draft)).toBe(true);
+    expect(textPatch(saved, draft)).toEqual({ instagramUrl: '@faderoom', websiteExtraText: null });
+  });
+
+  it('flags a missing name and a malformed email before sending', () => {
+    expect(businessFieldErrors(complete)).toEqual({});
+    expect(businessFieldErrors({ ...complete, shopName: ' ' })).toEqual({ shopName: 'Enter your barbershop name.' });
+    expect(businessFieldErrors({ ...complete, email: 'not-an-email' }).email).toMatch(/email address/);
+    expect(businessFieldErrors({ ...complete, email: 'hello@fade.co.uk' })).toEqual({});
   });
 });

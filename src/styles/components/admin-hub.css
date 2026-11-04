@@ -3782,7 +3782,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   color: var(--muted);
 }
 .ks-setup-card__error,
-.ks-row__error {
+.ks-setup-field__error {
   margin: 0;
   font-size: 13px;
   color: var(--danger);
@@ -3830,8 +3830,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   .ks-setup-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .ks-setup-grid > .ks-setup-field--wide,
-  .ks-setup-grid > .ks-check {
+  .ks-setup-grid > .ks-setup-field--wide {
     grid-column: 1 / -1;
   }
 }
@@ -3862,149 +3861,6 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   white-space: nowrap;
   border: 0;
 }
-.ks-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.ks-check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-}
-.ks-check input:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-
-/* Compact lists: services, team, products */
-.ks-rows-wrap {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-.ks-rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-.ks-row {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  padding: 8px 8px 8px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
-  transition: border-color 160ms ease;
-}
-.ks-row.is-open {
-  border-color: rgba(255, 255, 255, 0.18);
-  padding-bottom: 16px;
-}
-.ks-row.is-off .ks-row__name {
-  color: var(--muted);
-}
-.ks-row__line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.ks-row__main {
-  display: grid;
-  gap: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.ks-row__name {
-  font-size: 14.5px;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-.ks-row__meta {
-  font-size: 12.5px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-.ks-row__tools {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.ks-icon-btn {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
-}
-.ks-icon-btn:hover:not(:disabled) {
-  color: var(--fg);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-.ks-icon-btn:focus-visible,
-.ks-row__edit:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-.ks-icon-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-.ks-row__edit {
-  min-height: 44px;
-}
-.ks-row__form {
-  display: grid;
-  gap: 8px;
-  padding: 8px 8px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  min-width: 0;
-}
-.ks-row__form-foot {
-  display: flex;
-  justify-content: flex-start;
-}
-.ks-rows-empty {
-  margin: 0;
-  max-width: none;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  font-size: 13.5px;
-  color: var(--muted);
-  text-align: center;
-}
-.ks-rows-add {
-  justify-self: start;
-  gap: 8px;
-  min-height: 44px;
-}
-@media (max-width: 339px) {
-  .ks-row__line {
-    flex-wrap: wrap;
-  }
-  .ks-row__tools {
-    width: 100%;
-    justify-content: flex-end;
-  }
-}
-
 /* Save bar: lives in the app footer (outside the scroll area, so nothing is covered). */
 .ks-savebar {
   display: flex;
@@ -4043,9 +3899,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 }
 @media (prefers-reduced-motion: reduce) {
   .ks-setup__meter span,
-  .ks-setup-card,
-  .ks-row,
-  .ks-icon-btn {
+  .ks-setup-card {
     transition: none;
   }
   .ks-savebar {
