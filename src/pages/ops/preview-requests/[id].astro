@@ -9,22 +9,14 @@ import {
   OpsAccessUnconfigured,
 } from '@/components/ops/recommendations/OpsPageGates';
 import { OPS_PREVIEW_REQUESTS_PATH, isAdminHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
-import { parseBrandPalette } from '@/lib/adminHub/brandColours';
-import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColours';
+import OpsBuildBrief from '@/components/ops/previewRequests/OpsBuildBrief.astro';
 import { ownerFacingStageLabel, resolveHubState } from '@/lib/freePreview/hubStage';
 import { previewPageUrl } from '@/lib/freePreview/emails';
-import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
-import {
-  FREE_PREVIEW_BARBER_COUNTS,
-  FREE_PREVIEW_DOMAIN_OPTIONS,
-  labelFor,
-} from '@/lib/freePreview/intake';
 import {
   PREVIEW_STATUS_LABELS,
   getPreviewRequestDetail,
   isOverDailyCap,
   markPreviewRequestOpsSeen,
-  previewRequestLinks,
 } from '@/lib/freePreview/opsQueries';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
 import { HubMessages } from '@/components/previewHub/HubMessages';
@@ -35,6 +27,7 @@ import { loadHubChanges } from '@/lib/freePreview/hubChanges';
 import { loadHubReviewShopData, loadLatestHubReviews, reviewDiff } from '@/lib/freePreview/hubReviews';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { prisma } from '@/lib/db/client';
+import { buildPackFiles, loadBuildPack } from '@/lib/ops/buildPack';
 import {
   HUB_OPS_ABOUT,
   HUB_OPS_INSTAGRAM,
@@ -101,7 +94,6 @@ const websiteTextUpdatedAt = request
   : null;
 
 const hubEnabled = isPreviewHubEnabled() || isAdminHubEnabled();
-const adminHubEnabled = isAdminHubEnabled();
 const hubState = request
   ? resolveHubState({
       request,
@@ -117,6 +109,9 @@ const activeTab =
     ? tabParam
     : 'overview';
 const unreadOpsMessages = request ? unreadOwnerMessageCount(request) : 0;
+const showBrief = !hubEnabled || activeTab === 'overview';
+const showFiles = hubEnabled && activeTab === 'files';
+const buildPack = view === 'dashboard' && request && showBrief ? await loadBuildPack(request.id) : null;
 const hubMessages =
   view === 'dashboard' && request && hubEnabled && activeTab === 'messages'
     ? await loadHubMessages(request.id)
@@ -159,6 +154,7 @@ if (view === 'dashboard' && request && hubEnabled && activeTab === 'messages') {
   }
 }
 
+/** Lifecycle and admin rows: collapsed under the Build brief. Build data lives in OpsBuildBrief. */
 const fields: Array<[string, string]> = request
   ? [
       ['Status', PREVIEW_STATUS_LABELS[request.status]],
@@ -168,12 +164,6 @@ const fields: Array<[string, string]> = request
         : []),
       ['First name', request.firstName ?? '—'],
       ['Email', request.email],
-      ['Shop', request.shopName],
-      ['Town / city', request.townCity],
-      ['Barbers', labelFor(FREE_PREVIEW_BARBER_COUNTS, request.barberCount)],
-      ['Booking system', currentBookingSystemLabel(request.currentBookingSystem)],
-      ['Own domain', labelFor(FREE_PREVIEW_DOMAIN_OPTIONS, request.hasOwnDomain)],
-      ['Notes', request.notes ?? '—'],
       ['Authorisation consent', formatDate(request.authorisationConsentAt)],
       ['Authorisation statement', request.authorisationStatementVersion ?? 'Checkbox (earlier form)'],
       ['Marketing opt-in', request.marketingOptInAt ? formatDate(request.marketingOptInAt) : 'No'],
@@ -329,130 +319,131 @@ const fields: Array<[string, string]> = request
                 </section>
               ) : null
             }
-            <section class="ops-pr-detail__fields" aria-label="Request details" hidden={hubEnabled && (activeTab === 'messages' || activeTab === 'content' || activeTab === 'changes')}>
-              <h2 class="ops-pr-actions__title">Links</h2>
-              <ul class="ops-pr__links ops-pr__links--stacked">
-                {previewRequestLinks(request).map((link) => (
-                  <li>
-                    {link.label}:{' '}
-                    {link.url ? (
-                      <a href={link.url} target="_blank" rel="noopener noreferrer nofollow">
-                        {link.url}
-                      </a>
-                    ) : (
-                      link.value
-                    )}
-                    {link.url && link.value !== link.url ? ` (${link.value})` : ''}
-                  </li>
-                ))}
-              </ul>
-              <dl class="ops-pr-detail__list">
-                {fields.map(([label, value]) => (
-                  <div class="ops-pr-detail__item">
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              {
-                adminHubEnabled && (!hubEnabled || activeTab === 'overview') ? (
-                  <OpsBrandColours
-                    client:load
-                    primary={request.brandPrimaryColour}
-                    secondary={request.brandSecondaryColour}
-                    tone={request.brandBackgroundTone}
-                    source={request.brandColoursSource}
-                    sentAt={request.brandColoursSentAt ? request.brandColoursSentAt.toISOString() : null}
-                    palette={parseBrandPalette(request.brandPaletteExtracted)}
-                  />
-                ) : null
-              }
-
-              {
-                hubEnabled && activeTab !== 'overview' ? (
-                  <section class="ops-pr-files" aria-label={HUB_OPS_FILES_TITLE} hidden={activeTab !== 'files'}>
-                    <h2 class="ops-pr-actions__title">{HUB_OPS_FILES_TITLE}</h2>
+            {
+              showBrief ? (
+                <section class="ops-pr-detail__main" aria-label="Build brief">
+                  {isOverDailyCap(request) ? (
+                    <p class="ops-bb__warning">Over the daily cap: owner told it may take up to 3 working days.</p>
+                  ) : null}
+                  {buildPack ? (
+                    <OpsBuildBrief pack={buildPack} requestId={request.id} />
+                  ) : (
+                    <p class="ops-pr__empty">
+                      Personal data deleted on {formatDate(request.anonymisedAt)}: there is no build brief for this request.
+                    </p>
+                  )}
+                  <details class="ops-bb__details">
+                    <summary>Request admin</summary>
                     <dl class="ops-pr-detail__list">
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_BRAND_COLOURS}</dt>
-                        <dd>
-                          {request.brandPrimaryColour || request.brandSecondaryColour
-                            ? `${request.brandPrimaryColour ?? '—'} / ${request.brandSecondaryColour ?? '—'}`
-                            : '—'}
-                        </dd>
-                      </div>
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_STYLE_NOTES}</dt>
-                        <dd>{request.styleNotes ?? '—'}</dd>
-                      </div>
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_ABOUT}</dt>
-                        <dd>{request.aboutText ?? '—'}</dd>
-                      </div>
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_INSTAGRAM}</dt>
-                        <dd>{request.instagramUrl ?? '—'}</dd>
-                      </div>
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_WEBSITE_EXTRA}</dt>
-                        <dd>{request.websiteExtraText ?? '—'}</dd>
-                      </div>
-                      <div class="ops-pr-detail__item">
-                        <dt>{HUB_OPS_TEXT_UPDATED}</dt>
-                        <dd>{formatDate(websiteTextUpdatedAt)}</dd>
-                      </div>
+                      {fields.map(([label, value]) => (
+                        <div class="ops-pr-detail__item">
+                          <dt>{label}</dt>
+                          <dd>{value}</dd>
+                        </div>
+                      ))}
                     </dl>
-                    {request.hubAssets.length === 0 ? (
-                      <p class="ops-pr__empty">{HUB_OPS_FILES_EMPTY}</p>
-                    ) : (
-                      <ul class="ops-pr-files__grid">
-                        {request.hubAssets.map((asset) => (
-                          <li class="ops-pr-files__item">
-                            <div class="ops-pr-files__thumb">
-                              {asset.thumbPath || asset.contentType.startsWith('image/') ? (
-                                <img
-                                  src={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=thumb`}
-                                  alt=""
-                                />
-                              ) : (
-                                <span>{asset.kind}</span>
-                              )}
-                            </div>
-                            <p class="ops-pr-files__name">{asset.originalFileName}</p>
-                            <p class="ops-pr-files__meta">
-                              {asset.kind} · {formatBytes(asset.sizeBytes)} · {formatDate(asset.createdAt)} ·{' '}
-                              {asset.uploadedBy === 'OWNER' ? HUB_OPS_UPLOADED_BY_OWNER : HUB_OPS_UPLOADED_BY_KERSIVO}
-                            </p>
-                            <a
-                              class="btn btn--ghost btn--sm"
-                              href={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=full`}
-                            >
-                              {HUB_OPS_DOWNLOAD}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-                ) : null
-              }
-
-              <h2 class="ops-pr-actions__title">History</h2>
-              <ol class="ops-pr-detail__events">
-                {request.events.map((event) => (
-                  <li>
-                    <span class="ops-pr-detail__event-time">{formatDate(event.createdAt)}</span>{' '}
-                    {event.action}
-                    {event.fromStatus || event.toStatus
-                      ? ` (${event.fromStatus ?? '—'} → ${event.toStatus ?? '—'})`
-                      : ''}
-                    {event.actorEmail ? ` · ${event.actorEmail}` : ''}
-                  </li>
-                ))}
-              </ol>
-            </section>
+                  </details>
+                  <details class="ops-bb__details">
+                    <summary>History ({request.events.length})</summary>
+                    <ol class="ops-pr-detail__events">
+                      {request.events.map((event) => (
+                        <li>
+                          <span class="ops-pr-detail__event-time">{formatDate(event.createdAt)}</span>{' '}
+                          {event.action}
+                          {event.fromStatus || event.toStatus
+                            ? ` (${event.fromStatus ?? '—'} → ${event.toStatus ?? '—'})`
+                            : ''}
+                          {event.actorEmail ? ` · ${event.actorEmail}` : ''}
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                </section>
+              ) : null
+            }
+            {
+              showFiles ? (
+                <section class="ops-pr-detail__main ops-pr-files" aria-label={HUB_OPS_FILES_TITLE}>
+                  <h2 class="ops-pr-actions__title">{HUB_OPS_FILES_TITLE}</h2>
+                  <dl class="ops-pr-detail__list">
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_BRAND_COLOURS}</dt>
+                      <dd>
+                        {request.brandPrimaryColour || request.brandSecondaryColour
+                          ? `${request.brandPrimaryColour ?? '—'} / ${request.brandSecondaryColour ?? '—'}`
+                          : '—'}
+                      </dd>
+                    </div>
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_STYLE_NOTES}</dt>
+                      <dd>{request.styleNotes ?? '—'}</dd>
+                    </div>
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_ABOUT}</dt>
+                      <dd>{request.aboutText ?? '—'}</dd>
+                    </div>
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_INSTAGRAM}</dt>
+                      <dd>{request.instagramUrl ?? '—'}</dd>
+                    </div>
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_WEBSITE_EXTRA}</dt>
+                      <dd>{request.websiteExtraText ?? '—'}</dd>
+                    </div>
+                    <div class="ops-pr-detail__item">
+                      <dt>{HUB_OPS_TEXT_UPDATED}</dt>
+                      <dd>{formatDate(websiteTextUpdatedAt)}</dd>
+                    </div>
+                  </dl>
+                  {request.hubAssets.length === 0 ? (
+                    <p class="ops-pr__empty">{HUB_OPS_FILES_EMPTY}</p>
+                  ) : (
+                    <ul class="ops-pr-files__grid">
+                      {request.hubAssets.map((asset) => (
+                        <li class="ops-pr-files__item">
+                          <div class="ops-pr-files__thumb">
+                            {asset.thumbPath || asset.contentType.startsWith('image/') ? (
+                              <img
+                                src={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=thumb`}
+                                alt=""
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span>{asset.kind}</span>
+                            )}
+                          </div>
+                          <p class="ops-pr-files__name">{asset.originalFileName}</p>
+                          <p class="ops-pr-files__meta">
+                            {asset.kind} · {formatBytes(asset.sizeBytes)} · {formatDate(asset.createdAt)} ·{' '}
+                            {asset.uploadedBy === 'OWNER' ? HUB_OPS_UPLOADED_BY_OWNER : HUB_OPS_UPLOADED_BY_KERSIVO}
+                          </p>
+                          <a
+                            class="btn btn--ghost btn--sm"
+                            href={`/api/ops/preview-requests/${request.id}/assets/${asset.id}?size=full`}
+                          >
+                            {HUB_OPS_DOWNLOAD}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null
+            }
 
             <aside class="ops-pr-detail__actions">
+              <section class="ops-pr-actions ops-bb__rail" aria-labelledby="ops-bb-rail-title">
+                <h2 id="ops-bb-rail-title" class="ops-pr-actions__title">Build pack</h2>
+                <a class="btn btn--primary btn--sm" href={`/api/ops/preview-requests/${request.id}/build-pack`} download>
+                  Download build pack (.zip)
+                </a>
+                {buildPack ? (
+                  <p class="ops-pr-actions__hint">
+                    {buildPackFiles(buildPack).length} files · about{' '}
+                    {formatBytes(buildPackFiles(buildPack).reduce((sum, file) => sum + file.sizeBytes, 0))}
+                  </p>
+                ) : null}
+              </section>
               <PreviewRequestActions
                 client:load
                 requestId={request.id}

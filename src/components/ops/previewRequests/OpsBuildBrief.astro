@@ -1,0 +1,528 @@
+---
+/**
+ * Overview › Build brief on /ops/preview-requests/[id]: everything the owner supplied, from loadBuildPack.
+ * Owner text is rendered as text, never injected as HTML; line breaks are kept with CSS.
+ */
+import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColours';
+import type { BuildPack, BuildPackAsset } from '@/lib/ops/buildPack';
+import { buildPackFiles, buildPackShopName, buildPackTownCity } from '@/lib/ops/buildPack';
+import { formatBytes } from '@/lib/freePreview/hubAssets';
+
+type Props = { pack: BuildPack; requestId: string };
+const { pack, requestId } = Astro.props;
+
+const assetUrl = (asset: Pick<BuildPackAsset, 'id'>, size: 'thumb' | 'full') =>
+  `/api/ops/preview-requests/${requestId}/assets/${asset.id}?size=${size}`;
+
+function money(pence: number, from = false): string {
+  const value = `£${(pence / 100).toFixed(2).replace(/\.00$/, '')}`;
+  return from ? `From ${value}` : value;
+}
+
+function minutes(value: number): string {
+  if (value < 60) return `${value} min`;
+  const h = Math.floor(value / 60);
+  const m = value % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return '—';
+  return new Date(value).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' });
+}
+
+/** Only http(s) links become clickable; anything else is shown as text. */
+function safeHref(value: string | null | undefined): string | null {
+  const v = (value ?? '').trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/\S*)?$/i.test(v)) return `https://${v}`;
+  return null;
+}
+
+function dims(asset: BuildPackAsset): string | null {
+  return asset.width && asset.height ? `${asset.width}×${asset.height}` : null;
+}
+
+const files = buildPackFiles(pack);
+const packUrl = `/api/ops/preview-requests/${requestId}/build-pack`;
+const totalBytes = files.reduce((sum, file) => sum + file.sizeBytes, 0);
+const assetById = new Map(files.map((file) => [file.id, file]));
+const logos = pack.assets.LOGO;
+const currentLogo = logos.find((logo) => logo.id === pack.brand.currentLogoAssetId) ?? null;
+// Town alone is not an address: only build the line when the owner entered a street or postcode.
+const address =
+  pack.contact.addressLine1 || pack.contact.postcode
+    ? [pack.contact.addressLine1, pack.contact.addressLine2, buildPackTownCity(pack), pack.contact.postcode].filter(Boolean).join(', ')
+    : '';
+const anyHours = pack.shop.draftShopId !== null;
+
+const socials: Array<{ label: string; value: string | null }> = [
+  { label: 'Instagram (hub / preview form)', value: pack.links.instagram.request },
+  { label: 'Instagram (shop profile)', value: pack.links.instagram.profile },
+  { label: 'Facebook', value: pack.links.facebook },
+  { label: 'TikTok', value: pack.links.tiktok },
+  { label: 'Other social', value: pack.links.other },
+];
+const urlKey = (v: string | null | undefined) =>
+  (v ?? '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+// One row per URL: the hub Instagram is often the same column as the preview-form link.
+const seenUrls = new Set(pack.links.work.map((link) => urlKey(link.url ?? link.value)));
+const socialRows = socials.filter((row) => {
+  if (!row.value) return false;
+  const key = urlKey(row.value);
+  if (seenUrls.has(key)) return false;
+  seenUrls.add(key);
+  return true;
+});
+
+const photoGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
+  { title: 'Shop photos', items: pack.assets.SHOP_PHOTO },
+  { title: 'Team photos', items: pack.assets.TEAM_PHOTO },
+];
+const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
+  { title: 'Price list', items: pack.assets.PRICE_LIST },
+  { title: 'Other files', items: pack.assets.OTHER },
+];
+---
+
+<div class="ops-bb" data-testid="ops-build-brief">
+  <section class="ops-bb__card ops-bb__readiness" aria-labelledby="ops-bb-ready">
+    <div class="ops-bb__head">
+      <h2 id="ops-bb-ready" class="ops-bb__title">Build brief</h2>
+      <p class="ops-bb__meta" data-testid="ops-bb-file-summary">
+        {files.length} {files.length === 1 ? 'file' : 'files'} · about {formatBytes(totalBytes)}
+      </p>
+    </div>
+    <div class="ops-bb__actions">
+      <a class="btn btn--primary btn--sm" href={packUrl} download data-testid="ops-bb-download">Download build pack (.zip)</a>
+      <button type="button" class="btn btn--secondary btn--sm" data-ops-copy-brief={`${packUrl}?format=md`}>Copy brief</button>
+      <a class="btn btn--ghost btn--sm" href={`${packUrl}?format=json`} download>Download shop.json</a>
+      <span class="ops-bb__meta" role="status" aria-live="polite" data-ops-copy-status></span>
+    </div>
+    <ul class="ops-bb__chips" aria-label="What the owner has provided">
+      {
+        pack.readiness.map((item) => (
+          <li class:list={['ops-bb__chip', item.ok ? 'ops-bb__chip--ok' : 'ops-bb__chip--missing']}>
+            <span aria-hidden="true">{item.ok ? '✓' : '✗'}</span>
+            <span>{item.label}</span>
+            <span class="sr-only">{item.ok ? 'provided' : 'missing'}</span>
+          </li>
+        ))
+      }
+    </ul>
+    {
+      pack.missing.length ? (
+        <p class="ops-bb__missing">
+          <strong>Not provided:</strong> {pack.missing.join(' · ')}
+        </p>
+      ) : (
+        <p class="ops-bb__missing">Everything on the checklist has been provided.</p>
+      )
+    }
+    {
+      pack.conflicts.length ? (
+        <div class="ops-bb__warning" role="note" data-testid="ops-bb-conflicts">
+          <p>
+            <strong>Sources disagree — confirm with the owner before building:</strong>
+          </p>
+          <ul>
+            {pack.conflicts.map((conflict) => (
+              <li>
+                {conflict.label}:{' '}
+                {conflict.values.map((entry, index) => (
+                  <>
+                    {index > 0 ? ' vs ' : ''}
+                    <span class="ops-bb__pre">“{entry.value}”</span> ({entry.label})
+                  </>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null
+    }
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-business">
+    <h2 id="ops-bb-business" class="ops-bb__title">Business &amp; contact</h2>
+    <dl class="ops-bb__dl">
+      <div><dt>Shop name</dt><dd>{buildPackShopName(pack)}</dd></div>
+      <div><dt>Town / city</dt><dd>{buildPackTownCity(pack)}</dd></div>
+      <div><dt>Tagline</dt><dd class="ops-bb__pre">{pack.contact.tagline ?? '—'}</dd></div>
+      <div><dt>Address</dt><dd>{address || '—'}</dd></div>
+      <div><dt>Phone</dt><dd>{pack.contact.phone ?? '—'}</dd></div>
+      <div><dt>Public email</dt><dd>{pack.contact.email ?? '—'}</dd></div>
+      <div><dt>Own domain</dt><dd>{pack.contact.hasOwnDomain}</dd></div>
+      {pack.shop.bookingSlug ? <div><dt>Booking slug</dt><dd>{pack.shop.bookingSlug}</dd></div> : null}
+    </dl>
+    {pack.shop.draftShopId ? null : <p class="ops-pr__empty">No draft shop yet: business details are entered after it is created.</p>}
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-hours">
+    <h2 id="ops-bb-hours" class="ops-bb__title">Opening hours</h2>
+    {
+      anyHours && pack.hours.saved ? (
+        <table class="ops-bb__table ops-bb__table--hours">
+          <tbody>
+            {pack.hours.days.map((day) => (
+              <tr>
+                <th scope="row">{day.day}</th>
+                <td>{day.isOpen ? `${day.opens}–${day.closes}` : 'Closed'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p class="ops-pr__empty">Owner has not set hours yet.</p>
+      )
+    }
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-brand">
+    <h2 id="ops-bb-brand" class="ops-bb__title">Brand</h2>
+    <div class="ops-bb__brand">
+      <div class="ops-bb__logos">
+        {
+          logos.length ? (
+            logos.map((logo) => (
+              <figure class="ops-bb__logo">
+                <div class="ops-bb__logo-img">
+                  <img src={assetUrl(logo, 'thumb')} alt={`Logo: ${logo.fileName}`} loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  {logo.id === currentLogo?.id ? <strong>Current logo · </strong> : null}
+                  {logo.fileName}
+                  {dims(logo) ? ` · ${dims(logo)}` : ''} · {formatBytes(logo.sizeBytes)}
+                  <br />
+                  <a class="btn btn--ghost btn--sm" href={assetUrl(logo, 'full')}>Download</a>
+                </figcaption>
+              </figure>
+            ))
+          ) : (
+            <p class="ops-pr__empty">No logo uploaded.</p>
+          )
+        }
+        {
+          pack.brand.shopLogoUrl ? (
+            <p class="ops-bb__meta">
+              Shop settings logo URL:{' '}
+              {safeHref(pack.brand.shopLogoUrl) ? (
+                <a href={safeHref(pack.brand.shopLogoUrl)} target="_blank" rel="noopener noreferrer nofollow">
+                  {pack.brand.shopLogoUrl}
+                </a>
+              ) : (
+                pack.brand.shopLogoUrl
+              )}
+            </p>
+          ) : null
+        }
+      </div>
+      <div>
+        <OpsBrandColours
+          client:visible
+          primary={pack.brand.primary.request ?? pack.brand.primary.profile}
+          secondary={pack.brand.secondary.request ?? pack.brand.secondary.profile}
+          tone={pack.brand.backgroundTone}
+          source={pack.brand.source}
+          sentAt={pack.brand.submittedAt}
+          palette={pack.brand.paletteExtracted}
+        />
+        <dl class="ops-bb__dl">
+          <div>
+            <dt>Shop profile colours</dt>
+            <dd>
+              {pack.brand.primary.profile || pack.brand.secondary.profile
+                ? `${pack.brand.primary.profile ?? '—'} / ${pack.brand.secondary.profile ?? '—'}`
+                : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt>Sent to KERSIVO</dt>
+            <dd>
+              {pack.brand.submittedSnapshot
+                ? `${formatDate(pack.brand.submittedAt)} · ${pack.brand.submittedSnapshot.brandPrimaryColour ?? '—'} / ${
+                    pack.brand.submittedSnapshot.brandSecondaryColour ?? '—'
+                  } · logo: ${pack.brand.submittedSnapshot.logoOriginalFileName ?? '—'}`
+                : 'Not sent yet'}
+            </dd>
+          </div>
+          <div><dt>Style notes</dt><dd class="ops-bb__pre">{pack.brand.styleNotes ?? '—'}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-text">
+    <h2 id="ops-bb-text" class="ops-bb__title">Website text</h2>
+    <dl class="ops-bb__dl ops-bb__dl--stacked">
+      <div><dt>About your shop (hub)</dt><dd class="ops-bb__pre">{pack.text.about ?? '—'}</dd></div>
+      {
+        pack.text.description && pack.text.description !== pack.text.about ? (
+          <div><dt>Shop profile description</dt><dd class="ops-bb__pre">{pack.text.description}</dd></div>
+        ) : null
+      }
+      <div><dt>Tagline</dt><dd class="ops-bb__pre">{pack.contact.tagline ?? '—'}</dd></div>
+      <div><dt>Anything else</dt><dd class="ops-bb__pre">{pack.text.websiteExtra ?? '—'}</dd></div>
+    </dl>
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-links">
+    <h2 id="ops-bb-links" class="ops-bb__title">Socials &amp; links</h2>
+    {
+      pack.links.work.length || socialRows.length ? (
+        <ul class="ops-bb__links">
+          {pack.links.work.map((link) => (
+            <li>
+              <span class="ops-bb__label">{link.label}</span>
+              {safeHref(link.url) ? (
+                <a href={safeHref(link.url)} target="_blank" rel="noopener noreferrer nofollow">
+                  {link.url}
+                </a>
+              ) : (
+                <span>{link.value}</span>
+              )}
+            </li>
+          ))}
+          {socialRows.map((row) => (
+            <li>
+              <span class="ops-bb__label">{row.label}</span>
+              {safeHref(row.value) ? (
+                <a href={safeHref(row.value)} target="_blank" rel="noopener noreferrer nofollow">
+                  {row.value}
+                </a>
+              ) : (
+                <span>{row.value}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="ops-pr__empty">No links provided.</p>
+      )
+    }
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-services">
+    <h2 id="ops-bb-services" class="ops-bb__title">Services ({pack.services.length})</h2>
+    {
+      pack.services.length ? (
+        <div class="ops-bb__scroll">
+          <table class="ops-bb__table">
+            <thead>
+              <tr>
+                <th scope="col">Service</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Price</th>
+                <th scope="col">Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pack.services.map((service) => (
+                <tr>
+                  <td>
+                    {service.name}
+                    {service.featured ? <span class="ops-bb__tag">Featured</span> : null}
+                    {service.description ? <span class="ops-bb__sub ops-bb__pre">{service.description}</span> : null}
+                  </td>
+                  <td>{minutes(service.durationMinutes)}</td>
+                  <td>{money(service.pricePence, service.priceFrom)}</td>
+                  <td>{service.category ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p class="ops-pr__empty">No services added yet.</p>
+      )
+    }
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-team">
+    <h2 id="ops-bb-team" class="ops-bb__title">Team ({pack.team.length})</h2>
+    {
+      pack.team.length ? (
+        <ul class="ops-bb__team">
+          {pack.team.map((member) => {
+            const photo = member.photoAssetIds.map((id) => assetById.get(id)).find(Boolean) ?? null;
+            return (
+              <li class="ops-bb__member">
+                <div class="ops-bb__avatar">
+                  {photo ? (
+                    <img src={assetUrl(photo, 'thumb')} alt={`Photo of ${member.name}`} loading="lazy" decoding="async" />
+                  ) : (
+                    <span aria-hidden="true">{member.name.slice(0, 1).toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <p class="ops-bb__member-name">{member.name}</p>
+                  <p class="ops-bb__meta">
+                    {member.role ?? 'No role given'}
+                    {member.photoAssetIds.length ? ` · ${member.photoAssetIds.length} photo${member.photoAssetIds.length > 1 ? 's' : ''}` : ' · no photo'}
+                  </p>
+                  {member.bio ? <p class="ops-bb__sub ops-bb__pre">{member.bio}</p> : null}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p class="ops-pr__empty">No team members added yet.</p>
+      )
+    }
+  </section>
+
+  {
+    pack.products.length ? (
+      <section class="ops-bb__card" aria-labelledby="ops-bb-products">
+        <h2 id="ops-bb-products" class="ops-bb__title">Products ({pack.products.length})</h2>
+        <table class="ops-bb__table">
+          <tbody>
+            {pack.products.map((product) => (
+              <tr>
+                <td>
+                  {product.name}
+                  {product.description ? <span class="ops-bb__sub ops-bb__pre">{product.description}</span> : null}
+                </td>
+                <td>{money(product.pricePence)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    ) : null
+  }
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-photos">
+    <h2 id="ops-bb-photos" class="ops-bb__title">Photos</h2>
+    {
+      photoGroups.map((group) => (
+        <div class="ops-bb__group">
+          <h3 class="ops-bb__subtitle">
+            {group.title} ({group.items.length})
+          </h3>
+          {group.items.length ? (
+            <ul class="ops-pr-files__grid">
+              {group.items.map((asset) => (
+                <li class="ops-pr-files__item">
+                  <div class="ops-pr-files__thumb">
+                    {asset.isImage || asset.hasThumb ? (
+                      <img src={assetUrl(asset, 'thumb')} alt={asset.caption ?? asset.fileName} loading="lazy" decoding="async" />
+                    ) : (
+                      <span>{asset.kind}</span>
+                    )}
+                  </div>
+                  <p class="ops-pr-files__name" title={asset.fileName}>{asset.fileName}</p>
+                  {asset.caption ? <p class="ops-bb__caption ops-bb__pre">{asset.caption}</p> : null}
+                  <p class="ops-pr-files__meta">
+                    {asset.barberName ? `${asset.barberName} · ` : asset.barberId ? 'Barber removed · ' : ''}
+                    {dims(asset) ? `${dims(asset)} · ` : ''}
+                    {formatBytes(asset.sizeBytes)}
+                  </p>
+                  <a class="btn btn--ghost btn--sm" href={assetUrl(asset, 'full')}>Download</a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="ops-pr__empty">None uploaded.</p>
+          )}
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-docs">
+    <h2 id="ops-bb-docs" class="ops-bb__title">Documents</h2>
+    {
+      documentGroups.map((group) => (
+        <div class="ops-bb__group">
+          <h3 class="ops-bb__subtitle">
+            {group.title} ({group.items.length})
+          </h3>
+          {group.items.length ? (
+            <ul class="ops-bb__files">
+              {group.items.map((asset) => (
+                <li>
+                  <a href={assetUrl(asset, 'full')}>{asset.fileName}</a>
+                  <span class="ops-bb__meta">
+                    {' '}
+                    · {asset.contentType} · {formatBytes(asset.sizeBytes)}
+                    {asset.caption ? ` · ${asset.caption}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="ops-pr__empty">None uploaded.</p>
+          )}
+        </div>
+      ))
+    }
+    {
+      pack.revisionFiles.length ? (
+        <p class="ops-bb__meta">
+          {pack.revisionFiles.length} message / change-request attachment{pack.revisionFiles.length > 1 ? 's' : ''} on
+          the Files tab.
+        </p>
+      ) : null
+    }
+  </section>
+
+  {
+    pack.changeRequests.length || pack.legacyChangesRequested ? (
+      <section class="ops-bb__card" aria-labelledby="ops-bb-changes">
+        <h2 id="ops-bb-changes" class="ops-bb__title">Open change requests ({pack.changeRequests.length})</h2>
+        <ul class="ops-bb__links">
+          {pack.changeRequests.map((change) => (
+            <li>
+              <span class="ops-bb__label">
+                {change.page}
+                {change.round ? ` · round ${change.round}` : ''} · {change.status}
+              </span>
+              <span class="ops-bb__pre">{change.body}</span>
+            </li>
+          ))}
+          {pack.legacyChangesRequested ? (
+            <li>
+              <span class="ops-bb__label">Changes requested (preview page) · {formatDate(pack.legacyChangesRequested.at)}</span>
+              <span class="ops-bb__pre">{pack.legacyChangesRequested.text}</span>
+            </li>
+          ) : null}
+        </ul>
+      </section>
+    ) : null
+  }
+
+  <section class="ops-bb__card" aria-labelledby="ops-bb-intake">
+    <h2 id="ops-bb-intake" class="ops-bb__title">Intake</h2>
+    <dl class="ops-bb__dl">
+      <div><dt>Barbers</dt><dd>{pack.intake.barberCount}</dd></div>
+      <div><dt>Booking system</dt><dd>{pack.intake.currentBookingSystem}</dd></div>
+      <div><dt>Notes</dt><dd class="ops-bb__pre">{pack.intake.notes ?? '—'}</dd></div>
+    </dl>
+  </section>
+</div>
+
+<script>
+  // "Copy brief": fetch brief.md and put it on the clipboard. Text only.
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-ops-copy-brief]')) {
+    const status = button.parentElement?.querySelector<HTMLElement>('[data-ops-copy-status]') ?? null;
+    button.addEventListener('click', async () => {
+      const url = button.dataset.opsCopyBrief;
+      if (!url) return;
+      button.disabled = true;
+      if (status) status.textContent = 'Copying…';
+      try {
+        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) throw new Error(String(response.status));
+        await navigator.clipboard.writeText(await response.text());
+        if (status) status.textContent = 'Brief copied.';
+      } catch {
+        if (status) status.textContent = 'Could not copy the brief. Try again.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>

@@ -1,0 +1,87 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`build pack zip plan > brief.md starts with the fixed instruction and matches the snapshot 1`] = `
+"# Website brief — Fade & Co
+
+> This pack contains everything the barbershop owner supplied to KERSIVO. Design a unique website for this shop based on its logo, colours, photos and text. Use only the facts in this pack: do not invent prices, services, reviews, awards, opening hours or claims. Where something is listed under "Not provided", leave a clear placeholder instead of making it up. Use British English.
+
+## Shop
+
+- Name: Fade & Co
+- Town / city: Leeds
+- Tagline: Sharp cuts
+- Barbers (approx.): 2–3
+- Has its own domain: No
+
+## Location & contact
+
+- Address: 1 High St, Leeds, LS1 1AA
+- Phone: 0113 000 0000
+- Public email: hello@fadeco.example
+
+## Opening hours
+
+- Monday: 09:00–18:00
+- Tuesday: 09:00–18:00
+- Wednesday: 09:00–18:00
+- Thursday: 09:00–18:00
+- Friday: 09:00–18:00
+- Saturday: 09:00–18:00
+- Sunday: Closed
+
+## Brand
+
+- Logo: \`brand/logo/my-logo.png\`
+- Primary colour: #1F6F6B
+- Secondary colour: #C9A24A
+- Background tone: dark
+- Palette extracted from the logo: #1F6F6B (60%)
+
+Style notes from the owner:
+
+> Warm and old-school.
+
+## Website text
+
+### About the shop
+
+> Family-run since 2014.
+> Walk-ins welcome.
+
+## Services & prices
+
+| Service | Duration | Price | Category |
+| --- | --- | --- | --- |
+| Skin fade | 45 min | from £22 | Haircuts |
+
+Price list file: \`documents/price-list/prices.pdf\`
+
+## Team
+
+- **Alex Reed** — Owner · photo: \`photos/team/alex-reed.jpg\`
+- **Alex Reed** · photo: \`photos/team/alex-reed-2.jpg\`
+
+## Photos
+
+- Shop: \`photos/shop/01_shopfront.jpg\` (1600×1067) — Shopfront
+- Shop: \`photos/shop/02_evil.jpg\` (1600×1067)
+- Team: \`photos/team/alex-reed.jpg\` (1600×1067) — Alex Reed
+- Team: \`photos/team/alex-reed-2.jpg\` (1600×1067) — Alex Reed
+
+## Links & socials
+
+- Instagram: https://www.instagram.com/fadeco
+
+## Owner notes from the preview form
+
+> Big booking button please.
+
+## Not provided — do not invent
+
+- Nothing on the checklist is missing.
+
+## Conflicts to confirm
+
+- None.
+"
+`;
