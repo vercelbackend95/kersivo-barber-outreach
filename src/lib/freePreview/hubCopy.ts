@@ -616,6 +616,8 @@ export const HUB_ACTIVITY_LABELS: Readonly<Record<string, string>> = {
   OWNER_EDITED_TEAM: 'You updated your team',
   OWNER_EDITED_PRODUCTS: 'You updated your products',
   OWNER_EDITED_WEBSITE_TEXT: 'You updated the text for your website',
+  OWNER_EDITED_HOURS: 'You updated your opening hours',
+  OWNER_EDITED_BUSINESS: 'You updated your business details',
 };
 
 export const HUB_OWNER_ACTIVITY_ACTIONS = new Set(Object.keys(HUB_ACTIVITY_LABELS));

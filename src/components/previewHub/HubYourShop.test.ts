@@ -37,17 +37,14 @@ describe('HubYourShop a11y regressions', () => {
     expect(src).toContain('HUB_DETAILS_ABOUT_TITLE');
   });
 
-  it('keeps jump chips sticky, scrollable without a visible scrollbar, and marks the section in view', () => {
-    expect(adminCss).toMatch(/\.hub-jump \{[^}]*position: sticky;/);
-    expect(adminCss).toMatch(/\.hub-jump \{[^}]*scrollbar-width: none;/);
-    expect(adminCss).toContain('.hub-jump::-webkit-scrollbar');
-    expect(adminCss).toMatch(/\.hub-jump__chip\[aria-current='true'\]/);
-    expect(src).toContain('IntersectionObserver');
-    expect(src).toContain("aria-current={current === chip.id ? 'true' : undefined}");
+  it('drops the jump chips: the setup flow is one scrolling column', () => {
+    expect(adminCss).not.toContain('.hub-jump');
+    expect(src).not.toContain('hub-jump');
   });
 
-  it('lays materials out in two columns from 1024 px and respects reduced motion for the highlight', () => {
-    expect(css).toMatch(/@media \(min-width: 1024px\) \{\s*\.hub-materials \{[^}]*grid-template-columns:/);
+  it('keeps materials in one column and respects reduced motion for the highlight', () => {
+    expect(css).toMatch(/\.hub-materials \{[^}]*display: grid;/);
+    expect(css).not.toMatch(/\.hub-materials \{[^}]*grid-template-columns:/);
     expect(adminCss).toMatch(/prefers-reduced-motion: reduce[\s\S]*\.hub-card\.is-hub-add-target/);
   });
 

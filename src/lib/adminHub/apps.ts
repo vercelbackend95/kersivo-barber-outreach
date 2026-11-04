@@ -29,7 +29,7 @@ export type AdminHubAppMeta = {
   id: AdminHubAppId;
   title: string;
   crumb: string;
-  /** Desktop window max-width in px. Messages is the narrow one. */
+  /** Desktop window max-width in px. Messages and the single-column setup flow are narrow. */
   maxWidth: 720 | 1120;
   /** Use a sheet at or below this width. Default 1024. */
   sheetBelow?: 640 | 1024;
@@ -41,8 +41,7 @@ const META: Record<AdminHubAppId, Omit<AdminHubAppMeta, 'id'>> = {
   materials: {
     title: 'Add to your website',
     crumb: 'Overview › Add to your website',
-    maxWidth: 1120,
-    sheetBelow: 640,
+    maxWidth: 720,
   },
   hours: { title: 'Opening hours', crumb: 'Overview › Opening hours', maxWidth: 1120 },
   about: { title: 'About your shop', crumb: 'Overview › About your shop', maxWidth: 1120 },

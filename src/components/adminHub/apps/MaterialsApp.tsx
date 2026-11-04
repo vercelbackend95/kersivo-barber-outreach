@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HubYourShop } from '@/components/previewHub/HubYourShop';
+import { WebsiteSetupFlow } from '@/components/adminHub/setup/WebsiteSetupFlow';
 import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import type { AdminHubAppBodyProps } from './types';
 
@@ -8,6 +8,7 @@ function itemFromLocation() {
   return parseAdminHubAddWebsiteItem(new URLSearchParams(window.location.search).get('item'));
 }
 
+/** Overview › Add to your website: the guided, single-column setup flow. */
 export default function MaterialsApp({ ctx }: AdminHubAppBodyProps) {
   const [highlight, setHighlight] = useState(itemFromLocation);
 
@@ -22,17 +23,5 @@ export default function MaterialsApp({ ctx }: AdminHubAppBodyProps) {
     };
   }, []);
 
-  return (
-    <HubYourShop
-      token=""
-      apiBase={ctx.apiBase}
-      canUpload={ctx.canUpload}
-      canEditDetails={ctx.canEditDetails}
-      details={ctx.details}
-      assets={ctx.assets}
-      focus="materials"
-      highlight={highlight}
-      chrome={false}
-    />
-  );
+  return <WebsiteSetupFlow ctx={ctx} highlight={highlight} />;
 }

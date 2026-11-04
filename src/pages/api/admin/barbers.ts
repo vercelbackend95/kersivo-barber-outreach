@@ -101,6 +101,9 @@ export const GET: APIRoute = async (ctx) => {
     active: boolean;
     sortOrder: number;
     createdAt: Date;
+    /** Public website fields (site data contract); read by the hub setup flow. */
+    title: string | null;
+    showOnWebsite: boolean;
   };
 
   let barbers: BarberListItem[];
@@ -112,7 +115,7 @@ export const GET: APIRoute = async (ctx) => {
     barbers = await prisma.barber.findMany({
       where: { shopId },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true, title: true, showOnWebsite: true }
     });
   } catch (error) {
     const isMissingSortOrderColumn = error instanceof Error
@@ -129,7 +132,7 @@ export const GET: APIRoute = async (ctx) => {
     const fallbackBarbers = await prisma.barber.findMany({
       where: { shopId },
       orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true, title: true, showOnWebsite: true }
     });
 
     barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));

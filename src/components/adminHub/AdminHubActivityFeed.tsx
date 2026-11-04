@@ -48,7 +48,8 @@ function ActivityIcon({ kind }: { kind: AdminHubActivityKind }) {
   return <Icon width={13} height={13} strokeWidth={1.8} aria-hidden="true" />;
 }
 
-export function AdminHubActivityFeed(props: { groups: AdminHubActivityGroup[] }) {
+export function AdminHubActivityFeed(props: { groups: AdminHubActivityGroup[]; limit?: number }) {
+  const limit = props.limit ?? 5;
   const [groups, setGroups] = useState(props.groups);
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export function AdminHubActivityFeed(props: { groups: AdminHubActivityGroup[] })
         }),
       };
       setGroups((current) => {
-        const flat = [row, ...current.flatMap((group) => group.items)].slice(0, 5);
+        const flat = [row, ...current.flatMap((group) => group.items)].slice(0, limit);
         const next: AdminHubActivityGroup[] = [];
         for (const item of flat) {
           const label = item.id.startsWith('local-') ? ADMIN_HUB_ACTIVITY_TODAY : (current.find((group) => group.items.some((row) => row.id === item.id))?.label ?? ADMIN_HUB_ACTIVITY_TODAY);
@@ -86,7 +87,7 @@ export function AdminHubActivityFeed(props: { groups: AdminHubActivityGroup[] })
     };
     window.addEventListener('admin-hub:asset-uploaded', onUpload);
     return () => window.removeEventListener('admin-hub:asset-uploaded', onUpload);
-  }, []);
+  }, [limit]);
 
   if (!groups.length) {
     return <p className="admin-hub-nowbox__v">{ADMIN_HUB_ACTIVITY_EMPTY}</p>;

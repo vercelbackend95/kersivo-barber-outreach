@@ -126,21 +126,19 @@ describe('HubYourShop', () => {
     );
     expect(document.getElementById('photos')).toBeTruthy();
     expect(document.getElementById('logo')).toBeTruthy();
-    expect(document.getElementById('text')).toBeTruthy();
+    // Website text moved to the setup flow (WebsiteSetupFlow), so materials has no text card.
+    expect(document.getElementById('text')).toBeNull();
     expect(document.getElementById('team-photos')).toBeNull();
     expect(document.getElementById('price-list')).toBeTruthy();
     expect(document.getElementById('other')).toBeTruthy();
     expect(document.getElementById('photos')?.className).toContain('is-hub-add-target');
     expect(scrollIntoView).toHaveBeenCalled();
-    expect(screen.getByTestId('hub-jump').textContent).toMatch(/Photos/);
-    expect(screen.getByRole('heading', { name: 'Text for your website' })).toBeTruthy();
-    expect(screen.getByLabelText('About your shop')).toBeTruthy();
-    expect(screen.getByLabelText('Instagram')).toBeTruthy();
-    expect(screen.getByLabelText('Anything else for your website')).toBeTruthy();
+    expect(screen.queryByTestId('hub-jump')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Text for your website' })).toBeNull();
     expect(screen.getByRole('heading', { name: 'Other files' })).toBeTruthy();
   });
 
-  it('shows chip counts and a check when a section has content', () => {
+  it("shows each section's status in its card header", () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: () => ({
@@ -197,9 +195,9 @@ describe('HubYourShop', () => {
         ]}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Photos 1' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Logo ✓' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Text ✓' })).toBeTruthy();
+    const status = (id: string) => document.querySelector(`#${id} .hub-card__head .hub-status`)?.textContent;
+    expect(status('photos')).toBe('1 added');
+    expect(status('logo')).toBe('Added');
     expect(screen.queryByRole('button', { name: /Team photos/ })).toBeNull();
   });
 
@@ -356,11 +354,10 @@ describe('HubYourShop', () => {
       />,
     );
     const ids = Array.from(document.querySelectorAll('section.hub-card[id]')).map((el) => el.id);
-    expect(ids).toEqual(['photos', 'logo', 'text', 'price-list', 'other']);
+    expect(ids).toEqual(['photos', 'logo', 'price-list', 'other']);
     const status = (id: string) => document.querySelector(`#${id} .hub-card__head .hub-status`)?.textContent;
     expect(status('photos')).toBe('3 added');
     expect(status('logo')).toBe('Added');
-    expect(status('text')).toBe('Added');
     expect(status('price-list')).toBe('Not added yet');
     expect(status('other')).toBe('Not added yet');
     for (const id of ids) {
@@ -371,16 +368,11 @@ describe('HubYourShop', () => {
     expect(document.querySelector('#photos .hub-card__hint')?.textContent).toBe(HUB_UPLOAD_HINT_PHOTOS);
     expect(document.querySelector('#price-list .hub-empty')?.textContent).toBe(HUB_EMPTY_PRICE);
     expect(document.querySelector('#other .hub-empty')?.textContent).toBe(HUB_EMPTY_OTHER);
-    expect(document.querySelector('.hub-materials__main #photos')).toBeTruthy();
-    expect(Array.from(document.querySelectorAll('.hub-materials__side > section')).map((el) => el.id)).toEqual([
-      'logo',
-      'text',
-      'price-list',
-      'other',
-    ]);
+    // One column, in the setup flow's order.
+    expect(Array.from(document.querySelectorAll('.hub-materials > section')).map((el) => el.id)).toEqual(ids);
   });
 
-  it('moves focus to the section heading and marks the chip current', () => {
+  it('moves focus to the requested section heading', () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: () => ({ matches: true, addEventListener: () => undefined, removeEventListener: () => undefined }),
@@ -392,15 +384,12 @@ describe('HubYourShop', () => {
         canUpload
         canEditDetails
         focus="materials"
+        highlight="price-list"
         details={{ brandPrimaryColour: null, brandSecondaryColour: null, styleNotes: null, aboutText: null }}
         assets={[]}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Photos' }).getAttribute('aria-current')).toBe('true');
-    fireEvent.click(screen.getByRole('button', { name: 'Price list' }));
     expect(document.activeElement?.id).toBe('hub-price-title');
-    expect(screen.getByRole('button', { name: 'Price list' }).getAttribute('aria-current')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Photos' }).getAttribute('aria-current')).toBeNull();
   });
 
   it('keeps the full Your shop page: every card, brand extras under one logo, no jump chips', () => {

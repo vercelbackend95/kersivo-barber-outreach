@@ -6,6 +6,7 @@ import type { SetupCardModel } from '@/lib/adminHub/setupCard';
 import { useHubSelector } from '@/lib/adminHub/hubStore';
 import '@/styles/components/admin-hub.css';
 import '@/styles/components/preview-hub.css';
+import '@/styles/components/opening-hours-editor.css';
 
 export function PreviewAdminChrome(props: {
   section: PreviewHubSection;

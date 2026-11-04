@@ -18,8 +18,10 @@ describe('admin hub apps', () => {
     expect(adminHubAppMeta('materials')).toMatchObject({
       title: 'Add to your website',
       crumb: 'Overview › Add to your website',
-      sheetBelow: 640,
+      maxWidth: 720,
     });
+    // No narrow sheet breakpoint: below 1024 px (and on landscape phones) it opens full screen.
+    expect(adminHubAppMeta('materials').sheetBelow).toBeUndefined();
     expect(resolveAdminHubApp('about')).toBe('materials');
   });
 
