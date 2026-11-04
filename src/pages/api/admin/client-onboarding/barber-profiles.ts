@@ -53,6 +53,14 @@ export const PUT: APIRoute = async (ctx) => {
       }
 
       for (const profile of parsed.data.profiles) {
+        // Canonical (site data contract): Barber.bio / showOnWebsite. The profile row is a mirror.
+        await tx.barber.update({
+          where: { id: profile.barberId },
+          data: {
+            bio: profile.bio?.trim() || null,
+            ...(profile.showOnWebsite !== undefined ? { showOnWebsite: profile.showOnWebsite } : {}),
+          },
+        });
         await tx.clientOnboardingBarberProfile.upsert({
           where: { barberId: profile.barberId },
           create: {

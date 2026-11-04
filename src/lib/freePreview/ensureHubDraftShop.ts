@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
+import { fillEmptyShopPublicProfile, profilePatchFromHubDetails } from '@/lib/shopData/profile';
 import { createDraftShop } from '@/lib/preview/shopPreviewSession';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 
@@ -28,6 +29,10 @@ export async function ensureHubDraftShop(previewRequestId: string): Promise<Ensu
         shopName: true,
         townCity: true,
         anonymisedAt: true,
+        aboutText: true,
+        instagramUrl: true,
+        brandPrimaryColour: true,
+        brandSecondaryColour: true,
       },
     });
     if (!request) return { ok: false, code: 'NOT_FOUND', httpStatus: 404 };
@@ -39,6 +44,8 @@ export async function ensureHubDraftShop(previewRequestId: string): Promise<Ensu
     }
 
     const shop = await createDraftShop({ name: request.shopName, townCity: request.townCity }, tx);
+    // Details saved in the hub before the shop existed become the canonical profile now.
+    await fillEmptyShopPublicProfile(tx, shop.id, profilePatchFromHubDetails(request));
     await tx.previewRequest.update({
       where: { id: request.id },
       data: {

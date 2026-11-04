@@ -1,4 +1,5 @@
 import type { AdminAccess } from '@/lib/admin/auth';
+import { profilePatchFromClientOnboarding, writeShopPublicProfile } from '@/lib/shopData/profile';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import {
@@ -474,6 +475,11 @@ export async function saveClientOnboardingDraft(
       where: { id: writable.id },
       data: buildUpdateData(input),
     });
+    // Canonical business details (site data contract): the wizard columns above are mirrors.
+    await writeShopPublicProfile(tx, shopId, profilePatchFromClientOnboarding(input));
+    if (input.townCity) {
+      await tx.shopSettings.update({ where: { id: shopId }, data: { townCity: input.townCity } });
+    }
     return { ok: true as const, onboarding: serializeOnboarding(updated) };
   });
 }

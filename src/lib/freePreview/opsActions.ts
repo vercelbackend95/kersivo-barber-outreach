@@ -2,6 +2,7 @@ import { EmailOutboundPurpose, Prisma, type PreviewRequestStatus } from '@prisma
 import { z } from 'zod';
 import { prisma } from '@/lib/db/client';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
+import { fillEmptyShopPublicProfile, profilePatchFromHubDetails } from '@/lib/shopData/profile';
 import { createDraftShop } from '@/lib/preview/shopPreviewSession';
 import { SITE_VERSION_MAX, applySitePreview, normalizeSitePreviewUrl } from '@/lib/setup/sitePreview';
 import { isAnyHubEnabled, isFreePreviewFlowEnabled, previewExpiryFrom } from './config';
@@ -75,6 +76,10 @@ async function lockRequest(tx: Tx, id: string) {
       publicToken: true,
       anonymisedAt: true,
       convertedAt: true,
+      aboutText: true,
+      instagramUrl: true,
+      brandPrimaryColour: true,
+      brandSecondaryColour: true,
       draftShop: { select: { sitePreviewUrl: true } },
     },
   });
@@ -165,6 +170,7 @@ export async function executePreviewRequestOpsAction(input: {
         if (isFinal) return fail('INVALID_TRANSITION');
         if (request.draftShopId) return fail('DRAFT_SHOP_ALREADY_LINKED');
         const shop = await createDraftShop({ name: request.shopName, townCity: request.townCity }, tx);
+        await fillEmptyShopPublicProfile(tx, shop.id, profilePatchFromHubDetails(request));
         await tx.previewRequest.update({
           where: { id: request.id },
           data: {
@@ -197,6 +203,7 @@ export async function executePreviewRequestOpsAction(input: {
             },
           },
         });
+        await fillEmptyShopPublicProfile(tx, shop.id, profilePatchFromHubDetails(request));
         return done(request.status, shop.id);
       }
 

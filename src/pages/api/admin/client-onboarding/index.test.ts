@@ -12,6 +12,7 @@ const clientOnboardingUpdate = vi.fn();
 const clientOnboardingUpdateMany = vi.fn();
 const clientOnboardingFindUniqueOrThrow = vi.fn();
 const shopSettingsFindUnique = vi.fn();
+const shopPublicProfileUpsert = vi.fn(async (..._args: unknown[]) => ({}));
 const saasFindFirst = vi.fn();
 const barberCount = vi.fn();
 const serviceCount = vi.fn();
@@ -314,6 +315,11 @@ describe('/api/admin/client-onboarding', () => {
           create: (...args: unknown[]) => emailOutboundCreate(...args),
           findUnique: vi.fn(),
         },
+        shopPublicProfile: {
+          upsert: (...args: unknown[]) => shopPublicProfileUpsert(...args),
+          findUnique: vi.fn(async () => null),
+        },
+        shopSettings: { update: vi.fn(async () => ({})) },
       };
       return fn(tx);
     });

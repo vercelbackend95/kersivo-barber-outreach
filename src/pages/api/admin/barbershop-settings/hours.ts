@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { z } from 'zod';
+import { legacyHoursPayloadSchema, validateWeeklyHoursRows } from '@/lib/shopData/schema';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import {
@@ -9,34 +9,11 @@ import {
   serializeShopOpeningHours,
   type OnboardingWeeklyRule,
 } from '@/lib/admin/shopOpeningHours';
-import { timeStringToMinutes } from '@/lib/admin/timeStrings';
 
-const rowSchema = z.object({
-  dayOfWeek: z.number().int().min(1).max(7),
-  active: z.boolean(),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-});
-
-const payloadSchema = z.object({
-  rules: z.array(rowSchema).length(7),
-});
+const payloadSchema = legacyHoursPayloadSchema;
 
 function validateRules(rules: OnboardingWeeklyRule[]) {
-  let activeCount = 0;
-  for (const rule of rules) {
-    if (!rule.active) continue;
-    activeCount += 1;
-    const startMinutes = timeStringToMinutes(rule.startTime);
-    const endMinutes = timeStringToMinutes(rule.endTime);
-    if (startMinutes >= endMinutes) {
-      return `Day ${rule.dayOfWeek}: end time must be later than start time.`;
-    }
-  }
-  if (activeCount === 0) {
-    return 'Open the barbershop on at least one day.';
-  }
-  return null;
+  return validateWeeklyHoursRows(rules, { emptyMessage: 'Open the barbershop on at least one day.' });
 }
 
 function json(body: unknown, status = 200) {

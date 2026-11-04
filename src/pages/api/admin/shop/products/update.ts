@@ -33,6 +33,8 @@ const updateSchema = z.object({
   pricePence: z.number().int().positive('Price must be greater than zero.'),
   imageUrl: imageUrlSchema.optional().or(z.literal('')),
   active: z.boolean().default(true),
+  /** Omitted = unchanged (older clients do not send it). */
+  inStock: z.boolean().optional(),
   featured: z.boolean().default(false),
     category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
@@ -79,6 +81,7 @@ async function updateProductWithReorder(shopId: string, payload: UpdatePayload, 
         name: payload.name,
         description: payload.description || null,
         pricePence: payload.pricePence,
+        ...(payload.inStock !== undefined ? { inStock: payload.inStock } : {}),
         imageUrl: nextImageUrl,
         active: payload.active,
         featured: payload.featured,
@@ -120,6 +123,7 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
         pricePence: Number(formData.get('pricePence') ?? 0),
         imageUrl: String(formData.get('imageUrl') ?? ''),
         active: String(formData.get('active') ?? 'true').toLowerCase() !== 'false',
+        inStock: formData.has('inStock') ? String(formData.get('inStock')).toLowerCase() !== 'false' : undefined,
         featured: String(formData.get('featured') ?? 'false').toLowerCase() === 'true',
                 category: String(formData.get('category') ?? 'STYLING'),
         sortOrder: Number(formData.get('sortOrder') ?? 0)

@@ -27,6 +27,7 @@ import {
   lockShopForBookableBarberChange,
 } from '../../../lib/shop/freeBookableBarbers';
 import { formatInTimeZone } from 'date-fns-tz';
+import { teamMemberPublicFieldsSchema } from '@/lib/shopData/schema';
 import type { Prisma } from '@prisma/client';
 
 const jsonSchema = z.object({
@@ -37,8 +38,24 @@ const jsonSchema = z.object({
   active: z.boolean().optional(),
   isActive: z.boolean().optional(),
   serviceIds: z.array(z.string()).optional()
+}).merge(teamMemberPublicFieldsSchema);
 
-});
+/** Multipart forms send title/bio/showOnWebsite only when the screen has those fields. */
+function publicFieldsFromForm(form: FormData) {
+  const raw: Record<string, unknown> = {};
+  if (form.has('title')) raw.title = String(form.get('title') ?? '');
+  if (form.has('bio')) raw.bio = String(form.get('bio') ?? '');
+  if (form.has('showOnWebsite')) raw.showOnWebsite = String(form.get('showOnWebsite')).toLowerCase() !== 'false';
+  return teamMemberPublicFieldsSchema.safeParse(raw);
+}
+
+function definedPublicFields(fields: { title?: string | null; bio?: string | null; showOnWebsite?: boolean }) {
+  return {
+    ...(fields.title !== undefined ? { title: fields.title } : {}),
+    ...(fields.bio !== undefined ? { bio: fields.bio } : {}),
+    ...(fields.showOnWebsite !== undefined ? { showOnWebsite: fields.showOnWebsite } : {}),
+  };
+}
 
 function parseServiceIds(rawValue: FormDataEntryValue | null): string[] {
   if (!rawValue) return [];
@@ -244,10 +261,16 @@ export const POST: APIRoute = async (ctx) => {
       }
     }
 
+    const publicFields = publicFieldsFromForm(form);
+    if (!publicFields.success) {
+      return new Response(JSON.stringify({ error: publicFields.error.issues[0]?.message ?? 'Invalid request.' }), { status: 400 });
+    }
+
     const payload = {
       name,
       active: isActive,
-      ...(avatarUrl ? { avatarUrl } : {})
+      ...(avatarUrl ? { avatarUrl } : {}),
+      ...definedPublicFields(publicFields.data),
     };
 
     let barber;
@@ -321,8 +344,9 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
-  const { id, email, name, avatarUrl, active, isActive, serviceIds = [] } = parsed.data;
+  const { id, email, name, avatarUrl, active, isActive, serviceIds = [], title, bio, showOnWebsite } = parsed.data;
   const data = {
+    ...definedPublicFields({ title, bio, showOnWebsite }),
     ...(name ? { name } : {}),
     ...(typeof active === 'boolean' ? { active } : {}),
     ...(typeof isActive === 'boolean' ? { active: isActive } : {}),
@@ -386,6 +410,7 @@ export const POST: APIRoute = async (ctx) => {
             email: email || null,
             avatarUrl: avatarUrl || null,
             active: createActive,
+            ...definedPublicFields({ title, bio, showOnWebsite }),
             sortOrder: (maxSort._max.sortOrder ?? -1) + 1
           }
         });

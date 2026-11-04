@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { writeShopPublicProfile } from '@/lib/shopData/profile';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { HEX_COLOUR_RE, MAX_PALETTE, normaliseHexColour } from '@/lib/adminHub/colour';
@@ -208,6 +209,7 @@ export async function saveBrandColours(input: {
         where: { id: input.requestId },
         select: COLOUR_SELECT,
       });
+      await mirrorBrandColoursToProfile(tx, input.requestId, nextPrimary, nextSecondary);
       return toBrandColoursSaved(row);
     }
 
@@ -216,6 +218,22 @@ export async function saveBrandColours(input: {
       data,
       select: COLOUR_SELECT,
     });
+    await mirrorBrandColoursToProfile(tx, input.requestId, nextPrimary, nextSecondary);
     return toBrandColoursSaved(row);
   });
+}
+
+/** Canonical brand colours (site data contract) once the request has a draft shop. */
+async function mirrorBrandColoursToProfile(
+  tx: Prisma.TransactionClient,
+  requestId: string,
+  brandPrimaryColour: string | null,
+  brandSecondaryColour: string | null,
+): Promise<void> {
+  const link = await tx.previewRequest.findUnique({
+    where: { id: requestId },
+    select: { draftShopId: true },
+  });
+  if (!link?.draftShopId) return;
+  await writeShopPublicProfile(tx, link.draftShopId, { brandPrimaryColour, brandSecondaryColour });
 }
