@@ -1,10 +1,13 @@
 import type { HubShopDetails } from '@/components/previewHub/HubYourShop';
 import type { HubUploadedAsset } from '@/components/previewHub/HubUploader';
 import { loadActiveHubAssets, serializeHubAsset } from '@/lib/freePreview/hubAssets';
+import type { HubPageContext } from '@/lib/freePreview/hubPage';
 import { parseBrandPalette } from './brandColours';
 import { brandLockState } from './brandLock';
 import { currentHubLogo, currentHubLogoOptionsFromDetails, parseBrandSnapshotLogoAssetId } from './currentLogo';
+import { loadAdminHubSetupCard } from './hubView';
 import { hubLogoSrc, type AdminHubLiveState } from './liveState';
+import type { SetupCardModel } from './setupCard';
 
 export type HubLiveRequestFields = {
   id: string;
@@ -48,6 +51,7 @@ export function hubAppDetails(request: HubLiveRequestFields): HubShopDetails {
 export function buildAdminHubLiveState(input: {
   request: HubLiveRequestFields;
   assets: HubUploadedAsset[];
+  setup: SetupCardModel | null;
 }): AdminHubLiveState {
   const details = hubAppDetails(input.request);
   const logo = currentHubLogo(input.assets, currentHubLogoOptionsFromDetails(details));
@@ -55,10 +59,15 @@ export function buildAdminHubLiveState(input: {
     assets: input.assets,
     details,
     currentLogo: logo ? { id: logo.id, src: hubLogoSrc(logo) } : null,
+    setup: input.setup,
   };
 }
 
-export async function loadAdminHubLiveState(request: HubLiveRequestFields): Promise<AdminHubLiveState> {
-  const assets = (await loadActiveHubAssets(request.id)).map(serializeHubAsset);
-  return buildAdminHubLiveState({ request, assets });
+export async function loadAdminHubLiveState(ctx: HubPageContext): Promise<AdminHubLiveState> {
+  const rows = await loadActiveHubAssets(ctx.request.id);
+  const setup = await loadAdminHubSetupCard(
+    ctx,
+    rows.map((row) => row.kind),
+  );
+  return buildAdminHubLiveState({ request: ctx.request, assets: rows.map(serializeHubAsset), setup });
 }

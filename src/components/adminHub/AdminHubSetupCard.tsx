@@ -4,7 +4,6 @@ import {
   SETUP_CARD_TITLE,
   SETUP_COMPLETE_LABEL,
   SETUP_EXPAND_EVENT,
-  SETUP_FROM_LINKS_TAG,
   SETUP_HIDE_STEPS,
   SETUP_OPTIONAL_TAG,
   SETUP_SHOW_ALL_STEPS,
@@ -22,7 +21,6 @@ import {
 
 function extraLabel(item: SetupItem, nextId: SetupCardItemId | null): string {
   if (item.done) return item.detail ?? 'Done';
-  if (item.fromLinks) return SETUP_FROM_LINKS_TAG;
   if (item.optional) return SETUP_OPTIONAL_TAG;
   if (item.id === nextId) return 'Next';
   return 'To do';
@@ -53,8 +51,6 @@ function SetupRow(props: {
         </span>
       ) : item.done && item.detail ? (
         <span className="admin-hub-setup__tag">{item.detail}</span>
-      ) : item.fromLinks && !item.done ? (
-        <span className="admin-hub-setup__tag">{SETUP_FROM_LINKS_TAG}</span>
       ) : item.optional && !item.done ? (
         <span className="admin-hub-setup__tag">{SETUP_OPTIONAL_TAG}</span>
       ) : null}

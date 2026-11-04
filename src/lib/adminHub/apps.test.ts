@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_HUB_APP_IDS, adminHubAppHref, adminHubAppMeta, parseAdminHubApp, resolveAdminHubApp } from './apps';
@@ -34,7 +34,12 @@ describe('admin hub apps', () => {
   it('keeps messages on the narrow window', () => {
     expect(adminHubAppMeta('messages').maxWidth).toBe(720);
     expect(adminHubAppMeta('logo').maxWidth).toBe(1120);
-    expect(adminHubAppHref('hours')).toBe('/admin?app=hours');
+    expect(adminHubAppHref('logo')).toBe('/admin?app=logo');
+  });
+
+  it('has no opening hours window: hours are edited in Add to your website', () => {
+    expect(parseAdminHubApp('hours')).toBeNull();
+    expect((ADMIN_HUB_APP_IDS as readonly string[]).includes('hours')).toBe(false);
   });
 
   it('no longer treats services and team as hub apps', () => {
@@ -42,12 +47,9 @@ describe('admin hub apps', () => {
     expect(ADMIN_HUB_APP_IDS).not.toContain('team');
     expect(parseAdminHubApp('services')).toBeNull();
     expect(parseAdminHubApp('team')).toBeNull();
-    const reviewApp = readFileSync(resolve(process.cwd(), 'src/components/adminHub/apps/ReviewApp.tsx'), 'utf8');
     const loadApp = readFileSync(resolve(process.cwd(), 'src/components/adminHub/apps/loadApp.ts'), 'utf8');
-    expect(reviewApp).toContain('HoursApp');
-    expect(reviewApp).not.toContain('ServicesApp');
-    expect(reviewApp).not.toContain('TeamApp');
-    expect(loadApp).toContain('hours:');
+    expect(existsSync(resolve(process.cwd(), 'src/components/adminHub/apps/ReviewApp.tsx'))).toBe(false);
+    expect(loadApp).not.toContain('hours:');
     expect(loadApp).not.toContain('services:');
     expect(loadApp).not.toContain('team:');
   });

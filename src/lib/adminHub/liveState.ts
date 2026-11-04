@@ -5,6 +5,7 @@
 import type { HubUploadedAsset } from '@/components/previewHub/HubUploader';
 import type { HubShopDetails } from '@/components/previewHub/HubYourShop';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
+import type { SetupCardModel } from './setupCard';
 import { ADMIN_HUB_API_BASE } from './links';
 
 export type AdminHubLiveLogo = { id: string; src: string | null };
@@ -13,6 +14,8 @@ export type AdminHubLiveState = {
   assets: HubUploadedAsset[];
   details: HubShopDetails;
   currentLogo: AdminHubLiveLogo | null;
+  /** Sidebar setup card. Undefined = not sent (the page's server-rendered card stays). */
+  setup?: SetupCardModel | null;
 };
 
 export const ADMIN_HUB_STATE_SCRIPT_ID = 'admin-hub-state';

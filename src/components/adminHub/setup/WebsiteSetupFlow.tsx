@@ -8,6 +8,7 @@ import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { hubCanAddShopItems, type AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
 import { emitHubDataChanged } from '@/lib/adminHub/liveState';
+import { refreshHubState } from '@/lib/adminHub/hubStore';
 import { showHubToast } from '@/lib/adminHub/hubToast';
 import {
   HUB_DETAILS_ABOUT_HINT,
@@ -350,6 +351,8 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
       const fresh = await reloadHours();
       if (fresh) setHours(fresh.days);
       emitHubDataChanged('details-saved');
+      // The sidebar setup card reads saved hours: refresh now, not when the app closes.
+      void refreshHubState();
       showHubToast(SETUP_COPY.hoursSaved);
     } catch (error) {
       setErrors((current) => ({ ...current, hours: error instanceof Error ? error.message : GENERIC_ERROR }));
@@ -440,6 +443,8 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
       shopReady && dirty.hours ? reloadHours() : Promise.resolve(null),
     ]);
     emitHubDataChanged('details-saved');
+    // The sidebar setup card (opening hours, About) reads what was saved: refresh now, not when the app closes.
+    void refreshHubState();
 
     if (Object.keys(failed).length) {
       // Keep the owner's edits on screen; only the saved baselines were refreshed.

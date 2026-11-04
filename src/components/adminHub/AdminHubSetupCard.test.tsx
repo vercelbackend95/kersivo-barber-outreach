@@ -17,11 +17,10 @@ import {
 } from '@/lib/adminHub/setupCard';
 import { AdminHubSetupCard } from './AdminHubSetupCard';
 
-const none = { SERVICES: null, TEAM: null, HOURS: null };
 const scope = 'jo@shop.test';
 
 function incompleteCard() {
-  return setupPhase1Items({ stage: 'review', assetKinds: [], aboutText: null, reviewStates: none });
+  return setupPhase1Items({ stage: 'review', assetKinds: [], aboutText: null });
 }
 
 function completeCard() {
@@ -43,7 +42,7 @@ describe('AdminHubSetupCard', () => {
   it('shows the compact title, count and only the next step until expanded', () => {
     render(<AdminHubSetupCard placement="sidebar" card={incompleteCard()} storageScope={scope} />);
     expect(screen.getByRole('heading', { name: SETUP_CARD_TITLE })).toBeTruthy();
-    expect(screen.getByText('0 of 7 done')).toBeTruthy();
+    expect(screen.getByText('0 of 5 done')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Logo, Next' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Shop photos/ })).toBeNull();
 
@@ -59,13 +58,37 @@ describe('AdminHubSetupCard', () => {
       stage: 'review',
       assetKinds: ['LOGO'],
       aboutText: null,
-      reviewStates: none,
-      shopCounts: { activeServices: 2, activeBarbers: 1, products: 4 },
+      shopCounts: { activeServices: 2, activeBarbers: 1, products: 4, openingHoursSaved: false },
     });
     render(<AdminHubSetupCard placement="sidebar" card={card} storageScope={scope} />);
     expect(screen.getByRole('link', { name: 'Team, 1 team member' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Services & prices, 2 services' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Products, 4 products' })).toBeTruthy();
+  });
+
+  it('tags Products as optional and sends Opening hours to the hours section, not a window', () => {
+    localStorage.setItem(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope), '1');
+    render(<AdminHubSetupCard placement="sidebar" card={incompleteCard()} storageScope={scope} />);
+    const products = screen.getByRole('link', { name: 'Products, Optional' });
+    expect(products.textContent).toContain('Optional');
+    const hours = screen.getByRole('link', { name: 'Opening hours, To do' });
+    expect(hours.getAttribute('href')).toBe('/admin?app=materials&item=hours');
+    expect(hours.className).toContain('is-todo');
+  });
+
+  it('shows saved opening hours as done with a check mark and Done label', () => {
+    localStorage.setItem(setupStorageKey(SETUP_EXPAND_STORAGE_KEY, scope), '1');
+    const card = setupPhase1Items({
+      stage: 'review',
+      assetKinds: [],
+      aboutText: null,
+      shopCounts: { activeServices: 0, activeBarbers: 0, products: 0, openingHoursSaved: true },
+    });
+    render(<AdminHubSetupCard placement="sidebar" card={card} storageScope={scope} />);
+    const hours = screen.getByRole('link', { name: 'Opening hours, Done' });
+    expect(hours.className).toContain('is-done');
+    expect(hours.querySelector('.admin-hub-setup__mark svg')).toBeTruthy();
+    expect(screen.getByText('1 of 5 done')).toBeTruthy();
   });
 
   it('remembers the expand toggle from localStorage', () => {

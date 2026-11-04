@@ -15,7 +15,7 @@ export function createHubStateHandlers(sourceOf: HubSourceOf): { GET: APIRoute }
     if (limited) return withPrivateHeaders(limited);
     const ctxResult = await resolveHubApiContext({ request, source: sourceOf(params), mutation: false });
     if (!ctxResult.ok) return withPrivateHeaders(ctxResult.response);
-    const state = await loadAdminHubLiveState(ctxResult.ctx.request);
+    const state = await loadAdminHubLiveState(ctxResult.ctx);
     return withPrivateHeaders(hubJson({ ok: true, state }));
   };
   return { GET };

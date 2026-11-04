@@ -9,11 +9,13 @@ import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { HUB_WEBSITE_EXTRA_LABEL } from '@/lib/freePreview/hubCopy';
 import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { showHubToast } from '@/lib/adminHub/hubToast';
+import { refreshHubState } from '@/lib/adminHub/hubStore';
 import { defaultOpeningWeek } from '@/lib/shopData/openingHours';
 import { WebsiteSetupFlow } from './WebsiteSetupFlow';
 
 vi.mock('@/lib/adminHub/hubToast', () => ({ showHubToast: vi.fn() }));
 vi.mock('@/lib/adminHub/liveState', () => ({ emitHubDataChanged: vi.fn() }));
+vi.mock('@/lib/adminHub/hubStore', () => ({ refreshHubState: vi.fn() }));
 // Photos, logo and files is its own component with its own tests; a stub keeps this test on the flow.
 vi.mock('@/components/previewHub/HubYourShop', () => ({
   HubYourShop: () => <div data-testid="hub-your-shop-stub">uploads</div>,
@@ -90,6 +92,7 @@ beforeEach(() => {
   calls = [];
   guard = [];
   vi.mocked(showHubToast).mockClear();
+  vi.mocked(refreshHubState).mockClear();
   routes = {
     [key('GET', '/api/admin-hub/profile')]: () => ({ body: { ok: true, ready: true, profile: savedProfile } }),
     [key('GET', '/api/admin-hub/opening-hours')]: () => ({
@@ -317,6 +320,8 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
       expect(writes[0]!.body).toEqual({ days: defaultOpeningWeek() });
       expect(hours.queryByTestId('opening-hours-suggested')).toBeNull();
       expect(showHubToast).toHaveBeenCalledWith('Opening hours saved.');
+      // The sidebar setup card refreshes straight away (it reads the saved hours), not when the app closes.
+      expect(refreshHubState).toHaveBeenCalled();
       expect(screen.queryByTestId('setup-savebar')).toBeNull();
       expect(screen.getByTestId('setup-progress').textContent).toContain('2 of 2 sections complete');
     });

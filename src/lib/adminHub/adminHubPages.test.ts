@@ -29,9 +29,11 @@ describe('/admin hub location', () => {
       app: 'messages',
       draft: 'reopen',
     });
-    for (const app of ['setup', 'logo', 'photos', 'materials', 'hours', 'about', 'colours', 'activity', 'business']) {
+    for (const app of ['setup', 'logo', 'photos', 'materials', 'about', 'colours', 'activity', 'business']) {
       expect(parse(`/admin?app=${app}`)).toMatchObject({ section: 'overview', app });
     }
+    // No opening hours window: old ?app=hours links land on the Overview.
+    expect(parse('/admin?app=hours')).toMatchObject({ section: 'overview', app: null });
     expect(parse('/admin?app=services')).toMatchObject({ section: 'overview', app: null });
     expect(parse('/admin?app=team')).toMatchObject({ section: 'overview', app: null });
     expect(parse('/admin/changes?app=unknown')).toMatchObject({ section: 'changes', app: null });

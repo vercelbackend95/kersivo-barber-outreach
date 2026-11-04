@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GET /api/admin-hub/state > returns only the session shop: assets, details and the current logo 1`] = `
+exports[`GET /api/admin-hub/state > returns only the session shop: assets, details, the current logo and the setup card 1`] = `
 {
   "assets": [
     {
@@ -72,6 +72,65 @@ exports[`GET /api/admin-hub/state > returns only the session shop: assets, detai
     "snapshotLogoAssetId": null,
     "styleNotes": null,
     "websiteExtraText": null,
+  },
+  "setup": {
+    "done": 3,
+    "items": [
+      {
+        "done": true,
+        "href": "/admin?app=materials&item=logo",
+        "id": "logo",
+        "label": "Logo",
+        "optional": false,
+      },
+      {
+        "done": true,
+        "href": "/admin?app=materials&item=photos",
+        "id": "photos",
+        "label": "Shop photos",
+        "optional": false,
+      },
+      {
+        "done": false,
+        "href": "/admin/services?add=1",
+        "id": "services",
+        "label": "Services & prices",
+        "optional": false,
+      },
+      {
+        "done": false,
+        "href": "/admin/team?add=1",
+        "id": "team",
+        "label": "Team",
+        "optional": false,
+      },
+      {
+        "done": true,
+        "href": "/admin?app=materials&item=hours",
+        "id": "hours",
+        "label": "Opening hours",
+        "optional": false,
+      },
+      {
+        "done": true,
+        "href": "/admin?app=materials&item=text",
+        "id": "about",
+        "label": "About your shop",
+        "optional": true,
+      },
+      {
+        "done": false,
+        "href": "/admin/products?add=1",
+        "id": "products",
+        "label": "Products",
+        "optional": true,
+      },
+    ],
+    "nextId": "services",
+    "phase": 1,
+    "status": "Your shop · 3 of 5",
+    "title": "Help us build your site",
+    "total": 5,
   },
 }
 `;

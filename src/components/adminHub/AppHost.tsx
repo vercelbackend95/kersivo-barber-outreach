@@ -2,7 +2,6 @@ import { useCallback, useEffect, useId, useRef, useState, type ComponentType, ty
 import { createPortal } from 'react-dom';
 import {
   Camera,
-  Clock,
   Globe,
   ImagePlus,
   ListChecks,
@@ -47,7 +46,6 @@ const ICONS: Record<AdminHubAppId, typeof Store> = {
   logo: ImagePlus,
   photos: Camera,
   materials: ImagePlus,
-  hours: Clock,
   about: NotebookPen,
   messages: MessageCircle,
   activity: TrendingUp,
