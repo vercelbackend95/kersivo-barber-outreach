@@ -5,13 +5,21 @@ import {
   ensureOwnerMembership,
   getMembershipForUser,
   getShopIdForUser,
+  resolveActiveMembershipForUser,
 } from '@/lib/auth/provisionShop';
 import { DEMO_SHOP_ID, resolveShopId } from '@/lib/db/shopScope';
 import { requirePermission as denyUnless } from '@/lib/admin/rbac/can';
 import type { Permission } from '@/lib/admin/rbac/permissions';
 import { permissionsForRole } from '@/lib/admin/rbac/permissions';
 import { resolvePreviewAccess } from '@/lib/preview/shopPreviewSession';
-import { HUB_ADMIN_PERMISSIONS, resolveHubAdminAccess } from '@/lib/adminHub/hubAdminAccess';
+import {
+  HUB_ADMIN_PERMISSIONS,
+  hubAdminAccessForContext,
+  resolveHubAdminAccess,
+  type HubAdminAccess,
+} from '@/lib/adminHub/hubAdminAccess';
+import { resolveOperatorImpersonation } from '@/lib/adminHub/operatorImpersonation';
+import { readActiveShopSelection } from './activeShopSelection';
 import { getAdminSessionCookieName, getSessionSecret, parseAdminSessionToken } from './session';
 
 export type AdminAccess = {
@@ -97,12 +105,57 @@ function buildAccess(input: {
   };
 }
 
-export async function resolveAdminAccess(context: APIContext): Promise<AdminAccess | null> {
+function hubAccess(hub: HubAdminAccess): AdminAccess {
+  return buildAccess({
+    shopId: hub.shopId,
+    userId: null,
+    userName: null,
+    userEmail: null,
+    emailVerified: true,
+    userImage: null,
+    via: 'hub',
+    role: 'OWNER',
+    memberId: null,
+    barberId: null,
+    permissions: HUB_ADMIN_PERMISSIONS,
+    previewRequestId: hub.previewRequestId,
+  });
+}
+
+/**
+ * THE active-shop resolver for every /admin API handler (and, through `adminSessionShopFor` /
+ * `resolveAdminPageMode`, every /admin page). Order:
+ *
+ * a) Platform operator with a live, operator-bound "Viewing as KERSIVO" impersonation → the impersonated
+ *    draft shop with hub permissions, or no access at all. Never the operator's own shop.
+ * b) Otherwise the caller's own tenant access (`resolveTenantAdminAccess`).
+ *
+ * The shop id never comes from the client: no URL, query or body parameter is consulted.
+ */
+export async function getActiveShopContext(context: APIContext): Promise<AdminAccess | null> {
+  const impersonation = await resolveOperatorImpersonation(context.request);
+  if (impersonation.active) {
+    const hub = await hubAdminAccessForContext(impersonation.ctx);
+    return hub ? hubAccess(hub) : null;
+  }
+  return resolveTenantAdminAccess(context);
+}
+
+/** Same resolver under its historical name (used by every admin API route). */
+export const resolveAdminAccess = getActiveShopContext;
+
+/**
+ * The caller's own shop, ignoring any operator impersonation:
+ * Better Auth member (explicitly selected shop if valid, else a deterministic default) → guest preview cookie →
+ * owner hub cookie → legacy secret. Only `resolveAdminPageMode` uses this directly, after it has handled the
+ * operator case itself.
+ */
+export async function resolveTenantAdminAccess(context: APIContext): Promise<AdminAccess | null> {
   try {
     const session = await auth.api.getSession({ headers: context.request.headers });
     if (session?.user?.id) {
       const userId = session.user.id;
-      let membership = await getMembershipForUser(userId);
+      let membership = await resolveActiveMembershipForUser(userId, readActiveShopSelection(context.request));
 
       if (!membership) {
         const shopId = await getShopIdForUser(userId);
@@ -148,22 +201,7 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
   }
 
   const hub = await resolveHubAdminAccess(context);
-  if (hub) {
-    return buildAccess({
-      shopId: hub.shopId,
-      userId: null,
-      userName: null,
-      userEmail: null,
-      emailVerified: true,
-      userImage: null,
-      via: 'hub',
-      role: 'OWNER',
-      memberId: null,
-      barberId: null,
-      permissions: HUB_ADMIN_PERMISSIONS,
-      previewRequestId: hub.previewRequestId,
-    });
-  }
+  if (hub) return hubAccess(hub);
 
   if (isSecretAuthorized(context) || isLegacyCookieAuthorized(context)) {
     const shopId = (await resolveShopId()) || DEMO_SHOP_ID;

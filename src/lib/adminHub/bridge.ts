@@ -42,6 +42,7 @@ export async function adminHubBridge(input: {
     stage: ctx.state.stage,
     previewExpiresAt: ctx.request.expiresAt,
     operator: ctx.isOperator,
+    operatorEmail: operator.ok ? operator.access.email : null,
     now,
   });
   if (!cookie) {

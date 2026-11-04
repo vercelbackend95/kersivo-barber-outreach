@@ -27,8 +27,18 @@ const NOW = new Date('2026-11-01T12:00:00Z');
 const SECRET = 'admin-mode-test-secret-0123456789';
 const WEEK = new Date(NOW.getTime() + 7 * 86_400_000);
 
-function cookie(input: { id?: string; operator?: boolean } = {}) {
-  return signHubSession({ previewRequestId: input.id ?? 'req_1', expiresAt: WEEK, operator: input.operator }, SECRET)!;
+const OPS = { ok: true, access: { userId: 'ops', email: 'ops@kersivo.co.uk' } };
+
+function cookie(input: { id?: string; operator?: boolean; operatorEmail?: string | null } = {}) {
+  return signHubSession(
+    {
+      previewRequestId: input.id ?? 'req_1',
+      expiresAt: WEEK,
+      operator: input.operator,
+      operatorEmail: input.operator ? (input.operatorEmail === undefined ? OPS.access.email : input.operatorEmail) : null,
+    },
+    SECRET,
+  )!;
 }
 
 function hubCtx(stage: string, isOperator = false, id = 'req_1') {
@@ -99,7 +109,7 @@ describe('resolveAdminPageMode', () => {
   });
 
   it('honours the operator cookie only with a live operator session', async () => {
-    resolveOperatorAccess.mockResolvedValue({ ok: true });
+    resolveOperatorAccess.mockResolvedValue(OPS);
     resolveHubContext.mockResolvedValue(hubCtx('review', true));
     const mode = await run({ cookie: cookie({ operator: true }) }).result;
     expect(mode).toMatchObject({ kind: 'hub', ctx: { isOperator: true } });
@@ -108,6 +118,16 @@ describe('resolveAdminPageMode', () => {
     resolveHubContext.mockClear();
     const dropped = await run({ cookie: cookie({ operator: true }) }).result;
     expect(dropped).toEqual({ kind: 'full', setCookie: expect.stringMatching(/^ks_hub=; Max-Age=0;/) });
+    expect(resolveHubContext).not.toHaveBeenCalled();
+  });
+
+  it('drops an operator cookie minted for another operator, or an unbound legacy one', async () => {
+    resolveOperatorAccess.mockResolvedValue(OPS);
+    resolveHubContext.mockResolvedValue(hubCtx('review', true));
+    for (const value of [cookie({ operator: true, operatorEmail: 'other@kersivo.co.uk' }), cookie({ operator: true, operatorEmail: null })]) {
+      const mode = await run({ cookie: value }).result;
+      expect(mode).toEqual({ kind: 'full', setCookie: expect.stringMatching(/^ks_hub=; Max-Age=0;/) });
+    }
     expect(resolveHubContext).not.toHaveBeenCalled();
   });
 

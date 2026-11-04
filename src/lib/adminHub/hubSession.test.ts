@@ -3,6 +3,8 @@ import {
   HUB_COOKIE_MAX_AGE_SECONDS,
   HUB_EXPIRED_COOKIE_MAX_AGE_SECONDS,
   clearHubCookie,
+  hubOperatorBinding,
+  mintHubCookie,
   hubCookieExpiry,
   readHubCookie,
   serializeHubCookie,
@@ -123,5 +125,31 @@ describe('ks_hub cookie header', () => {
     });
     expect(readHubCookie(request)).toBe('v1.req.1.mac');
     expect(readHubCookie(new Request('http://localhost/admin'))).toBeNull();
+  });
+});
+
+describe('ks_hub operator binding', () => {
+  it('binds an operator cookie to the operator email without storing the email', () => {
+    const value = signHubSession(
+      { previewRequestId: 'req_abc123', expiresAt: IN_A_WEEK, operator: true, operatorEmail: 'Ops@Kersivo.co.uk' },
+      SECRET,
+    )!;
+    expect(value).toMatch(/^v1\.req_abc123\.\d+\.op-[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/);
+    expect(value.toLowerCase()).not.toContain('kersivo.co.uk');
+    const session = verifyHubSession(value, NOW, SECRET);
+    expect(session?.operator).toBe(true);
+    expect(session?.operatorBinding).toBe(hubOperatorBinding('ops@kersivo.co.uk', SECRET));
+    expect(session?.operatorBinding).not.toBe(hubOperatorBinding('other@kersivo.co.uk', SECRET));
+  });
+
+  it('rejects a tampered binding and refuses to mint an unbound operator cookie', () => {
+    const value = signHubSession(
+      { previewRequestId: 'req_abc123', expiresAt: IN_A_WEEK, operator: true, operatorEmail: 'ops@kersivo.co.uk' },
+      SECRET,
+    )!;
+    const parts = value.split('.');
+    parts[3] = `op-${'A'.repeat(22)}`;
+    expect(verifyHubSession(parts.join('.'), NOW, SECRET)).toBeNull();
+    expect(mintHubCookie({ previewRequestId: 'req_abc123', stage: 'review', previewExpiresAt: IN_A_WEEK, operator: true, now: NOW })).toBeNull();
   });
 });

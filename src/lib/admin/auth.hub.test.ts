@@ -28,10 +28,16 @@ vi.mock('@/lib/preview/shopPreviewSession', async (importOriginal) => {
 vi.mock('@/lib/adminHub/hubAdminAccess', () => ({
   HUB_ADMIN_PERMISSIONS: ['catalog.manage', 'team.read', 'retail.manage'],
   resolveHubAdminAccess: (...args: unknown[]) => resolveHubAdminAccess(...args),
+  hubAdminAccessForContext: vi.fn(),
+}));
+
+vi.mock('@/lib/adminHub/operatorImpersonation', () => ({
+  resolveOperatorImpersonation: async () => ({ active: false }),
 }));
 
 vi.mock('@/lib/auth/provisionShop', () => ({
   getMembershipForUser: (...args: unknown[]) => getMembershipForUser(...args),
+  resolveActiveMembershipForUser: (userId: string) => getMembershipForUser(userId),
   getShopIdForUser: (...args: unknown[]) => getShopIdForUser(...args),
   ensureOwnerMembership: (...args: unknown[]) => ensureOwnerMembership(...args),
 }));

@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { auth } from '@/lib/auth';
 import { acceptInviteForUser, hashInviteToken } from '@/lib/admin/rbac/members';
 import { prisma } from '@/lib/db/client';
+import { serializeActiveShopSelection } from '@/lib/admin/activeShopSelection';
 
 /**
  * Accept a shop invite. Bound to invite.shopId (never shop name).
@@ -66,15 +67,20 @@ export const POST: APIRoute = async (context) => {
     });
   }
 
+  // The user just chose to join this shop: make it their active shop (matters when they belong to several).
+  const successHeaders = new Headers({ 'Content-Type': 'application/json' });
+  const selection = serializeActiveShopSelection(result.shopId);
+  if (selection) successHeaders.append('Set-Cookie', selection);
+
   if (result.alreadyMember) {
     return new Response(
       JSON.stringify({ ok: true, shopId: result.shopId, alreadyMember: true }),
-      { headers: { 'Content-Type': 'application/json' } },
+      { headers: successHeaders },
     );
   }
 
   return new Response(
     JSON.stringify({ ok: true, shopId: result.shopId, role: result.role }),
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: successHeaders },
   );
 };

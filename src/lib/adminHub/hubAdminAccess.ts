@@ -1,9 +1,8 @@
 import type { APIContext } from 'astro';
 import type { Permission } from '@/lib/admin/rbac/permissions';
 import { prisma } from '@/lib/db/client';
-import { isAdminHubRouteEnabled, resolveHubContext } from '@/lib/freePreview/hubPage';
+import { isAdminHubRouteEnabled, resolveHubContext, type HubPageContext } from '@/lib/freePreview/hubPage';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
-import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { recordDebouncedPreviewRequestEvent } from './ownerEditEvents';
 import { readHubCookie, verifyHubSession } from './hubSession';
 
@@ -117,6 +116,18 @@ export function isAdminApiPath(pathname: string): boolean {
   return pathname === '/api/admin' || pathname.startsWith('/api/admin/');
 }
 
+/** /admin pages and the admin, admin-hub and setup APIs: every response depends on who is signed in (no-store). */
+export function isTenantPrivatePath(pathname: string): boolean {
+  return (
+    pathname === '/admin' ||
+    pathname.startsWith('/admin/') ||
+    isAdminApiPath(pathname) ||
+    pathname === '/api/admin-hub' ||
+    pathname.startsWith('/api/admin-hub/') ||
+    pathname.startsWith('/api/setup/')
+  );
+}
+
 export function isHubAdminApiAllowed(method: string, pathname: string): boolean {
   const path = normalizeAdminPath(pathname);
   const verb = method.toUpperCase();
@@ -184,24 +195,10 @@ export type HubAdminAccess = {
 };
 
 /**
- * Tenant access to the ownerless draft shop for a live hub cookie.
- * Converted / launch owners keep Better Auth and never reach this path.
+ * Draft-shop access for a resolved hub context: only the ownerless draft shop, only in draft stages,
+ * never for an anonymised request. Shared by the owner cookie path and operator impersonation.
  */
-export async function resolveHubAdminAccess(context: APIContext, now: Date = new Date()): Promise<HubAdminAccess | null> {
-  if (!isAdminHubRouteEnabled()) return null;
-
-  const cookie = readHubCookie(context.request);
-  const session = verifyHubSession(cookie, now);
-  if (!session) return null;
-
-  let operatorOk = false;
-  if (session.operator) {
-    const operator = await resolveOperatorAccess(context.request);
-    if (!operator.ok) return null;
-    operatorOk = true;
-  }
-
-  const ctx = await resolveHubContext({ cookie }, { isOperator: operatorOk, now });
+export async function hubAdminAccessForContext(ctx: HubPageContext | null): Promise<HubAdminAccess | null> {
   if (!ctx || ctx.state.kind !== 'hub' || !HUB_ADMIN_STAGES.has(ctx.state.stage)) return null;
 
   const draftShopId = ctx.request.draftShopId;
@@ -234,6 +231,23 @@ export async function resolveHubAdminAccess(context: APIContext, now: Date = new
     permissions: HUB_ADMIN_PERMISSIONS,
     previewRequestId: ctx.request.id,
   };
+}
+
+/**
+ * Tenant access to the ownerless draft shop for a live OWNER hub cookie.
+ * Operator cookies are never resolved here: "Viewing as KERSIVO" goes through
+ * `resolveOperatorImpersonation` (operatorImpersonation.ts) so it cannot mix with the operator's own shop.
+ * Converted / launch owners keep Better Auth and never reach this path.
+ */
+export async function resolveHubAdminAccess(context: APIContext, now: Date = new Date()): Promise<HubAdminAccess | null> {
+  if (!isAdminHubRouteEnabled()) return null;
+
+  const cookie = readHubCookie(context.request);
+  const session = verifyHubSession(cookie, now);
+  if (!session || session.operator) return null;
+
+  const ctx = await resolveHubContext({ cookie }, { isOperator: false, now });
+  return hubAdminAccessForContext(ctx);
 }
 
 export function hubOwnerEditSectionForPath(pathname: string): HubOwnerEditSection | null {

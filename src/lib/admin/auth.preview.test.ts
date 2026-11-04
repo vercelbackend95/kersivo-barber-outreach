@@ -26,6 +26,7 @@ vi.mock('@/lib/preview/shopPreviewSession', async (importOriginal) => {
 
 vi.mock('@/lib/auth/provisionShop', () => ({
   getMembershipForUser: (...args: unknown[]) => getMembershipForUser(...args),
+  resolveActiveMembershipForUser: (userId: string) => getMembershipForUser(userId),
   getShopIdForUser: (...args: unknown[]) => getShopIdForUser(...args),
   ensureOwnerMembership: (...args: unknown[]) => ensureOwnerMembership(...args),
 }));

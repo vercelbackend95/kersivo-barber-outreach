@@ -241,14 +241,10 @@ describe('resolveHubAdminAccess', () => {
     expect(resolveHubContext).not.toHaveBeenCalled();
   });
 
-  it('grants operator hub access when the operator session is live', async () => {
+  it('never resolves operator cookies (impersonation goes through resolveOperatorImpersonation)', async () => {
     resolveOperatorAccess.mockResolvedValue({ ok: true, access: { userId: 'ops', email: 'ops@kersivo.co.uk' } });
-    const access = await resolveHubAdminAccess(ctxWith(cookie({ operator: true })), NOW);
-    expect(access?.via).toBe('hub');
-    expect(resolveHubContext).toHaveBeenCalledWith(
-      { cookie: cookie({ operator: true }) },
-      { isOperator: true, now: NOW },
-    );
+    expect(await resolveHubAdminAccess(ctxWith(cookie({ operator: true })), NOW)).toBeNull();
+    expect(resolveHubContext).not.toHaveBeenCalled();
   });
 });
 
@@ -314,5 +310,17 @@ describe('middleware wiring', () => {
     expect(src).not.toMatch(/startsWith\(ADMIN_API_PREFIX\)/);
     expect(src).not.toMatch(/startsWith\(['"]\/api\/admin['"]\)/);
     expect(HUB_ADMIN_UNAVAILABLE_MESSAGE).toBe('Not available in your preview.');
+  });
+});
+
+describe('isTenantPrivatePath', () => {
+  it('covers /admin pages and tenant APIs, not public pages', async () => {
+    const { isTenantPrivatePath } = await import('./hubAdminAccess');
+    for (const path of ['/admin', '/admin/team', '/api/admin/session', '/api/admin-hub/state', '/api/setup/billing-status']) {
+      expect(isTenantPrivatePath(path), path).toBe(true);
+    }
+    for (const path of ['/admin-demo', '/administrator', '/api/administrator', '/pricing', '/api/availability']) {
+      expect(isTenantPrivatePath(path), path).toBe(false);
+    }
   });
 });
