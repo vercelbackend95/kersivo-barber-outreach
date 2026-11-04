@@ -7,6 +7,7 @@ import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColour
 import type { BuildPack, BuildPackAsset, BuildPackRemoteImage } from '@/lib/ops/buildPack';
 import { buildPackFiles, buildPackLogos, buildPackShopName, buildPackTownCity, memberPhotoCount } from '@/lib/ops/buildPack';
 import { isAllowedRemoteImageUrl, remoteImageStoreHost } from '@/lib/ops/buildPackRemoteImages';
+import { remoteImageThumbUrl, type RemoteImageThumbWidth } from '@/lib/ops/buildPackRemoteImageThumb';
 import { buildPackFileSummary, buildPackFileSummaryLabel } from '@/lib/ops/buildPackZipPlan';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
 
@@ -60,6 +61,14 @@ const storeHost = remoteImageStoreHost();
 const isAllowed = (url: string | null | undefined) => isAllowedRemoteImageUrl(url, storeHost);
 const remoteFor = (source: BuildPackRemoteImage['source'], ownerId: string) =>
   pack.remoteImages.find((image) => image.source === source && image.ownerId === ownerId) ?? null;
+// Overview thumbnails are resized WebP from the remote-image route (originals are often 1.5 MB+ PNGs).
+// Downloads and the zip keep the originals.
+const thumbFor = (source: BuildPackRemoteImage['source'], ownerId: string, width: RemoteImageThumbWidth) => {
+  const image = remoteFor(source, ownerId);
+  return image && isAllowed(image.url) ? remoteImageThumbUrl(requestId, image, width) : null;
+};
+const shopLogoImage = pack.remoteImages.find((image) => image.source === 'shopLogo') ?? null;
+const shopLogoThumb = shopLogoImage && isAllowed(shopLogoImage.url) ? remoteImageThumbUrl(requestId, shopLogoImage, 240) : null;
 const fileSummary = buildPackFileSummaryLabel(buildPackFileSummary(pack, (url) => isAllowed(url)), formatBytes);
 
 /** Display only: "shaving" → "Shaving". Stored data is never changed. */
@@ -220,11 +229,11 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
           )
         }
         {
-          pack.brand.shopLogoUrl && isAllowed(pack.brand.shopLogoUrl) ? (
+          pack.brand.shopLogoUrl && shopLogoThumb ? (
             <figure class="ops-bb__logo">
               <div class="ops-bb__logo-img">
                 <img
-                  src={pack.brand.shopLogoUrl}
+                  src={shopLogoThumb}
                   alt="Logo set in the dashboard shop settings"
                   loading="lazy"
                   decoding="async"
@@ -380,10 +389,10 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
                 <tr>
                   <td>
                     <div class="ops-bb__item">
-                      {service.imageUrl && isAllowed(service.imageUrl) ? (
+                      {thumbFor('service', service.id, 96) ? (
                         <img
                           class="ops-bb__thumb"
-                          src={service.imageUrl}
+                          src={thumbFor('service', service.id, 96)}
                           alt={`Photo for ${service.name}`}
                           width="48"
                           height="48"
@@ -423,7 +432,7 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
         <ul class="ops-bb__team">
           {pack.team.map((member) => {
             const photo = member.photoAssetIds.map((id) => assetById.get(id)).find(Boolean) ?? null;
-            const avatar = member.avatarUrl && isAllowed(member.avatarUrl) ? member.avatarUrl : null;
+            const avatar = thumbFor('barber', member.id, 96);
             const count = memberPhotoCount(member);
             return (
               <li class="ops-bb__member" data-testid="ops-bb-member">
@@ -474,10 +483,10 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
               {pack.products.map((product) => (
                 <tr>
                   <td class="ops-bb__thumb-col">
-                    {product.imageUrl && isAllowed(product.imageUrl) ? (
+                    {thumbFor('product', product.id, 96) ? (
                       <img
                         class="ops-bb__thumb"
-                        src={product.imageUrl}
+                        src={thumbFor('product', product.id, 96)}
                         alt={`Photo of ${product.name}`}
                         width="48"
                         height="48"
@@ -644,6 +653,19 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
     if (event.target === dialog) dialog.close();
   });
 
+  // Some browsers leave clipboard.write() pending for ~7 s before rejecting a blocked write (the
+  // ClipboardItem promise just hangs). Give up after 2.5 s and offer the dialog instead.
+  const CLIPBOARD_TIMEOUT_MS = 2500;
+  const CLIPBOARD_TIMEOUT = Symbol('clipboard-timeout');
+  function withClipboardTimeout<T>(promise: Promise<T>): Promise<T> {
+    promise.catch(() => {});
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(CLIPBOARD_TIMEOUT), CLIPBOARD_TIMEOUT_MS);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+  }
+
   function openBriefDialog(text: string, opener: HTMLElement) {
     if (!dialog || !dialogText) return false;
     dialogText.value = text;
@@ -671,19 +693,23 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
       });
       textPromise.catch(() => {});
       let copied = false;
+      let timedOut = false;
       try {
         if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
           const item = new ClipboardItem({ 'text/plain': textPromise.then((text) => new Blob([text], { type: 'text/plain' })) });
-          await navigator.clipboard.write([item]);
+          await withClipboardTimeout(navigator.clipboard.write([item]));
           copied = true;
         }
-      } catch {
+      } catch (error) {
         copied = false;
+        timedOut = error === CLIPBOARD_TIMEOUT;
       }
-      if (!copied) {
+      // A write that hung until the timeout means the browser is sitting on a blocked clipboard: a second
+      // attempt would hang the same way, so go straight to the dialog.
+      if (!copied && !timedOut) {
         try {
           if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(await textPromise);
+            await withClipboardTimeout(navigator.clipboard.writeText(await textPromise));
             copied = true;
           }
         } catch {
