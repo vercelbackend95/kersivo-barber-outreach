@@ -16,8 +16,12 @@ import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import { FREE_PREVIEW_BARBER_COUNTS, FREE_PREVIEW_DOMAIN_OPTIONS, labelFor } from '@/lib/freePreview/intake';
 import { displayWorkLinks, type DisplayWorkLink } from '@/lib/freePreview/workLinkNormalise';
 import { selectFor } from './buildPackFields';
+import { collectRemoteImages, type BuildPackRemoteImage } from './buildPackRemoteImages';
 
-export const BUILD_PACK_SCHEMA_VERSION = 1 as const;
+export type { BuildPackRemoteImage } from './buildPackRemoteImages';
+
+/** 2: remoteImages (dashboard images), photoPath on team/products/services, current/earlier logos. */
+export const BUILD_PACK_SCHEMA_VERSION = 2 as const;
 
 export const BUILD_PACK_ASSET_KINDS = ['LOGO', 'SHOP_PHOTO', 'TEAM_PHOTO', 'PRICE_LIST', 'OTHER'] as const;
 export type BuildPackAssetKind = (typeof BUILD_PACK_ASSET_KINDS)[number];
@@ -189,6 +193,8 @@ export type BuildPack = {
   services: BuildPackService[];
   team: BuildPackTeamMember[];
   products: BuildPackProduct[];
+  /** Images added in the dashboard screens (public Blob URLs): avatars, product, service and shop logo images. */
+  remoteImages: BuildPackRemoteImage[];
   assets: Record<BuildPackAssetKind, BuildPackAsset[]>;
   /** Change and message attachments: for revisions, not the first build. */
   revisionFiles: BuildPackAsset[];
@@ -603,10 +609,8 @@ export function shapeBuildPack(rows: BuildPackRows, now: Date = new Date()): Bui
     if (!contact.email) missing.push('Public email');
   }
   if (!contact.tagline) missing.push('Tagline');
-  if (team.length > 0 && team.some((member) => member.photoAssetIds.length === 0 && !member.avatarUrl)) {
-    const without = team.filter((member) => member.photoAssetIds.length === 0 && !member.avatarUrl).map((m) => m.name);
-    missing.push(`Team photos for ${without.join(', ')}`);
-  }
+  const without = team.filter((member) => !memberHasPhoto(member)).map((m) => m.name);
+  if (without.length) missing.push(`Team photos for ${without.join(', ')}`);
   if (!links.instagram.request && !links.instagram.profile && !links.facebook && !links.tiktok && !links.other) {
     missing.push('Social links');
   }
@@ -633,6 +637,12 @@ export function shapeBuildPack(rows: BuildPackRows, now: Date = new Date()): Bui
     services,
     team,
     products,
+    remoteImages: collectRemoteImages({
+      team,
+      products,
+      services,
+      shop: shop ? { id: shop.id, name: clean(shop.name) ?? request.shopName, logoUrl: brand.shopLogoUrl } : null,
+    }),
     assets,
     revisionFiles,
     changeRequests,
@@ -657,6 +667,53 @@ export function buildPackShopName(pack: Pick<BuildPack, 'shop'>): string {
 
 export function buildPackTownCity(pack: Pick<BuildPack, 'shop'>): string {
   return pack.shop.draftTownCity ?? pack.shop.requestTownCity;
+}
+
+/**
+ * The one answer to "does this team member have a photo": a hub TEAM_PHOTO upload or a dashboard avatar.
+ * Used by `missing`, the Overview Team card and brief.md so they cannot disagree.
+ */
+export function memberHasPhoto(member: Pick<BuildPackTeamMember, 'photoAssetIds' | 'avatarUrl'>): boolean {
+  return member.photoAssetIds.length > 0 || Boolean(member.avatarUrl?.trim());
+}
+
+/** Number of photos for a team member: hub uploads plus the dashboard avatar. */
+export function memberPhotoCount(member: Pick<BuildPackTeamMember, 'photoAssetIds' | 'avatarUrl'>): number {
+  return member.photoAssetIds.length + (member.avatarUrl?.trim() ? 1 : 0);
+}
+
+export type BuildPackLogoGroups = {
+  /** The logo to build from (snapshot logo once sent, else the newest upload). */
+  current: BuildPackAsset | null;
+  /** Other LOGO uploads, oldest first, duplicates removed. */
+  earlier: BuildPackAsset[];
+  /** Exact re-uploads (same original file name and size as a logo already kept), with the kept one. */
+  duplicates: Array<{ asset: BuildPackAsset; duplicateOf: BuildPackAsset }>;
+};
+
+/**
+ * Splits LOGO uploads into current / earlier / duplicates. There is no content hash, so the same original
+ * file name and the same size in bytes counts as the same file.
+ */
+export function buildPackLogos(pack: Pick<BuildPack, 'assets' | 'brand'>): BuildPackLogoGroups {
+  const logos = pack.assets.LOGO;
+  const current = logos.find((logo) => logo.id === pack.brand.currentLogoAssetId) ?? null;
+  const kept: BuildPackAsset[] = current ? [current] : [];
+  const earlier: BuildPackAsset[] = [];
+  const duplicates: BuildPackLogoGroups['duplicates'] = [];
+  const others = logos
+    .filter((logo) => logo !== current)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+  for (const logo of others) {
+    const same = kept.find((k) => k.sizeBytes === logo.sizeBytes && k.fileName.trim().toLowerCase() === logo.fileName.trim().toLowerCase());
+    if (same) {
+      duplicates.push({ asset: logo, duplicateOf: same });
+      continue;
+    }
+    kept.push(logo);
+    earlier.push(logo);
+  }
+  return { current, earlier, duplicates };
 }
 
 /** Every file in the pack (build files first, then revision files). */

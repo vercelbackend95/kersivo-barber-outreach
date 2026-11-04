@@ -4,8 +4,10 @@
  * Owner text is rendered as text, never injected as HTML; line breaks are kept with CSS.
  */
 import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColours';
-import type { BuildPack, BuildPackAsset } from '@/lib/ops/buildPack';
-import { buildPackFiles, buildPackShopName, buildPackTownCity } from '@/lib/ops/buildPack';
+import type { BuildPack, BuildPackAsset, BuildPackRemoteImage } from '@/lib/ops/buildPack';
+import { buildPackFiles, buildPackLogos, buildPackShopName, buildPackTownCity, memberPhotoCount } from '@/lib/ops/buildPack';
+import { isAllowedRemoteImageUrl, remoteImageStoreHost } from '@/lib/ops/buildPackRemoteImages';
+import { buildPackFileSummary, buildPackFileSummaryLabel } from '@/lib/ops/buildPackZipPlan';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
 
 type Props = { pack: BuildPack; requestId: string };
@@ -46,10 +48,25 @@ function dims(asset: BuildPackAsset): string | null {
 
 const files = buildPackFiles(pack);
 const packUrl = `/api/ops/preview-requests/${requestId}/build-pack`;
-const totalBytes = files.reduce((sum, file) => sum + file.sizeBytes, 0);
 const assetById = new Map(files.map((file) => [file.id, file]));
-const logos = pack.assets.LOGO;
-const currentLogo = logos.find((logo) => logo.id === pack.brand.currentLogoAssetId) ?? null;
+const logoGroups = buildPackLogos(pack);
+const currentLogo = logoGroups.current;
+const duplicateIds = new Set(logoGroups.duplicates.map((d) => d.asset.id));
+// Older uploads, oldest first, with exact re-uploads marked (they are left out of the zip).
+const earlierLogos = pack.assets.LOGO.filter((logo) => logo !== currentLogo).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+// Dashboard images (public Blob URLs from admin input): only this project's store is rendered as <img>.
+const storeHost = remoteImageStoreHost();
+const isAllowed = (url: string | null | undefined) => isAllowedRemoteImageUrl(url, storeHost);
+const remoteFor = (source: BuildPackRemoteImage['source'], ownerId: string) =>
+  pack.remoteImages.find((image) => image.source === source && image.ownerId === ownerId) ?? null;
+const fileSummary = buildPackFileSummaryLabel(buildPackFileSummary(pack, (url) => isAllowed(url)), formatBytes);
+
+/** Display only: "shaving" → "Shaving". Stored data is never changed. */
+function displayCategory(value: string | null): string {
+  if (!value) return '—';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 // Town alone is not an address: only build the line when the owner entered a street or postcode.
 const address =
   pack.contact.addressLine1 || pack.contact.postcode
@@ -90,13 +107,13 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
   <section class="ops-bb__card ops-bb__readiness" aria-labelledby="ops-bb-ready">
     <div class="ops-bb__head">
       <h2 id="ops-bb-ready" class="ops-bb__title">Build brief</h2>
-      <p class="ops-bb__meta" data-testid="ops-bb-file-summary">
-        {files.length} {files.length === 1 ? 'file' : 'files'} · about {formatBytes(totalBytes)}
-      </p>
+      <p class="ops-bb__meta" data-testid="ops-bb-file-summary">{fileSummary}</p>
     </div>
     <div class="ops-bb__actions">
       <a class="btn btn--primary btn--sm" href={packUrl} download data-testid="ops-bb-download">Download build pack (.zip)</a>
-      <button type="button" class="btn btn--secondary btn--sm" data-ops-copy-brief={`${packUrl}?format=md`}>Copy brief</button>
+      <button type="button" class="btn btn--secondary btn--sm" data-ops-copy-brief={`${packUrl}?format=md`} aria-controls="ops-bb-brief-dialog">
+        Copy brief
+      </button>
       <a class="btn btn--ghost btn--sm" href={`${packUrl}?format=json`} download>Download shop.json</a>
       <span class="ops-bb__meta" role="status" aria-live="polite" data-ops-copy-status></span>
     </div>
@@ -182,39 +199,80 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
   <section class="ops-bb__card" aria-labelledby="ops-bb-brand">
     <h2 id="ops-bb-brand" class="ops-bb__title">Brand</h2>
     <div class="ops-bb__brand">
-      <div class="ops-bb__logos">
+      <div class="ops-bb__logos" data-testid="ops-bb-logos">
         {
-          logos.length ? (
-            logos.map((logo) => (
-              <figure class="ops-bb__logo">
-                <div class="ops-bb__logo-img">
-                  <img src={assetUrl(logo, 'thumb')} alt={`Logo: ${logo.fileName}`} loading="lazy" decoding="async" />
-                </div>
-                <figcaption>
-                  {logo.id === currentLogo?.id ? <strong>Current logo · </strong> : null}
-                  {logo.fileName}
-                  {dims(logo) ? ` · ${dims(logo)}` : ''} · {formatBytes(logo.sizeBytes)}
-                  <br />
-                  <a class="btn btn--ghost btn--sm" href={assetUrl(logo, 'full')}>Download</a>
-                </figcaption>
-              </figure>
-            ))
-          ) : (
+          currentLogo ? (
+            <figure class="ops-bb__logo" data-testid="ops-bb-current-logo">
+              <div class="ops-bb__logo-img">
+                <img src={assetUrl(currentLogo, 'thumb')} alt={`Current logo: ${currentLogo.fileName}`} loading="lazy" decoding="async" />
+              </div>
+              <figcaption>
+                <span class="ops-bb__badge">Current logo</span>
+                <br />
+                {currentLogo.fileName}
+                {dims(currentLogo) ? ` · ${dims(currentLogo)}` : ''} · {formatBytes(currentLogo.sizeBytes)}
+                <br />
+                <a class="btn btn--ghost btn--sm" href={assetUrl(currentLogo, 'full')}>Download</a>
+              </figcaption>
+            </figure>
+          ) : pack.brand.shopLogoUrl && isAllowed(pack.brand.shopLogoUrl) ? null : (
             <p class="ops-pr__empty">No logo uploaded.</p>
           )
         }
         {
-          pack.brand.shopLogoUrl ? (
+          pack.brand.shopLogoUrl && isAllowed(pack.brand.shopLogoUrl) ? (
+            <figure class="ops-bb__logo">
+              <div class="ops-bb__logo-img">
+                <img
+                  src={pack.brand.shopLogoUrl}
+                  alt="Logo set in the dashboard shop settings"
+                  loading="lazy"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+              </div>
+              <figcaption>
+                {currentLogo ? null : (
+                  <>
+                    <span class="ops-bb__badge">Current logo</span>
+                    <br />
+                  </>
+                )}
+                Shop settings logo (dashboard)
+              </figcaption>
+            </figure>
+          ) : pack.brand.shopLogoUrl ? (
             <p class="ops-bb__meta">
-              Shop settings logo URL:{' '}
-              {safeHref(pack.brand.shopLogoUrl) ? (
-                <a href={safeHref(pack.brand.shopLogoUrl)} target="_blank" rel="noopener noreferrer nofollow">
-                  {pack.brand.shopLogoUrl}
-                </a>
-              ) : (
-                pack.brand.shopLogoUrl
-              )}
+              Shop settings logo URL (not on KERSIVO storage, not downloaded): <span class="ops-bb__url">{pack.brand.shopLogoUrl}</span>
             </p>
+          ) : null
+        }
+        {
+          earlierLogos.length ? (
+            <details class="ops-bb__details ops-bb__earlier" data-testid="ops-bb-earlier-logos">
+              <summary>Earlier uploads ({earlierLogos.length})</summary>
+              <div class="ops-bb__logos">
+                {earlierLogos.map((logo) => (
+                  <figure class="ops-bb__logo">
+                    <div class="ops-bb__logo-img">
+                      <img src={assetUrl(logo, 'thumb')} alt={`Earlier logo: ${logo.fileName}`} loading="lazy" decoding="async" />
+                    </div>
+                    <figcaption>
+                      {duplicateIds.has(logo.id) ? (
+                        <>
+                          <span class="ops-bb__tag ops-bb__tag--flush">Duplicate, not in the pack</span>
+                          <br />
+                        </>
+                      ) : null}
+                      {logo.fileName}
+                      {dims(logo) ? ` · ${dims(logo)}` : ''} · {formatBytes(logo.sizeBytes)} · {formatDate(logo.createdAt)}
+                      <br />
+                      <a class="btn btn--ghost btn--sm" href={assetUrl(logo, 'full')}>Download</a>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </details>
           ) : null
         }
       </div>
@@ -321,13 +379,32 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
               {pack.services.map((service) => (
                 <tr>
                   <td>
-                    {service.name}
-                    {service.featured ? <span class="ops-bb__tag">Featured</span> : null}
-                    {service.description ? <span class="ops-bb__sub ops-bb__pre">{service.description}</span> : null}
+                    <div class="ops-bb__item">
+                      {service.imageUrl && isAllowed(service.imageUrl) ? (
+                        <img
+                          class="ops-bb__thumb"
+                          src={service.imageUrl}
+                          alt={`Photo for ${service.name}`}
+                          width="48"
+                          height="48"
+                          loading="lazy"
+                          decoding="async"
+                          referrerpolicy="no-referrer"
+                        />
+                      ) : null}
+                      <div>
+                        {service.name}
+                        {service.featured ? <span class="ops-bb__tag">Featured</span> : null}
+                        {service.description ? <span class="ops-bb__sub ops-bb__pre">{service.description}</span> : null}
+                        {service.imageUrl && !isAllowed(service.imageUrl) ? (
+                          <span class="ops-bb__sub ops-bb__url">Photo URL (not downloaded): {service.imageUrl}</span>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td>{minutes(service.durationMinutes)}</td>
                   <td>{money(service.pricePence, service.priceFrom)}</td>
-                  <td>{service.category ?? '—'}</td>
+                  <td>{displayCategory(service.category)}</td>
                 </tr>
               ))}
             </tbody>
@@ -346,11 +423,15 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
         <ul class="ops-bb__team">
           {pack.team.map((member) => {
             const photo = member.photoAssetIds.map((id) => assetById.get(id)).find(Boolean) ?? null;
+            const avatar = member.avatarUrl && isAllowed(member.avatarUrl) ? member.avatarUrl : null;
+            const count = memberPhotoCount(member);
             return (
-              <li class="ops-bb__member">
+              <li class="ops-bb__member" data-testid="ops-bb-member">
                 <div class="ops-bb__avatar">
                   {photo ? (
                     <img src={assetUrl(photo, 'thumb')} alt={`Photo of ${member.name}`} loading="lazy" decoding="async" />
+                  ) : avatar ? (
+                    <img src={avatar} alt={`Photo of ${member.name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   ) : (
                     <span aria-hidden="true">{member.name.slice(0, 1).toUpperCase()}</span>
                   )}
@@ -359,8 +440,11 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
                   <p class="ops-bb__member-name">{member.name}</p>
                   <p class="ops-bb__meta">
                     {member.role ?? 'No role given'}
-                    {member.photoAssetIds.length ? ` · ${member.photoAssetIds.length} photo${member.photoAssetIds.length > 1 ? 's' : ''}` : ' · no photo'}
+                    {count ? ` · ${count} photo${count > 1 ? 's' : ''}` : ' · no photo'}
                   </p>
+                  {member.avatarUrl && !isAllowed(member.avatarUrl) ? (
+                    <p class="ops-bb__sub ops-bb__url">Photo URL (not downloaded): {member.avatarUrl}</p>
+                  ) : null}
                   {member.bio ? <p class="ops-bb__sub ops-bb__pre">{member.bio}</p> : null}
                 </div>
               </li>
@@ -377,19 +461,47 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
     pack.products.length ? (
       <section class="ops-bb__card" aria-labelledby="ops-bb-products">
         <h2 id="ops-bb-products" class="ops-bb__title">Products ({pack.products.length})</h2>
-        <table class="ops-bb__table">
-          <tbody>
-            {pack.products.map((product) => (
+        <div class="ops-bb__scroll">
+          <table class="ops-bb__table">
+            <thead>
               <tr>
-                <td>
-                  {product.name}
-                  {product.description ? <span class="ops-bb__sub ops-bb__pre">{product.description}</span> : null}
-                </td>
-                <td>{money(product.pricePence)}</td>
+                <th scope="col" class="ops-bb__thumb-col">Photo</th>
+                <th scope="col">Product</th>
+                <th scope="col">Price</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pack.products.map((product) => (
+                <tr>
+                  <td class="ops-bb__thumb-col">
+                    {product.imageUrl && isAllowed(product.imageUrl) ? (
+                      <img
+                        class="ops-bb__thumb"
+                        src={product.imageUrl}
+                        alt={`Photo of ${product.name}`}
+                        width="48"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                      />
+                    ) : (
+                      <span class="ops-bb__meta">—</span>
+                    )}
+                  </td>
+                  <td>
+                    {product.name}
+                    {product.description ? <span class="ops-bb__sub ops-bb__pre">{product.description}</span> : null}
+                    {product.imageUrl && !isAllowed(product.imageUrl) ? (
+                      <span class="ops-bb__sub ops-bb__url">Photo URL: {product.imageUrl}</span>
+                    ) : null}
+                  </td>
+                  <td>{money(product.pricePence)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     ) : null
   }
@@ -504,24 +616,96 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
   </section>
 </div>
 
+<dialog id="ops-bb-brief-dialog" class="ops-bb__dialog" aria-labelledby="ops-bb-brief-dialog-title" data-ops-brief-dialog>
+  <div class="ops-bb__dialog-head">
+    <h2 id="ops-bb-brief-dialog-title" class="ops-bb__title">Copy the brief</h2>
+    <button type="button" class="btn btn--ghost btn--sm" data-ops-brief-close>Close</button>
+  </div>
+  <p class="ops-bb__meta" id="ops-bb-brief-dialog-help">
+    This browser blocked the clipboard. The brief is selected below: press Ctrl+C (⌘C on a Mac) to copy it, or download it.
+  </p>
+  <label class="sr-only" for="ops-bb-brief-text">Brief (brief.md)</label>
+  <textarea id="ops-bb-brief-text" class="ops-bb__dialog-text" readonly rows="16" aria-describedby="ops-bb-brief-dialog-help" data-ops-brief-text
+  ></textarea>
+  <div class="ops-bb__actions">
+    <a class="btn btn--secondary btn--sm" href={`${packUrl}?format=md&download=1`} download data-testid="ops-bb-brief-download">Download brief.md</a>
+  </div>
+</dialog>
+
 <script>
-  // "Copy brief": fetch brief.md and put it on the clipboard. Text only.
+  // "Copy brief": brief.md onto the clipboard, text only. clipboard.write() is called straight from the
+  // click, with the fetch as a promise inside the ClipboardItem, so Safari keeps the user gesture. When
+  // every clipboard route is refused, the brief opens in a dialog, selected, to copy by hand or download.
+  const dialog = document.querySelector<HTMLDialogElement>('[data-ops-brief-dialog]');
+  const dialogText = dialog?.querySelector<HTMLTextAreaElement>('[data-ops-brief-text]') ?? null;
+  dialog?.querySelector<HTMLButtonElement>('[data-ops-brief-close]')?.addEventListener('click', () => dialog.close());
+  // Click on the backdrop closes it too (Esc is native to a modal <dialog>).
+  dialog?.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  function openBriefDialog(text: string, opener: HTMLElement) {
+    if (!dialog || !dialogText) return false;
+    dialogText.value = text;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    dialogText.focus();
+    dialogText.select();
+    dialogText.setSelectionRange(0, text.length);
+    // Back to "Copy brief" once closed (after the browser's own focus restore).
+    dialog.addEventListener('close', () => requestAnimationFrame(() => opener.focus()), { once: true });
+    return true;
+  }
+
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-ops-copy-brief]')) {
     const status = button.parentElement?.querySelector<HTMLElement>('[data-ops-copy-status]') ?? null;
     button.addEventListener('click', async () => {
       const url = button.dataset.opsCopyBrief;
-      if (!url) return;
-      button.disabled = true;
+      // Busy flag rather than `disabled`: a disabled button drops focus, so it could not get it back.
+      if (!url || button.getAttribute('aria-busy') === 'true') return;
+      button.setAttribute('aria-busy', 'true');
       if (status) status.textContent = 'Copying…';
-      try {
-        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+      const textPromise = fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then((response) => {
         if (!response.ok) throw new Error(String(response.status));
-        await navigator.clipboard.writeText(await response.text());
-        if (status) status.textContent = 'Brief copied.';
+        return response.text();
+      });
+      textPromise.catch(() => {});
+      let copied = false;
+      try {
+        if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+          const item = new ClipboardItem({ 'text/plain': textPromise.then((text) => new Blob([text], { type: 'text/plain' })) });
+          await navigator.clipboard.write([item]);
+          copied = true;
+        }
       } catch {
-        if (status) status.textContent = 'Could not copy the brief. Try again.';
+        copied = false;
+      }
+      if (!copied) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(await textPromise);
+            copied = true;
+          }
+        } catch {
+          copied = false;
+        }
+      }
+      try {
+        if (copied) {
+          if (status) status.textContent = 'Brief copied.';
+          return;
+        }
+        const text = await textPromise;
+        const opened = openBriefDialog(text, button);
+        if (status) {
+          status.textContent = opened
+            ? 'Clipboard blocked by this browser — brief opened below to copy.'
+            : 'Could not copy the brief. Use Download shop.json or try again.';
+        }
+      } catch {
+        if (status) status.textContent = 'Could not load the brief. Try again.';
       } finally {
-        button.disabled = false;
+        button.removeAttribute('aria-busy');
       }
     });
   }

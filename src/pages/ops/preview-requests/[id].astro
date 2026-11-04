@@ -27,7 +27,9 @@ import { loadHubChanges } from '@/lib/freePreview/hubChanges';
 import { loadHubReviewShopData, loadLatestHubReviews, reviewDiff } from '@/lib/freePreview/hubReviews';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { prisma } from '@/lib/db/client';
-import { buildPackFiles, loadBuildPack } from '@/lib/ops/buildPack';
+import { loadBuildPack } from '@/lib/ops/buildPack';
+import { isAllowedRemoteImageUrl } from '@/lib/ops/buildPackRemoteImages';
+import { buildPackFileSummary, buildPackFileSummaryLabel } from '@/lib/ops/buildPackZipPlan';
 import {
   HUB_OPS_ABOUT,
   HUB_OPS_INSTAGRAM,
@@ -438,9 +440,8 @@ const fields: Array<[string, string]> = request
                   Download build pack (.zip)
                 </a>
                 {buildPack ? (
-                  <p class="ops-pr-actions__hint">
-                    {buildPackFiles(buildPack).length} files · about{' '}
-                    {formatBytes(buildPackFiles(buildPack).reduce((sum, file) => sum + file.sizeBytes, 0))}
+                  <p class="ops-pr-actions__hint" data-testid="ops-bb-rail-summary">
+                    {buildPackFileSummaryLabel(buildPackFileSummary(buildPack, (url) => isAllowedRemoteImageUrl(url)), formatBytes)}
                   </p>
                 ) : null}
               </section>

@@ -14,7 +14,8 @@ ready to give to an AI tool (or a designer) to design a unique site.
 | Zip layout, `shop.json`, README | `src/lib/ops/buildPackZipPlan.ts` |
 | `brief.md` | `src/lib/ops/buildPackBrief.ts` |
 | Streaming zip | `src/lib/ops/streamZip.ts` (fflate) |
-| Endpoint | `GET /api/ops/preview-requests/[id]/build-pack` (`?format=md`, `?format=json`) |
+| Dashboard images (allowlist, fetch) | `src/lib/ops/buildPackRemoteImages.ts`, tests in `buildPackRemoteImages.test.ts` |
+| Endpoint | `GET /api/ops/preview-requests/[id]/build-pack` (`?format=md`, `?format=md&download=1`, `?format=json`) |
 
 The loader is read-only and returns `null` once the request is anonymised. When two sources hold the same
 fact and disagree, both values are returned and listed under `conflicts`; nothing is silently picked.
@@ -25,11 +26,15 @@ fact and disagree, both values are returned and listed under `conflicts`; nothin
 kersivo-build-pack_<shop-slug>_<YYYY-MM-DD>/
   README.md                      how to use, contents, not provided, conflicts, files that failed
   brief.md                       the design brief (British English)
-  shop.json                      the BuildPack as JSON (schemaVersion 1), paths relative to this folder
-  brand/logo/<name>              all LOGO uploads, originals
+  shop.json                      the BuildPack as JSON (schemaVersion 2), paths relative to this folder
+  brand/logo/current-logo.<ext>  the logo to build from (snapshot logo once sent, else the newest upload)
+  brand/logo/earlier/<name>      other LOGO uploads (exact re-uploads left out, listed in README)
+  brand/logo/shop-settings-logo.<ext>  ShopSettings.logoUrl (dashboard), when set
   brand/colours.json             primary, secondary, tone, source, extracted palette, snapshot
   photos/shop/NN_<caption>.<ext> SHOP_PHOTO in sortOrder
-  photos/team/<barber>.<ext>     TEAM_PHOTO named after the linked barber
+  photos/team/<barber>.<ext>     TEAM_PHOTO named after the linked barber, then Barber.avatarUrl (-2 when both)
+  photos/products/NN_<product>.<ext>  Product.imageUrl, product sort order
+  photos/services/NN_<service>.<ext>  Service.imageUrl, service display order
   documents/price-list/…         PRICE_LIST
   documents/other/…              OTHER
   revisions/change-requests.md   open change requests (SENT, IN_PROGRESS)
@@ -41,6 +46,38 @@ Originals come from private Blob (`storagePath`), never thumbnails. Every path s
 download carries on; README lists it under "Files that could not be included" and its `path` in `shop.json`
 is `null`. Each zip download records `ops_build_pack_downloaded` (operator email, file counts) in History.
 
+### Dashboard images (schemaVersion 2)
+
+Images added through the paid dashboard screens are public Vercel Blob URLs on `Barber.avatarUrl`,
+`Product.imageUrl`, `Service.imageUrl` and `ShopSettings.logoUrl`. They are `pack.remoteImages`
+(`{ id: "<source>:<ownerId>", source, ownerId, ownerName, url }`), downloaded into the zip next to the hub
+originals, named in `brief.md`, and shown on the Overview. `buildPack.coverage.test.ts` fails when a new
+image-like URL column appears on those models without a mapping.
+
+These URLs come from admin input, so the server fetches one only when **all** of these hold:
+
+- the scheme is `https:` (no credentials, default port);
+- the host ends with `.public.blob.vercel-storage.com` **and** is exactly this project's store. The store
+  host is `PUBLIC_BLOB_STORE_HOST` when set (Production). It is not set for Preview, and previews share the
+  production database and store, so the fallback is the store id inside `BLOB_READ_WRITE_TOKEN`
+  (`vercel_blob_rw_<storeId>_…` → `<storeid>.public.blob.vercel-storage.com`), i.e. the store the upload
+  routes write to. Checked 2026-11-04: every dashboard image URL on the verification shops is on that host.
+  With neither set, nothing is fetched (fail closed);
+- no redirects (`redirect: 'error'`), 15 s per file, at most 15 MB per file (checked while reading, before
+  the entry is added, so nothing is half-written), and the response `Content-Type` starts with `image/`.
+
+Anything else is not fetched: README lists it under "Files that could not be included" (`external URL not
+fetched`, or the reason the download failed), its `path` in `shop.json` is `null`, and the Overview shows the
+URL as text instead of an `<img>`. Images are fetched one at a time, and count in the download event's
+`fileCount` / `failedCount`.
+
+`shop.json` v2 adds `remoteImages[]` (each with `path` or `null`), `photoPath` on every team member,
+product and service (`photoPaths` on team members: hub uploads first, then the avatar), and `duplicateOf` on
+LOGO uploads left out as exact re-uploads (same original file name and size; there is no content hash).
+
+"Has a photo" has one definition, `memberHasPhoto()` in `buildPack.ts` (a TEAM_PHOTO upload or an avatar),
+used by `missing`, the Team card and `brief.md`.
+
 ## Field → source
 
 | Build brief | Source |
@@ -49,15 +86,15 @@ is `null`. Each zip download records `ops_build_pack_downloaded` (operator email
 | Tagline, address, postcode, phone, public email | draft `ShopPublicProfile` |
 | Own domain, barbers, booking system, notes | `PreviewRequest.hasOwnDomain/barberCount/currentBookingSystem/notes` |
 | Opening hours | `ShopOpeningHours` of the draft shop → 7-day week |
-| Logo | `PreviewHubAsset` kind LOGO (current = snapshot logo once sent, else newest); `ShopSettings.logoUrl` shown if set |
+| Logo | `PreviewHubAsset` kind LOGO (current = snapshot logo once sent, else newest; Overview shows it first with older uploads collapsed); `ShopSettings.logoUrl` downloaded as `shop-settings-logo`, used by `brief.md` when there is no hub logo |
 | Colours | `PreviewRequest.brand*` (hub Colours) and `ShopPublicProfile.brandPrimary/SecondaryColour`; `brandSubmittedSnapshot` = what was sent to KERSIVO; conflicts listed |
 | Style notes | `PreviewRequest.styleNotes` |
 | About / description | `PreviewRequest.aboutText` (hub) and `ShopPublicProfile.description` (dashboard); conflict if both set and different |
 | Anything else | `PreviewRequest.websiteExtraText` |
 | Links | `PreviewRequest.workLinks` (or the four legacy URL columns), `instagramUrl`; profile Instagram, Facebook, TikTok, other |
-| Services | `Service` (active), ordered by `displayOrder` |
-| Team | `Barber` (active and shown on website); team photos matched by `PreviewHubAsset.barberId` |
-| Products | `Product` (active); stock is not included |
+| Services | `Service` (active), ordered by `displayOrder`; `imageUrl` → `photos/services/` |
+| Team | `Barber` (active and shown on website); team photos matched by `PreviewHubAsset.barberId`, plus `avatarUrl` |
+| Products | `Product` (active), `imageUrl` → `photos/products/`; stock is not included |
 | Photos, documents | `PreviewHubAsset` (not deleted), grouped by kind, ordered by `sortOrder`, `createdAt` |
 | Change requests | `PreviewChangeRequest` with status SENT or IN_PROGRESS; legacy `changesRequestedText` |
 
@@ -69,7 +106,8 @@ PreviewRequest, ShopPublicProfile, Service, Barber, Product, PreviewHubAsset or 
 
 ## Using it with an AI tool
 
-1. Download the pack from the request (or **Copy brief** for the text alone).
+1. Download the pack from the request (or **Copy brief** for the text alone). When the browser blocks the
+   clipboard, Copy brief opens the brief in a dialog, selected, with a **Download brief.md** link.
 2. Start a new conversation, paste `brief.md`, and attach the logo, `brand/colours.json` and the photos you
    want used. Attach `shop.json` when the tool should generate pages from structured data.
 3. Ask for a design for this shop only. The brief already tells the tool to use only the facts provided,

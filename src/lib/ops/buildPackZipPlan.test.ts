@@ -151,7 +151,7 @@ describe('build pack zip plan', () => {
 
   it('lays files out as in the spec, sanitised and unique', () => {
     expect(files.map((f) => f.path)).toEqual([
-      'brand/logo/my-logo.png',
+      'brand/logo/current-logo.png',
       'photos/shop/01_shopfront.jpg',
       'photos/shop/02_evil.jpg',
       'photos/team/alex-reed.jpg',
@@ -171,7 +171,7 @@ describe('build pack zip plan', () => {
     const text = JSON.stringify(json);
     expect(text).not.toContain('storagePath');
     expect(text).not.toContain('preview-hub/');
-    expect(json.schemaVersion).toBe(1);
+    expect(json.schemaVersion).toBe(2);
     expect(json.assets.SHOP_PHOTO.map((a) => a.path)).toEqual(['photos/shop/01_shopfront.jpg', null]);
   });
 
@@ -205,5 +205,88 @@ describe('build pack zip plan', () => {
       '## Not provided — do not invent',
       '## Conflicts to confirm',
     ]);
+  });
+});
+
+describe('build pack zip plan: dashboard images and logos', () => {
+  const blob = (name: string) => `https://store1.public.blob.vercel-storage.com/shops/shop_1/${name}`;
+
+  function rows() {
+    const r = sampleRows();
+    r.shop!.logoUrl = blob('logo/shop-logo-Xy.PNG');
+    r.barbers[0].avatarUrl = blob('barbers/alex-1.jpg'); // also has TEAM_PHOTO t1
+    r.barbers.push({ id: 'b3', name: 'Jess', avatarUrl: blob('barbers/jess'), title: null, bio: null, sortOrder: 2 });
+    r.products = [
+      { id: 'pr2', name: 'Hair gel', description: null, pricePence: 900, imageUrl: blob('products/gel.webp'), featured: false, category: 'HAIR', sortOrder: 1 },
+      { id: 'pr1', name: 'YoŁ shampoo', description: null, pricePence: 2500, imageUrl: blob('products/sh.png'), featured: false, category: 'HAIR', sortOrder: 0 },
+      { id: 'pr3', name: 'Comb', description: null, pricePence: 300, imageUrl: null, featured: false, category: 'TOOLS', sortOrder: 2 },
+    ];
+    r.services[0].imageUrl = blob('services/fade.jpg');
+    // Three logos: an old one, a re-upload of the current one (same name and size), and the current one.
+    r.assets = [
+      asset('l1', 'LOGO', { originalFileName: 'IMG_2197.jpg', sizeBytes: 177342, createdAt: at('2026-11-01T02:45:00Z') }),
+      asset('l2', 'LOGO', { originalFileName: 'Futuristic £39 Neon Showroom.jpg', sizeBytes: 139405, createdAt: at('2026-11-01T15:01:00Z') }),
+      asset('l3', 'LOGO', { originalFileName: 'Futuristic £39 Neon Showroom.jpg', sizeBytes: 139405, createdAt: at('2026-11-01T20:21:00Z') }),
+      ...r.assets.filter((a) => a.kind !== 'LOGO'),
+    ];
+    return r;
+  }
+
+  const pack = shapeBuildPack(rows(), at('2026-11-04T12:00:00Z'));
+  const files = planBuildPackFiles(pack);
+  const paths = files.map((f) => f.path);
+
+  it('current logo, earlier uploads, shop settings logo; exact duplicate left out', () => {
+    expect(pack.brand.currentLogoAssetId).toBe('l3');
+    expect(paths.filter((p) => p.startsWith('brand/'))).toEqual([
+      'brand/logo/current-logo.jpg',
+      'brand/logo/earlier/img-2197.jpg',
+      'brand/logo/shop-settings-logo.png',
+    ]);
+    expect(files.some((f) => f.asset?.id === 'l2')).toBe(false);
+    const json = toBuildPackJson(pack, files);
+    expect(json.assets.LOGO.find((a) => a.id === 'l2')).toMatchObject({ path: null, duplicateOf: 'l3' });
+    const readme = buildPackReadme({ pack, folder: 'f', files, failed: [] });
+    expect(readme).toContain('## Duplicate logo uploads left out');
+    expect(readme).toContain('- Futuristic £39 Neon Showroom.jpg (uploaded 2026-11-01)');
+  });
+
+  it('avatar, product and service paths in display order; avatar next to a hub team photo gets -2', () => {
+    expect(paths.filter((p) => p.startsWith('photos/team/'))).toEqual([
+      'photos/team/alex-reed.jpg',
+      'photos/team/alex-reed-2.jpg',
+      'photos/team/alex-reed-3.jpg',
+      'photos/team/jess.img',
+    ]);
+    expect(files.find((f) => f.remote?.id === 'barber:b3')).toMatchObject({ extFromUrl: false });
+    expect(paths.filter((p) => p.startsWith('photos/products/'))).toEqual(['photos/products/01_yol-shampoo.png', 'photos/products/02_hair-gel.webp']);
+    expect(paths.filter((p) => p.startsWith('photos/services/'))).toEqual(['photos/services/01_skin-fade.jpg']);
+  });
+
+  it('shop.json v2: remoteImages with paths and photoPath on team, products and services', () => {
+    const json = toBuildPackJson(pack, files, new Set(['product:pr2']));
+    expect(json.schemaVersion).toBe(2);
+    expect(json.remoteImages.find((i) => i.id === 'product:pr2')?.path).toBeNull();
+    expect(json.remoteImages.find((i) => i.id === 'shopLogo:shop_1')?.path).toBe('brand/logo/shop-settings-logo.png');
+    expect(json.team[0]).toMatchObject({ photoPath: 'photos/team/alex-reed.jpg', photoPaths: ['photos/team/alex-reed.jpg', 'photos/team/alex-reed-3.jpg'] });
+    expect(json.products.map((p) => p.photoPath)).toEqual(['photos/products/01_yol-shampoo.png', null, null]);
+    expect(json.services[0].photoPath).toBe('photos/services/01_skin-fade.jpg');
+  });
+
+  it('brief: current logo path and a factual raster hint for a JPEG logo', () => {
+    const brief = buildPackBriefMd(pack, files);
+    expect(brief).toContain('- Logo: `brand/logo/current-logo.jpg`');
+    expect(brief).toContain('- Logo file is a raster image (JPG/PNG photo), not a vector or transparent logo.');
+    expect(brief).toContain('- Earlier logo uploads (use only if asked): `brand/logo/earlier/img-2197.jpg`');
+  });
+
+  it('brief: falls back to the shop settings logo, and says "Not provided" only when there is none', () => {
+    const noHub = rows();
+    noHub.assets = noHub.assets.filter((a) => a.kind !== 'LOGO');
+    const p1 = shapeBuildPack(noHub);
+    const b1 = buildPackBriefMd(p1, planBuildPackFiles(p1));
+    expect(b1).toContain('- Logo: `brand/logo/shop-settings-logo.png`');
+    expect(b1).not.toContain('raster image');
+    expect(buildPackBriefMd(p1, planBuildPackFiles(p1), new Set(['shopLogo:shop_1']))).toContain('- Logo: Not provided');
   });
 });

@@ -1,6 +1,11 @@
 import { Prisma } from '@prisma/client';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/db/client', () => ({ prisma: {} }));
+
+import { shapeBuildPack } from './buildPack';
 import { BUILD_PACK_EXCLUDED_FIELDS, BUILD_PACK_MAPPED_FIELDS } from './buildPackFields';
+import { BUILD_PACK_NON_IMAGE_URL_FIELDS, BUILD_PACK_REMOTE_IMAGE_FIELDS } from './buildPackRemoteImages';
 
 function scalarFields(model: string): string[] {
   const found = Prisma.dmmf.datamodel.models.find((m) => m.name === model);
@@ -53,5 +58,41 @@ describe('ops build pack field coverage', () => {
     }
     expect(new Set<string>(BUILD_PACK_MAPPED_FIELDS.Barber).has('email')).toBe(false);
     expect(new Set<string>(BUILD_PACK_MAPPED_FIELDS.Product).has('inStock')).toBe(false);
+  });
+});
+
+describe('ops build pack image URL coverage', () => {
+  const urlLike = /(url|image|photo|logo|avatar)/i;
+
+  for (const model of Object.keys(BUILD_PACK_REMOTE_IMAGE_FIELDS) as Array<keyof typeof BUILD_PACK_REMOTE_IMAGE_FIELDS>) {
+    it(`${model}: every image URL column is mapped to remoteImages`, () => {
+      const imageFields = new Set(Object.keys(BUILD_PACK_REMOTE_IMAGE_FIELDS[model]));
+      const links = new Set(BUILD_PACK_NON_IMAGE_URL_FIELDS[model]);
+      const unmapped = scalarFields(model).filter((field) => urlLike.test(field) && !imageFields.has(field) && !links.has(field));
+      // A new image column here must become a remoteImages source (buildPackRemoteImages.ts), so it is
+      // downloaded into the pack and named in brief.md, or be listed as a plain link.
+      expect(unmapped).toEqual([]);
+      const selected = new Set<string>(BUILD_PACK_MAPPED_FIELDS[model as keyof typeof BUILD_PACK_MAPPED_FIELDS] ?? []);
+      for (const field of imageFields) expect(selected.has(field), `${model}.${field} is selected`).toBe(true);
+    });
+  }
+
+  it('every mapped image field ends up in pack.remoteImages', () => {
+    const url = (name: string) => `https://store1.public.blob.vercel-storage.com/shops/shop_1/${name}.jpg`;
+    const pack = shapeBuildPack({
+      request: { id: 'req_1', shopName: 'Fade Co', townCity: 'Leeds', draftShopId: 'shop_1' } as never,
+      shop: { id: 'shop_1', name: 'Fade Co', townCity: 'Leeds', logoUrl: url('logo'), bookingSlug: null, sitePreviewUrl: null, sitePreviewVersion: null },
+      profile: null,
+      hours: [],
+      services: [{ id: 's1', name: 'Fade', description: null, imageUrl: url('s1'), pricePence: 1, priceFrom: false, durationMinutes: 30, displayOrder: 0, category: null, featured: false }],
+      barbers: [{ id: 'b1', name: 'Alex', avatarUrl: url('b1'), title: null, bio: null, sortOrder: 0 }],
+      products: [{ id: 'p1', name: 'Wax', description: null, pricePence: 1, imageUrl: url('p1'), featured: false, category: 'HAIR', sortOrder: 0 }],
+      assets: [],
+      changeRequests: [],
+    });
+    const sources = new Set(pack.remoteImages.map((image) => image.source));
+    for (const fields of Object.values(BUILD_PACK_REMOTE_IMAGE_FIELDS)) {
+      for (const source of Object.values(fields)) expect(sources.has(source), source).toBe(true);
+    }
   });
 });

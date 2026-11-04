@@ -2,11 +2,14 @@
  * brief.md for the ops build pack: the design brief handed to an AI tool or designer. Generated only from
  * BuildPack (no owner personal data: see buildPackFields.ts). British English.
  */
-import { buildPackShopName, buildPackTownCity, type BuildPack, type BuildPackAsset } from './buildPack';
-import type { BuildPackZipFile } from './buildPackZipPlan';
+import { buildPackLogos, buildPackShopName, buildPackTownCity, type BuildPack, type BuildPackAsset } from './buildPack';
+import type { BuildPackRemoteImage } from './buildPackRemoteImages';
+import { includedPaths, type BuildPackZipFile } from './buildPackZipPlan';
 
 export const BUILD_PACK_BRIEF_INSTRUCTION =
   'This pack contains everything the barbershop owner supplied to KERSIVO. Design a unique website for this shop based on its logo, colours, photos and text. Use only the facts in this pack: do not invent prices, services, reviews, awards, opening hours or claims. Where something is listed under "Not provided", leave a clear placeholder instead of making it up. Use British English.';
+
+const RASTER_HINT = '- Logo file is a raster image (JPG/PNG photo), not a vector or transparent logo.';
 
 function money(pence: number, from = false): string {
   const value = `£${(pence / 100).toFixed(2).replace(/\.00$/, '')}`;
@@ -27,8 +30,32 @@ function fileRef(asset: BuildPackAsset, pathById: Map<string, string>): string {
   return path ? `\`${path}\`` : `${asset.fileName} (not in this pack)`;
 }
 
-export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []): string {
-  const pathById = new Map(files.map((file) => [file.asset.id, file.path]));
+function remoteRef(image: BuildPackRemoteImage, pathById: Map<string, string>): string {
+  const path = pathById.get(image.id);
+  return path ? `\`${path}\`` : 'image added in the dashboard (not in this pack)';
+}
+
+/** Intake answers come back as "—" when the owner left them empty. */
+function answered(value: string): string {
+  return value && value.trim() !== '—' ? value : 'Not provided';
+}
+
+/**
+ * Factual hint only: a JPEG logo is a photo-like raster file, not a vector or transparent logo. PNG/WebP
+ * are not judged (that would need the pixels).
+ */
+function isRasterPhotoLogo(contentTypeOrPath: string): boolean {
+  return /^image\/jpe?g$/i.test(contentTypeOrPath) || /\.jpe?g$/i.test(contentTypeOrPath);
+}
+
+/**
+ * @param failedIds pack file ids that are not in the zip (failed, or dashboard URLs that are not fetched),
+ *   so the brief never points at a file that is not there.
+ */
+export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = [], failedIds: ReadonlySet<string> = new Set()): string {
+  const pathById = includedPaths(files, failedIds);
+  const remote = (source: BuildPackRemoteImage['source'], ownerId: string) =>
+    pack.remoteImages.find((image) => image.source === source && image.ownerId === ownerId) ?? null;
   const name = buildPackShopName(pack);
   const out: string[] = [`# Website brief — ${inline(name)}`, '', ...quote(BUILD_PACK_BRIEF_INSTRUCTION), ''];
 
@@ -36,8 +63,8 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   out.push(`- Name: ${inline(name)}`);
   out.push(`- Town / city: ${inline(buildPackTownCity(pack))}`);
   if (pack.contact.tagline) out.push(`- Tagline: ${inline(pack.contact.tagline)}`);
-  out.push(`- Barbers (approx.): ${pack.intake.barberCount}`);
-  out.push(`- Has its own domain: ${pack.contact.hasOwnDomain}`);
+  out.push(`- Barbers (approx.): ${answered(pack.intake.barberCount)}`);
+  out.push(`- Has its own domain: ${answered(pack.contact.hasOwnDomain)}`);
   out.push('');
 
   out.push('## Location & contact', '');
@@ -56,10 +83,20 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   out.push('');
 
   out.push('## Brand', '');
-  const logos = pack.assets.LOGO;
-  const current = logos.find((logo) => logo.id === pack.brand.currentLogoAssetId);
-  out.push(`- Logo: ${current ? fileRef(current, pathById) : 'Not provided'}`);
-  if (logos.length > 1) out.push(`- Other logo files: ${logos.filter((l) => l !== current).map((l) => fileRef(l, pathById)).join(', ')}`);
+  const logos = buildPackLogos(pack);
+  const shopLogo = pack.remoteImages.find((image) => image.source === 'shopLogo') ?? null;
+  const shopLogoPath = shopLogo ? pathById.get(shopLogo.id) ?? null : null;
+  if (logos.current) {
+    out.push(`- Logo: ${fileRef(logos.current, pathById)}`);
+    if (isRasterPhotoLogo(logos.current.contentType)) out.push(RASTER_HINT);
+  } else if (shopLogoPath) {
+    out.push(`- Logo: \`${shopLogoPath}\``);
+    if (isRasterPhotoLogo(shopLogoPath)) out.push(RASTER_HINT);
+  } else {
+    out.push('- Logo: Not provided');
+  }
+  if (logos.earlier.length) out.push(`- Earlier logo uploads (use only if asked): ${logos.earlier.map((l) => fileRef(l, pathById)).join(', ')}`);
+  if (logos.current && shopLogoPath) out.push(`- Logo set in the dashboard shop settings: \`${shopLogoPath}\``);
   const primary = pack.brand.primary.request ?? pack.brand.primary.profile;
   const secondary = pack.brand.secondary.request ?? pack.brand.secondary.profile;
   out.push(`- Primary colour: ${primary ?? 'Not provided'}`);
@@ -95,16 +132,27 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   } else {
     out.push('Not provided. Do not invent services or prices.');
   }
+  const servicePhotos = pack.services
+    .map((service) => ({ service, image: remote('service', service.id) }))
+    .filter((row): row is { service: (typeof pack.services)[number]; image: BuildPackRemoteImage } => Boolean(row.image));
+  if (servicePhotos.length) {
+    out.push('', 'Service photos:');
+    for (const { service, image } of servicePhotos) out.push(`- ${inline(service.name)}: ${remoteRef(image, pathById)}`);
+  }
   if (pack.assets.PRICE_LIST.length) out.push('', `Price list file: ${pack.assets.PRICE_LIST.map((a) => fileRef(a, pathById)).join(', ')}`);
   out.push('');
 
   out.push('## Team', '');
   if (pack.team.length) {
     for (const member of pack.team) {
-      const photos = member.photoAssetIds
-        .map((id) => pack.assets.TEAM_PHOTO.find((a) => a.id === id))
-        .filter((a): a is BuildPackAsset => Boolean(a))
-        .map((a) => fileRef(a, pathById));
+      const avatar = remote('barber', member.id);
+      const photos = [
+        ...member.photoAssetIds
+          .map((id) => pack.assets.TEAM_PHOTO.find((a) => a.id === id))
+          .filter((a): a is BuildPackAsset => Boolean(a))
+          .map((a) => fileRef(a, pathById)),
+        ...(avatar ? [remoteRef(avatar, pathById)] : []),
+      ];
       out.push(`- **${inline(member.name)}**${member.role ? ` — ${inline(member.role)}` : ''}${photos.length ? ` · photo: ${photos.join(', ')}` : ' · no photo'}`);
       if (member.bio) out.push(...quote(member.bio).map((line) => `  ${line}`));
     }
@@ -116,7 +164,12 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   if (pack.products.length) {
     out.push('## Products', '');
     for (const product of pack.products) {
-      out.push(`- ${inline(product.name)} — ${money(product.pricePence)}${product.description ? ` (${inline(product.description)})` : ''}`);
+      const image = remote('product', product.id);
+      out.push(
+        `- ${inline(product.name)} — ${money(product.pricePence)}${product.description ? ` (${inline(product.description)})` : ''}${
+          image ? ` · photo: ${remoteRef(image, pathById)}` : ''
+        }`,
+      );
     }
     out.push('');
   }
@@ -133,6 +186,17 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
       const dims = asset.width && asset.height ? ` (${asset.width}×${asset.height})` : '';
       const who = asset.barberName ? ` — ${inline(asset.barberName)}` : '';
       out.push(`- ${label}: ${fileRef(asset, pathById)}${dims}${who}${asset.caption ? ` — ${inline(asset.caption)}` : ''}`);
+    }
+  }
+  const remoteGroups: Array<[string, BuildPackRemoteImage['source']]> = [
+    ['Team (dashboard)', 'barber'],
+    ['Products', 'product'],
+    ['Services', 'service'],
+  ];
+  for (const [label, source] of remoteGroups) {
+    for (const image of pack.remoteImages.filter((i) => i.source === source)) {
+      anyPhoto = true;
+      out.push(`- ${label}: ${remoteRef(image, pathById)} — ${inline(image.ownerName)}`);
     }
   }
   if (!anyPhoto) out.push('No photos provided. Use neutral placeholders, not stock photos of other shops.');

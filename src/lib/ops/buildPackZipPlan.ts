@@ -8,11 +8,16 @@
  */
 import {
   BUILD_PACK_ASSET_KINDS,
+  buildPackLogos,
   buildPackShopName,
   type BuildPack,
   type BuildPackAsset,
   type BuildPackAssetKind,
+  type BuildPackProduct,
+  type BuildPackService,
+  type BuildPackTeamMember,
 } from './buildPack';
+import { remoteImageExtension, type BuildPackRemoteImage } from './buildPackRemoteImages';
 
 /** ASCII slug: "Fade & Co. Barbers" → "fade-and-co-barbers". Empty input → fallback. */
 export function asciiSlug(input: string, fallback = 'file', max = 60): string {
@@ -92,34 +97,94 @@ export function uniquePath(path: string, used: Set<string>): string {
   return candidate;
 }
 
-export type BuildPackZipFile = { path: string; asset: BuildPackAsset };
+export type BuildPackZipFile =
+  | { path: string; asset: BuildPackAsset; remote?: undefined }
+  | {
+      path: string;
+      remote: BuildPackRemoteImage;
+      asset?: undefined;
+      /** False when the URL has no extension: the route swaps in one from the response Content-Type. */
+      extFromUrl: boolean;
+    };
 
-/** Paths (relative to the pack folder) for every original file, in zip order. */
-export function planBuildPackFiles(pack: Pick<BuildPack, 'assets' | 'revisionFiles' | 'team'>): BuildPackZipFile[] {
+/** Id of the file inside the pack: the asset id, or "<source>:<ownerId>" for a dashboard image. */
+export function zipFileId(file: BuildPackZipFile): string {
+  return file.asset ? file.asset.id : file.remote.id;
+}
+
+type PlanInput = Pick<BuildPack, 'assets' | 'revisionFiles' | 'brand'> & Partial<Pick<BuildPack, 'remoteImages'>>;
+
+/**
+ * Paths (relative to the pack folder) for every file, in zip order: hub originals and dashboard images.
+ * Exact duplicate logo uploads are left out (buildPackLogos); README says so.
+ */
+export function planBuildPackFiles(pack: PlanInput): BuildPackZipFile[] {
   const used = new Set<string>();
   const out: BuildPackZipFile[] = [];
   const add = (asset: BuildPackAsset, dir: string, name: string) => {
     // dir is one of the fixed folders below; the name is user-derived, so it is sanitised once more.
     out.push({ asset, path: uniquePath(`${dir}/${sanitiseSegment(name, 'file')}`, used) });
   };
+  const remotes = pack.remoteImages ?? [];
+  const addRemote = (remote: BuildPackRemoteImage, dir: string, base: string) => {
+    const ext = remoteImageExtension(remote.url);
+    out.push({
+      remote,
+      extFromUrl: Boolean(ext),
+      path: uniquePath(`${dir}/${sanitiseSegment(`${base}.${ext ?? 'img'}`, 'image')}`, used),
+    });
+  };
   const base = (asset: BuildPackAsset) => {
     const name = asset.fileName.replace(/\.[^.]+$/, '');
     return asciiSlug(name, asset.kind.toLowerCase().replace(/_/g, '-'));
   };
+  const nn = (index: number) => String(index + 1).padStart(2, '0');
 
-  for (const asset of pack.assets.LOGO) add(asset, 'brand/logo', `${base(asset)}.${fileExtension(asset)}`);
+  const logos = buildPackLogos(pack);
+  if (logos.current) add(logos.current, 'brand/logo', `current-logo.${fileExtension(logos.current)}`);
+  for (const asset of logos.earlier) add(asset, 'brand/logo/earlier', `${base(asset)}.${fileExtension(asset)}`);
+  for (const remote of remotes.filter((r) => r.source === 'shopLogo')) addRemote(remote, 'brand/logo', 'shop-settings-logo');
+
   pack.assets.SHOP_PHOTO.forEach((asset, index) => {
     const label = asset.caption ? asciiSlug(asset.caption, base(asset), 40) : base(asset);
-    add(asset, 'photos/shop', `${String(index + 1).padStart(2, '0')}_${label}.${fileExtension(asset)}`);
+    add(asset, 'photos/shop', `${nn(index)}_${label}.${fileExtension(asset)}`);
   });
   for (const asset of pack.assets.TEAM_PHOTO) {
     const name = asset.barberName ? asciiSlug(asset.barberName, 'team') : base(asset);
     add(asset, 'photos/team', `${name}.${fileExtension(asset)}`);
   }
+  // Dashboard avatars after hub team photos, so a barber with both gets "<name>.jpg" and "<name>-2.jpg".
+  for (const remote of remotes.filter((r) => r.source === 'barber')) addRemote(remote, 'photos/team', asciiSlug(remote.ownerName, 'team'));
+  remotes
+    .filter((r) => r.source === 'product')
+    .forEach((remote, index) => addRemote(remote, 'photos/products', `${nn(index)}_${asciiSlug(remote.ownerName, 'product', 50)}`));
+  remotes
+    .filter((r) => r.source === 'service')
+    .forEach((remote, index) => addRemote(remote, 'photos/services', `${nn(index)}_${asciiSlug(remote.ownerName, 'service', 50)}`));
+
   for (const asset of pack.assets.PRICE_LIST) add(asset, 'documents/price-list', `${base(asset)}.${fileExtension(asset)}`);
   for (const asset of pack.assets.OTHER) add(asset, 'documents/other', `${base(asset)}.${fileExtension(asset)}`);
   for (const asset of pack.revisionFiles) add(asset, 'revisions/attachments', `${base(asset)}.${fileExtension(asset)}`);
   return out;
+}
+
+/** Same path with another extension ("photos/team/alex.img" + "png" -> "photos/team/alex.png"). */
+export function withExtension(path: string, ext: string): string {
+  const slash = path.lastIndexOf('/');
+  const dot = path.lastIndexOf('.');
+  const stem = dot > slash ? path.slice(0, dot) : path;
+  const safe = ext.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'img';
+  return `${stem}.${safe}`;
+}
+
+/** Path of each file by its pack id, leaving out files that could not be included. */
+export function includedPaths(files: BuildPackZipFile[], failedIds: ReadonlySet<string> = new Set()): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const file of files) {
+    const id = zipFileId(file);
+    if (!failedIds.has(id)) map.set(id, file.path);
+  }
+  return map;
 }
 
 /** "kersivo-build-pack_fade-and-co_2026-11-04" (London date). */
@@ -131,24 +196,35 @@ export function buildPackFolderName(pack: Pick<BuildPack, 'shop'>, now: Date = n
 export type BuildPackJsonFile = Omit<BuildPackAsset, 'storagePath' | 'hasThumb'> & {
   /** Path inside the pack folder, or null when the file could not be included. */
   path: string | null;
+  /** LOGO only: id of the upload this one is an exact re-upload of (left out of the zip). */
+  duplicateOf?: string;
 };
 
-/** shop.json (schemaVersion 1): the BuildPack with file paths instead of storage paths. */
-export type BuildPackJson = Omit<BuildPack, 'assets' | 'revisionFiles'> & {
+export type BuildPackJsonRemoteImage = BuildPackRemoteImage & { path: string | null };
+
+/** shop.json (schemaVersion 2): the BuildPack with file paths instead of storage paths. */
+export type BuildPackJson = Omit<BuildPack, 'assets' | 'revisionFiles' | 'remoteImages' | 'team' | 'products' | 'services'> & {
   assets: Record<BuildPackAssetKind, BuildPackJsonFile[]>;
   revisionFiles: BuildPackJsonFile[];
+  remoteImages: BuildPackJsonRemoteImage[];
+  team: Array<BuildPackTeamMember & { photoPath: string | null; photoPaths: string[] }>;
+  products: Array<BuildPackProduct & { photoPath: string | null }>;
+  services: Array<BuildPackService & { photoPath: string | null }>;
 };
 
 export function toBuildPackJson(
   pack: BuildPack,
   files: BuildPackZipFile[],
-  failedAssetIds: ReadonlySet<string> = new Set(),
+  failedIds: ReadonlySet<string> = new Set(),
 ): BuildPackJson {
-  const pathById = new Map(files.map((file) => [file.asset.id, file.path]));
+  const pathById = includedPaths(files, failedIds);
+  const duplicateOf = new Map(buildPackLogos(pack).duplicates.map((d) => [d.asset.id, d.duplicateOf.id]));
   const toFile = ({ storagePath: _storagePath, hasThumb: _hasThumb, ...rest }: BuildPackAsset): BuildPackJsonFile => ({
     ...rest,
-    path: failedAssetIds.has(rest.id) ? null : pathById.get(rest.id) ?? null,
+    path: pathById.get(rest.id) ?? null,
+    ...(duplicateOf.has(rest.id) ? { duplicateOf: duplicateOf.get(rest.id)! } : {}),
   });
+  const remotePath = (source: BuildPackRemoteImage['source'], ownerId: string) => pathById.get(`${source}:${ownerId}`) ?? null;
   return {
     ...pack,
     assets: Object.fromEntries(BUILD_PACK_ASSET_KINDS.map((kind) => [kind, pack.assets[kind].map(toFile)])) as Record<
@@ -156,6 +232,15 @@ export function toBuildPackJson(
       BuildPackJsonFile[]
     >,
     revisionFiles: pack.revisionFiles.map(toFile),
+    remoteImages: pack.remoteImages.map((image) => ({ ...image, path: pathById.get(image.id) ?? null })),
+    team: pack.team.map((member) => {
+      const photoPaths = [...member.photoAssetIds.map((id) => pathById.get(id)), remotePath('barber', member.id)].filter(
+        (path): path is string => Boolean(path),
+      );
+      return { ...member, photoPath: photoPaths[0] ?? null, photoPaths };
+    }),
+    products: pack.products.map((product) => ({ ...product, photoPath: remotePath('product', product.id) })),
+    services: pack.services.map((service) => ({ ...service, photoPath: remotePath('service', service.id) })),
   };
 }
 
@@ -172,7 +257,7 @@ export function buildPackColoursJson(pack: BuildPack) {
 }
 
 export function buildPackChangeRequestsMd(pack: BuildPack, files: BuildPackZipFile[]): string {
-  const pathById = new Map(files.map((file) => [file.asset.id, file.path]));
+  const pathById = includedPaths(files);
   const lines = ['# Open change requests', ''];
   if (!pack.changeRequests.length && !pack.legacyChangesRequested) lines.push('None open.', '');
   for (const change of pack.changeRequests) {
@@ -187,6 +272,13 @@ export function buildPackChangeRequestsMd(pack: BuildPack, files: BuildPackZipFi
   }
   return lines.join('\n');
 }
+
+const REMOTE_LABEL: Record<BuildPackRemoteImage['source'], string> = {
+  barber: 'dashboard photo',
+  product: 'product image',
+  service: 'service image',
+  shopLogo: 'shop settings logo',
+};
 
 export function buildPackReadme(input: {
   pack: BuildPack;
@@ -211,9 +303,13 @@ export function buildPackReadme(input: {
     '- `README.md` — this file',
     '- `brief.md` — the design brief',
     '- `shop.json` — every field as structured data (file paths are relative to this folder)',
+    '- `brand/logo/current-logo.*` — the logo to build from; `brand/logo/earlier/` holds older uploads',
     '- `brand/colours.json` — brand colours, background tone and extracted palette',
     '- `revisions/change-requests.md` — open change requests from the owner',
-    ...files.map((file) => `- \`${file.path}\`${file.asset.caption ? ` — ${file.asset.caption}` : ''}`),
+    ...files.map((file) => {
+      const note = file.asset ? file.asset.caption : `${REMOTE_LABEL[file.remote.source]}: ${file.remote.ownerName}`;
+      return `- \`${file.path}\`${note ? ` — ${note}` : ''}`;
+    }),
     '',
     '## Not provided',
     '',
@@ -231,6 +327,42 @@ export function buildPackReadme(input: {
     for (const item of failed) lines.push(`- \`${item.path}\` — ${item.reason}`);
     lines.push('');
   }
+  const duplicates = buildPackLogos(pack).duplicates;
+  if (duplicates.length) {
+    lines.push('## Duplicate logo uploads left out', '');
+    for (const d of duplicates) {
+      lines.push(`- ${d.asset.fileName} (uploaded ${d.asset.createdAt.slice(0, 10)}): same file name and size as a logo already in the pack`);
+    }
+    lines.push('');
+  }
   lines.push(`Folder: \`${folder}/\``, '');
   return lines.join('\n');
+}
+
+export type BuildPackFileSummary = {
+  /** Hub originals that go into the zip (duplicate logos left out). */
+  fileCount: number;
+  /** Their total size; dashboard image sizes are unknown until downloaded. */
+  totalBytes: number;
+  /** Dashboard images that pass the allowlist and will be downloaded into the zip. */
+  remoteCount: number;
+};
+
+export function buildPackFileSummary(pack: BuildPack, isAllowed: (url: string) => boolean): BuildPackFileSummary {
+  const files = planBuildPackFiles(pack);
+  const assets = files.filter((file) => file.asset);
+  return {
+    fileCount: assets.length,
+    totalBytes: assets.reduce((sum, file) => sum + (file.asset?.sizeBytes ?? 0), 0),
+    remoteCount: files.filter((file) => file.remote && isAllowed(file.remote.url)).length,
+  };
+}
+
+/** "12 files (+8 dashboard images) · about 1.9 MB" */
+export function buildPackFileSummaryLabel(summary: BuildPackFileSummary, formatBytes: (bytes: number) => string): string {
+  const files = `${summary.fileCount} ${summary.fileCount === 1 ? 'file' : 'files'}`;
+  const remote = summary.remoteCount
+    ? ` (+${summary.remoteCount} dashboard ${summary.remoteCount === 1 ? 'image' : 'images'})`
+    : '';
+  return `${files}${remote} · about ${formatBytes(summary.totalBytes)}`;
 }
