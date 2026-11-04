@@ -171,7 +171,7 @@ describe('build pack zip plan', () => {
     const text = JSON.stringify(json);
     expect(text).not.toContain('storagePath');
     expect(text).not.toContain('preview-hub/');
-    expect(json.schemaVersion).toBe(1);
+    expect(json.schemaVersion).toBe(2);
     expect(json.assets.SHOP_PHOTO.map((a) => a.path)).toEqual(['photos/shop/01_shopfront.jpg', null]);
   });
 

@@ -321,13 +321,32 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
               {pack.services.map((service) => (
                 <tr>
                   <td>
-                    {service.name}
-                    {service.featured ? <span class="ops-bb__tag">Featured</span> : null}
-                    {service.description ? <span class="ops-bb__sub ops-bb__pre">{service.description}</span> : null}
+                    <div class="ops-bb__item">
+                      {service.imageUrl && isAllowed(service.imageUrl) ? (
+                        <img
+                          class="ops-bb__thumb"
+                          src={service.imageUrl}
+                          alt={`Photo for ${service.name}`}
+                          width="48"
+                          height="48"
+                          loading="lazy"
+                          decoding="async"
+                          referrerpolicy="no-referrer"
+                        />
+                      ) : null}
+                      <div>
+                        {service.name}
+                        {service.featured ? <span class="ops-bb__tag">Featured</span> : null}
+                        {service.description ? <span class="ops-bb__sub ops-bb__pre">{service.description}</span> : null}
+                        {service.imageUrl && !isAllowed(service.imageUrl) ? (
+                          <span class="ops-bb__sub ops-bb__url">Photo URL (not downloaded): {service.imageUrl}</span>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td>{minutes(service.durationMinutes)}</td>
                   <td>{money(service.pricePence, service.priceFrom)}</td>
-                  <td>{service.category ?? '—'}</td>
+                  <td>{displayCategory(service.category)}</td>
                 </tr>
               ))}
             </tbody>
@@ -346,11 +365,15 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
         <ul class="ops-bb__team">
           {pack.team.map((member) => {
             const photo = member.photoAssetIds.map((id) => assetById.get(id)).find(Boolean) ?? null;
+            const avatar = member.avatarUrl && isAllowed(member.avatarUrl) ? member.avatarUrl : null;
+            const count = memberPhotoCount(member);
             return (
-              <li class="ops-bb__member">
+              <li class="ops-bb__member" data-testid="ops-bb-member">
                 <div class="ops-bb__avatar">
                   {photo ? (
                     <img src={assetUrl(photo, 'thumb')} alt={`Photo of ${member.name}`} loading="lazy" decoding="async" />
+                  ) : avatar ? (
+                    <img src={avatar} alt={`Photo of ${member.name}`} loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   ) : (
                     <span aria-hidden="true">{member.name.slice(0, 1).toUpperCase()}</span>
                   )}
@@ -359,8 +382,11 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
                   <p class="ops-bb__member-name">{member.name}</p>
                   <p class="ops-bb__meta">
                     {member.role ?? 'No role given'}
-                    {member.photoAssetIds.length ? ` · ${member.photoAssetIds.length} photo${member.photoAssetIds.length > 1 ? 's' : ''}` : ' · no photo'}
+                    {count ? ` · ${count} photo${count > 1 ? 's' : ''}` : ' · no photo'}
                   </p>
+                  {member.avatarUrl && !isAllowed(member.avatarUrl) ? (
+                    <p class="ops-bb__sub ops-bb__url">Photo URL (not downloaded): {member.avatarUrl}</p>
+                  ) : null}
                   {member.bio ? <p class="ops-bb__sub ops-bb__pre">{member.bio}</p> : null}
                 </div>
               </li>
@@ -377,19 +403,47 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
     pack.products.length ? (
       <section class="ops-bb__card" aria-labelledby="ops-bb-products">
         <h2 id="ops-bb-products" class="ops-bb__title">Products ({pack.products.length})</h2>
-        <table class="ops-bb__table">
-          <tbody>
-            {pack.products.map((product) => (
+        <div class="ops-bb__scroll">
+          <table class="ops-bb__table">
+            <thead>
               <tr>
-                <td>
-                  {product.name}
-                  {product.description ? <span class="ops-bb__sub ops-bb__pre">{product.description}</span> : null}
-                </td>
-                <td>{money(product.pricePence)}</td>
+                <th scope="col" class="ops-bb__thumb-col">Photo</th>
+                <th scope="col">Product</th>
+                <th scope="col">Price</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pack.products.map((product) => (
+                <tr>
+                  <td class="ops-bb__thumb-col">
+                    {product.imageUrl && isAllowed(product.imageUrl) ? (
+                      <img
+                        class="ops-bb__thumb"
+                        src={product.imageUrl}
+                        alt={`Photo of ${product.name}`}
+                        width="48"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                      />
+                    ) : (
+                      <span class="ops-bb__meta">—</span>
+                    )}
+                  </td>
+                  <td>
+                    {product.name}
+                    {product.description ? <span class="ops-bb__sub ops-bb__pre">{product.description}</span> : null}
+                    {product.imageUrl && !isAllowed(product.imageUrl) ? (
+                      <span class="ops-bb__sub ops-bb__url">Photo URL: {product.imageUrl}</span>
+                    ) : null}
+                  </td>
+                  <td>{money(product.pricePence)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     ) : null
   }

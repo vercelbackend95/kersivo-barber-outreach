@@ -116,10 +116,38 @@ export function planBuildPackFiles(pack: Pick<BuildPack, 'assets' | 'revisionFil
     const name = asset.barberName ? asciiSlug(asset.barberName, 'team') : base(asset);
     add(asset, 'photos/team', `${name}.${fileExtension(asset)}`);
   }
+  // Dashboard avatars after hub team photos, so a barber with both gets "<name>.jpg" and "<name>-2.jpg".
+  for (const remote of remotes.filter((r) => r.source === 'barber')) addRemote(remote, 'photos/team', asciiSlug(remote.ownerName, 'team'));
+  remotes
+    .filter((r) => r.source === 'product')
+    .forEach((remote, index) => addRemote(remote, 'photos/products', `${nn(index)}_${asciiSlug(remote.ownerName, 'product', 50)}`));
+  remotes
+    .filter((r) => r.source === 'service')
+    .forEach((remote, index) => addRemote(remote, 'photos/services', `${nn(index)}_${asciiSlug(remote.ownerName, 'service', 50)}`));
+
   for (const asset of pack.assets.PRICE_LIST) add(asset, 'documents/price-list', `${base(asset)}.${fileExtension(asset)}`);
   for (const asset of pack.assets.OTHER) add(asset, 'documents/other', `${base(asset)}.${fileExtension(asset)}`);
   for (const asset of pack.revisionFiles) add(asset, 'revisions/attachments', `${base(asset)}.${fileExtension(asset)}`);
   return out;
+}
+
+/** Same path with another extension ("photos/team/alex.img" + "png" -> "photos/team/alex.png"). */
+export function withExtension(path: string, ext: string): string {
+  const slash = path.lastIndexOf('/');
+  const dot = path.lastIndexOf('.');
+  const stem = dot > slash ? path.slice(0, dot) : path;
+  const safe = ext.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8) || 'img';
+  return `${stem}.${safe}`;
+}
+
+/** Path of each file by its pack id, leaving out files that could not be included. */
+export function includedPaths(files: BuildPackZipFile[], failedIds: ReadonlySet<string> = new Set()): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const file of files) {
+    const id = zipFileId(file);
+    if (!failedIds.has(id)) map.set(id, file.path);
+  }
+  return map;
 }
 
 /** "kersivo-build-pack_fade-and-co_2026-11-04" (London date). */
@@ -156,6 +184,15 @@ export function toBuildPackJson(
       BuildPackJsonFile[]
     >,
     revisionFiles: pack.revisionFiles.map(toFile),
+    remoteImages: pack.remoteImages.map((image) => ({ ...image, path: pathById.get(image.id) ?? null })),
+    team: pack.team.map((member) => {
+      const photoPaths = [...member.photoAssetIds.map((id) => pathById.get(id)), remotePath('barber', member.id)].filter(
+        (path): path is string => Boolean(path),
+      );
+      return { ...member, photoPath: photoPaths[0] ?? null, photoPaths };
+    }),
+    products: pack.products.map((product) => ({ ...product, photoPath: remotePath('product', product.id) })),
+    services: pack.services.map((service) => ({ ...service, photoPath: remotePath('service', service.id) })),
   };
 }
 
@@ -172,7 +209,7 @@ export function buildPackColoursJson(pack: BuildPack) {
 }
 
 export function buildPackChangeRequestsMd(pack: BuildPack, files: BuildPackZipFile[]): string {
-  const pathById = new Map(files.map((file) => [file.asset.id, file.path]));
+  const pathById = includedPaths(files);
   const lines = ['# Open change requests', ''];
   if (!pack.changeRequests.length && !pack.legacyChangesRequested) lines.push('None open.', '');
   for (const change of pack.changeRequests) {
@@ -187,6 +224,13 @@ export function buildPackChangeRequestsMd(pack: BuildPack, files: BuildPackZipFi
   }
   return lines.join('\n');
 }
+
+const REMOTE_LABEL: Record<BuildPackRemoteImage['source'], string> = {
+  barber: 'dashboard photo',
+  product: 'product image',
+  service: 'service image',
+  shopLogo: 'shop settings logo',
+};
 
 export function buildPackReadme(input: {
   pack: BuildPack;

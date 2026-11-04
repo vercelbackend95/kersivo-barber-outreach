@@ -49,15 +49,15 @@ is `null`. Each zip download records `ops_build_pack_downloaded` (operator email
 | Tagline, address, postcode, phone, public email | draft `ShopPublicProfile` |
 | Own domain, barbers, booking system, notes | `PreviewRequest.hasOwnDomain/barberCount/currentBookingSystem/notes` |
 | Opening hours | `ShopOpeningHours` of the draft shop → 7-day week |
-| Logo | `PreviewHubAsset` kind LOGO (current = snapshot logo once sent, else newest); `ShopSettings.logoUrl` shown if set |
+| Logo | `PreviewHubAsset` kind LOGO (current = snapshot logo once sent, else newest; Overview shows it first with older uploads collapsed); `ShopSettings.logoUrl` downloaded as `shop-settings-logo`, used by `brief.md` when there is no hub logo |
 | Colours | `PreviewRequest.brand*` (hub Colours) and `ShopPublicProfile.brandPrimary/SecondaryColour`; `brandSubmittedSnapshot` = what was sent to KERSIVO; conflicts listed |
 | Style notes | `PreviewRequest.styleNotes` |
 | About / description | `PreviewRequest.aboutText` (hub) and `ShopPublicProfile.description` (dashboard); conflict if both set and different |
 | Anything else | `PreviewRequest.websiteExtraText` |
 | Links | `PreviewRequest.workLinks` (or the four legacy URL columns), `instagramUrl`; profile Instagram, Facebook, TikTok, other |
-| Services | `Service` (active), ordered by `displayOrder` |
-| Team | `Barber` (active and shown on website); team photos matched by `PreviewHubAsset.barberId` |
-| Products | `Product` (active); stock is not included |
+| Services | `Service` (active), ordered by `displayOrder`; `imageUrl` → `photos/services/` |
+| Team | `Barber` (active and shown on website); team photos matched by `PreviewHubAsset.barberId`, plus `avatarUrl` |
+| Products | `Product` (active), `imageUrl` → `photos/products/`; stock is not included |
 | Photos, documents | `PreviewHubAsset` (not deleted), grouped by kind, ordered by `sortOrder`, `createdAt` |
 | Change requests | `PreviewChangeRequest` with status SENT or IN_PROGRESS; legacy `changesRequestedText` |
 

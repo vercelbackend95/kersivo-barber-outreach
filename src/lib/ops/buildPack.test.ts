@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/db/client', () => ({ prisma: {} }));
 
-import { shapeBuildPack, type BuildPackRows } from './buildPack';
+import { memberHasPhoto, shapeBuildPack, type BuildPackRows } from './buildPack';
+import { buildPackBriefMd } from './buildPackBrief';
+import { planBuildPackFiles } from './buildPackZipPlan';
 
 const at = (s: string) => new Date(s);
 
@@ -137,7 +139,7 @@ function fullRows(): BuildPackRows {
 describe('shapeBuildPack', () => {
   it('maps a full request into every section', () => {
     const pack = shapeBuildPack(fullRows(), at('2026-11-04T12:00:00Z'));
-    expect(pack.schemaVersion).toBe(1);
+    expect(pack.schemaVersion).toBe(2);
     expect(pack.contact).toMatchObject({ tagline: 'Sharp cuts', addressLine1: '1 High St', postcode: 'LS1 1AA', hasOwnDomain: 'Yes' });
     expect(pack.hours.saved).toBe(true);
     expect(pack.hours.days[0]).toEqual({ dayOfWeek: 1, day: 'Monday', isOpen: true, opens: '09:00', closes: '18:00' });
@@ -197,5 +199,58 @@ describe('shapeBuildPack', () => {
     expect(pack.brand.currentLogoAssetId).toBe('logo');
     expect(pack.brand.submittedSnapshot?.logoOriginalFileName).toBe('logo.jpg');
     expect(pack.conflicts.find((c) => c.field === 'brand.primary')?.values.map((v) => v.source)).toEqual(['request', 'profile', 'snapshot']);
+  });
+});
+
+describe('dashboard photos (avatarUrl, imageUrl)', () => {
+  const blob = (name: string) => `https://store1.public.blob.vercel-storage.com/shops/shop_1/${name}`;
+
+  function rowsWithAvatar(): BuildPackRows {
+    const rows = fullRows();
+    // Jordan has a dashboard avatar and no hub TEAM_PHOTO.
+    rows.barbers[1].avatarUrl = blob('barbers/jordan-x1.jpg');
+    rows.products = [
+      { id: 'p1', name: 'YoŁ shampoo', description: null, pricePence: 2500, imageUrl: blob('products/shampoo.png'), featured: false, category: 'HAIR', sortOrder: 0 },
+    ];
+    rows.services[0].imageUrl = blob('services/beard.webp');
+    return rows;
+  }
+
+  it('one truth for "has photo": avatar counts, so nothing is missing and the brief names the file', () => {
+    const pack = shapeBuildPack(rowsWithAvatar(), at('2026-11-04T12:00:00Z'));
+    const jordan = pack.team.find((m) => m.name === 'Jordan')!;
+    expect(memberHasPhoto(jordan)).toBe(true);
+    expect(pack.missing.some((item) => item.startsWith('Team photos'))).toBe(false);
+    expect(pack.remoteImages.map((image) => image.id)).toEqual(['barber:b2', 'product:p1', 'service:s2']);
+
+    const brief = buildPackBriefMd(pack, planBuildPackFiles(pack));
+    expect(brief).toContain('- **Jordan** · photo: `photos/team/jordan.jpg`');
+    expect(brief).not.toContain('no photo');
+    expect(brief).toContain('- YoŁ shampoo — £25 · photo: `photos/products/01_yol-shampoo.png`');
+    expect(brief).toContain('- Beard: `photos/services/01_beard.webp`');
+    expect(brief).toContain('- Team (dashboard): `photos/team/jordan.jpg` — Jordan');
+  });
+
+  it('still says "no photo" when there is truly none', () => {
+    const rows = fullRows();
+    rows.assets = rows.assets.filter((a) => a.kind !== 'TEAM_PHOTO');
+    const pack = shapeBuildPack(rows);
+    expect(pack.missing).toContain('Team photos for Alex, Jordan');
+    expect(buildPackBriefMd(pack, planBuildPackFiles(pack))).toContain('- **Jordan** · no photo');
+  });
+
+  it('a dashboard image that is not in the zip is named as such, never as a path', () => {
+    const pack = shapeBuildPack(rowsWithAvatar());
+    const brief = buildPackBriefMd(pack, planBuildPackFiles(pack), new Set(['barber:b2']));
+    expect(brief).toContain('- **Jordan** · photo: image added in the dashboard (not in this pack)');
+  });
+
+  it('brief writes "Not provided" for unanswered intake questions', () => {
+    const rows = fullRows();
+    rows.request.barberCount = null;
+    rows.request.hasOwnDomain = null;
+    const brief = buildPackBriefMd(shapeBuildPack(rows));
+    expect(brief).toContain('- Barbers (approx.): Not provided');
+    expect(brief).toContain('- Has its own domain: Not provided');
   });
 });

@@ -189,6 +189,8 @@ export type BuildPack = {
   services: BuildPackService[];
   team: BuildPackTeamMember[];
   products: BuildPackProduct[];
+  /** Images added in the dashboard screens (public Blob URLs): avatars, product, service and shop logo images. */
+  remoteImages: BuildPackRemoteImage[];
   assets: Record<BuildPackAssetKind, BuildPackAsset[]>;
   /** Change and message attachments: for revisions, not the first build. */
   revisionFiles: BuildPackAsset[];
@@ -603,10 +605,8 @@ export function shapeBuildPack(rows: BuildPackRows, now: Date = new Date()): Bui
     if (!contact.email) missing.push('Public email');
   }
   if (!contact.tagline) missing.push('Tagline');
-  if (team.length > 0 && team.some((member) => member.photoAssetIds.length === 0 && !member.avatarUrl)) {
-    const without = team.filter((member) => member.photoAssetIds.length === 0 && !member.avatarUrl).map((m) => m.name);
-    missing.push(`Team photos for ${without.join(', ')}`);
-  }
+  const without = team.filter((member) => !memberHasPhoto(member)).map((m) => m.name);
+  if (without.length) missing.push(`Team photos for ${without.join(', ')}`);
   if (!links.instagram.request && !links.instagram.profile && !links.facebook && !links.tiktok && !links.other) {
     missing.push('Social links');
   }
@@ -633,6 +633,12 @@ export function shapeBuildPack(rows: BuildPackRows, now: Date = new Date()): Bui
     services,
     team,
     products,
+    remoteImages: collectRemoteImages({
+      team,
+      products,
+      services,
+      shop: shop ? { id: shop.id, name: clean(shop.name) ?? request.shopName, logoUrl: brand.shopLogoUrl } : null,
+    }),
     assets,
     revisionFiles,
     changeRequests,

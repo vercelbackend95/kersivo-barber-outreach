@@ -36,8 +36,8 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   out.push(`- Name: ${inline(name)}`);
   out.push(`- Town / city: ${inline(buildPackTownCity(pack))}`);
   if (pack.contact.tagline) out.push(`- Tagline: ${inline(pack.contact.tagline)}`);
-  out.push(`- Barbers (approx.): ${pack.intake.barberCount}`);
-  out.push(`- Has its own domain: ${pack.contact.hasOwnDomain}`);
+  out.push(`- Barbers (approx.): ${answered(pack.intake.barberCount)}`);
+  out.push(`- Has its own domain: ${answered(pack.contact.hasOwnDomain)}`);
   out.push('');
 
   out.push('## Location & contact', '');
@@ -95,16 +95,27 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   } else {
     out.push('Not provided. Do not invent services or prices.');
   }
+  const servicePhotos = pack.services
+    .map((service) => ({ service, image: remote('service', service.id) }))
+    .filter((row): row is { service: (typeof pack.services)[number]; image: BuildPackRemoteImage } => Boolean(row.image));
+  if (servicePhotos.length) {
+    out.push('', 'Service photos:');
+    for (const { service, image } of servicePhotos) out.push(`- ${inline(service.name)}: ${remoteRef(image, pathById)}`);
+  }
   if (pack.assets.PRICE_LIST.length) out.push('', `Price list file: ${pack.assets.PRICE_LIST.map((a) => fileRef(a, pathById)).join(', ')}`);
   out.push('');
 
   out.push('## Team', '');
   if (pack.team.length) {
     for (const member of pack.team) {
-      const photos = member.photoAssetIds
-        .map((id) => pack.assets.TEAM_PHOTO.find((a) => a.id === id))
-        .filter((a): a is BuildPackAsset => Boolean(a))
-        .map((a) => fileRef(a, pathById));
+      const avatar = remote('barber', member.id);
+      const photos = [
+        ...member.photoAssetIds
+          .map((id) => pack.assets.TEAM_PHOTO.find((a) => a.id === id))
+          .filter((a): a is BuildPackAsset => Boolean(a))
+          .map((a) => fileRef(a, pathById)),
+        ...(avatar ? [remoteRef(avatar, pathById)] : []),
+      ];
       out.push(`- **${inline(member.name)}**${member.role ? ` — ${inline(member.role)}` : ''}${photos.length ? ` · photo: ${photos.join(', ')}` : ' · no photo'}`);
       if (member.bio) out.push(...quote(member.bio).map((line) => `  ${line}`));
     }
@@ -116,7 +127,12 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
   if (pack.products.length) {
     out.push('## Products', '');
     for (const product of pack.products) {
-      out.push(`- ${inline(product.name)} — ${money(product.pricePence)}${product.description ? ` (${inline(product.description)})` : ''}`);
+      const image = remote('product', product.id);
+      out.push(
+        `- ${inline(product.name)} — ${money(product.pricePence)}${product.description ? ` (${inline(product.description)})` : ''}${
+          image ? ` · photo: ${remoteRef(image, pathById)}` : ''
+        }`,
+      );
     }
     out.push('');
   }
@@ -133,6 +149,17 @@ export function buildPackBriefMd(pack: BuildPack, files: BuildPackZipFile[] = []
       const dims = asset.width && asset.height ? ` (${asset.width}×${asset.height})` : '';
       const who = asset.barberName ? ` — ${inline(asset.barberName)}` : '';
       out.push(`- ${label}: ${fileRef(asset, pathById)}${dims}${who}${asset.caption ? ` — ${inline(asset.caption)}` : ''}`);
+    }
+  }
+  const remoteGroups: Array<[string, BuildPackRemoteImage['source']]> = [
+    ['Team (dashboard)', 'barber'],
+    ['Products', 'product'],
+    ['Services', 'service'],
+  ];
+  for (const [label, source] of remoteGroups) {
+    for (const image of pack.remoteImages.filter((i) => i.source === source)) {
+      anyPhoto = true;
+      out.push(`- ${label}: ${remoteRef(image, pathById)} — ${inline(image.ownerName)}`);
     }
   }
   if (!anyPhoto) out.push('No photos provided. Use neutral placeholders, not stock photos of other shops.');

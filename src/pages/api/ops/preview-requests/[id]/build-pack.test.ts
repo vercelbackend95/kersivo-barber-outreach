@@ -30,7 +30,7 @@ import { GET } from './build-pack';
 
 const at = (s: string) => new Date(s);
 
-function pack() {
+function pack(extra: { barbers?: unknown[]; products?: unknown[]; draftShopId?: string | null } = {}) {
   const asset = (id: string, kind: string, extra: Record<string, unknown> = {}) => ({
     id,
     kind,
@@ -63,7 +63,7 @@ function pack() {
         currentBookingSystem: null,
         hasOwnDomain: null,
         notes: null,
-        draftShopId: null,
+        draftShopId: extra.draftShopId ?? null,
         changesRequestedText: null,
         changesRequestedAt: null,
         anonymisedAt: null,
@@ -78,12 +78,14 @@ function pack() {
         aboutText: null,
         websiteExtraText: null,
       },
-      shop: null,
+      shop: extra.draftShopId
+        ? { id: extra.draftShopId, name: 'Fade Co', townCity: 'Leeds', logoUrl: null, bookingSlug: null, sitePreviewUrl: null, sitePreviewVersion: null }
+        : null,
       profile: null,
       hours: [],
       services: [],
-      barbers: [],
-      products: [],
+      barbers: (extra.barbers ?? []) as never,
+      products: (extra.products ?? []) as never,
       assets: [asset('logo', 'LOGO'), asset('p1', 'SHOP_PHOTO', { sortOrder: 0 }), asset('p2', 'SHOP_PHOTO', { sortOrder: 1 })],
       changeRequests: [],
     },
@@ -117,7 +119,11 @@ beforeEach(() => {
   blobGet.mockReset().mockImplementation(async (path: string) => blob(`ORIGINAL:${path}`));
   eventCreate.mockReset().mockResolvedValue({});
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe('GET /api/ops/preview-requests/[id]/build-pack', () => {
   it.each([401, 403])('passes through %i from operator auth without reading data', async (status) => {
@@ -186,7 +192,7 @@ describe('GET /api/ops/preview-requests/[id]/build-pack', () => {
     expect((await md.text()).startsWith('# Website brief — Fade Co')).toBe(true);
     const json = await call('req_1', '?format=json');
     const body = await json.json();
-    expect(body.schemaVersion).toBe(1);
+    expect(body.schemaVersion).toBe(2);
     expect(JSON.stringify(body)).not.toContain('storagePath');
     expect(eventCreate).not.toHaveBeenCalled();
     expect(blobGet).not.toHaveBeenCalled();
