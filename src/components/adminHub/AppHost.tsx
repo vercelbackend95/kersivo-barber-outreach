@@ -22,14 +22,22 @@ import {
   type AdminHubAppId,
 } from '@/lib/adminHub/apps';
 import { ADMIN_HUB_LOCATION_EVENT, parseAdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
-import { ADMIN_HUB_APP_CLOSE } from '@/lib/adminHub/copy';
+import {
+  ADMIN_HUB_APP_CLOSE,
+  ADMIN_HUB_LEAVE_BODY,
+  ADMIN_HUB_LEAVE_DISCARD,
+  ADMIN_HUB_LEAVE_KEEP,
+  ADMIN_HUB_LEAVE_TITLE,
+} from '@/lib/adminHub/copy';
 import { useAdminHubScrollLock, useClientPortalTarget, useHubOverlayMode } from '@/lib/adminHub/hubOverlay';
 import { flushHubDirty, setHubAppOpen, useHubSnapshot } from '@/lib/adminHub/hubStore';
 import { mergeLiveStateIntoAppCtx } from '@/lib/adminHub/liveState';
+import { navigateAppPath } from '@/lib/navigation/clientNavigate';
 import { useHubToast } from '@/lib/adminHub/hubToast';
 import { loadAdminHubApp } from './apps/loadApp';
 import { AppStatus } from './apps/AppStatus';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from './apps/AppChrome';
+import { AdminHubConfirmDialog } from './AdminHubConfirmDialog';
 import type { AdminHubAppBodyProps, AdminHubAppContext } from './apps/types';
 
 const FOCUSABLE =
@@ -120,6 +128,24 @@ export function AppHost(props: {
   const closeRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
+  // Unsaved edits in the open app (useAppLeaveGuard): leaving asks first.
+  const guardRef = useRef(false);
+  const pendingLeaveRef = useRef<(() => void) | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const setLeaveGuard = useCallback((active: boolean) => {
+    guardRef.current = active;
+  }, []);
+  /** Runs `action` now, or after the owner confirms "Discard changes" when the app has unsaved edits. */
+  const guarded = useCallback((action: () => void) => {
+    if (!guardRef.current) {
+      action();
+      return;
+    }
+    pendingLeaveRef.current = action;
+    setLeaveOpen(true);
+  }, []);
+  const appRef = useRef<AdminHubAppId | null>(null);
+  const hrefRef = useRef<string>('');
   const [app, setApp] = useState<AdminHubAppId | null>(
     props.initialApp ? adminHubAppOpenTarget(props.initialApp).id : null,
   );
@@ -139,6 +165,7 @@ export function AppHost(props: {
     ctxRef.current = { app, ctx: mergeLiveStateIntoAppCtx(props.ctx, hub.state) };
   }
   const appCtx = app && ctxRef.current?.app === app ? ctxRef.current.ctx : null;
+  appRef.current = app;
 
   useEffect(() => {
     setHubAppOpen(Boolean(app));
@@ -178,6 +205,7 @@ export function AppHost(props: {
     if (id && item) url.searchParams.set('item', item);
     else url.searchParams.delete('item');
     const state = { adminHubApp: id, adminHubItem: item };
+    hrefRef.current = url.href;
     if (push) {
       history.pushState(state, '', url);
       pushedRef.current = true;
@@ -187,7 +215,7 @@ export function AppHost(props: {
     window.dispatchEvent(new Event(ADMIN_HUB_LOCATION_EVENT));
   }, []);
 
-  const close = useCallback(() => {
+  const closeNow = useCallback(() => {
     // Something changed while the app was open: refresh the Overview once (no-op otherwise).
     void flushHubDirty();
     const usedHistory = pushedRef.current;
@@ -198,26 +226,58 @@ export function AppHost(props: {
     queueMicrotask(() => restoreOpenerFocus(openerRef.current));
   }, [writeLocation]);
 
+  const close = useCallback(() => guarded(closeNow), [closeNow, guarded]);
+
   const open = useCallback(
     (id: AdminHubAppId, opener: HTMLElement | null, push: boolean, item: string | null = null) => {
-      openerRef.current = stableOpener(opener);
       const target = adminHubAppOpenTarget(id);
       const nextItem = item ?? target.item;
       if (target.id === app) {
+        openerRef.current = stableOpener(opener);
         writeLocation(target.id, nextItem, false);
         return;
       }
+      if (app && guardRef.current) {
+        guarded(() => open(id, opener, push, item));
+        return;
+      }
+      openerRef.current = stableOpener(opener);
       // Switching apps: start the refresh first so the next app waits for fresh data.
       void flushHubDirty();
       writeLocation(target.id, nextItem, push);
       withTransition(() => setApp(target.id));
     },
-    [app, writeLocation],
+    [app, guarded, writeLocation],
   );
 
+  // Astro's ClientRouter turns same-origin link clicks (the sidebar, in-page ?app= links) and Back/Forward into
+  // soft navigations that swap the page, dropping the app and its edits without a beforeunload prompt. While the
+  // guard is on, such a navigation never loads: a link asks here and continues on "Discard changes"; Back/Forward
+  // is asked by the popstate handler below (which puts the app URL back) and goes back again on Discard.
   useEffect(() => {
+    const onBeforePreparation = (event: Event) => {
+      const prep = event as Event & { navigationType?: string; loader?: () => Promise<void>; to?: URL };
+      if (!guardRef.current) return;
+      prep.loader = () => new Promise<void>(() => undefined);
+      const to = prep.to?.href;
+      if (prep.navigationType !== 'traverse' && to) guarded(() => void navigateAppPath(to));
+    };
+    document.addEventListener('astro:before-preparation', onBeforePreparation);
+    return () => document.removeEventListener('astro:before-preparation', onBeforePreparation);
+  }, [guarded]);
+
+  useEffect(() => {
+    hrefRef.current = window.location.href;
     const onPop = () => {
       const next = appFromLocation();
+      if (guardRef.current && next !== appRef.current) {
+        // Back / Forward with unsaved edits: put the app's URL back and ask; Discard goes back again.
+        history.pushState(history.state, '', hrefRef.current);
+        pushedRef.current = true;
+        guarded(() => history.back());
+        return;
+      }
+      hrefRef.current = window.location.href;
       void flushHubDirty();
       setApp(next);
       pushedRef.current = false;
@@ -225,7 +285,7 @@ export function AppHost(props: {
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, []);
+  }, [guarded]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -307,6 +367,19 @@ export function AppHost(props: {
     }
   };
 
+  const keepEditing = () => {
+    pendingLeaveRef.current = null;
+    setLeaveOpen(false);
+  };
+  const discardAndLeave = () => {
+    const action = pendingLeaveRef.current;
+    pendingLeaveRef.current = null;
+    guardRef.current = false;
+    setLeaveOpen(false);
+    // After the dialog has gone (it hands focus back first), so the leave restores focus as usual.
+    if (action) window.setTimeout(action, 0);
+  };
+
   if (!portalTarget) return null;
   // Stays mounted while apps open and close, so a toast raised on close (e.g. "Draft saved") is announced.
   const toastRegion = (
@@ -362,7 +435,7 @@ export function AppHost(props: {
           {loadError ? (
             <AppStatus state="error" onRetry={() => setRetry((n) => n + 1)} />
           ) : Body && appCtx ? (
-            <AppChromeProvider setChrome={setChrome}>
+            <AppChromeProvider setChrome={setChrome} setLeaveGuard={setLeaveGuard}>
               <Body ctx={appCtx} />
             </AppChromeProvider>
           ) : (
@@ -372,6 +445,18 @@ export function AppHost(props: {
         {chrome.footer ? <div className="admin-hub-app__foot">{chrome.footer}</div> : null}
       </div>
     </div>
+    {leaveOpen ? (
+      <AdminHubConfirmDialog
+        title={ADMIN_HUB_LEAVE_TITLE}
+        body={ADMIN_HUB_LEAVE_BODY}
+        primaryLabel={ADMIN_HUB_LEAVE_DISCARD}
+        secondaryLabel={ADMIN_HUB_LEAVE_KEEP}
+        initialFocus="secondary"
+        onConfirm={discardAndLeave}
+        onClose={keepEditing}
+        testId="admin-hub-leave-confirm"
+      />
+    ) : null}
     </>,
     portalTarget,
   );

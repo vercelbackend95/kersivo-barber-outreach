@@ -74,6 +74,12 @@ describe('AdminHubAddMenu', () => {
     renderMenu();
     fireEvent.click(screen.getByTestId('admin-hub-add'));
     expect(screen.getByRole('menu', { name: 'Add to your website or shop' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: /Business details/ }).getAttribute('href')).toBe(
+      '/admin?app=materials&item=business',
+    );
+    expect(screen.getByRole('menuitem', { name: /Opening hours/ }).getAttribute('href')).toBe(
+      '/admin?app=materials&item=hours',
+    );
     expect(screen.getByRole('menuitem', { name: /Shop photos/ }).getAttribute('href')).toBe(
       '/admin?app=materials&item=photos',
     );
@@ -131,14 +137,14 @@ describe('AdminHubAddMenu', () => {
     const trigger = screen.getByTestId('admin-hub-add');
     trigger.focus();
     fireEvent.keyDown(trigger, { key: 'ArrowDown' });
-    const first = await screen.findByRole('menuitem', { name: /Shop photos/ });
+    const first = await screen.findByRole('menuitem', { name: /Business details/ });
     await waitFor(() => expect(document.activeElement).toBe(first));
     fireEvent.keyDown(screen.getByTestId('admin-hub-add-menu'), { key: 'End' });
     expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: /Product/ }));
     fireEvent.keyDown(screen.getByTestId('admin-hub-add-menu'), { key: 'Home' });
     expect(document.activeElement).toBe(first);
     fireEvent.keyDown(screen.getByTestId('admin-hub-add-menu'), { key: 'ArrowDown' });
-    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: /Logo/ }));
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: /Opening hours/ }));
   });
 
   it('returns focus to the trigger on Escape', () => {

@@ -1,21 +1,191 @@
 /*
- * OpeningHoursEditor (src/components/admin/OpeningHoursEditor.tsx).
- * Below 1024 px: one row per day (day | switch | times). From 1024 px: one row of seven day cards.
- * Premium card tokens (near-black, 1px rgba(255,255,255,.08), hairlines); 8 px spacing scale.
+ * OpeningHoursEditor (src/components/admin/OpeningHoursEditor.tsx): "Week at a glance".
+ * The layout follows the editor's own width (container query), not the viewport: the hub content column is about
+ * 640 px on a 1024 px screen. Compact below 720 px (stacked rows), wide from 720 px (one grid row per day with a
+ * timeline). Admin tokens only, 8 px spacing scale, 14 px row radius, tabular numerals for every time and number.
+ * Brand red is only the switch "on" state, primary buttons and links; open-hours bars are warm off-white.
  */
 .ks-hours {
+  --ks-hours-bar: #e9e4da;
+  --ks-hours-row: rgba(255, 255, 255, 0.02);
+  --ks-hours-line: rgba(255, 255, 255, 0.08);
+  --ks-hours-recess: rgba(0, 0, 0, 0.35);
+  container-type: inline-size;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ks-hours :focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+.ks-hours p {
+  margin: 0;
+}
+
+/* --- Your week summary ---------------------------------------------------------------------------------------- */
+.ks-hours__summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--ks-hours-line);
+  background: var(--ks-hours-recess);
+}
+.ks-hours__summary-main {
+  min-width: 0;
+}
+.ks-hours__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ks-hours__groups {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.ks-hours__group-days {
+  font-weight: 650;
+  color: var(--fg);
+}
+.ks-hours__group-time {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ks-hours__total {
+  display: grid;
+  justify-items: end;
+  flex-shrink: 0;
+  text-align: right;
+}
+.ks-hours__total-num {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fg);
+}
+.ks-hours__total-label {
+  margin-top: 4px;
+  max-width: 9em;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+/* --- Suggested hours banner ----------------------------------------------------------------------------------- */
+.ks-hours__suggested {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 35%, transparent);
+  background: color-mix(in srgb, var(--color-brand) 8%, transparent);
+}
+.ks-hours__suggested-copy {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.ks-hours__suggested-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--fg);
+}
+.ks-hours__suggested-text {
+  margin-top: 4px !important;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg);
+  opacity: 0.86;
+}
+.ks-hours .ks-hours__suggested-btn {
+  min-height: 44px;
+}
+
+/* --- Quick patterns ------------------------------------------------------------------------------------------- */
+.ks-hours__patterns {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-.ks-hours__tools {
+/* Compact: the label is for screen readers only and the chips scroll sideways inside the editor. */
+.ks-hours__patterns-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ks-hours__chip-row {
   display: flex;
-  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: thin;
 }
-.ks-hours__copy {
+.ks-hours__chip {
+  flex: 0 0 auto;
   min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--ks-hours-line);
+  background: var(--ks-hours-row);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
-.ks-hours__grid {
+.ks-hours__chip:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.ks-hours__chip[aria-pressed='true'] {
+  border-color: var(--fg);
+  background: var(--surface-3);
+}
+
+/* --- Scale (wide only) ---------------------------------------------------------------------------------------- */
+.ks-hours__scale {
+  display: none;
+}
+.ks-hours__scale-track {
+  position: relative;
+  display: block;
+  height: 16px;
+}
+.ks-hours__tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--muted);
+}
+.ks-hours__tick:first-child {
+  transform: none;
+}
+
+/* --- Day rows ------------------------------------------------------------------------------------------------- */
+.ks-hours__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -24,235 +194,428 @@
   min-width: 0;
 }
 .ks-hours__day {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  grid-template-areas:
-    'head times'
-    'error error';
-  align-items: center;
-  gap: 8px 16px;
   min-width: 0;
-  padding: 8px 8px 8px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease;
+  border-radius: 14px;
+  border: 1px solid var(--ks-hours-line);
+  background: var(--ks-hours-row);
+  transition: border-color 160ms ease;
 }
 .ks-hours__day.has-error {
   border-color: color-mix(in srgb, var(--danger) 60%, transparent);
 }
-.ks-hours__head {
-  grid-area: head;
+.ks-hours__day.is-expanded {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.ks-hours__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px 44px;
+  grid-template-areas:
+    'day switch copy'
+    'time time time'
+    'line line line';
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  padding: 8px 8px 12px 16px;
+  min-width: 0;
+}
+.ks-hours.no-copy .ks-hours__row {
+  grid-template-columns: minmax(0, 1fr) 52px;
+  grid-template-areas:
+    'day switch'
+    'time time'
+    'line line';
+}
+.ks-hours.is-readonly .ks-hours__row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'day time'
+    'line line';
+  padding: 8px 16px 12px;
+}
+.ks-hours__name {
+  grid-area: day;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.ks-hours__day.is-closed .ks-hours__name {
+  color: var(--muted);
+}
+
+/* Switch: 44 px target, 40×24 track, brand red when open. */
+.ks-hours__switch {
+  grid-area: switch;
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+.ks-hours__track {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--surface-3);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.ks-hours__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+.ks-hours__switch[aria-checked='true'] .ks-hours__track {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+.ks-hours__switch[aria-checked='true'] .ks-hours__thumb {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+.ks-hours__time {
+  grid-area: time;
+  min-width: 0;
+}
+.ks-hours__time-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-width: 0;
-}
-.ks-hours__name {
-  font-size: 14px;
-  font-weight: 650;
-  color: var(--fg);
-}
-.ks-hours__sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-.ks-hours__switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  width: 100%;
   min-height: 44px;
-  min-width: 44px;
+  padding: 0 12px 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--ks-hours-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
-.ks-hours__switch input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-  cursor: inherit;
+.ks-hours__time-btn:hover {
+  border-color: rgba(255, 255, 255, 0.24);
 }
-.ks-hours__track {
-  position: relative;
+.ks-hours__time-btn[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.ks-hours__chevron {
   flex-shrink: 0;
-  width: 36px;
-  height: 20px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition: background-color 160ms ease;
-}
-.ks-hours__thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #f4f4f5;
+  color: var(--muted);
   transition: transform 160ms ease;
 }
-.ks-hours__switch input:checked + .ks-hours__track {
-  background: var(--accent);
-  border-color: var(--accent);
+.ks-hours__time-btn[aria-expanded='true'] .ks-hours__chevron {
+  transform: rotate(180deg);
 }
-.ks-hours__switch input:checked + .ks-hours__track .ks-hours__thumb {
-  transform: translateX(16px);
+.ks-hours__time-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
 }
-.ks-hours__switch input:focus-visible + .ks-hours__track {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-.ks-hours__switch input:disabled {
-  cursor: not-allowed;
-}
-.ks-hours__switch input:disabled + .ks-hours__track {
-  opacity: 0.5;
-}
-.ks-hours__state {
-  font-size: 12.5px;
+.ks-hours__closed {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 14px;
   color: var(--muted);
-  min-width: 3.5em;
 }
-.ks-hours__times {
-  grid-area: times;
+.ks-hours.is-readonly .ks-hours__closed,
+.ks-hours.is-readonly .ks-hours__time-text {
+  min-height: 0;
+}
+
+/* Timeline (decorative): 06:00–23:00 track, faint gridlines every hour, the open period as an off-white bar. */
+.ks-hours__timeline {
+  grid-area: line;
+  position: relative;
+  display: block;
+  height: 8px;
+  min-width: 0;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.04);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.07) 0 1px,
+    transparent 1px calc(100% / 17)
+  );
+  overflow: hidden;
+}
+.ks-hours__timeline.is-closed {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0 2px,
+    transparent 2px 7px
+  );
+}
+.ks-hours__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 3px;
+  border-radius: 999px;
+  background: var(--ks-hours-bar);
+  transition:
+    left 200ms ease,
+    width 200ms ease;
+}
+
+.ks-hours__copy-btn {
+  grid-area: copy;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.ks-hours__copy-btn:hover,
+.ks-hours__copy-btn[aria-expanded='true'] {
+  color: var(--fg);
+  border-color: var(--ks-hours-line);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ks-hours__error {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--danger);
+}
+.ks-hours__error:not(:empty) {
+  padding-bottom: 12px;
+}
+
+/* --- Inline panels (time picker, copy) ------------------------------------------------------------------------ */
+.ks-hours__panel {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  /* Compact: the panel uses the row's full width so six 44 px hour buttons fit at 375 px. */
+  margin: 0;
+  padding: 16px 8px;
+  border-radius: 0 0 13px 13px;
+  border-top: 1px solid var(--ks-hours-line);
+  background: var(--ks-hours-recess);
+  min-width: 0;
+}
+.ks-hours__cols {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.ks-hours__col {
+  display: grid;
   gap: 8px;
   min-width: 0;
 }
-.ks-hours__time {
+.ks-hours__col-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ks-hours__col-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ks-hours__col-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fg);
+}
+.ks-hours__hours {
   display: grid;
+  grid-template-columns: repeat(6, minmax(44px, 1fr));
   gap: 4px;
-  min-width: 0;
 }
-/* Visible "Opens / Closes" only in the seven-column layout; the list keeps them for screen readers. */
-.ks-hours__time-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
+.ks-hours__minutes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(44px, 1fr));
+  gap: 4px;
 }
-.ks-hours .ks-hours__select {
+.ks-hours__cell {
+  min-width: 44px;
   min-height: 44px;
-  padding: 8px 28px 8px 12px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--ks-hours-line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fg);
+  font: inherit;
   font-size: 14px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  min-width: 0;
+  cursor: pointer;
 }
-.ks-hours .ks-hours__day.is-closed .ks-hours__select {
-  opacity: 0.45;
+.ks-hours__cell:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.24);
 }
-.ks-hours__error {
-  grid-area: error;
-  margin: 0;
-  font-size: 12.5px;
+.ks-hours__cell[aria-pressed='true'] {
+  border-color: var(--ks-hours-bar);
+  background: var(--ks-hours-bar);
+  color: var(--bg);
+}
+.ks-hours__cell:disabled {
+  cursor: not-allowed;
+  color: rgba(241, 238, 232, 0.28);
+  background: transparent;
+  border-style: dashed;
+}
+.ks-hours__panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ks-hours__panel-foot .btn {
+  min-height: 44px;
+}
+.ks-hours .ks-hours__link {
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--accent-text);
+}
+.ks-hours__copy-head {
+  font-size: 14px;
+  color: var(--muted);
+}
+.ks-hours__copy-head strong {
+  color: var(--fg);
+  font-weight: 650;
+}
+.ks-hours__day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ks-hours__chip--day {
+  min-width: 56px;
+  padding: 0 12px;
+}
+.ks-hours__quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--muted);
+}
+
+/* --- Status line ---------------------------------------------------------------------------------------------- */
+.ks-hours__status {
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ks-hours__status.is-error {
   color: var(--danger);
 }
-.ks-hours__error:empty {
-  display: none;
-}
 
-/* Very narrow phones: the times move under the day. */
-@media (max-width: 379px) {
-  .ks-hours__day {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'head'
-      'times'
-      'error';
+/* --- Wide: one grid row per day with the timeline (from 720 px of editor width) ------------------------------ */
+@container (min-width: 720px) {
+  .ks-hours__groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 0;
   }
-}
-
-@media (min-width: 1024px) {
-  .ks-hours__grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-  .ks-hours__day {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'head'
-      'times'
-      'error';
-    align-content: start;
-    align-items: start;
-    gap: 8px;
-    padding: 12px 6px;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-  .ks-hours__head {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-  }
-  .ks-hours__name {
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+  .ks-hours__group + .ks-hours__group::before {
+    content: '·';
+    margin: 0 8px;
     color: var(--muted);
   }
-  /* Narrow day cards (the hub column is 720 px): the Open/Closed text sits under the switch. */
-  .ks-hours__switch {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 4px;
-    padding: 4px 0;
+  .ks-hours__patterns {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
   }
-  .ks-hours__state {
-    min-width: 0;
-    font-size: 12px;
-  }
-  .ks-hours__times {
-    grid-template-columns: minmax(0, 1fr);
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-  }
-  .ks-hours__time-label {
+  .ks-hours__patterns-label {
     position: static;
     width: auto;
     height: auto;
     overflow: visible;
     clip: auto;
-    font-size: 11.5px;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--muted);
   }
-  .ks-hours .ks-hours__select {
-    width: 100%;
-    padding: 8px 15px 8px 6px;
-    font-size: 13px;
-    letter-spacing: -0.01em;
-    /* The native arrow is too wide for a 1/7 column; a small chevron replaces it. */
-    -webkit-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 4px center;
-    background-size: 8px 5px;
+  .ks-hours__chip-row {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .ks-hours__scale,
+  .ks-hours__row {
+    display: grid;
+    grid-template-columns: 104px 52px 168px minmax(0, 1fr) 44px;
+    grid-template-areas: 'day switch time line copy';
+    column-gap: 16px;
+  }
+  .ks-hours__scale {
+    padding: 0 8px 0 16px;
+  }
+  .ks-hours__scale-track {
+    grid-column: 4;
+  }
+  .ks-hours__row {
+    padding: 8px 8px 8px 16px;
+  }
+  .ks-hours.is-readonly .ks-hours__scale,
+  .ks-hours.is-readonly .ks-hours__row {
+    grid-template-columns: 104px 168px minmax(0, 1fr);
+    grid-template-areas: 'day time line';
+  }
+  .ks-hours.is-readonly .ks-hours__scale-track {
+    grid-column: 3;
+  }
+  .ks-hours.is-readonly .ks-hours__row {
+    padding: 8px 16px;
+  }
+  .ks-hours__cols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+  }
+  .ks-hours__panel {
+    margin: 0 8px 8px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--ks-hours-line);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ks-hours__day,
+  .ks-hours__bar,
   .ks-hours__track,
-  .ks-hours__thumb {
+  .ks-hours__thumb,
+  .ks-hours__chevron,
+  .ks-hours__chip,
+  .ks-hours__day {
     transition: none;
   }
 }

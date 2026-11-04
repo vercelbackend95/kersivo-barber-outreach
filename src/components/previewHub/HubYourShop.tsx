@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { highlightHubAddTarget } from './hubAddTarget';
 import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import type { PreviewHubAssetKind } from '@prisma/client';
 import { extractLogoHexes, HEX_COLOUR_RE } from '@/lib/freePreview/extractLogoColours';
@@ -91,8 +92,6 @@ const UNDO_MS = 5000;
 const AUTOSAVE_MS = 700;
 const OTHER_MAX = 10;
 const EXTRA_MAX = 2000;
-/** How long `?item=` keeps its card highlighted. */
-const HIGHLIGHT_MS = 2400;
 
 function assetUrl(apiRoot: string, id: string, size: 'thumb' | 'full') {
   return `${apiRoot}/assets/${encodeURIComponent(id)}?size=${size}`;
@@ -165,32 +164,6 @@ function HexField(props: {
       </div>
     </div>
   );
-}
-
-/**
- * Scrolls a card to the top of the app body (respecting its scroll-margin-top) and moves
- * focus to its heading. Only the app body scrolls: scrollIntoView would also scroll the app window's own box and
- * push its title bar out of view. Outside the hub it falls back to scrollIntoView.
- */
-function scrollToCard(node: HTMLElement) {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const behavior: ScrollBehavior = reduce ? 'auto' : 'smooth';
-  const scroller = node.closest<HTMLElement>('.admin-hub-app__body');
-  if (scroller && typeof scroller.scrollTo === 'function') {
-    const margin = parseFloat(getComputedStyle(node).scrollMarginTop) || 0;
-    const box = scroller.getBoundingClientRect();
-    // The app window may still be scaling in: convert on-screen distance to layout pixels.
-    const scale = box.height > 0 && scroller.offsetHeight > 0 ? scroller.offsetHeight / box.height : 1;
-    const top = scroller.scrollTop + (node.getBoundingClientRect().top - box.top) * scale - margin;
-    scroller.scrollTo({ top: Math.max(0, top), behavior });
-  } else {
-    node.scrollIntoView({ block: 'start', behavior });
-  }
-  const heading = node.querySelector('h2');
-  if (heading instanceof HTMLElement) {
-    heading.tabIndex = -1;
-    heading.focus({ preventScroll: true });
-  }
 }
 
 function cardStatus(count: number, kind: 'count' | 'check') {
@@ -353,16 +326,8 @@ export function HubYourShop(props: {
   useEffect(() => {
     const item = props.highlight;
     if (!item) return;
-    const node = document.getElementById(item);
-    if (!node) return;
-    node.classList.add('is-hub-add-target');
-    scrollToCard(node);
     // A brief highlight; the outline fades out (no transition under prefers-reduced-motion).
-    const timer = window.setTimeout(() => node.classList.remove('is-hub-add-target'), HIGHLIGHT_MS);
-    return () => {
-      window.clearTimeout(timer);
-      node.classList.remove('is-hub-add-target');
-    };
+    return highlightHubAddTarget(item) ?? undefined;
   }, [props.highlight]);
 
   const addAsset = (asset: HubUploadedAsset) => {

@@ -74,6 +74,8 @@ describe('add menu view-model', () => {
     const { groups } = overviewAddMenu({ canUpload: true, canEditDetails: true, canAddShop: true });
     const website = groups.find((group) => group.id === 'website')!.items;
     expect(website.map((item) => item.id)).toEqual([
+      'business',
+      'hours',
       'photos',
       'logo',
       'text',
@@ -87,6 +89,28 @@ describe('add menu view-model', () => {
     expect(website.find((item) => item.id === 'text')?.title).toBe(ADMIN_HUB_ADD_TEXT);
   });
 
+  it('starts the website group with Business details and Opening hours, deep-linking into Materials', () => {
+    const { groups } = overviewAddMenu({ canUpload: true, canEditDetails: true, canAddShop: false });
+    const [business, hours] = groups[0]!.items;
+    expect(business).toEqual({
+      id: 'business',
+      title: 'Business details',
+      hint: 'Name, address, phone and email',
+      href: '/admin?app=materials&item=business',
+      inPlace: true,
+    });
+    expect(hours).toEqual({
+      id: 'hours',
+      title: 'Opening hours',
+      hint: 'When customers can visit and book',
+      href: '/admin?app=materials&item=hours',
+      inPlace: true,
+    });
+    expect(parseAdminHubAddWebsiteItem('business')).toBe('business');
+    expect(parseAdminHubAddWebsiteItem('hours')).toBe('hours');
+    expect(parseAdminHubAddItem('hours')).toBe('hours');
+  });
+
   it('hides website items by capability and shop items without draft-shop admin', () => {
     const uploadOnly = overviewAddMenu({ canUpload: true, canEditDetails: false, canAddShop: false });
     expect(uploadOnly.groups).toHaveLength(1);
@@ -98,7 +122,7 @@ describe('add menu view-model', () => {
     ]);
 
     const detailsOnly = overviewAddMenu({ canUpload: false, canEditDetails: true, canAddShop: false });
-    expect(detailsOnly.groups[0]!.items.map((item) => item.id)).toEqual(['text']);
+    expect(detailsOnly.groups[0]!.items.map((item) => item.id)).toEqual(['business', 'hours', 'text']);
 
     const shopOnly = overviewAddMenu({ canUpload: false, canEditDetails: false, canAddShop: true });
     expect(shopOnly.groups).toHaveLength(1);
@@ -135,7 +159,7 @@ describe('add menu view-model', () => {
       capabilities: caps({ canUpload: true, canEditDetails: false }),
     });
     expect(launch.groups.map((group) => group.id)).toEqual(['website']);
-    expect(launch.groups[0]!.items.some((item) => item.id === 'text')).toBe(false);
+    expect(launch.groups[0]!.items.some((item) => ['text', 'business', 'hours'].includes(item.id))).toBe(false);
 
     const live = overviewAddMenuFromHub({
       stage: 'live' satisfies HubStage,

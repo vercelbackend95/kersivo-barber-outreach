@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppChromeProvider, emptyAppChrome, type AdminHubAppChrome } from '@/components/adminHub/apps/AppChrome';
 import type { AdminHubAppContext } from '@/components/adminHub/apps/types';
 import { HUB_WEBSITE_EXTRA_LABEL } from '@/lib/freePreview/hubCopy';
+import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
+import { showHubToast } from '@/lib/adminHub/hubToast';
 import { defaultOpeningWeek } from '@/lib/shopData/openingHours';
 import { WebsiteSetupFlow } from './WebsiteSetupFlow';
 
@@ -44,11 +46,19 @@ function ctx(overrides: Partial<AdminHubAppContext> = {}): AdminHubAppContext {
   } as AdminHubAppContext;
 }
 
-function Harness({ overrides = {} }: { overrides?: Partial<AdminHubAppContext> }) {
+let guard: boolean[] = [];
+
+function Harness({
+  overrides = {},
+  highlight = null,
+}: {
+  overrides?: Partial<AdminHubAppContext>;
+  highlight?: AdminHubAddWebsiteItem | null;
+}) {
   const [chrome, setChrome] = useState<AdminHubAppChrome>(emptyAppChrome);
   return (
-    <AppChromeProvider setChrome={setChrome}>
-      <WebsiteSetupFlow ctx={ctx(overrides)} />
+    <AppChromeProvider setChrome={setChrome} setLeaveGuard={(active) => guard.push(active)}>
+      <WebsiteSetupFlow ctx={ctx(overrides)} highlight={highlight} />
       <div data-testid="chrome-footer">{chrome.footer}</div>
     </AppChromeProvider>
   );
@@ -78,6 +88,8 @@ function key(method: string, url: string) {
 
 beforeEach(() => {
   calls = [];
+  guard = [];
+  vi.mocked(showHubToast).mockClear();
   routes = {
     [key('GET', '/api/admin-hub/profile')]: () => ({ body: { ok: true, ready: true, profile: savedProfile } }),
     [key('GET', '/api/admin-hub/opening-hours')]: () => ({
@@ -164,7 +176,7 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
     expect(alert.textContent).toContain('We could not load your business details.');
     // Hours, website text and uploads still work.
     const hours = within(screen.getByTestId('setup-hours'));
-    expect((await hours.findAllByRole('combobox')).some((el) => !(el as HTMLSelectElement).disabled)).toBe(true);
+    expect((await hours.findAllByRole('switch')).length).toBe(7);
     expect(hours.queryByRole('alert')).toBeNull();
     expect((screen.getByLabelText(HUB_WEBSITE_EXTRA_LABEL) as HTMLTextAreaElement).disabled).toBe(false);
     expect(screen.getByTestId('hub-your-shop-stub')).toBeTruthy();
@@ -177,7 +189,7 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
     expect(calls.filter((c) => c.url.endsWith('/opening-hours')).length).toBe(hoursCallsBefore);
   });
 
-  it('without a draft shop shows the fields straight away and creates the shop on save', async () => {
+  it('without a draft shop shows the fields straight away and creates the shop on save (hours stay suggested)', async () => {
     routes[key('GET', '/api/admin-hub/profile')] = () => ({
       body: { ok: true, ready: false, profile: { ...savedProfile, addressLine1: null, postcode: null, phone: null } },
     });
@@ -190,17 +202,14 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
     const business = within(await screen.findByTestId('setup-business'));
     expect(await business.findByDisplayValue('Fade Room')).toBeTruthy();
     expect(screen.queryByText(/Set up my shop/)).toBeNull();
-    expect(screen.getByTestId('setup-hours').textContent).toContain("We've filled in common hours. Check them and save.");
+    expect(within(screen.getByTestId('setup-hours')).getByTestId('opening-hours-suggested')).toBeTruthy();
 
     fireEvent.change(business.getByLabelText('Postcode'), { target: { value: 'LS1 1AA' } });
     fireEvent.click(within(screen.getByTestId('chrome-footer')).getByRole('button', { name: 'Save changes' }));
-    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true));
+    await waitFor(() => expect(screen.queryByTestId('setup-savebar')).toBeNull());
+    // Untouched suggested hours are not an edit: only Use these hours (or changing them) saves hours.
     const writes = calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.url}`);
-    expect(writes).toEqual([
-      'POST /api/admin-hub/draft-shop',
-      'PATCH /api/admin-hub/profile',
-      'PUT /api/admin-hub/opening-hours',
-    ]);
+    expect(writes).toEqual(['POST /api/admin-hub/draft-shop', 'PATCH /api/admin-hub/profile']);
     expect(calls.find((c) => c.method === 'PATCH')!.body).toEqual({ postcode: 'LS1 1AA' });
   });
 
@@ -271,5 +280,109 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
     expect(screen.getByText('These details are managed from your KERSIVO dashboard now.')).toBeTruthy();
     expect(business.queryByRole('alert')).toBeNull();
     expect(screen.queryByTestId('setup-savebar')).toBeNull();
+  });
+
+  describe('suggested hours, Discard, deep links and the leave guard', () => {
+    const unsavedHours = () => {
+      routes[key('GET', '/api/admin-hub/opening-hours')] = () => ({ body: { ok: true, ready: true, saved: false, days: null } });
+    };
+
+    it('shows no save bar on first open with suggested hours, and no leave guard', async () => {
+      unsavedHours();
+      render(<Harness />);
+      await screen.findByLabelText('Barbershop name');
+      expect(within(screen.getByTestId('setup-hours')).getByTestId('opening-hours-suggested')).toBeTruthy();
+      expect(screen.queryByTestId('setup-savebar')).toBeNull();
+      expect(guard.at(-1)).toBe(false);
+      expect(within(screen.getByTestId('setup-hours')).getByText('Not set up')).toBeTruthy();
+    });
+
+    it('Use these hours issues one PUT, flips the status and toasts', async () => {
+      unsavedHours();
+      let savedNow = false;
+      routes[key('GET', '/api/admin-hub/opening-hours')] = () => ({
+        body: { ok: true, saved: savedNow, days: savedNow ? defaultOpeningWeek() : null },
+      });
+      routes[key('PUT', '/api/admin-hub/opening-hours')] = () => {
+        savedNow = true;
+        return { body: { ok: true, saved: true, days: defaultOpeningWeek() } };
+      };
+      render(<Harness />);
+      await screen.findByLabelText('Barbershop name');
+      const hours = within(screen.getByTestId('setup-hours'));
+      fireEvent.click(hours.getByRole('button', { name: 'Use these hours' }));
+      await waitFor(() => expect(hours.getByText('Complete')).toBeTruthy());
+      const writes = calls.filter((c) => c.method !== 'GET');
+      expect(writes.map((c) => `${c.method} ${c.url}`)).toEqual(['PUT /api/admin-hub/opening-hours']);
+      expect(writes[0]!.body).toEqual({ days: defaultOpeningWeek() });
+      expect(hours.queryByTestId('opening-hours-suggested')).toBeNull();
+      expect(showHubToast).toHaveBeenCalledWith('Opening hours saved.');
+      expect(screen.queryByTestId('setup-savebar')).toBeNull();
+      expect(screen.getByTestId('setup-progress').textContent).toContain('2 of 2 sections complete');
+    });
+
+    it('Use these hours without a draft shop creates it first', async () => {
+      unsavedHours();
+      routes[key('POST', '/api/admin-hub/draft-shop')] = () => ({ body: { shopId: 'shop_1' } });
+      routes[key('PUT', '/api/admin-hub/opening-hours')] = () => ({ body: { ok: true } });
+      render(<Harness overrides={{ hasDraftShop: false }} />);
+      await screen.findByLabelText('Barbershop name');
+      fireEvent.click(within(screen.getByTestId('setup-hours')).getByRole('button', { name: 'Use these hours' }));
+      await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true));
+      expect(calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.url}`)).toEqual([
+        'POST /api/admin-hub/draft-shop',
+        'PUT /api/admin-hub/opening-hours',
+      ]);
+    });
+
+    it('editing hours arms the save bar and the leave guard; Discard always clears both', async () => {
+      unsavedHours();
+      render(<Harness />);
+      await screen.findByLabelText('Barbershop name');
+      fireEvent.click(screen.getByRole('switch', { name: 'Open on Sunday' }));
+      expect(screen.getByTestId('setup-savebar')).toBeTruthy();
+      expect(guard.at(-1)).toBe(true);
+      fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '0113 000 0000' } });
+      fireEvent.click(within(screen.getByTestId('chrome-footer')).getByRole('button', { name: 'Discard' }));
+      expect(screen.queryByTestId('setup-savebar')).toBeNull();
+      expect(guard.at(-1)).toBe(false);
+      expect(screen.getByRole('switch', { name: 'Open on Sunday' }).getAttribute('aria-checked')).toBe('false');
+      expect((screen.getByLabelText('Phone') as HTMLInputElement).value).toBe('0113 496 0000');
+    });
+
+    it('a server 400 on hours keeps the edits and shows the error in the Opening hours card', async () => {
+      routes[key('PUT', '/api/admin-hub/opening-hours')] = () => ({ status: 400, body: { ok: false, error: 'Hours could not be saved.' } });
+      render(<Harness />);
+      await screen.findByLabelText('Barbershop name');
+      fireEvent.click(screen.getByRole('switch', { name: 'Open on Sunday' }));
+      fireEvent.click(within(screen.getByTestId('chrome-footer')).getByRole('button', { name: 'Save changes' }));
+      const hours = within(screen.getByTestId('setup-hours'));
+      expect((await hours.findByRole('alert')).textContent).toBe('Hours could not be saved.');
+      expect(screen.getByRole('switch', { name: 'Open on Sunday' }).getAttribute('aria-checked')).toBe('true');
+      expect(screen.getByTestId('setup-savebar')).toBeTruthy();
+    });
+
+    it.each([
+      ['business', 'setup-business'],
+      ['hours', 'setup-hours'],
+    ] as const)('deep link item=%s scrolls to and highlights its section, focusing the heading', async (item, id) => {
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduce'), media: query }));
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        render(<Harness highlight={item} />);
+        await screen.findByLabelText('Barbershop name');
+        const section = screen.getByTestId(id);
+        await waitFor(() => expect(section.className).toContain('is-hub-add-target'));
+        expect(scrollIntoView).toHaveBeenCalled();
+        expect(document.activeElement).toBe(section.querySelector('h2'));
+        expect(section.querySelector('h2')!.getAttribute('tabindex')).toBe('-1');
+        vi.advanceTimersByTime(2500);
+        expect(section.className).not.toContain('is-hub-add-target');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });
