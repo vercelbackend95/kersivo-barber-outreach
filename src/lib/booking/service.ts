@@ -409,8 +409,35 @@ async function loadBookingForCreateResponse(bookingId: string) {
   });
 }
 
-export async function createInstantBooking(
-  input: {
+/**
+ * Thrown inside the create transaction by a dry run (options.dryRun) right after the booking row is
+ * inserted, so Postgres rolls back everything the transaction wrote (client upsert, booking row). Private:
+ * never escapes createInstantBooking.
+ */
+class DryRunRollback extends Error {
+  constructor(readonly wouldCreate: InstantBookingDryRunResult['wouldCreate']) {
+    super('dry-run rollback');
+    this.name = 'DryRunRollback';
+  }
+}
+
+export type InstantBookingDryRunResult = {
+  dryRun: true;
+  wouldCreate: {
+    shopId: string;
+    serviceId: string;
+    serviceName: string;
+    barberId: string;
+    barberName: string;
+    startAt: Date;
+    endAt: Date;
+    status: BookingStatus;
+    paymentRequired: boolean;
+    totalPricePence: number;
+  };
+};
+
+export type CreateInstantBookingInput = {
     serviceId: string;
     barberId: string;
     date: string;
@@ -421,8 +448,9 @@ export async function createInstantBooking(
     idempotencyKey?: string;
     /** v1.19 Starter public booking: explicit DEPOSIT or FULL customer choice. */
     paymentChoice?: 'DEPOSIT' | 'FULL';
-  },
-  options: {
+};
+
+export type CreateInstantBookingOptions = {
     /** When set, service must belong to this shop. */
     requiredShopId?: string;
     /** Prefixed into booking notes (e.g. public demo / owner test). */
@@ -444,8 +472,40 @@ export async function createInstantBooking(
      * inside the create transaction; idempotent replays of an existing booking skip it.
      */
     requiredCapability?: KersivoCapability;
-  } = {},
+    /**
+     * Shop health check (src/lib/ops/shopHealth): run the whole create path, then roll the transaction
+     * back right after the booking row is inserted. Nothing is persisted, no email is enqueued or sent,
+     * the idempotency key is ignored, and no payment is started (this function never calls Stripe; the
+     * checkout session is created by the route after it returns). Returns { dryRun: true, wouldCreate }.
+     */
+    dryRun?: boolean;
+};
+
+type CreateInstantBookingResult = Exclude<
+  Awaited<ReturnType<typeof createInstantBookingCore>>,
+  InstantBookingDryRunResult
+>;
+
+export function createInstantBooking(
+  input: CreateInstantBookingInput,
+  options: CreateInstantBookingOptions & { dryRun: true },
+): Promise<InstantBookingDryRunResult>;
+export function createInstantBooking(
+  input: CreateInstantBookingInput,
+  options?: CreateInstantBookingOptions & { dryRun?: false },
+): Promise<CreateInstantBookingResult>;
+export function createInstantBooking(
+  input: CreateInstantBookingInput,
+  options: CreateInstantBookingOptions = {},
+): Promise<CreateInstantBookingResult | InstantBookingDryRunResult> {
+  return createInstantBookingCore(input, options);
+}
+
+async function createInstantBookingCore(
+  input: CreateInstantBookingInput,
+  options: CreateInstantBookingOptions = {},
 ) {
+  const dryRun = options.dryRun === true;
   try {
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (options.requiredShopId && service.shopId !== options.requiredShopId) {
@@ -466,7 +526,8 @@ export async function createInstantBooking(
     }
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 
-    const clientIdempotencyKey = input.idempotencyKey?.trim() || '';
+    // A dry run never reads or writes an idempotency row.
+    const clientIdempotencyKey = dryRun ? '' : input.idempotencyKey?.trim() || '';
     const scopedIdempotencyKey = clientIdempotencyKey
       ? scopeBookingIdempotencyKey(service.shopId, clientIdempotencyKey)
       : null;
@@ -668,6 +729,21 @@ export async function createInstantBooking(
             include: { service: true, barber: true }
           });
 
+          if (dryRun) {
+            throw new DryRunRollback({
+              shopId: service.shopId,
+              serviceId: created.serviceId,
+              serviceName: created.serviceNameAtBooking ?? created.service.name,
+              barberId: created.barberId,
+              barberName: created.barber.name,
+              startAt: created.startAt,
+              endAt: created.endAt,
+              status: created.status,
+              paymentRequired: created.paymentRequired,
+              totalPricePence: created.totalPricePence ?? service.pricePence,
+            });
+          }
+
           if (!collectPayment && !options.skipConfirmationEmail) {
             const rendered = buildInstantBookingConfirmationEmail({
               to: created.email,
@@ -695,6 +771,10 @@ export async function createInstantBooking(
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
     } catch (error) {
+      if (error instanceof DryRunRollback) {
+        // The transaction rolled back; outboxId is still null, so nothing is delivered below.
+        return { dryRun: true as const, wouldCreate: error.wouldCreate };
+      }
       if (
         scopedIdempotencyKey &&
         error instanceof Prisma.PrismaClientKnownRequestError &&
