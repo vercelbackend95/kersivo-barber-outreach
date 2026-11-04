@@ -166,6 +166,11 @@
     align-items: start;
   }
 
+  /* Tabs span both columns so the workspace sits in the wide column and the actions in the rail. */
+  .ops-pr-tabs {
+    grid-column: 1 / -1;
+  }
+
   .ops-pr-detail__actions {
     position: sticky;
     top: 1rem;
@@ -196,6 +201,7 @@
 
 .ops-pr-tabs {
   display: flex;
+  min-width: 0;
   flex-wrap: wrap;
   gap: 8px;
   margin: 0 0 16px;
@@ -331,4 +337,339 @@
 }
 .ops-brand-colours button {
   font-size: 12px;
+}
+
+/* Overview › Build brief (OpsBuildBrief.astro). Reuses the ops surface tokens. */
+.ops-pr-detail__main {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ops-bb {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ops-bb__card {
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  border: var(--admin-premium-surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--admin-premium-surface-bg);
+}
+
+.ops-bb__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.ops-bb__title {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-md);
+  color: var(--fg);
+}
+
+.ops-bb__subtitle {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.ops-bb__meta {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.ops-bb__pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ops-bb__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.ops-bb__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ops-bb__chip--ok {
+  background: var(--success-subtle);
+}
+
+.ops-bb__chip--missing {
+  background: var(--danger-subtle);
+}
+
+.ops-bb__missing {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.ops-bb__missing strong {
+  color: var(--fg);
+}
+
+.ops-bb__warning {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--warning-subtle);
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+  font-size: var(--text-sm);
+}
+
+.ops-bb__warning p {
+  margin: 0 0 0.35rem;
+}
+
+.ops-bb__warning ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.ops-bb__dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.ops-bb__dl > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  font-size: var(--text-sm);
+}
+
+.ops-bb__dl--stacked > div {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
+}
+
+.ops-bb__dl dt {
+  color: var(--muted);
+}
+
+.ops-bb__dl dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ops-bb__scroll {
+  overflow-x: auto;
+}
+
+.ops-bb__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.ops-bb__table th,
+.ops-bb__table td {
+  padding: 0.4rem 0.5rem 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ops-bb__table thead th,
+.ops-bb__table tbody th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.ops-bb__table--hours {
+  max-width: 22rem;
+}
+
+.ops-bb__sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.ops-bb__tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ops-bb__brand {
+  display: grid;
+  gap: 1rem;
+}
+
+.ops-bb__brand .ops-brand-colours {
+  margin-top: 0;
+}
+
+.ops-bb__brand .ops-brand-colours .ops-pr-actions__title {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.ops-bb__logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-content: start;
+}
+
+.ops-bb__logo {
+  margin: 0;
+  width: 11rem;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.ops-bb__logo-img {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  margin-bottom: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  /* Checkerboard so light and transparent logos stay visible. */
+  background: repeating-conic-gradient(#2a2a2d 0% 25%, #1c1c1f 0% 50%) 50% / 16px 16px;
+}
+
+.ops-bb__logo-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.ops-bb__links,
+.ops-bb__files {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.ops-bb__links li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ops-bb__label {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.ops-bb__links a,
+.ops-bb__files a {
+  color: var(--fg);
+}
+
+.ops-bb__team {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ops-bb__member {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.ops-bb__avatar {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #111;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.ops-bb__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ops-bb__member-name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ops-bb__caption {
+  margin: 0 0 4px;
+  font-size: var(--text-xs);
+}
+
+.ops-bb__group + .ops-bb__group {
+  margin-top: 1rem;
+}
+
+.ops-bb__details {
+  padding: 0.75rem 1.1rem;
+  border: var(--admin-premium-surface-border);
+  border-radius: var(--radius-lg);
+}
+
+.ops-bb__details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 24px;
+}
+
+.ops-bb__details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.ops-bb a:focus-visible,
+.ops-bb__details > summary:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@media (min-width: 48rem) {
+  .ops-bb__brand {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .ops-bb__dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
 }
