@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { isValidOpeningPeriod } from '@/lib/shopData/schema';
 import { Prisma, type PreviewContentReviewState, type PreviewContentSection } from '@prisma/client';
 import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { prisma } from '@/lib/db/client';
 import { DEFAULT_ONBOARDING_HOURS, type OnboardingWeeklyRule } from '@/lib/admin/shopOpeningHours';
-import { minutesToTimeString, timeStringToMinutes } from '@/lib/admin/timeStrings';
+import { minutesToTimeString } from '@/lib/admin/timeStrings';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 import {
   HUB_REVIEW_INVALID_BIO,
@@ -100,7 +101,7 @@ export const hubHoursProposalSchema = z
       return;
     }
     for (const day of value.days) {
-      if (day.open && timeStringToMinutes(day.start) >= timeStringToMinutes(day.end)) {
+      if (day.open && !isValidOpeningPeriod(day.start, day.end)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: HUB_REVIEW_INVALID_HOURS });
         return;
       }

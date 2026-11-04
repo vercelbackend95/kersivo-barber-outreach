@@ -1,0 +1,198 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JSON-LD > matches the snapshot for the seeded shop 1`] = `
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@id": "https://fixturebarbers.example.test#website",
+      "@type": "WebSite",
+      "inLanguage": "en-GB",
+      "name": "Fixture Barbers",
+      "publisher": {
+        "@id": "https://fixturebarbers.example.test#barbershop",
+      },
+      "url": "https://fixturebarbers.example.test",
+    },
+    {
+      "@id": "https://fixturebarbers.example.test#barbershop",
+      "@type": "BarberShop",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "GB",
+        "addressLocality": "Leeds",
+        "postalCode": "LS1 6AA",
+        "streetAddress": "1 Example Street",
+      },
+      "description": "A small barbershop for fades, classic cuts and beard work.",
+      "email": "hello@example.test",
+      "hasOfferCatalog": {
+        "@id": "https://fixturebarbers.example.test#services",
+        "@type": "OfferCatalog",
+        "itemListElement": [
+          {
+            "@type": "OfferCatalog",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "category": "Haircuts",
+                  "name": "Skin fade",
+                },
+                "price": "25.00",
+                "priceCurrency": "GBP",
+                "seller": {
+                  "@id": "https://fixturebarbers.example.test#barbershop",
+                },
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "category": "Haircuts",
+                  "name": "Long hair cut",
+                },
+                "priceSpecification": {
+                  "@type": "PriceSpecification",
+                  "minPrice": "30.00",
+                  "priceCurrency": "GBP",
+                },
+                "seller": {
+                  "@id": "https://fixturebarbers.example.test#barbershop",
+                },
+              },
+            ],
+            "name": "Haircuts",
+          },
+          {
+            "@type": "OfferCatalog",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "category": "Beards",
+                  "description": "Shape and line-up.",
+                  "name": "Beard trim",
+                },
+                "price": "12.50",
+                "priceCurrency": "GBP",
+                "seller": {
+                  "@id": "https://fixturebarbers.example.test#barbershop",
+                },
+              },
+            ],
+            "name": "Beards",
+          },
+        ],
+        "name": "Services",
+      },
+      "image": "https://cdn.example.test/logo.png",
+      "logo": "https://cdn.example.test/logo.png",
+      "name": "Fixture Barbers",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "18:00",
+          "dayOfWeek": "https://schema.org/Monday",
+          "opens": "09:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "18:00",
+          "dayOfWeek": "https://schema.org/Tuesday",
+          "opens": "09:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "18:00",
+          "dayOfWeek": "https://schema.org/Wednesday",
+          "opens": "09:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "20:00",
+          "dayOfWeek": "https://schema.org/Thursday",
+          "opens": "09:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "20:00",
+          "dayOfWeek": "https://schema.org/Friday",
+          "opens": "09:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "16:00",
+          "dayOfWeek": "https://schema.org/Saturday",
+          "opens": "08:00",
+        },
+      ],
+      "potentialAction": {
+        "@type": "ReserveAction",
+        "name": "Book an appointment",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://fixturebarbers.example.test/book",
+        },
+      },
+      "priceRange": "£12.50–£30",
+      "sameAs": [
+        "https://www.instagram.com/fixturebarbers/",
+      ],
+      "specialOpeningHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "14:00",
+          "opens": "09:00",
+          "validFrom": "2026-12-24",
+          "validThrough": "2026-12-24",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "closes": "00:00",
+          "opens": "00:00",
+          "validFrom": "2026-12-25",
+          "validThrough": "2026-12-25",
+        },
+      ],
+      "telephone": "0113 000 0000",
+      "url": "https://fixturebarbers.example.test",
+    },
+    {
+      "@id": "https://kersivo.co.uk/shop/shop_fixture/p1#product",
+      "@type": "Product",
+      "image": "https://cdn.example.test/clay.webp",
+      "name": "Matte clay",
+      "offers": {
+        "@type": "Offer",
+        "availability": "https://schema.org/InStock",
+        "price": "14.00",
+        "priceCurrency": "GBP",
+        "seller": {
+          "@id": "https://fixturebarbers.example.test#barbershop",
+        },
+        "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+      },
+      "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+    },
+    {
+      "@id": "https://kersivo.co.uk/shop/shop_fixture/p2#product",
+      "@type": "Product",
+      "name": "Beard oil",
+      "offers": {
+        "@type": "Offer",
+        "availability": "https://schema.org/OutOfStock",
+        "price": "12.00",
+        "priceCurrency": "GBP",
+        "seller": {
+          "@id": "https://fixturebarbers.example.test#barbershop",
+        },
+        "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+      },
+      "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+    },
+  ],
+}
+`;

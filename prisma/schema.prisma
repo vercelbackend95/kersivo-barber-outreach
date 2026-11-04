@@ -342,6 +342,50 @@ model ShopSettings {
   fullBookingDestination             FullBookingDestination?
   fullBookingDestinationEvents       FullBookingDestinationEvent[]
   previewRequest                     PreviewRequest?
+  publicProfile                      ShopPublicProfile?
+  openingExceptions                  ShopOpeningException[]
+}
+
+/// Canonical public business details for a shop (docs/site-data-contract.md). One row per shop,
+/// written by the Starter hub, the launch wizard and the dashboard; read by getSiteData().
+/// Plan never affects what is stored here. Town lives on ShopSettings.townCity, logo on
+/// ShopSettings.logoUrl. Legacy copies on ClientOnboarding / PreviewRequest are mirrors only.
+model ShopPublicProfile {
+  id                   String       @id @default(cuid())
+  shopId               String       @unique
+  tagline              String?
+  description          String?      @db.Text
+  addressLine1         String?
+  addressLine2         String?
+  postcode             String?
+  phone                String?
+  email                String?
+  instagramUrl         String?
+  facebookUrl          String?
+  tiktokUrl            String?
+  otherSocialUrl       String?
+  brandPrimaryColour   String?
+  brandSecondaryColour String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  shop                 ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+/// Date-specific opening exception (bank holiday, closure, special hours). Closed by default.
+/// When not closed, startMinutes/endMinutes replace that day's weekly hours.
+model ShopOpeningException {
+  id           String       @id @default(cuid())
+  shopId       String
+  date         DateTime     @db.Date
+  closed       Boolean      @default(true)
+  startMinutes Int?
+  endMinutes   Int?
+  label        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  shop         ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, date])
 }
 
 enum FullBookingDestinationStatus {
@@ -636,6 +680,8 @@ model Service {
   description            String?
   imageUrl               String?
   pricePence             Int
+  /// Show the price as "From £X" (price varies by length/style). Display only; booking still charges pricePence.
+  priceFrom              Boolean                 @default(false)
   durationMinutes        Int
   bufferMinutes          Int                     @default(0)
   displayOrder           Int                     @default(0)
@@ -661,6 +707,12 @@ model Barber {
   name                    String
   email                   String?
   avatarUrl               String?
+  /// Public role/title, e.g. "Senior Barber". Canonical (site data contract).
+  title                   String?
+  /// Public short bio. Canonical; ClientOnboardingBarberProfile.bio is a legacy mirror.
+  bio                     String?                        @db.Text
+  /// Show on the public website. Canonical; ClientOnboardingBarberProfile.showOnWebsite is a legacy mirror.
+  showOnWebsite           Boolean                        @default(true)
   active                  Boolean                        @default(true)
   sortOrder               Int                            @default(0)
   // Intended dashboard role when Owner later invites this seat (MANAGER | BARBER).
@@ -963,6 +1015,8 @@ model Product {
   pricePence  Int
   imageUrl    String?
   active      Boolean         @default(true)
+  /// Retail pickup availability. Out of stock stays listed but cannot be ordered.
+  inStock     Boolean         @default(true)
   featured    Boolean         @default(false)
   category    ProductCategory @default(STYLING)
   sortOrder   Int             @default(0)

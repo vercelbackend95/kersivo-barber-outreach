@@ -32,6 +32,7 @@ const createSchema = z.object({
   pricePence: z.number().int().positive('Price must be greater than zero.'),
   imageUrl: imageUrlSchema.optional().or(z.literal('')),
   active: z.boolean().default(true),
+  inStock: z.boolean().optional(),
   featured: z.boolean().default(false),
     category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
@@ -44,6 +45,7 @@ const multipartCreateSchema = z.object({
   imageUrl: imageUrlSchema.optional().or(z.literal('')),
 
   active: z.boolean().default(true),
+  inStock: z.boolean().optional(),
   featured: z.boolean().default(false),
     category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
@@ -80,6 +82,7 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
         pricePence: payload.pricePence,
         imageUrl,
         active: payload.active,
+        inStock: payload.inStock ?? true,
         featured: payload.featured,
         category: payload.category,
         sortOrder: -1 - productCount
@@ -136,6 +139,7 @@ export const POST: APIRoute = async (ctx) => {
         pricePence: Number(formData.get('pricePence') ?? 0),
         imageUrl: String(formData.get('imageUrl') ?? ''),
         active: String(formData.get('active') ?? 'true').toLowerCase() !== 'false',
+        inStock: formData.has('inStock') ? String(formData.get('inStock')).toLowerCase() !== 'false' : undefined,
         featured: String(formData.get('featured') ?? 'false').toLowerCase() === 'true',
                 category: String(formData.get('category') ?? 'STYLING'),
         sortOrder: Number(formData.get('sortOrder') ?? 0)

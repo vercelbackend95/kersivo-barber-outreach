@@ -20,6 +20,7 @@ const tx = {
     findUnique: vi.fn(async () => state.request),
     update: (...args: unknown[]) => update(...args),
   },
+  shopPublicProfile: { findUnique: vi.fn(async () => null), upsert: vi.fn(async () => ({})) },
 };
 
 vi.mock('@/lib/db/client', () => ({

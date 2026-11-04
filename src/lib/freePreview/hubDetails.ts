@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '@/lib/db/client';
+import { profilePatchFromHubDetails, writeShopPublicProfile } from '@/lib/shopData/profile';
 import { recordDebouncedPreviewRequestEvent } from '@/lib/adminHub/ownerEditEvents';
 import { assertBrandUnlockedTx, brandLockState } from '@/lib/adminHub/brandLock';
 import { HEX_COLOUR_RE, normaliseHexColour } from './extractLogoColours';
@@ -153,6 +154,7 @@ export async function saveHubDetails(input: {
       websiteExtraText: true,
       brandColoursSentAt: true,
       shopName: true,
+      draftShopId: true,
     },
   };
 
@@ -162,6 +164,12 @@ export async function saveHubDetails(input: {
         return tx.previewRequest.update(updateArgs);
       })
     : await prisma.previewRequest.update(updateArgs);
+
+  // Canonical business details (site data contract). Before the draft shop exists the values stay
+  // on the request; ensureHubDraftShop seeds them into the profile when the shop is created.
+  if (row.draftShopId) {
+    await writeShopPublicProfile(prisma, row.draftShopId, profilePatchFromHubDetails(input.patch));
+  }
 
   if (recordOwnerEvent && textFields.length) {
     await recordDebouncedPreviewRequestEvent({
