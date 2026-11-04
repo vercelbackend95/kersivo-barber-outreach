@@ -14,7 +14,8 @@ ready to give to an AI tool (or a designer) to design a unique site.
 | Zip layout, `shop.json`, README | `src/lib/ops/buildPackZipPlan.ts` |
 | `brief.md` | `src/lib/ops/buildPackBrief.ts` |
 | Streaming zip | `src/lib/ops/streamZip.ts` (fflate) |
-| Endpoint | `GET /api/ops/preview-requests/[id]/build-pack` (`?format=md`, `?format=json`) |
+| Dashboard images (allowlist, fetch) | `src/lib/ops/buildPackRemoteImages.ts`, tests in `buildPackRemoteImages.test.ts` |
+| Endpoint | `GET /api/ops/preview-requests/[id]/build-pack` (`?format=md`, `?format=md&download=1`, `?format=json`) |
 
 The loader is read-only and returns `null` once the request is anonymised. When two sources hold the same
 fact and disagree, both values are returned and listed under `conflicts`; nothing is silently picked.
@@ -105,7 +106,8 @@ PreviewRequest, ShopPublicProfile, Service, Barber, Product, PreviewHubAsset or 
 
 ## Using it with an AI tool
 
-1. Download the pack from the request (or **Copy brief** for the text alone).
+1. Download the pack from the request (or **Copy brief** for the text alone). When the browser blocks the
+   clipboard, Copy brief opens the brief in a dialog, selected, with a **Download brief.md** link.
 2. Start a new conversation, paste `brief.md`, and attach the logo, `brand/colours.json` and the photos you
    want used. Attach `shop.json` when the tool should generate pages from structured data.
 3. Ask for a design for this shop only. The brief already tells the tool to use only the facts provided,

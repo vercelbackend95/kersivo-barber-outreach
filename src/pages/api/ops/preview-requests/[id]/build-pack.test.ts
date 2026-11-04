@@ -198,3 +198,70 @@ describe('GET /api/ops/preview-requests/[id]/build-pack', () => {
     expect(blobGet).not.toHaveBeenCalled();
   });
 });
+
+describe('GET build-pack: dashboard images', () => {
+  const HOST = 'store1.public.blob.vercel-storage.com';
+  const unzip = async (response: Response) => unzipSync(new Uint8Array(await response.arrayBuffer()));
+  const text = (entries: Record<string, Uint8Array>, suffix: string) =>
+    strFromU8(Object.entries(entries).find(([name]) => name.endsWith(suffix))![1]);
+
+  beforeEach(() => {
+    vi.stubEnv('PUBLIC_BLOB_STORE_HOST', HOST);
+    loadBuildPack.mockResolvedValue(
+      pack({
+        draftShopId: 'shop_1',
+        barbers: [
+          { id: 'b1', name: 'Jess', avatarUrl: `https://${HOST}/shops/shop_1/barbers/jess.jpg`, title: null, bio: null, sortOrder: 0 },
+          { id: 'b2', name: 'Sam', avatarUrl: 'https://example.com/sam.jpg', title: null, bio: null, sortOrder: 1 },
+        ],
+        products: [
+          { id: 'p1', name: 'Wax', description: null, pricePence: 900, imageUrl: `https://${HOST}/shops/shop_1/products/wax.png`, featured: false, category: 'HAIR', sortOrder: 0 },
+        ],
+      }),
+    );
+  });
+
+  it('downloads allowlisted images one at a time; a remote failure does not break the zip', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      expect(init.redirect).toBe('error');
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      if (url.endsWith('wax.png')) return new Response('nope', { status: 500, headers: { 'content-type': 'text/plain' } });
+      return new Response(new TextEncoder().encode(`REMOTE:${url}`), { status: 200, headers: { 'content-type': 'image/jpeg' } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const entries = await unzip(await call('req_1'));
+    expect(fetchMock).toHaveBeenCalledTimes(2); // example.com is never fetched
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('example.com'))).toBe(false);
+    expect(maxInFlight).toBe(1);
+    expect(text(entries, 'photos/team/jess.jpg')).toBe(`REMOTE:https://${HOST}/shops/shop_1/barbers/jess.jpg`);
+    expect(Object.keys(entries).some((name) => name.includes('photos/products/'))).toBe(false);
+
+    const readme = text(entries, 'README.md');
+    expect(readme).toContain('`photos/team/sam.jpg` — external URL not fetched');
+    expect(readme).toContain('`photos/products/01_wax.png` — download failed (HTTP 500)');
+    const shop = JSON.parse(text(entries, 'shop.json'));
+    expect(shop.team.map((m: { photoPath: string | null }) => m.photoPath)).toEqual(['photos/team/jess.jpg', null]);
+    expect(text(entries, 'brief.md')).toContain('- **Jess** · photo: `photos/team/jess.jpg`');
+    // 3 hub files + Jess; Sam (external) and the wax image (500) failed.
+    expect(eventCreate.mock.calls[0][0].data.meta).toEqual({ fileCount: 4, failedCount: 2 });
+  });
+
+  it('?format=md never fetches and only names files that would be in the zip; &download=1 makes it a download', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const inline = await call('req_1', '?format=md');
+    expect(inline.headers.get('content-disposition')).toBeNull();
+    const md = await inline.text();
+    expect(md).toContain('- **Jess** · photo: `photos/team/jess.jpg`');
+    expect(md).toContain('- **Sam** · photo: image added in the dashboard (not in this pack)');
+    const download = await call('req_1', '?format=md&download=1');
+    expect(download.headers.get('content-disposition')).toMatch(/^attachment; filename="kersivo-build-pack_fade-co_\d{4}-\d{2}-\d{2}_brief\.md"$/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

@@ -3,8 +3,9 @@ export const prerender = false;
 /**
  * GET /api/ops/preview-requests/[id]/build-pack — everything the owner supplied, as one download for
  * building their website (docs/ops/build-pack.md).
- *   (default)      application/zip, streamed: originals from private Blob, never thumbnails
- *   ?format=md     brief.md as text (the "Copy brief" button)
+ *   (default)      application/zip, streamed: originals from private Blob, never thumbnails, plus images
+ *                  added in the dashboard (public Blob, allowlisted: buildPackRemoteImages.ts)
+ *   ?format=md     brief.md as text (the "Copy brief" button); &download=1 adds Content-Disposition
  *   ?format=json   shop.json
  * Operators only. 404 unknown id, 410 personal data deleted.
  */
@@ -62,16 +63,23 @@ export const GET: APIRoute = async (context) => {
 
   const folder = buildPackFolderName(pack, now);
   const files = planBuildPackFiles(pack);
-  const format = new URL(context.request.url).searchParams.get('format');
+  const params = new URL(context.request.url).searchParams;
+  const format = params.get('format');
+  // Without the zip nothing is downloaded: dashboard URLs outside the allowlist are simply not in the pack.
+  const notFetchable = notFetchableIds(files);
 
   if (format === 'md') {
-    return new Response(buildPackBriefMd(pack, files), {
+    return new Response(buildPackBriefMd(pack, files, notFetchable), {
       status: 200,
-      headers: { ...DOWNLOAD_HEADERS, 'Content-Type': 'text/markdown; charset=utf-8' },
+      headers: {
+        ...DOWNLOAD_HEADERS,
+        'Content-Type': 'text/markdown; charset=utf-8',
+        ...(params.get('download') === '1' ? { 'Content-Disposition': `attachment; filename="${folder}_brief.md"` } : {}),
+      },
     });
   }
   if (format === 'json') {
-    return new Response(JSON.stringify(toBuildPackJson(pack, files), null, 2), {
+    return new Response(JSON.stringify(toBuildPackJson(pack, files, notFetchable), null, 2), {
       status: 200,
       headers: {
         ...DOWNLOAD_HEADERS,
