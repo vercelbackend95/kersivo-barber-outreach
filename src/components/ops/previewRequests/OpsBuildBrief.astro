@@ -4,8 +4,10 @@
  * Owner text is rendered as text, never injected as HTML; line breaks are kept with CSS.
  */
 import { OpsBrandColours } from '@/components/ops/previewRequests/OpsBrandColours';
-import type { BuildPack, BuildPackAsset } from '@/lib/ops/buildPack';
-import { buildPackFiles, buildPackShopName, buildPackTownCity } from '@/lib/ops/buildPack';
+import type { BuildPack, BuildPackAsset, BuildPackRemoteImage } from '@/lib/ops/buildPack';
+import { buildPackFiles, buildPackLogos, buildPackShopName, buildPackTownCity, memberPhotoCount } from '@/lib/ops/buildPack';
+import { isAllowedRemoteImageUrl, remoteImageStoreHost } from '@/lib/ops/buildPackRemoteImages';
+import { buildPackFileSummary, buildPackFileSummaryLabel } from '@/lib/ops/buildPackZipPlan';
 import { formatBytes } from '@/lib/freePreview/hubAssets';
 
 type Props = { pack: BuildPack; requestId: string };
@@ -46,10 +48,25 @@ function dims(asset: BuildPackAsset): string | null {
 
 const files = buildPackFiles(pack);
 const packUrl = `/api/ops/preview-requests/${requestId}/build-pack`;
-const totalBytes = files.reduce((sum, file) => sum + file.sizeBytes, 0);
 const assetById = new Map(files.map((file) => [file.id, file]));
-const logos = pack.assets.LOGO;
-const currentLogo = logos.find((logo) => logo.id === pack.brand.currentLogoAssetId) ?? null;
+const logoGroups = buildPackLogos(pack);
+const currentLogo = logoGroups.current;
+const duplicateIds = new Set(logoGroups.duplicates.map((d) => d.asset.id));
+// Older uploads, oldest first, with exact re-uploads marked (they are left out of the zip).
+const earlierLogos = pack.assets.LOGO.filter((logo) => logo !== currentLogo).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+// Dashboard images (public Blob URLs from admin input): only this project's store is rendered as <img>.
+const storeHost = remoteImageStoreHost();
+const isAllowed = (url: string | null | undefined) => isAllowedRemoteImageUrl(url, storeHost);
+const remoteFor = (source: BuildPackRemoteImage['source'], ownerId: string) =>
+  pack.remoteImages.find((image) => image.source === source && image.ownerId === ownerId) ?? null;
+const fileSummary = buildPackFileSummaryLabel(buildPackFileSummary(pack, (url) => isAllowed(url)), formatBytes);
+
+/** Display only: "shaving" → "Shaving". Stored data is never changed. */
+function displayCategory(value: string | null): string {
+  if (!value) return '—';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 // Town alone is not an address: only build the line when the owner entered a street or postcode.
 const address =
   pack.contact.addressLine1 || pack.contact.postcode
@@ -182,39 +199,80 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
   <section class="ops-bb__card" aria-labelledby="ops-bb-brand">
     <h2 id="ops-bb-brand" class="ops-bb__title">Brand</h2>
     <div class="ops-bb__brand">
-      <div class="ops-bb__logos">
+      <div class="ops-bb__logos" data-testid="ops-bb-logos">
         {
-          logos.length ? (
-            logos.map((logo) => (
-              <figure class="ops-bb__logo">
-                <div class="ops-bb__logo-img">
-                  <img src={assetUrl(logo, 'thumb')} alt={`Logo: ${logo.fileName}`} loading="lazy" decoding="async" />
-                </div>
-                <figcaption>
-                  {logo.id === currentLogo?.id ? <strong>Current logo · </strong> : null}
-                  {logo.fileName}
-                  {dims(logo) ? ` · ${dims(logo)}` : ''} · {formatBytes(logo.sizeBytes)}
-                  <br />
-                  <a class="btn btn--ghost btn--sm" href={assetUrl(logo, 'full')}>Download</a>
-                </figcaption>
-              </figure>
-            ))
-          ) : (
+          currentLogo ? (
+            <figure class="ops-bb__logo" data-testid="ops-bb-current-logo">
+              <div class="ops-bb__logo-img">
+                <img src={assetUrl(currentLogo, 'thumb')} alt={`Current logo: ${currentLogo.fileName}`} loading="lazy" decoding="async" />
+              </div>
+              <figcaption>
+                <span class="ops-bb__badge">Current logo</span>
+                <br />
+                {currentLogo.fileName}
+                {dims(currentLogo) ? ` · ${dims(currentLogo)}` : ''} · {formatBytes(currentLogo.sizeBytes)}
+                <br />
+                <a class="btn btn--ghost btn--sm" href={assetUrl(currentLogo, 'full')}>Download</a>
+              </figcaption>
+            </figure>
+          ) : pack.brand.shopLogoUrl && isAllowed(pack.brand.shopLogoUrl) ? null : (
             <p class="ops-pr__empty">No logo uploaded.</p>
           )
         }
         {
-          pack.brand.shopLogoUrl ? (
+          pack.brand.shopLogoUrl && isAllowed(pack.brand.shopLogoUrl) ? (
+            <figure class="ops-bb__logo">
+              <div class="ops-bb__logo-img">
+                <img
+                  src={pack.brand.shopLogoUrl}
+                  alt="Logo set in the dashboard shop settings"
+                  loading="lazy"
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+              </div>
+              <figcaption>
+                {currentLogo ? null : (
+                  <>
+                    <span class="ops-bb__badge">Current logo</span>
+                    <br />
+                  </>
+                )}
+                Shop settings logo (dashboard)
+              </figcaption>
+            </figure>
+          ) : pack.brand.shopLogoUrl ? (
             <p class="ops-bb__meta">
-              Shop settings logo URL:{' '}
-              {safeHref(pack.brand.shopLogoUrl) ? (
-                <a href={safeHref(pack.brand.shopLogoUrl)} target="_blank" rel="noopener noreferrer nofollow">
-                  {pack.brand.shopLogoUrl}
-                </a>
-              ) : (
-                pack.brand.shopLogoUrl
-              )}
+              Shop settings logo URL (not on KERSIVO storage, not downloaded): <span class="ops-bb__url">{pack.brand.shopLogoUrl}</span>
             </p>
+          ) : null
+        }
+        {
+          earlierLogos.length ? (
+            <details class="ops-bb__details ops-bb__earlier" data-testid="ops-bb-earlier-logos">
+              <summary>Earlier uploads ({earlierLogos.length})</summary>
+              <div class="ops-bb__logos">
+                {earlierLogos.map((logo) => (
+                  <figure class="ops-bb__logo">
+                    <div class="ops-bb__logo-img">
+                      <img src={assetUrl(logo, 'thumb')} alt={`Earlier logo: ${logo.fileName}`} loading="lazy" decoding="async" />
+                    </div>
+                    <figcaption>
+                      {duplicateIds.has(logo.id) ? (
+                        <>
+                          <span class="ops-bb__tag ops-bb__tag--flush">Duplicate, not in the pack</span>
+                          <br />
+                        </>
+                      ) : null}
+                      {logo.fileName}
+                      {dims(logo) ? ` · ${dims(logo)}` : ''} · {formatBytes(logo.sizeBytes)} · {formatDate(logo.createdAt)}
+                      <br />
+                      <a class="btn btn--ghost btn--sm" href={assetUrl(logo, 'full')}>Download</a>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </details>
           ) : null
         }
       </div>

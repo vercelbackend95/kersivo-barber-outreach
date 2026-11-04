@@ -156,7 +156,7 @@ describe('GET /api/ops/preview-requests/[id]/build-pack', () => {
     const entries = unzipSync(new Uint8Array(await response.arrayBuffer()));
     const names = Object.keys(entries).map((name) => name.replace(/^[^/]+\//, ''));
     expect(names).toEqual(
-      expect.arrayContaining(['README.md', 'brief.md', 'shop.json', 'brand/colours.json', 'revisions/change-requests.md', 'brand/logo/logo.jpg', 'photos/shop/01_p1.jpg', 'photos/shop/02_p2.jpg']),
+      expect.arrayContaining(['README.md', 'brief.md', 'shop.json', 'brand/colours.json', 'revisions/change-requests.md', 'brand/logo/current-logo.jpg', 'photos/shop/01_p1.jpg', 'photos/shop/02_p2.jpg']),
     );
     const photo = Object.entries(entries).find(([name]) => name.endsWith('photos/shop/01_p1.jpg'))!;
     expect(strFromU8(photo[1])).toBe('ORIGINAL:preview-hub/req_1/p1.jpg');

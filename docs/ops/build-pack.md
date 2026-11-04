@@ -25,11 +25,15 @@ fact and disagree, both values are returned and listed under `conflicts`; nothin
 kersivo-build-pack_<shop-slug>_<YYYY-MM-DD>/
   README.md                      how to use, contents, not provided, conflicts, files that failed
   brief.md                       the design brief (British English)
-  shop.json                      the BuildPack as JSON (schemaVersion 1), paths relative to this folder
-  brand/logo/<name>              all LOGO uploads, originals
+  shop.json                      the BuildPack as JSON (schemaVersion 2), paths relative to this folder
+  brand/logo/current-logo.<ext>  the logo to build from (snapshot logo once sent, else the newest upload)
+  brand/logo/earlier/<name>      other LOGO uploads (exact re-uploads left out, listed in README)
+  brand/logo/shop-settings-logo.<ext>  ShopSettings.logoUrl (dashboard), when set
   brand/colours.json             primary, secondary, tone, source, extracted palette, snapshot
   photos/shop/NN_<caption>.<ext> SHOP_PHOTO in sortOrder
-  photos/team/<barber>.<ext>     TEAM_PHOTO named after the linked barber
+  photos/team/<barber>.<ext>     TEAM_PHOTO named after the linked barber, then Barber.avatarUrl (-2 when both)
+  photos/products/NN_<product>.<ext>  Product.imageUrl, product sort order
+  photos/services/NN_<service>.<ext>  Service.imageUrl, service display order
   documents/price-list/…         PRICE_LIST
   documents/other/…              OTHER
   revisions/change-requests.md   open change requests (SENT, IN_PROGRESS)
@@ -40,6 +44,38 @@ Originals come from private Blob (`storagePath`), never thumbnails. Every path s
 (no separators, no `..`) and de-duplicated case-insensitively. A file that cannot be read is skipped, and the
 download carries on; README lists it under "Files that could not be included" and its `path` in `shop.json`
 is `null`. Each zip download records `ops_build_pack_downloaded` (operator email, file counts) in History.
+
+### Dashboard images (schemaVersion 2)
+
+Images added through the paid dashboard screens are public Vercel Blob URLs on `Barber.avatarUrl`,
+`Product.imageUrl`, `Service.imageUrl` and `ShopSettings.logoUrl`. They are `pack.remoteImages`
+(`{ id: "<source>:<ownerId>", source, ownerId, ownerName, url }`), downloaded into the zip next to the hub
+originals, named in `brief.md`, and shown on the Overview. `buildPack.coverage.test.ts` fails when a new
+image-like URL column appears on those models without a mapping.
+
+These URLs come from admin input, so the server fetches one only when **all** of these hold:
+
+- the scheme is `https:` (no credentials, default port);
+- the host ends with `.public.blob.vercel-storage.com` **and** is exactly this project's store. The store
+  host is `PUBLIC_BLOB_STORE_HOST` when set (Production). It is not set for Preview, and previews share the
+  production database and store, so the fallback is the store id inside `BLOB_READ_WRITE_TOKEN`
+  (`vercel_blob_rw_<storeId>_…` → `<storeid>.public.blob.vercel-storage.com`), i.e. the store the upload
+  routes write to. Checked 2026-11-04: every dashboard image URL on the verification shops is on that host.
+  With neither set, nothing is fetched (fail closed);
+- no redirects (`redirect: 'error'`), 15 s per file, at most 15 MB per file (checked while reading, before
+  the entry is added, so nothing is half-written), and the response `Content-Type` starts with `image/`.
+
+Anything else is not fetched: README lists it under "Files that could not be included" (`external URL not
+fetched`, or the reason the download failed), its `path` in `shop.json` is `null`, and the Overview shows the
+URL as text instead of an `<img>`. Images are fetched one at a time, and count in the download event's
+`fileCount` / `failedCount`.
+
+`shop.json` v2 adds `remoteImages[]` (each with `path` or `null`), `photoPath` on every team member,
+product and service (`photoPaths` on team members: hub uploads first, then the avatar), and `duplicateOf` on
+LOGO uploads left out as exact re-uploads (same original file name and size; there is no content hash).
+
+"Has a photo" has one definition, `memberHasPhoto()` in `buildPack.ts` (a TEAM_PHOTO upload or an avatar),
+used by `missing`, the Team card and `brief.md`.
 
 ## Field → source
 
