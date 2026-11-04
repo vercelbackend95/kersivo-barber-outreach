@@ -8,7 +8,14 @@ import { hubCanAddShopItems, type AdminHubAddWebsiteItem } from '@/lib/adminHub/
 import { ADMIN_HUB_API_BASE } from '@/lib/adminHub/links';
 import { emitHubDataChanged } from '@/lib/adminHub/liveState';
 import { showHubToast } from '@/lib/adminHub/hubToast';
-import { HUB_WEBSITE_EXTRA_HINT, HUB_WEBSITE_EXTRA_LABEL } from '@/lib/freePreview/hubCopy';
+import {
+  HUB_DETAILS_ABOUT_HINT,
+  HUB_DETAILS_ABOUT_TITLE,
+  HUB_DETAILS_INSTAGRAM_HINT,
+  HUB_DETAILS_INSTAGRAM_LABEL,
+  HUB_WEBSITE_EXTRA_HINT,
+  HUB_WEBSITE_EXTRA_LABEL,
+} from '@/lib/freePreview/hubCopy';
 import {
   defaultOpeningWeek,
   isOpeningWeekValid,
@@ -26,6 +33,10 @@ import {
   emptyBusinessDraft,
   SETUP_COPY,
   setupCompletion,
+  textDirty,
+  textDraftFromDetails,
+  textPatch,
+  type TextDraft,
   setupSectionStatus,
   type BusinessDraft,
   type BusinessField,
@@ -33,6 +44,7 @@ import {
 } from '@/lib/adminHub/websiteSetup';
 
 const EXTRA_MAX = 2000;
+const ABOUT_MAX = 600;
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
 
 /** Each card loads on its own: one failing request never blanks the rest of the screen. */
@@ -156,7 +168,7 @@ function TextField(props: {
   autoComplete?: string;
   maxLength?: number;
   multiline?: boolean;
-  inputMode?: 'text' | 'email' | 'tel';
+  inputMode?: 'text' | 'email' | 'tel' | 'url';
   wide?: boolean;
 }) {
   const hintId = props.hint ? `${props.id}-hint` : undefined;
@@ -218,9 +230,10 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
   const [hoursLoad, setHoursLoad] = useState<SectionLoad<HoursSaved>>({ kind: 'loading' });
   const [business, setBusiness] = useState<BusinessDraft>(emptyBusinessDraft);
   const [hours, setHours] = useState<OpeningDay[]>(defaultOpeningWeek);
-  // Website text lives on the hub request, not the shop: it works before the draft shop exists.
-  const [savedExtra, setSavedExtra] = useState(ctx.details.websiteExtraText ?? '');
-  const [extraText, setExtraText] = useState(ctx.details.websiteExtraText ?? '');
+  // Website text (about, Instagram, anything else) lives on the hub request, not the shop: it works
+  // before the draft shop exists.
+  const [savedText, setSavedText] = useState<TextDraft>(() => textDraftFromDetails(ctx.details));
+  const [text, setText] = useState<TextDraft>(() => textDraftFromDetails(ctx.details));
   const [hasShop, setHasShop] = useState(ctx.hasDraftShop !== false);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [errors, setErrors] = useState<SectionErrors>({});
@@ -297,9 +310,9 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
       business: canEdit && Boolean(savedBusiness && businessDirty(savedBusiness, business)),
       // Defaults shown for a shop with no hours count as a change: they are not saved yet.
       hours: canEdit && Boolean(savedHours && (!savedHours.saved || !sameOpeningWeek(savedHours.days, hours))),
-      text: ctx.canEditDetails && savedExtra.trim() !== extraText.trim(),
+      text: ctx.canEditDetails && textDirty(savedText, text),
     }),
-    [business, canEdit, ctx.canEditDetails, extraText, hours, savedBusiness, savedExtra, savedHours],
+    [business, canEdit, ctx.canEditDetails, hours, savedBusiness, savedHours, savedText, text],
   );
   const anyDirty = dirty.business || dirty.hours || dirty.text;
 
@@ -311,11 +324,11 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
   const discard = useCallback(() => {
     if (savedBusiness) setBusiness(savedBusiness);
     if (savedHours) setHours(savedHours.days);
-    setExtraText(savedExtra);
+    setText(savedText);
     setErrors({});
     setFieldErrors({});
     setSaveState('idle');
-  }, [savedBusiness, savedExtra, savedHours]);
+  }, [savedBusiness, savedHours, savedText]);
 
   const save = useCallback(async () => {
     if (saving || !anyDirty) return;
@@ -345,6 +358,7 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
       }
     };
 
+    let freshText: TextDraft | null = null;
     // Business details and hours are stored on the hub's draft shop: create it first if needed.
     let shopReady = hasShop;
     if (!shopReady && (dirty.business || dirty.hours)) {
@@ -366,11 +380,20 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
     }
     if (dirty.text) {
       await run('text', async () => {
-        await request(`${ADMIN_HUB_API_BASE}/details`, {
+        const payload = await request<{ details?: Record<string, unknown> }>(`${ADMIN_HUB_API_BASE}/details`, {
           method: 'PATCH',
-          body: JSON.stringify({ websiteExtraText: extraText.trim() || null }),
+          body: JSON.stringify(textPatch(savedText, text)),
         });
-        setSavedExtra(extraText.trim());
+        // The server normalises Instagram (handle to profile link): show what it stored.
+        const next = payload?.details
+          ? textDraftFromDetails(payload.details)
+          : {
+              aboutText: text.aboutText.trim(),
+              instagramUrl: text.instagramUrl.trim(),
+              websiteExtraText: text.websiteExtraText.trim(),
+            };
+        setSavedText(next);
+        freshText = next;
       });
     }
 
@@ -389,10 +412,10 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
     }
     if (freshBusiness) setBusiness(freshBusiness);
     if (freshHours) setHours(freshHours.days);
-    setExtraText((value) => value.trim());
+    if (freshText) setText(freshText);
     setSaveState('idle');
     showHubToast(SETUP_COPY.saved);
-  }, [anyDirty, business, dirty, extraText, hasShop, hours, reloadBusiness, reloadHours, savedBusiness, saving]);
+  }, [anyDirty, business, dirty, hasShop, hours, reloadBusiness, reloadHours, savedBusiness, savedText, saving, text]);
 
   // Stable handlers for the footer (the footer is memoised; see useAppChrome).
   const saveRef = useRef(save);
@@ -440,6 +463,8 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
     setBusiness((current) => ({ ...current, [name]: value }));
     if (fieldErrors[name]) setFieldErrors((current) => ({ ...current, [name]: undefined }));
   };
+  const setTextField = (name: keyof TextDraft) => (value: string) =>
+    setText((current) => ({ ...current, [name]: value }));
   const field = (name: string) => `${idBase}-${name}`;
   const fieldsDisabled = !canEdit || saving;
 
@@ -526,17 +551,41 @@ export function WebsiteSetupFlow(props: { ctx: AdminHubAppContext; highlight?: A
         error={errors.text}
       >
         <TextField
+          id={field('about')}
+          label={HUB_DETAILS_ABOUT_TITLE}
+          hint={HUB_DETAILS_ABOUT_HINT}
+          value={text.aboutText}
+          onChange={setTextField('aboutText')}
+          disabled={!ctx.canEditDetails || saving}
+          maxLength={ABOUT_MAX}
+          multiline
+        />
+        <p className="field__hint ks-setup-count">
+          {text.aboutText.length} / {ABOUT_MAX}
+        </p>
+        <TextField
+          id={field('instagram')}
+          label={HUB_DETAILS_INSTAGRAM_LABEL}
+          hint={HUB_DETAILS_INSTAGRAM_HINT}
+          value={text.instagramUrl}
+          onChange={setTextField('instagramUrl')}
+          disabled={!ctx.canEditDetails || saving}
+          maxLength={2048}
+          inputMode="url"
+          wide
+        />
+        <TextField
           id={field('extra')}
           label={HUB_WEBSITE_EXTRA_LABEL}
           hint={HUB_WEBSITE_EXTRA_HINT}
-          value={extraText}
-          onChange={setExtraText}
+          value={text.websiteExtraText}
+          onChange={setTextField('websiteExtraText')}
           disabled={!ctx.canEditDetails || saving}
           maxLength={EXTRA_MAX}
           multiline
         />
         <p className="field__hint ks-setup-count">
-          {extraText.length} / {EXTRA_MAX}
+          {text.websiteExtraText.length} / {EXTRA_MAX}
         </p>
       </SectionCard>
 

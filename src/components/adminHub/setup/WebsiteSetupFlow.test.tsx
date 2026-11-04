@@ -232,6 +232,37 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
     expect(calls.some((c) => c.method !== 'GET')).toBe(false);
   });
 
+  it('edits About your shop and Instagram in Website text, saved through /details', async () => {
+    routes[key('PATCH', '/api/admin-hub/details')] = () => ({
+      body: {
+        ok: true,
+        details: {
+          aboutText: 'Family-run since 2009.',
+          instagramUrl: 'https://www.instagram.com/faderoom/',
+          websiteExtraText: null,
+        },
+      },
+    });
+    const details = { aboutText: 'Old about', instagramUrl: null, websiteExtraText: null } as AdminHubAppContext['details'];
+    render(<Harness overrides={{ details }} />);
+    await screen.findByLabelText('Barbershop name');
+    const textCard = within(screen.getByTestId('text'));
+    const labels = Array.from(screen.getByTestId('text').querySelectorAll('label')).map((l) => l.textContent);
+    expect(labels).toEqual(['About your shop', 'Instagram', HUB_WEBSITE_EXTRA_LABEL]);
+    expect((textCard.getByLabelText('About your shop') as HTMLTextAreaElement).value).toBe('Old about');
+
+    fireEvent.change(textCard.getByLabelText('About your shop'), { target: { value: 'Family-run since 2009.' } });
+    fireEvent.change(textCard.getByLabelText('Instagram'), { target: { value: '@faderoom' } });
+    fireEvent.click(within(screen.getByTestId('chrome-footer')).getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => expect(screen.queryByTestId('setup-savebar')).toBeNull());
+    const patch = calls.find((c) => c.method === 'PATCH')!;
+    expect(patch.url).toBe('/api/admin-hub/details');
+    expect(patch.body).toEqual({ aboutText: 'Family-run since 2009.', instagramUrl: '@faderoom' });
+    // Shows what the server stored (normalised profile link) and is no longer dirty.
+    expect((textCard.getByLabelText('Instagram') as HTMLInputElement).value).toBe('https://www.instagram.com/faderoom/');
+    expect(calls.filter((c) => c.url.startsWith('/api/admin/'))).toEqual([]);
+  });
+
   it('shows saved values read-only, without an error, at a stage past editing', async () => {
     render(<Harness overrides={{ stage: 'live' }} />);
     const business = within(await screen.findByTestId('setup-business'));

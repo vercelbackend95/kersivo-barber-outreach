@@ -36,7 +36,7 @@ export const SETUP_COPY = {
   sections: {
     business: { title: 'Business details', description: 'The details customers see on your website.' },
     hours: { title: 'Opening hours', description: 'When customers can visit and book.' },
-    text: { title: 'Website text', description: 'Anything else you would like on your website.' },
+    text: { title: 'Website text', description: 'About your shop, your Instagram and anything else for your website.' },
     files: { title: 'Photos, logo and files', description: 'Images and files for your website.' },
   },
 } as const;
@@ -125,6 +125,33 @@ export function businessFieldErrors(draft: BusinessDraft): Partial<Record<Busine
   const email = draft.email.trim();
   if (email && !EMAIL_RE.test(email)) errors.email = 'Enter an email address like name@example.co.uk.';
   return errors;
+}
+
+// ---------------------------------------------------------------------------
+// Website text (saved on the hub request through /api/admin-hub/details)
+// ---------------------------------------------------------------------------
+
+export const TEXT_FIELDS = ['aboutText', 'instagramUrl', 'websiteExtraText'] as const;
+export type TextDraft = Record<(typeof TEXT_FIELDS)[number], string>;
+
+export function textDraftFromDetails(details: object | null | undefined): TextDraft {
+  const source = (details ?? {}) as Record<string, unknown>;
+  const read = (key: string) => (typeof source[key] === 'string' ? (source[key] as string) : '');
+  return { aboutText: read('aboutText'), instagramUrl: read('instagramUrl'), websiteExtraText: read('websiteExtraText') };
+}
+
+export function textDirty(saved: TextDraft, draft: TextDraft): boolean {
+  return TEXT_FIELDS.some((field) => saved[field].trim() !== draft[field].trim());
+}
+
+/** Changed fields only for PATCH /api/admin-hub/details, null when cleared. */
+export function textPatch(saved: TextDraft, draft: TextDraft): Partial<Record<keyof TextDraft, string | null>> {
+  const patch: Partial<Record<keyof TextDraft, string | null>> = {};
+  for (const field of TEXT_FIELDS) {
+    const next = draft[field].trim();
+    if (saved[field].trim() !== next) patch[field] = next || null;
+  }
+  return patch;
 }
 
 // ---------------------------------------------------------------------------

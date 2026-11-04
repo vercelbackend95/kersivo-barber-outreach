@@ -11,6 +11,9 @@ import {
   SETUP_COPY,
   SETUP_SECTION_IDS,
   setupCompletion,
+  textDirty,
+  textDraftFromDetails,
+  textPatch,
 } from './websiteSetup';
 
 const complete = {
@@ -89,6 +92,15 @@ describe('website setup view-model', () => {
     expect(businessPatch(saved, { ...saved, shopName: '' })).toEqual({});
     expect(businessDirty(saved, { ...saved, postcode: 'M1 1AE ' })).toBe(false);
     expect(businessDirty(saved, { ...saved, email: 'a@b.co.uk' })).toBe(true);
+  });
+
+  it('maps and diffs Website text (about, Instagram, anything else)', () => {
+    const saved = textDraftFromDetails({ aboutText: 'Family-run since 2009.', instagramUrl: null, websiteExtraText: 'Walk-ins' });
+    expect(saved).toEqual({ aboutText: 'Family-run since 2009.', instagramUrl: '', websiteExtraText: 'Walk-ins' });
+    expect(textDirty(saved, { ...saved, aboutText: 'Family-run since 2009. ' })).toBe(false);
+    const draft = { ...saved, instagramUrl: '@faderoom', websiteExtraText: ' ' };
+    expect(textDirty(saved, draft)).toBe(true);
+    expect(textPatch(saved, draft)).toEqual({ instagramUrl: '@faderoom', websiteExtraText: null });
   });
 
   it('flags a missing name and a malformed email before sending', () => {
