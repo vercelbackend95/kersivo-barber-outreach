@@ -9,9 +9,11 @@ import {
   isAdminApiPath,
   isHubAdminApiAllowed,
   isHubOnlyAdminApiRequest,
+  isTenantPrivatePath,
   recordHubOwnerAdminEdit,
 } from '@/lib/adminHub/hubAdminAccess';
 import { isAdminHubRouteEnabled } from '@/lib/freePreview/hubPage';
+import { readOperatorImpersonation } from '@/lib/adminHub/operatorImpersonation';
 import { isPreviewHubAllowedPath } from '@/lib/adminHub/previewHubPaths';
 import { applySecurityHeaders } from '@/lib/security/headers';
 import {
@@ -71,7 +73,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  const hubOnlyAdminApi = isAdminApiPath(url.pathname) && isHubOnlyAdminApiRequest(request);
+  // Hub owners AND operators "Viewing as KERSIVO" get only the hub allowlist, even though an operator also has a
+  // Better Auth session (resolveAdminAccess resolves both to the hub draft shop, never the operator's own shop).
+  const hubOnlyAdminApi =
+    isAdminApiPath(url.pathname) &&
+    (isHubOnlyAdminApiRequest(request) || Boolean(await readOperatorImpersonation(request)));
   if (hubOnlyAdminApi && !isHubAdminApiAllowed(method, url.pathname)) {
     return applySecurityHeaders(hubAdminUnavailableResponse(), { isProd, isHttps });
   }
@@ -133,5 +139,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       /* Sentry optional */
     }
   }
-  return applySecurityHeaders(response, { isProd, isHttps });
+  const secured = applySecurityHeaders(response, { isProd, isHttps });
+  if (isTenantPrivatePath(url.pathname)) {
+    // Tenant-scoped admin pages and APIs: never stored by the browser or the Vercel CDN.
+    secured.headers.set('Cache-Control', 'private, no-store');
+    if (!secured.headers.get('Vary')?.toLowerCase().includes('cookie')) secured.headers.append('Vary', 'Cookie');
+  }
+  return secured;
 });
+

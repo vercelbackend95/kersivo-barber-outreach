@@ -1,10 +1,11 @@
 import type { APIContext } from 'astro';
-import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
+import { isTenantAdminAccess, resolveTenantAdminAccess } from '@/lib/admin/auth';
 import { isAdminHubRouteEnabled, resolveHubContext, type HubPageContext } from '@/lib/freePreview/hubPage';
 import { resolvePreviewRequestByDraftShopId } from '@/lib/freePreview/previewAccess';
 import { evaluateExactSameOrigin } from '@/lib/ops/requireOperatorMutation';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { clearHubCookie, mintHubCookie, readHubCookie, verifyHubSession } from './hubSession';
+import { resolveOperatorImpersonation } from './operatorImpersonation';
 
 /** Sent on /admin in every mode once ADMIN_HUB_ENABLED is on (docs/admin-hub/ADMIN_HUB_SPEC.md §2.2). */
 export const ADMIN_PRIVATE_HEADERS = {
@@ -23,7 +24,8 @@ export type AdminPageMode =
 /**
  * Server-side decision for /admin (spec §2.1–2.3). Null = the flag is off: render today's admin untouched.
  *
- * 1. Operator `ks_hub` + live operator session → hub ("Viewing as KERSIVO"). Without a live session it is dropped.
+ * 1. Operator `ks_hub` + live operator session bound to that cookie → hub ("Viewing as KERSIVO"), resolved by
+ *    `resolveOperatorImpersonation` — the same check every /api/admin handler uses. Otherwise it is dropped.
  * 2. Real session: an OWNER whose shop is a converted preview that is not live → hub, launch phase; otherwise the
  *    full admin (the session wins over any owner `ks_hub`).
  * 3. Owner `ks_hub` → hub while the request still resolves; otherwise the cookie is cleared.
@@ -40,10 +42,10 @@ export async function resolveAdminPageMode(input: {
   let clearCookie = Boolean(cookie) && !session;
 
   if (session?.operator) {
-    const operator = await resolveOperatorAccess(request);
-    if (operator.ok) {
-      const ctx = await resolveHubContext({ cookie }, { isOperator: true, now });
-      if (ctx) return { kind: 'hub', ctx, setCookie: null, phase: phaseFor(ctx) };
+    const impersonation = await resolveOperatorImpersonation(request, now);
+    if (impersonation.active && impersonation.ctx) {
+      const ctx = impersonation.ctx;
+      return { kind: 'hub', ctx, setCookie: null, phase: phaseFor(ctx) };
     }
     clearCookie = true;
   }
@@ -82,8 +84,9 @@ export async function resolveAdminPageMode(input: {
   return { kind: 'full', setCookie: clearCookie ? clearHubCookie() : null };
 }
 
+/** The visitor's own tenant shop. Operator impersonation is decided first, in `resolveAdminPageMode`. */
 export async function adminSessionShopFor(context: APIContext): Promise<AdminSessionShop | null> {
-  const access = await resolveAdminAccess(context);
+  const access = await resolveTenantAdminAccess(context);
   if (!isTenantAdminAccess(access)) return null;
   return { shopId: access.shopId, role: access.role, via: access.via === 'session' ? 'session' : 'preview' };
 }

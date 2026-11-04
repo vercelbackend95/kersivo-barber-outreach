@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { EMAIL_VERIFICATION_REQUIRED_MESSAGE } from '@/lib/admin/auth';
 import { acceptInviteForUser } from '@/lib/admin/rbac/members';
 import { prisma } from '@/lib/db/client';
+import { serializeActiveShopSelection } from '@/lib/admin/activeShopSelection';
 
 /**
  * Accept the newest open invite for the signed-in user's email.
@@ -53,6 +54,11 @@ export const POST: APIRoute = async (context) => {
     });
   }
 
+  // The user just chose to join this shop: make it their active shop (matters when they belong to several).
+  const successHeaders = new Headers({ 'Content-Type': 'application/json' });
+  const selection = serializeActiveShopSelection(result.shopId);
+  if (selection) successHeaders.append('Set-Cookie', selection);
+
   return new Response(
     JSON.stringify({
       ok: true,
@@ -60,6 +66,6 @@ export const POST: APIRoute = async (context) => {
       role: result.role,
       alreadyMember: result.alreadyMember,
     }),
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: successHeaders },
   );
 };

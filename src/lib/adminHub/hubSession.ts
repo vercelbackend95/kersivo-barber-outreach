@@ -7,11 +7,16 @@ import type { HubStage } from '@/lib/freePreview/hubStage';
  * the PreviewRequest and its stage, so revoking (REJECTED) or expiring a request takes effect immediately.
  *
  * Owner:    v1.<previewRequestId>.<expUnix>.<hmac>
- * Operator: v1.<previewRequestId>.<expUnix>.op.<hmac>
+ * Operator: v1.<previewRequestId>.<expUnix>.op-<binding>.<hmac>
+ *
+ * `<binding>` is a keyed hash of the operator's email: an operator ("Viewing as KERSIVO") cookie is only honoured
+ * for the operator who started it (see `operatorImpersonation.ts`). The older unbound `op` form still verifies
+ * here (binding null) but is never treated as an active impersonation.
  */
 export const HUB_COOKIE_NAME = 'ks_hub';
 const VERSION = 'v1';
 const OPERATOR_FLAG = 'op';
+const OPERATOR_BINDING_PATTERN = /^[A-Za-z0-9_-]{22}$/;
 const HKDF_INFO = 'ks-hub-v1';
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const HMAC_PATTERN = /^[A-Za-z0-9_-]{43}$/;
@@ -24,6 +29,8 @@ export type HubSessionPayload = {
   previewRequestId: string;
   expiresAt: Date;
   operator: boolean;
+  /** Keyed hash of the operator email the cookie was minted for; undefined for owner and legacy operator cookies. */
+  operatorBinding?: string;
 };
 
 function readEnv(name: string): string | undefined {
@@ -45,15 +52,28 @@ function mac(key: Buffer, body: string): string {
   return createHmac('sha256', key).update(body).digest('base64url');
 }
 
+/** Keyed hash binding an operator cookie to one operator email (never the email itself). */
+export function hubOperatorBinding(
+  email: string,
+  secret: string | null = readHubSessionSecret(),
+): string | null {
+  const normalized = email.trim().toLowerCase();
+  if (!secret || !normalized) return null;
+  return mac(deriveKey(secret), `operator:${normalized}`).slice(0, 22);
+}
+
 export function signHubSession(
-  input: { previewRequestId: string; expiresAt: Date; operator?: boolean },
+  input: { previewRequestId: string; expiresAt: Date; operator?: boolean; operatorEmail?: string | null },
   secret: string | null = readHubSessionSecret(),
 ): string | null {
   if (!secret || !ID_PATTERN.test(input.previewRequestId)) return null;
   const exp = Math.floor(input.expiresAt.getTime() / 1000);
   if (!Number.isFinite(exp) || exp <= 0) return null;
   const parts = [VERSION, input.previewRequestId, String(exp)];
-  if (input.operator) parts.push(OPERATOR_FLAG);
+  if (input.operator) {
+    const binding = input.operatorEmail ? hubOperatorBinding(input.operatorEmail, secret) : null;
+    parts.push(binding ? `${OPERATOR_FLAG}-${binding}` : OPERATOR_FLAG);
+  }
   const body = parts.join('.');
   return `${body}.${mac(deriveKey(secret), body)}`;
 }
@@ -69,7 +89,16 @@ export function verifyHubSession(
   const [version, id, expRaw] = parts;
   if (version !== VERSION || !id || !ID_PATTERN.test(id) || !expRaw || !/^\d{1,12}$/.test(expRaw)) return null;
   const operator = parts.length === 5;
-  if (operator && parts[3] !== OPERATOR_FLAG) return null;
+  let operatorBinding: string | undefined;
+  if (operator) {
+    const flag = parts[3] ?? '';
+    if (flag.startsWith(`${OPERATOR_FLAG}-`)) {
+      operatorBinding = flag.slice(OPERATOR_FLAG.length + 1);
+      if (!OPERATOR_BINDING_PATTERN.test(operatorBinding)) return null;
+    } else if (flag !== OPERATOR_FLAG) {
+      return null;
+    }
+  }
   const presented = parts[parts.length - 1] ?? '';
   if (!HMAC_PATTERN.test(presented)) return null;
 
@@ -83,7 +112,9 @@ export function verifyHubSession(
   if (expiresAt.getTime() <= nowMs) return null;
   // Never honour a lifetime longer than we ever issue (defence in depth against a leaked key).
   if (expiresAt.getTime() > nowMs + (HUB_COOKIE_MAX_AGE_SECONDS + 60) * 1000) return null;
-  return { previewRequestId: id, expiresAt, operator };
+  return operatorBinding
+    ? { previewRequestId: id, expiresAt, operator, operatorBinding }
+    : { previewRequestId: id, expiresAt, operator };
 }
 
 /** max age = min(30 days, preview expiry) while the preview can still expire; see the Batch 1 plan for the rest. */
@@ -127,13 +158,17 @@ export function mintHubCookie(input: {
   stage: HubStage;
   previewExpiresAt: Date | null;
   operator: boolean;
+  /** Required for operator cookies: binds "Viewing as KERSIVO" to the operator who opened it. */
+  operatorEmail?: string | null;
   now: Date;
 }): string | null {
+  if (input.operator && !input.operatorEmail) return null;
   const expiresAt = hubCookieExpiry({ stage: input.stage, previewExpiresAt: input.previewExpiresAt }, input.now);
   const value = signHubSession({
     previewRequestId: input.previewRequestId,
     expiresAt,
     operator: input.operator,
+    operatorEmail: input.operatorEmail,
   });
   return value ? serializeHubCookie(value, expiresAt, input.now) : null;
 }

@@ -70,11 +70,7 @@ export async function ensureOwnerMembership(shopId: string, userId: string): Pro
 }
 
 export async function getShopIdForUser(userId: string): Promise<string | null> {
-  const member = await prisma.shopMember.findFirst({
-    where: { userId },
-    select: { shopId: true },
-    orderBy: { updatedAt: 'desc' },
-  });
+  const member = await getMembershipForUser(userId);
   if (member) return member.shopId;
 
   const shop = await prisma.shopSettings.findUnique({
@@ -113,14 +109,28 @@ export async function getMembershipForUser(userId: string, shopId?: string) {
     });
   }
 
+  // No explicit shop: a stable default, never "whichever membership row changed last".
+  // 1) the shop this user owns, 2) otherwise the membership they joined first.
+  const owned = await prisma.shopMember.findFirst({
+    where: { userId, shop: { ownerUserId: userId } },
+    select: { id: true, shopId: true, role: true, barberId: true },
+  });
+  if (owned) return owned;
   return prisma.shopMember.findFirst({
     where: { userId },
-    select: {
-      id: true,
-      shopId: true,
-      role: true,
-      barberId: true,
-    },
-    orderBy: { updatedAt: 'desc' },
+    select: { id: true, shopId: true, role: true, barberId: true },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
   });
+}
+
+/**
+ * Membership for the admin's active shop. `selectedShopId` comes from the `ks_active_shop` cookie and is only
+ * honoured when this user really is a member of that shop; otherwise the stable default applies.
+ */
+export async function resolveActiveMembershipForUser(userId: string, selectedShopId: string | null) {
+  if (selectedShopId) {
+    const selected = await getMembershipForUser(userId, selectedShopId);
+    if (selected) return selected;
+  }
+  return getMembershipForUser(userId);
 }

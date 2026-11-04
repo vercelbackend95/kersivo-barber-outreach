@@ -45,9 +45,9 @@ describe('legacy NEW membership / RBAC compatibility', () => {
     expect(fnBody).toMatch(/role:\s*true/);
   });
 
-  it('resolveAdminAccess builds access from role without teamStatus', () => {
+  it('resolveTenantAdminAccess builds access from role without teamStatus', () => {
     const src = readFileSync(resolve(process.cwd(), 'src/lib/admin/auth.ts'), 'utf8');
-    const fnStart = src.indexOf('export async function resolveAdminAccess');
+    const fnStart = src.indexOf('export async function resolveTenantAdminAccess');
     expect(fnStart).toBeGreaterThan(-1);
     const fnBody = src.slice(fnStart, fnStart + 1200);
     expect(fnBody).not.toMatch(/teamStatus/);

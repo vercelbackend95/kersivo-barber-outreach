@@ -17,7 +17,7 @@ vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
 }));
 
 import { adminHubBridge } from './bridge';
-import { verifyHubSession } from './hubSession';
+import { hubOperatorBinding, verifyHubSession } from './hubSession';
 
 const TOKEN = 'T'.repeat(43);
 const NOW = new Date('2026-11-01T12:00:00Z');
@@ -85,12 +85,14 @@ describe('adminHubBridge', () => {
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 
-  it('gives operators the op-flag cookie', async () => {
-    resolveOperatorAccess.mockResolvedValue({ ok: true });
+  it('gives operators an op-flag cookie bound to that operator', async () => {
+    resolveOperatorAccess.mockResolvedValue({ ok: true, access: { userId: 'ops', email: 'ops@kersivo.co.uk' } });
     resolveHubContext.mockResolvedValue(ctx('review', true));
     const response = (await bridge('/overview', 'overview'))!;
     expect(resolveHubContext).toHaveBeenCalledWith({ token: TOKEN }, { isOperator: true, now: NOW });
-    expect(verifyHubSession(cookieValue(response), NOW, SECRET)?.operator).toBe(true);
+    const session = verifyHubSession(cookieValue(response), NOW, SECRET);
+    expect(session?.operator).toBe(true);
+    expect(session?.operatorBinding).toBe(hubOperatorBinding('ops@kersivo.co.uk', SECRET));
   });
 
   it('keeps 404 for rejected or unknown tokens and sets no cookie', async () => {
