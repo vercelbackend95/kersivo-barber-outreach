@@ -61,6 +61,7 @@ export const PREVIEW_REQUEST_ACTIONS = {
   OPS_HUB_DOMAIN_CONNECTED: 'ops_hub_domain_connected',
   OPS_HUB_SSL_ACTIVE: 'ops_hub_ssl_active',
   OPS_HUB_MARK_LIVE: 'ops_hub_mark_live',
+  OPS_BUILD_PACK_DOWNLOADED: 'ops_build_pack_downloaded',
   HUB_DIRECT_SUBSCRIBE_CREATED: 'hub_direct_subscribe_created',
   OWNER_EDITED_SERVICES: 'OWNER_EDITED_SERVICES',
   OWNER_EDITED_TEAM: 'OWNER_EDITED_TEAM',

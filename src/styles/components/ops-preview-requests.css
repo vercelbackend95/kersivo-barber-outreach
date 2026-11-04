@@ -340,6 +340,19 @@
 }
 
 /* Overview › Build brief (OpsBuildBrief.astro). Reuses the ops surface tokens. */
+.ops-bb__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.9rem;
+}
+
+.ops-bb__rail {
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 .ops-pr-detail__main {
   display: grid;
   gap: 1rem;

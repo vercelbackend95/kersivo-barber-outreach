@@ -27,7 +27,7 @@ import { loadHubChanges } from '@/lib/freePreview/hubChanges';
 import { loadHubReviewShopData, loadLatestHubReviews, reviewDiff } from '@/lib/freePreview/hubReviews';
 import { PREVIEW_REQUEST_ACTIONS } from '@/lib/freePreview/createPreviewRequest';
 import { prisma } from '@/lib/db/client';
-import { loadBuildPack } from '@/lib/ops/buildPack';
+import { buildPackFiles, loadBuildPack } from '@/lib/ops/buildPack';
 import {
   HUB_OPS_ABOUT,
   HUB_OPS_INSTAGRAM,
@@ -432,6 +432,18 @@ const fields: Array<[string, string]> = request
             }
 
             <aside class="ops-pr-detail__actions">
+              <section class="ops-pr-actions ops-bb__rail" aria-labelledby="ops-bb-rail-title">
+                <h2 id="ops-bb-rail-title" class="ops-pr-actions__title">Build pack</h2>
+                <a class="btn btn--primary btn--sm" href={`/api/ops/preview-requests/${request.id}/build-pack`} download>
+                  Download build pack (.zip)
+                </a>
+                {buildPack ? (
+                  <p class="ops-pr-actions__hint">
+                    {buildPackFiles(buildPack).length} files · about{' '}
+                    {formatBytes(buildPackFiles(buildPack).reduce((sum, file) => sum + file.sizeBytes, 0))}
+                  </p>
+                ) : null}
+              </section>
               <PreviewRequestActions
                 client:load
                 requestId={request.id}

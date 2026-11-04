@@ -45,6 +45,7 @@ function dims(asset: BuildPackAsset): string | null {
 }
 
 const files = buildPackFiles(pack);
+const packUrl = `/api/ops/preview-requests/${requestId}/build-pack`;
 const totalBytes = files.reduce((sum, file) => sum + file.sizeBytes, 0);
 const assetById = new Map(files.map((file) => [file.id, file]));
 const logos = pack.assets.LOGO;
@@ -90,8 +91,14 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
     <div class="ops-bb__head">
       <h2 id="ops-bb-ready" class="ops-bb__title">Build brief</h2>
       <p class="ops-bb__meta" data-testid="ops-bb-file-summary">
-        {files.length} {files.length === 1 ? 'file' : 'files'} · {formatBytes(totalBytes)}
+        {files.length} {files.length === 1 ? 'file' : 'files'} · about {formatBytes(totalBytes)}
       </p>
+    </div>
+    <div class="ops-bb__actions">
+      <a class="btn btn--primary btn--sm" href={packUrl} download data-testid="ops-bb-download">Download build pack (.zip)</a>
+      <button type="button" class="btn btn--secondary btn--sm" data-ops-copy-brief={`${packUrl}?format=md`}>Copy brief</button>
+      <a class="btn btn--ghost btn--sm" href={`${packUrl}?format=json`} download>Download shop.json</a>
+      <span class="ops-bb__meta" role="status" aria-live="polite" data-ops-copy-status></span>
     </div>
     <ul class="ops-bb__chips" aria-label="What the owner has provided">
       {
@@ -496,3 +503,26 @@ const documentGroups: Array<{ title: string; items: BuildPackAsset[] }> = [
     </dl>
   </section>
 </div>
+
+<script>
+  // "Copy brief": fetch brief.md and put it on the clipboard. Text only.
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-ops-copy-brief]')) {
+    const status = button.parentElement?.querySelector<HTMLElement>('[data-ops-copy-status]') ?? null;
+    button.addEventListener('click', async () => {
+      const url = button.dataset.opsCopyBrief;
+      if (!url) return;
+      button.disabled = true;
+      if (status) status.textContent = 'Copying…';
+      try {
+        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) throw new Error(String(response.status));
+        await navigator.clipboard.writeText(await response.text());
+        if (status) status.textContent = 'Brief copied.';
+      } catch {
+        if (status) status.textContent = 'Could not copy the brief. Try again.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>
