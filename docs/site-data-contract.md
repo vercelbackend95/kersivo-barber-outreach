@@ -130,7 +130,7 @@ type SiteService = {
 | `services` | `Service` where `isActive`, in dashboard order. Categories appear in the order of their first service. A service without a category goes under "Services". The price is integer pence; `priceFrom` shows "From £X". |
 | `products` | `Product` where `active`, in dashboard order. **Empty unless `planFeatures.retail`.** Out-of-stock items stay listed with `inStock: false`. |
 | `booking.available` | True only when the shop accepts new online bookings now. `url` is the own-domain booking URL when verified, else `https://kersivo.co.uk/book/{slug}`. |
-| `booking.hostedUrl` | The KERSIVO-hosted booking URL `https://kersivo.co.uk/book/{slug}` whenever booking is available, also when `url` is the own-domain URL. Null when booking is unavailable, and always null in preview mode. |
+| `booking.hostedUrl` | The KERSIVO-hosted booking URL `https://kersivo.co.uk/book/{slug}` whenever booking is available, also when `url` is the own-domain URL. The own-domain `/book` redirects here (§7). Null when booking is unavailable, and always null in preview mode. |
 | `team[].bookingUrl`, `services.all[].bookingUrl` | Booking deep links (§7): `booking.url` with `?barber=<id>` / `?service=<id>`. The service objects under `services.categories` are the same objects. Null whenever `booking.available` is false. |
 | `seo.canonicalUrl` | `business.websiteUrl`, else the hosted booking page |
 | `planFeatures` | What the plan lets this site show. Gating happens here, never in storage. |
@@ -281,3 +281,26 @@ These are the **only** supported parameters. Anything else is ignored.
   Only combine a barber with a service they perform (`member.serviceIds.includes(service.id)`).
 - The booking page validates both ids against the shop's bookable services and the barbers shown on the website. An unknown id, another shop's id, an inactive service, a barber not on the website, or a barber who does not perform the chosen service is dropped silently: the flow opens without that preselection. The visitor can always change the selection.
 - The parameters survive the legacy `/book/{shopId}` → `/book/{slug}` redirect. The booking page's canonical URL never includes them.
+
+### Own-domain booking path
+
+Once the shop is live, `booking.url` is the ops-verified own-domain URL (`FullBookingDestination`, e.g. `https://sharpcuts.co.uk/book`). That path is served by the **shop's own Vercel project**, which must:
+
+1. Serve `/book` as a **`307` redirect to `booking.hostedUrl`**, forwarding only the `service` and `barber` query parameters (drop everything else), e.g. in the shop project's `src/pages/book.ts`:
+   ```ts
+   export const prerender = false;
+   export async function GET({ url }) {
+     const site = await loadSiteData();                 // the shop's live SiteData
+     if (!site?.booking.hostedUrl) return new Response(null, { status: 404 });
+     const target = new URL(site.booking.hostedUrl);
+     for (const key of ['service', 'barber']) {
+       const value = url.searchParams.get(key);
+       if (value) target.searchParams.set(key, value);
+     }
+     return new Response(null, { status: 307, headers: { Location: target.toString(), 'Cache-Control': 'no-store' } });
+   }
+   ```
+2. **Never proxy or frame** the booking flow. The KERSIVO booking page sends `Content-Security-Policy: frame-ancestors 'self'`, so it cannot be framed by another origin, and a proxy would break payments, cookies and the CSRF origin checks.
+3. Ops registers `https://<shop-domain>/book` (no query, no trailing slash) as the shop's Full booking destination, then marks it live once the redirect works.
+
+`booking.hostedUrl` is the redirect target. Do not hard-code `kersivo.co.uk/book/{slug}` in the shop project: the slug can change, `hostedUrl` follows it.
