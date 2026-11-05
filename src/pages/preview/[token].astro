@@ -4,6 +4,7 @@ export const prerender = false;
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import { adminHubBridge } from '@/lib/adminHub/bridge';
 import BookingFlow from '@/components/booking/BookingFlow';
+import { BOOKING_BARBER_PARAM, BOOKING_SERVICE_PARAM } from '@/lib/booking/initialSelection';
 import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import {
   FREE_PREVIEW_PAGE_PATH,
@@ -74,7 +75,12 @@ if (isPreviewHubEnabled()) {
   const hub = await resolveHubPageContext({ token, isOperator: hubOperator.ok, now });
   if (!hub) return notFound();
   if (Astro.url.searchParams.get('view') === 'booking') {
-    return Astro.redirect(`${previewPagePath(token)}/website?view=booking`, 302);
+    const forward = new URLSearchParams({ view: 'booking' });
+    for (const key of [BOOKING_SERVICE_PARAM, BOOKING_BARBER_PARAM]) {
+      const value = Astro.url.searchParams.get(key);
+      if (value) forward.set(key, value);
+    }
+    return Astro.redirect(`${previewPagePath(token)}/website?${forward.toString()}`, 302);
   }
   return Astro.rewrite(`${previewPagePath(token)}/overview`);
 }

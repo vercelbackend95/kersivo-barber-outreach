@@ -36,3 +36,4 @@ Founder / on-call: triage via Sentry (Production ops alerts / issues), then runb
 - [messaging.md](./messaging.md)
 - [backup-restore-neon.md](./backup-restore-neon.md)
 - [uptime.md](./uptime.md)
+- [shop-site-projects.md](./shop-site-projects.md) — shop website projects: naming, modes, expiry, archive, reuse

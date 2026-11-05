@@ -23,7 +23,8 @@ export function seededShopSource(overrides: Partial<SiteDataSource> = {}): SiteD
       postcode: 'ls1 6aa',
       phone: '0113 000 0000',
       email: 'hello@example.test',
-      instagramUrl: 'https://www.instagram.com/fixturebarbers/',
+      // Reserved .test domain: the fixture is published (docs/site-data/fixture.json), so no real handle.
+      instagramUrl: 'https://instagram.example.test/fixturebarbers',
       facebookUrl: null,
       tiktokUrl: null,
       otherSocialUrl: null,
@@ -72,6 +73,7 @@ export function seededShopSource(overrides: Partial<SiteDataSource> = {}): SiteD
     plan: 'full',
     features: { brandedSite: true, onlineBooking: true, retail: true },
     bookingUrl: 'https://fixturebarbers.example.test/book',
+    hostedBookingUrl: 'https://kersivo.co.uk/book/fixture-barbers',
     websiteUrl: 'https://fixturebarbers.example.test',
     fallbackCanonicalUrl: 'https://kersivo.co.uk/book/fixture-barbers',
     appOrigin: 'https://kersivo.co.uk',
@@ -91,9 +93,22 @@ export function emptyShopSource(overrides: Partial<SiteDataSource> = {}): SiteDa
     services: [],
     products: [],
     bookingUrl: null,
+    hostedBookingUrl: null,
     websiteUrl: null,
     features: { brandedSite: true, onlineBooking: false, retail: false },
     fallbackCanonicalUrl: 'https://kersivo.co.uk/book/empty-barbers',
     ...overrides,
   });
+}
+
+/**
+ * The published fixture (docs/site-data/fixture.json): the SiteData of the fictional seeded shop,
+ * for shop website projects in `template` mode and for local work. Fictional data only.
+ * Regenerate with `npx tsx scripts/site-data/export-fixture.ts`; `fixtureExport.test.ts` fails when
+ * the file is out of date.
+ */
+export const PUBLISHED_FIXTURE_PATH = 'docs/site-data/fixture.json';
+
+export function publishedFixtureJson(build: (source: SiteDataSource) => unknown): string {
+  return `${JSON.stringify(build(seededShopSource()), null, 2)}\n`;
 }

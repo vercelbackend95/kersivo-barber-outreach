@@ -155,6 +155,7 @@ export async function loadSiteDataForShop(
   let plan: SitePlan;
   let features: SiteDataSource['features'];
   let bookingUrl: string | null = null;
+  let bookingHostedUrl: string | null = null;
   let websiteUrl: string | null = null;
 
   if (mode === 'preview') {
@@ -177,8 +178,11 @@ export async function loadSiteDataForShop(
       if (destination.kind === 'own_domain') {
         bookingUrl = destination.url;
         websiteUrl = new URL(destination.url).origin;
+        // The own-domain /book redirects to the hosted flow (docs/site-data-contract.md).
+        bookingHostedUrl = hostedBookingUrl;
       } else if (destination.kind === 'hosted') {
         bookingUrl = `${origin}${destination.path}`;
+        bookingHostedUrl = bookingUrl;
       }
       features = {
         brandedSite: hasKersivoCapability(access, 'BRANDED_SITE'),
@@ -200,6 +204,7 @@ export async function loadSiteDataForShop(
     plan,
     features,
     bookingUrl,
+    hostedBookingUrl: bookingHostedUrl,
     websiteUrl,
     fallbackCanonicalUrl: hostedBookingUrl,
     appOrigin: origin,

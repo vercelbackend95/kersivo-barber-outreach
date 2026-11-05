@@ -25,6 +25,7 @@ import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
+import { resolveBookingPreselection } from '@/lib/booking/initialSelection';
 import '@/styles/components/booking.css';
 import '@/styles/components/booking-flow.css';
 import '@/styles/components/booking-mobile.css';
@@ -99,6 +100,10 @@ if (
   }
 }
 
+// Same deep-link parameters as /book/{slug} (docs/site-data-contract.md), test booking view only.
+const preselection =
+  view === 'booking' && ctx.draft ? resolveBookingPreselection(Astro.url.searchParams, ctx.draft) : {};
+
 const shopName = ctx.draft?.shop.name ?? ctx.request.shopName;
 const basePath = previewPagePath(token);
 const [unreadMessages, changeItems, openChanges] = await Promise.all([
@@ -144,6 +149,8 @@ const [unreadMessages, changeItems, openChanges] = await Promise.all([
             barbers: ctx.draft.barbers,
             hours: ctx.draft.hours,
           }}
+          initialServiceId={preselection.initialServiceId}
+          initialBarberId={preselection.initialBarberId}
           changeItems={changeItems}
           includedChangeRounds={ctx.request.includedChangeRounds}
           changeRoundsUsed={ctx.request.changeRoundsUsed}

@@ -243,6 +243,8 @@ describe('BookingFlow BLACKLINE host', () => {
 
     expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
     expect(screen.queryByRole('radio', { name: /^Ellis Ward$/i })).toBeNull();
+    // The preselected barber is visible on arrival (deep link `?barber=<id>`).
+    expect(screen.getByText('With Ellis Ward')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('radio', { name: skinFadeButtonName }));
     expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();

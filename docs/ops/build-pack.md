@@ -4,6 +4,10 @@ KERSIVO builds every client website individually. `/ops/preview-requests/[id]` s
 supplied on **Overview › Build brief**, and **Download build pack (.zip)** hands all of it over in one file,
 ready to give to an AI tool (or a designer) to design a unique site.
 
+Each site is built in its own repo and Vercel project: naming, modes, expiry, archive and reuse are in
+[`shop-site-projects.md`](./shop-site-projects.md). The site reads its data from the SiteData API
+([`docs/site-data-contract.md`](../site-data-contract.md)).
+
 ## Where it lives
 
 | Piece | File |
