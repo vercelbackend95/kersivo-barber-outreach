@@ -10,6 +10,7 @@ import { ADMIN_HUB_API_BASE, ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import { preparePreviewHubPage } from '@/lib/adminHub/previewHubPage';
 import { hostnameOf } from '@/lib/freePreview/hubPage';
 import { HUB_LOCKED_REASON_PREVIEW, HUB_WEBSITE_LOCKED_BODY } from '@/lib/freePreview/hubCopy';
+import { resolveBookingPreselection } from '@/lib/booking/initialSelection';
 
 const prepared = await preparePreviewHubPage({
   context: Astro,
@@ -18,6 +19,11 @@ const prepared = await preparePreviewHubPage({
 });
 if (prepared.kind === 'response') return prepared.response;
 const { data } = prepared;
+// Same deep-link parameters as /book/{slug} (docs/site-data-contract.md §7), test booking view only.
+const preselection =
+  data.websiteView === 'booking' && data.ctx.draft
+    ? resolveBookingPreselection(Astro.url.searchParams, data.ctx.draft)
+    : {};
 ---
 
 <PreviewHubDocument title={`${data.title} — ${data.shopName} | KERSIVO`}>
@@ -48,6 +54,8 @@ const { data } = prepared;
             barbers: data.ctx.draft.barbers,
             hours: data.ctx.draft.hours,
           }}
+          initialServiceId={preselection.initialServiceId}
+          initialBarberId={preselection.initialBarberId}
           changeItems={data.view.changeItems}
           includedChangeRounds={data.ctx.request.includedChangeRounds}
           changeRoundsUsed={data.ctx.request.changeRoundsUsed}

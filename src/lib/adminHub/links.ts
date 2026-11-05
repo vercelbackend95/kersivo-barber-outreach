@@ -37,6 +37,19 @@ export const ADMIN_HUB_LINKS: HubLinks = {
   messagesDraft: (draft) => `${ADMIN_HUB_PATH}/messages?draft=${draft}`,
 };
 
+/**
+ * The test booking link, keeping only the booking deep-link parameters (`service`, `barber`;
+ * docs/site-data-contract.md §7). Values are validated where they are used, never here.
+ */
+function adminHubBookingLink(search: URLSearchParams): string {
+  const params = new URLSearchParams({ view: 'booking' });
+  for (const key of ['service', 'barber']) {
+    const value = search.get(key);
+    if (value && value.length <= 64) params.set(key, value);
+  }
+  return `${ADMIN_HUB_PATH}/website?${params.toString()}`;
+}
+
 /** Base path of the hub JSON API: the token routes unless the caller is inside /admin. */
 export function hubApiRoot(input: { token: string; apiBase?: string }): string {
   return input.apiBase ?? `/api/preview-hub/${encodeURIComponent(input.token)}`;
@@ -50,11 +63,11 @@ export function adminHubUrlFor(subroute: HubBridgeSubroute, search: URLSearchPar
   const booking = search.get('view') === 'booking';
   switch (subroute) {
     case '':
-      return booking ? ADMIN_HUB_LINKS.booking : ADMIN_HUB_PATH;
+      return booking ? adminHubBookingLink(search) : ADMIN_HUB_PATH;
     case 'overview':
       return ADMIN_HUB_PATH;
     case 'website':
-      return booking ? ADMIN_HUB_LINKS.booking : ADMIN_HUB_LINKS.website;
+      return booking ? adminHubBookingLink(search) : ADMIN_HUB_LINKS.website;
     case 'changes':
       return ADMIN_HUB_LINKS.changes;
     case 'messages': {
