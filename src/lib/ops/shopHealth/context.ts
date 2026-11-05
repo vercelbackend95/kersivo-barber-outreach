@@ -70,7 +70,7 @@ export async function loadShopHealthContext(
     await Promise.all([
       loadKersivoAccess(shopId, now),
       loadPublicBookingIntakeStatus(shopId),
-      prisma.shopOpeningHours.findMany({ where: { shopId, active: true }, select: { startMinutes: true, endMinutes: true } }),
+      prisma.shopOpeningHours.findMany({ where: { shopId }, select: { active: true, startMinutes: true, endMinutes: true } }),
       prisma.service.findMany({
         where: { shopId, isActive: true },
         orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
@@ -133,7 +133,8 @@ export async function loadShopHealthContext(
     destination,
     verifiedDestinationUrl:
       fullDestination && String(fullDestination.status) === 'VERIFIED_LIVE' ? fullDestination.url : null,
-    openDays: hours.filter((row) => row.endMinutes > row.startMinutes).length,
+    openDays: hours.filter((row) => row.active && row.endMinutes > row.startMinutes).length,
+    hoursSaved: hours.length > 0,
     services: services.map((s) => ({
       id: s.id,
       name: s.name,

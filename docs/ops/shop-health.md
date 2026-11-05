@@ -58,7 +58,7 @@ Config checks run from the database only. They are fast and also run when the pa
 
 | id | severity | applies | passes when |
 | --- | --- | --- | --- |
-| setup.hours | critical | always | at least one open day saved |
+| setup.hours | critical | always | at least one open day. No hours saved at all → warn (slots follow barber working hours); hours saved but every day closed → fail |
 | setup.services | critical | always | an active service with a duration and a price |
 | setup.barbers | critical | always | an active barber with a linked active service and availability rules |
 | setup.service_coverage | warning | always | every active service has an active barber |

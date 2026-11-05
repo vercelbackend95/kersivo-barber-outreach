@@ -41,10 +41,16 @@ describe('config checks on a healthy live shop', () => {
 });
 
 describe('setup checks', () => {
-  it('setup.hours fails with no open day', async () => {
-    const r = await run(setupHours, healthyContext({ openDays: 0 }));
+  it('setup.hours fails when hours are saved but every day is closed (booking returns no slots)', async () => {
+    const r = await run(setupHours, healthyContext({ openDays: 0, hoursSaved: true }));
     expect(r).toMatchObject({ status: 'fail', severity: 'critical' });
     expect(r.fix).toMatch(/opening hours/);
+  });
+
+  it('setup.hours only warns when no hours are saved: slots follow barber working hours', async () => {
+    const r = await run(setupHours, healthyContext({ openDays: 0, hoursSaved: false }));
+    expect(r.status).toBe('warn');
+    expect(r.message).toMatch(/barbers’ working hours/);
   });
 
   it('setup.services needs a price and a duration', async () => {

@@ -65,12 +65,20 @@ export const setupHours: ShopHealthCheck = {
   run: (ctx) =>
     ctx.openDays > 0
       ? { status: 'pass', message: `Open ${plural(ctx.openDays, 'day')} a week.`, evidence: { openDays: ctx.openDays } }
-      : {
-          status: 'fail',
-          message: 'No opening hours saved, so customers cannot book.',
-          fix: 'Add opening hours in the shop settings (at least one open day).',
-          evidence: { openDays: 0 },
-        },
+      : !ctx.hoursSaved
+        ? {
+            // Booking still works: with no rows, slots follow each barber's working hours.
+            status: 'warn',
+            message: 'No opening hours saved. Bookings follow the barbers’ working hours; the website and emails show no hours.',
+            fix: 'Add opening hours in the shop settings.',
+            evidence: { openDays: 0, hoursSaved: false },
+          }
+        : {
+            status: 'fail',
+            message: 'Opening hours are saved but every day is closed, so customers cannot book.',
+            fix: 'Open at least one day in the shop’s opening hours.',
+            evidence: { openDays: 0, hoursSaved: true },
+          },
 };
 
 export const setupServices: ShopHealthCheck = {

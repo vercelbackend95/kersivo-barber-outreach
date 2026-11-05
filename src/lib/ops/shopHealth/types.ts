@@ -128,6 +128,11 @@ export type ShopHealthContext = {
   /** VERIFIED_LIVE own-domain booking URL, if any. */
   verifiedDestinationUrl: string | null;
   openDays: number;
+  /**
+   * Any ShopOpeningHours row exists. With none, slots follow the barbers' availability rules alone
+   * (booking/service.ts); with rows, a day without an active row is closed.
+   */
+  hoursSaved: boolean;
   services: HealthService[];
   barbers: HealthBarber[];
   products: HealthProduct[];

@@ -37,6 +37,7 @@ export function healthyContext(overrides: DeepPartial<ShopHealthContext> = {}): 
     destination: { kind: 'hosted', path: '/book/fade-room', source: 'full_hosted_fallback' },
     verifiedDestinationUrl: null,
     openDays: 6,
+    hoursSaved: true,
     services: [{ id: 'svc_1', name: 'Skin fade', pricePence: 2500, durationMinutes: 30, barberIds: ['barber_1'] }],
     barbers: [{ id: 'barber_1', name: 'Alex', serviceIds: ['svc_1'], activeRuleCount: 5 }],
     products: [{ id: 'prod_1', name: 'Matt clay', pricePence: 1200, hasImage: true, hasDescription: true }],
