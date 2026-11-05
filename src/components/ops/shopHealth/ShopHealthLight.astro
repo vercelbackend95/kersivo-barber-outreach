@@ -1,0 +1,32 @@
+---
+/** The light as icon + text (never colour alone). size="lg" for the report header. */
+import { OVERALL_ICONS, overallText } from '@/lib/ops/shopHealth/display';
+import type { ShopHealthOverall } from '@/lib/ops/shopHealth/types';
+
+type Props = {
+  overall: ShopHealthOverall | null;
+  readiness?: { ready: number; total: number } | null;
+  size?: 'sm' | 'lg';
+  /** Short label only (e.g. "Red") for dense tables; the full text stays available to screen readers. */
+  short?: boolean;
+};
+
+const { overall, readiness, size = 'sm', short = false } = Astro.props;
+const text = overallText(overall, readiness);
+const tone = (overall ?? 'none').toLowerCase();
+const shortText = overall === 'GREY' && readiness && readiness.total ? `${readiness.ready} / ${readiness.total}` : text.split(' — ')[0];
+---
+
+<span class={`ops-sh-light ops-sh-light--${tone} ops-sh-light--${size}`} data-overall={overall ?? 'NONE'}>
+  <span class="ops-sh-light__icon" aria-hidden="true">{overall ? OVERALL_ICONS[overall] : '–'}</span>
+  {
+    short ? (
+      <>
+        <span aria-hidden="true">{shortText}</span>
+        <span class="sr-only">{text}</span>
+      </>
+    ) : (
+      <span>{text}</span>
+    )
+  }
+</span>

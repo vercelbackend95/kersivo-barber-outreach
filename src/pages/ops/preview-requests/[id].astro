@@ -10,6 +10,7 @@ import {
 } from '@/components/ops/recommendations/OpsPageGates';
 import { OPS_PREVIEW_REQUESTS_PATH, isAdminHubEnabled, isFreePreviewFlowEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
 import OpsBuildBrief from '@/components/ops/previewRequests/OpsBuildBrief.astro';
+import OpsShopHealthCard from '@/components/ops/shopHealth/OpsShopHealthCard.astro';
 import { ownerFacingStageLabel, resolveHubState } from '@/lib/freePreview/hubStage';
 import { previewPageUrl } from '@/lib/freePreview/emails';
 import {
@@ -61,6 +62,7 @@ import '@/styles/components/admin-login.css';
 import '@/styles/components/ops-recommendations.css';
 import '@/styles/components/ops-preview-requests.css';
 import '@/styles/components/preview-hub.css';
+import '@/styles/components/ops-shop-health.css';
 
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 Astro.response.headers.set('Vary', 'Cookie');
@@ -445,6 +447,7 @@ const fields: Array<[string, string]> = request
                   </p>
                 ) : null}
               </section>
+              {request.draftShopId ? <OpsShopHealthCard shopId={request.draftShopId} /> : null}
               <PreviewRequestActions
                 client:load
                 requestId={request.id}

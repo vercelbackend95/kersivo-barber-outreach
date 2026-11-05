@@ -30,6 +30,10 @@ handset (only the provider's status), and how the site looks on each device.*
 | Hourly cron | `src/lib/ops/shopHealth/cron.ts`, `GET /api/cron/shop-health` (`vercel.json`, minute 7) |
 | Ops alerts | `src/lib/ops/shopHealth/alerts.ts` |
 | Storage | `ShopHealthRun` (latest 50 per shop), `ShopSettings.healthOverall / healthCheckedAt / healthAlertedAt` |
+| Read side for the UI | `src/lib/ops/shopHealth/report.ts` (list rows, report, history), `display.ts` (labels, icons) |
+| Ops UI | `/ops/shops`, `/ops/shops/[shopId]`, "System health" card on `/ops/preview-requests/[id]` |
+| API | `POST /api/ops/shops/[shopId]/health/run`, `GET /api/ops/shops/[shopId]/health` |
+| Launch guard | `src/lib/ops/shopHealth/launchGuard.ts`, used by `PreviewRequestActions` ("Mark live") |
 
 ## Modes
 
@@ -154,6 +158,33 @@ Audit of what a probe could count or trigger:
   own `messaging.email` check), de-duplicated per run and recipient. Outside Production they are stored
   as SUPPRESSED with a `[Preview]` subject, and never sent.
 - Launch-guard runs never alert. No email ever goes to shop owners.
+
+## Ops UI
+
+- **`/ops/shops`** (operator only, linked from the `/ops/preview-requests` header): one row per shop the
+  cron looks after, plus any shop ever checked. Columns: light (icon + text), shop, plan, mode, last checked,
+  failing / warning titles (two, then "+n"), "Run now". Sorted red, amber, not live yet, green, never
+  checked; oldest check first inside each. Filter chips by light (`?light=red`).
+- **`/ops/shops/[shopId]`**: the big light with a summary line, "Run checks now", checks grouped by area
+  (Setup · Booking · Payments · Products · Website · Messages) with status icon + word, message, fix hint and
+  collapsible evidence; the last 20 runs as dots (hover or keyboard focus shows time, light, trigger and
+  failing checks); the fixed footnote. A GREY draft keeps showing its pre-launch run even after a newer
+  launch-guard LIVE run.
+- **"System health" card** on `/ops/preview-requests/[id]` (when a draft shop is linked): light with
+  readiness, last checked, top 3 issues, "Run checks now", "Open full report".
+- **Launch guard**: "Mark live" asks the usual confirm, then runs a LAUNCH health run in LIVE mode for the
+  draft shop. GREEN/AMBER → marks live. RED → a "Launch anyway?" dialog lists the failing checks with fixes.
+  A run that is rate-limited or fails also asks. It never hard-blocks; Cancel (focused by default) or Escape
+  does nothing.
+- The light is never colour-only: every light, status and history dot has a distinct glyph
+  (✓ ! ✕ ○ – … ?) and text or an accessible label.
+
+### API
+
+| Route | Auth | Notes |
+| --- | --- | --- |
+| `POST /api/ops/shops/[shopId]/health/run` | Operator, same-origin JSON | Body `{}`: MANUAL run with probes, 1 per minute per shop (429 + `Retry-After`). Body `{ "launch": true }`: LAUNCH run in LIVE mode, own bucket of 3 per minute. Returns the run (light, readiness, failing, warnings, results). |
+| `GET /api/ops/shops/[shopId]/health` | Operator | Latest run (display mode) and the last 20 runs. `Cache-Control: private, no-store`. |
 
 ## Environment
 

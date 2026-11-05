@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   HUB_OPS_DOMAIN_CONFIRM,
   HUB_OPS_DOMAIN_CONNECTED,
@@ -8,6 +8,8 @@ import {
   HUB_OPS_SSL_ACTIVE,
   HUB_OPS_SSL_CONFIRM,
 } from '@/lib/freePreview/hubCopy';
+import { opsShopHealthPath } from '@/lib/ops/shopHealth/display';
+import { runLaunchGuard, type LaunchGuardDecision } from '@/lib/ops/shopHealth/launchGuard';
 
 type Status =
   | 'REQUESTED'
@@ -63,6 +65,9 @@ export default function PreviewRequestActions(props: Props) {
   const [siteVersion, setSiteVersion] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [launchQuestion, setLaunchQuestion] = useState<Exclude<LaunchGuardDecision, { kind: 'proceed' }> | null>(null);
+  const launchDialog = useRef<HTMLDialogElement>(null);
+  const launchCancel = useRef<HTMLButtonElement>(null);
 
   const isFinal = FINAL.includes(props.status);
   const canToggleProgress = props.status === 'REQUESTED' || props.status === 'IN_PROGRESS';
@@ -100,6 +105,34 @@ export default function PreviewRequestActions(props: Props) {
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Mark live, guarded by a LAUNCH health run of the draft shop. RED or a failed run asks; never blocks. */
+  async function markLiveWithGuard() {
+    if (!window.confirm(HUB_OPS_LIVE_CONFIRM)) return;
+    if (!props.draftShopId) {
+      void runLaunchStep('live', 'Marked live. Owner emailed.');
+      return;
+    }
+    setBusy(true);
+    setMessage({ kind: 'ok', text: 'Running launch checks… this can take up to a minute.' });
+    const decision = await runLaunchGuard(props.draftShopId);
+    setBusy(false);
+    if (decision.kind === 'proceed') {
+      void runLaunchStep('live', 'Launch checks passed. Marked live. Owner emailed.');
+      return;
+    }
+    setMessage(null);
+    setLaunchQuestion(decision);
+    requestAnimationFrame(() => {
+      launchDialog.current?.showModal();
+      launchCancel.current?.focus();
+    });
+  }
+
+  function closeLaunchDialog() {
+    launchDialog.current?.close();
+    setLaunchQuestion(null);
   }
 
   async function run(body: Record<string, unknown>, successText: string, reload = true) {
@@ -346,15 +379,71 @@ export default function PreviewRequestActions(props: Props) {
               type="button"
               className="btn btn--primary btn--sm"
               disabled={busy || Boolean(props.liveAt)}
-              onClick={() => {
-                if (window.confirm(HUB_OPS_LIVE_CONFIRM)) {
-                  void runLaunchStep('live', 'Marked live. Owner emailed.');
-                }
-              }}
+              onClick={() => void markLiveWithGuard()}
             >
               {HUB_OPS_MARK_LIVE}
             </button>
           </div>
+          {props.draftShopId && !props.liveAt ? (
+            <p className="ops-pr-actions__hint">Mark live runs the launch health checks first.</p>
+          ) : null}
+          <dialog
+            ref={launchDialog}
+            className="ops-sh-dialog"
+            aria-labelledby="ops-sh-launch-title"
+            onCancel={() => setLaunchQuestion(null)}
+            onClose={() => setLaunchQuestion(null)}
+          >
+            {launchQuestion ? (
+              <div className="ops-sh-dialog__body">
+                <h2 id="ops-sh-launch-title" className="ops-sh-dialog__title">
+                  Launch anyway?
+                </h2>
+                {launchQuestion.reason === 'red' ? (
+                  <>
+                    <p>
+                      <span aria-hidden="true">✕ </span>
+                      Red — {launchQuestion.failing.length}{' '}
+                      {launchQuestion.failing.length === 1 ? 'critical check is' : 'critical checks are'} failing in live mode:
+                    </p>
+                    <ul className="ops-sh-dialog__list">
+                      {launchQuestion.failing.map((issue) => (
+                        <li key={issue.id}>
+                          <strong>{issue.title}</strong>: {issue.message}
+                          {issue.fix ? <span className="ops-sh-dialog__fix"> Fix: {issue.fix}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p>{launchQuestion.text}</p>
+                )}
+                {props.draftShopId ? (
+                  <p>
+                    <a href={opsShopHealthPath(props.draftShopId)} target="_blank" rel="noopener noreferrer">
+                      Open the full health report
+                    </a>
+                  </p>
+                ) : null}
+                <div className="ops-pr-actions__row">
+                  <button type="button" className="btn btn--secondary btn--sm" onClick={closeLaunchDialog} ref={launchCancel}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--primary btn--sm ops-pr-actions__danger"
+                    disabled={busy}
+                    onClick={() => {
+                      closeLaunchDialog();
+                      void runLaunchStep('live', 'Marked live despite failing checks. Owner emailed.');
+                    }}
+                  >
+                    Launch anyway
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </dialog>
         </section>
       ) : null}
 

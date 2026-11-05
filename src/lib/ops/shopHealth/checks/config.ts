@@ -194,7 +194,7 @@ export const bookingPaused: ShopHealthCheck = {
     isPauseActiveNow(ctx.shop, ctx.now)
       ? {
           status: 'fail',
-          message: `Bookings and retail are paused today: “${pauseReasonMessage(ctx.shop)}”.`,
+          message: `Bookings and retail are paused today: “${pauseReasonMessage(ctx.shop).replace(/[.!?]\s*$/, '')}”.`,
           fix: 'If the pause is intended (e.g. a holiday) no action is needed; otherwise the owner can lift it in the dashboard.',
           evidence: {
             pauseFrom: ctx.shop.publicActivityPauseFrom?.toISOString() ?? null,

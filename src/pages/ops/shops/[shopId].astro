@@ -1,0 +1,215 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import { OpsAccessDenied, OpsAccessUnconfigured } from '@/components/ops/recommendations/OpsPageGates';
+import ShopHealthLight from '@/components/ops/shopHealth/ShopHealthLight.astro';
+import ShopHealthRunButton from '@/components/ops/shopHealth/ShopHealthRunButton';
+import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import {
+  OPS_SHOPS_PATH,
+  OVERALL_ICONS,
+  OVERALL_SHORT,
+  STATUS_ICONS,
+  STATUS_LABELS,
+  STATUS_ORDER,
+  evidenceText,
+  formatLondon,
+  formatRelative,
+} from '@/lib/ops/shopHealth/display';
+import { SHOP_HEALTH_FOOTNOTE } from '@/lib/ops/shopHealth/overall';
+import { MODE_LABELS, loadShopHealthReport } from '@/lib/ops/shopHealth/report';
+import { SHOP_HEALTH_AREAS, SHOP_HEALTH_AREA_LABELS } from '@/lib/ops/shopHealth/types';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/ops-recommendations.css';
+import '@/styles/components/ops-preview-requests.css';
+import '@/styles/components/ops-shop-health.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+
+const shopId = (Astro.params.shopId ?? '').trim();
+const report = view === 'dashboard' && shopId && shopId.length <= 64 ? await loadShopHealthReport(shopId) : null;
+if (view === 'dashboard' && !report) {
+  return new Response('Shop not found', { status: 404, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
+const now = new Date();
+const latest = report?.latest ?? null;
+const areas = latest
+  ? SHOP_HEALTH_AREAS.map((area) => ({
+      area,
+      label: SHOP_HEALTH_AREA_LABELS[area],
+      results: latest.results.filter((r) => r.area === area).sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]),
+    })).filter((group) => group.results.length > 0)
+  : [];
+
+function summaryLine(): string {
+  if (!latest) return 'No checks have run for this shop yet.';
+  if (latest.mode === 'PRELAUNCH') {
+    return `${latest.readiness.ready} of ${latest.readiness.total} pre-launch checks ready. Live-only checks run after launch.`;
+  }
+  if (!latest.failingCount && !latest.warningCount) return 'All checks passed.';
+  const parts = [];
+  if (latest.failingCount) parts.push(`${latest.failingCount} critical ${latest.failingCount === 1 ? 'check' : 'checks'} failing`);
+  if (latest.warningCount) parts.push(`${latest.warningCount} ${latest.warningCount === 1 ? 'warning' : 'warnings'}`);
+  return `${parts.join(', ')}.`;
+}
+
+const TRIGGER_LABELS = { CRON: 'hourly run', MANUAL: 'run by an operator', LAUNCH: 'launch check' } as const;
+---
+
+<MinimalLayout
+  title="Shop health report | KERSIVO Ops"
+  description="Internal health report for one KERSIVO shop."
+  canonicalPath={OPS_SHOPS_PATH}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Shop health</h1>
+          <p class="ops-gate__body">Sign in with an authorized operator account to continue.</p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={Astro.url.pathname}
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+            showGoogle={false}
+            allowSignup={false}
+            passwordResetRedirectTo="/ops/reset-password"
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {
+      view === 'dashboard' && report ? (
+        <div class="ops-cr ops-pr ops-sh">
+          <header class="ops-cr__header">
+            <div class="ops-cr__brand">
+              <p class="ops-cr__brand-kicker">
+                <a href={OPS_SHOPS_PATH}>← Shop health</a>
+              </p>
+              <h1 class="ops-cr__title">{report.name}</h1>
+              <p class="ops-cr__subtitle">
+                {report.mode ? MODE_LABELS[report.mode] : 'Not checked'} · <code>{report.shopId}</code>
+                {report.previewRequestId ? (
+                  <>
+                    {' '}· <a href={`${OPS_PREVIEW_REQUESTS_PATH}/${report.previewRequestId}`}>Preview request</a>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          </header>
+
+          <section class="ops-sh-hero" aria-labelledby="ops-sh-hero-title">
+            <h2 id="ops-sh-hero-title" class="sr-only">Overall</h2>
+            <div class="ops-sh-hero__light">
+              <ShopHealthLight overall={report.overall} readiness={latest?.readiness} size="lg" />
+              <p class="ops-sh-hero__summary">{summaryLine()}</p>
+              {latest ? (
+                <p class="ops-sh-hero__meta">
+                  Last checked{' '}
+                  <time datetime={latest.startedAt.toISOString()} title={formatLondon(latest.startedAt)}>
+                    {formatRelative(latest.startedAt, now)}
+                  </time>{' '}
+                  ({TRIGGER_LABELS[latest.trigger]}, {(latest.durationMs / 1000).toFixed(1)} s)
+                </p>
+              ) : null}
+            </div>
+            <ShopHealthRunButton client:load shopId={report.shopId} variant="primary" />
+          </section>
+
+          {areas.map((group) => (
+            <section class="ops-sh-area" aria-labelledby={`ops-sh-area-${group.area}`}>
+              <h2 id={`ops-sh-area-${group.area}`} class="ops-sh-area__title">{group.label}</h2>
+              <ul class="ops-sh-checks">
+                {group.results.map((result) => {
+                  const evidence = Object.entries(result.evidence ?? {}).filter(([, v]) => v !== undefined);
+                  return (
+                    <li class={`ops-sh-check ops-sh-check--${result.status}`} data-check={result.id}>
+                      <p class="ops-sh-check__status">
+                        <span class="ops-sh-check__icon" aria-hidden="true">{STATUS_ICONS[result.status]}</span>
+                        {STATUS_LABELS[result.status]}
+                        {result.severity !== 'critical' ? <span class="ops-sh-check__severity">{result.severity === 'info' ? 'Info only' : 'Warning-level'}</span> : null}
+                      </p>
+                      <div class="ops-sh-check__body">
+                        <h3 class="ops-sh-check__title">{result.title}</h3>
+                        <p class="ops-sh-check__message">{result.message}</p>
+                        {result.fix && result.status !== 'pass' ? <p class="ops-sh-check__fix"><strong>Fix:</strong> {result.fix}</p> : null}
+                        {evidence.length ? (
+                          <details class="ops-sh-check__evidence">
+                            <summary>Evidence</summary>
+                            <dl>
+                              {evidence.map(([key, value]) => (
+                                <div>
+                                  <dt>{key}</dt>
+                                  <dd>{evidenceText(value)}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </details>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+
+          {report.history.length ? (
+            <section class="ops-sh-history" aria-labelledby="ops-sh-history-title">
+              <h2 id="ops-sh-history-title" class="ops-sh-area__title">Last {report.history.length} runs</h2>
+              <p class="ops-sh-history__hint">Oldest on the left. Hover or focus a dot for the time and failing checks.</p>
+              <ol class="ops-sh-dots">
+                {report.history.map((run) => {
+                  const when = formatLondon(run.startedAt);
+                  const failing = run.failing.length ? `Failing: ${run.failing.join(', ')}` : 'Nothing failing';
+                  const label = `${when} — ${OVERALL_SHORT[run.overall]} (${MODE_LABELS[run.mode]}, ${TRIGGER_LABELS[run.trigger]}). ${failing}.`;
+                  return (
+                    <li class="ops-sh-dots__item">
+                      <span class={`ops-sh-dot ops-sh-dot--${run.overall.toLowerCase()}`} tabindex="0" role="img" aria-label={label}>
+                        <span aria-hidden="true">{OVERALL_ICONS[run.overall]}</span>
+                      </span>
+                      <span class="ops-sh-dot__tip" aria-hidden="true">
+                        <strong>{when}</strong>
+                        <span>{OVERALL_SHORT[run.overall]} · {MODE_LABELS[run.mode]} · {TRIGGER_LABELS[run.trigger]}</span>
+                        <span>{failing}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          ) : null}
+
+          <p class="ops-sh-footnote">{SHOP_HEALTH_FOOTNOTE}</p>
+        </div>
+      ) : null
+    }
+  </main>
+</MinimalLayout>

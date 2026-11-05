@@ -113,6 +113,9 @@ function filterHref(status: string | null, sort = query.sort) {
               <h1 class="ops-cr__title">Free preview requests</h1>
               <p class="ops-cr__subtitle">Newest {requests.length} shown. Counts cover the last 30 days.</p>
             </div>
+            <div class="ops-cr__header-actions">
+              <a class="btn btn--secondary btn--sm" href="/ops/shops">Shop health</a>
+            </div>
           </header>
 
           {counts ? (
