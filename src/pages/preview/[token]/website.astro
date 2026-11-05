@@ -20,6 +20,7 @@ import {
 } from '@/lib/freePreview/hubPage';
 import { applyPrivatePreviewHeaders } from '@/lib/freePreview/previewHeaders';
 import { recordPreviewView, shouldRecordOwnerView } from '@/lib/freePreview/previewAccess';
+import { isVerifiedHealthProbe } from '@/lib/ops/healthProbeAuth';
 import { PREVIEW_PAGE_RATE } from '@/lib/freePreview/previewApi';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
@@ -77,6 +78,8 @@ if (showPreview && view === 'website' && ctx.draft?.shop.sitePreviewUrl) {
 
 if (
   showPreview &&
+  // A verified shop health probe (docs/ops/shop-health.md) is never an owner view.
+  !isVerifiedHealthProbe(Astro.request) &&
   shouldRecordOwnerView({
     kind: 'preview',
     request: ctx.request,

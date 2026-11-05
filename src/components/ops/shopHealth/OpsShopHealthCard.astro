@@ -1,0 +1,59 @@
+---
+/** "System health" rail card on /ops/preview-requests/[id] for the linked draft shop. */
+import ShopHealthLight from '@/components/ops/shopHealth/ShopHealthLight.astro';
+import ShopHealthRunButton from '@/components/ops/shopHealth/ShopHealthRunButton';
+import { formatLondon, formatRelative, opsShopHealthPath } from '@/lib/ops/shopHealth/display';
+import { issueTitles, loadShopHealthReport } from '@/lib/ops/shopHealth/report';
+
+type Props = { shopId: string };
+
+const { shopId } = Astro.props;
+const report = await loadShopHealthReport(shopId).catch((error) => {
+  console.error('[ops/shop-health] rail card failed', error instanceof Error ? error.message : error);
+  return null;
+});
+const latest = report?.latest ?? null;
+const issues = latest ? issueTitles(latest) : { failing: [], warnings: [] };
+const top = [...issues.failing, ...issues.warnings].slice(0, 3);
+const more = issues.failing.length + issues.warnings.length - top.length;
+const now = new Date();
+---
+
+<section class="ops-pr-actions ops-sh-rail" aria-labelledby="ops-sh-rail-title" data-testid="ops-shop-health-card">
+  <h2 id="ops-sh-rail-title" class="ops-pr-actions__title">System health</h2>
+  {
+    report ? (
+      <>
+        <ShopHealthLight overall={report.overall} readiness={latest?.readiness} />
+        {latest ? (
+          <p class="ops-pr-actions__hint">
+            Last checked{' '}
+            <time datetime={latest.startedAt.toISOString()} title={formatLondon(latest.startedAt)}>
+              {formatRelative(latest.startedAt, now)}
+            </time>
+          </p>
+        ) : (
+          <p class="ops-pr-actions__hint">Not checked yet. The hourly run checks draft shops once a day.</p>
+        )}
+        {top.length ? (
+          <ul class="ops-sh-rail__issues">
+            {top.map((title, i) => (
+              <li>
+                <span aria-hidden="true">{i < issues.failing.length ? '✕' : '!'}</span>
+                <span class="sr-only">{i < issues.failing.length ? 'Failing: ' : 'Warning: '}</span>
+                {title}
+              </li>
+            ))}
+            {more > 0 ? <li class="ops-sh-rail__more">+{more} more</li> : null}
+          </ul>
+        ) : null}
+        <div class="ops-pr-actions__row">
+          <ShopHealthRunButton client:visible shopId={shopId} compact />
+          <a class="btn btn--ghost btn--sm" href={opsShopHealthPath(shopId)}>Open full report</a>
+        </div>
+      </>
+    ) : (
+      <p class="ops-pr-actions__hint">Health data is unavailable for this shop.</p>
+    )
+  }
+</section>

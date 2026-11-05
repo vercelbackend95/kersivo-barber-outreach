@@ -110,6 +110,8 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_HUB_LAUNCH_APPROVED_INTERNAL
   /// Shop Hub: site is live — transactional email to the owner.
   FREE_PREVIEW_HUB_SITE_LIVE
+  /// Shop health ops alert (red / still red / back to green) to KERSIVO_OPS_EMAILS. docs/ops/shop-health.md
+  SHOP_HEALTH_ALERT_INTERNAL
 }
 
 enum EmailOutboundStatus {
@@ -311,6 +313,11 @@ model ShopSettings {
   /// Full-admin Phase 3 card (docs/admin-hub/ADMIN_HUB_SPEC.md §5). Additive; unused unless ADMIN_HUB_ENABLED.
   nextStepsDismissedAt               DateTime?
   nextStepsWebsiteViewedAt           DateTime?
+  /// Shop health (src/lib/ops/shopHealth): light of the latest run, denormalised for /ops/shops sorting.
+  healthOverall                      ShopHealthOverall?
+  healthCheckedAt                    DateTime?
+  /// Last "Red" ops alert for this shop (alert de-duplication; cleared on recovery).
+  healthAlertedAt                    DateTime?
   ownerUserId                        String?                         @unique
   createdAt                          DateTime                        @default(now())
   updatedAt                          DateTime                        @updatedAt
@@ -344,6 +351,41 @@ model ShopSettings {
   previewRequest                     PreviewRequest?
   publicProfile                      ShopPublicProfile?
   openingExceptions                  ShopOpeningException[]
+  healthRuns                         ShopHealthRun[]
+}
+
+enum ShopHealthTrigger {
+  CRON
+  MANUAL
+  LAUNCH
+}
+
+enum ShopHealthMode {
+  LIVE
+  PRELAUNCH
+}
+
+enum ShopHealthOverall {
+  GREEN
+  AMBER
+  RED
+  GREY
+}
+
+/// One shop health run (docs/ops/shop-health.md). results = ShopHealthCheckResult[]. The cron keeps the
+/// latest 50 per shop.
+model ShopHealthRun {
+  id         String            @id @default(cuid())
+  shopId     String
+  trigger    ShopHealthTrigger
+  mode       ShopHealthMode
+  overall    ShopHealthOverall
+  results    Json
+  startedAt  DateTime          @default(now())
+  durationMs Int
+  shop       ShopSettings      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, startedAt])
 }
 
 /// Canonical public business details for a shop (docs/site-data-contract.md). One row per shop,

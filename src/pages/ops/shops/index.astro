@@ -1,0 +1,215 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import { OpsAccessDenied, OpsAccessUnconfigured } from '@/components/ops/recommendations/OpsPageGates';
+import ShopHealthLight from '@/components/ops/shopHealth/ShopHealthLight.astro';
+import ShopHealthRunButton from '@/components/ops/shopHealth/ShopHealthRunButton';
+import { OPS_PREVIEW_REQUESTS_PATH } from '@/lib/freePreview/config';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import {
+  OPS_SHOPS_PATH,
+  OVERALL_ICONS,
+  OVERALL_SHORT,
+  formatLondon,
+  formatRelative,
+  opsShopHealthPath,
+  truncateIssues,
+} from '@/lib/ops/shopHealth/display';
+import { SHOP_HEALTH_FOOTNOTE } from '@/lib/ops/shopHealth/overall';
+import { MODE_LABELS, listShopHealthRows, parseShopHealthFilter } from '@/lib/ops/shopHealth/report';
+import type { ShopHealthOverall } from '@/lib/ops/shopHealth/types';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/table.css';
+import '@/styles/components/ops-recommendations.css';
+import '@/styles/components/ops-preview-requests.css';
+import '@/styles/components/ops-shop-health.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+
+const filter = parseShopHealthFilter(Astro.url.searchParams.get('light'));
+const allRows = view === 'dashboard' ? await listShopHealthRows() : [];
+const rows = filter ? allRows.filter((r) => r.overall === filter) : allRows;
+const now = new Date();
+
+const LIGHTS: ShopHealthOverall[] = ['RED', 'AMBER', 'GREY', 'GREEN'];
+const CHIP_LABELS: Record<ShopHealthOverall, string> = { ...OVERALL_SHORT, GREY: 'Not live yet' };
+const counts = Object.fromEntries(LIGHTS.map((l) => [l, allRows.filter((r) => r.overall === l).length])) as Record<ShopHealthOverall, number>;
+const filterHref = (light: ShopHealthOverall | null) => (light ? `${OPS_SHOPS_PATH}?light=${light.toLowerCase()}` : OPS_SHOPS_PATH);
+---
+
+<MinimalLayout
+  title="Shop health | KERSIVO Ops"
+  description="Internal health checks for every KERSIVO shop."
+  canonicalPath={OPS_SHOPS_PATH}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Shop health</h1>
+          <p class="ops-gate__body">Sign in with an authorized operator account to continue.</p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={Astro.url.pathname + Astro.url.search}
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+            showGoogle={false}
+            allowSignup={false}
+            passwordResetRedirectTo="/ops/reset-password"
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {
+      view === 'dashboard' ? (
+        <div class="ops-cr ops-pr ops-sh">
+          <header class="ops-cr__header">
+            <div class="ops-cr__brand">
+              <p class="ops-cr__brand-kicker">
+                <a href={OPS_PREVIEW_REQUESTS_PATH}>← Free preview requests</a>
+              </p>
+              <h1 class="ops-cr__title">Shop health</h1>
+              <p class="ops-cr__subtitle">
+                {allRows.length} shops · red first, then amber, not live yet, green; oldest check first within each.
+              </p>
+            </div>
+          </header>
+
+          <nav class="ops-filters" aria-label="Filter by light">
+            <div class="ops-filters__rail">
+              <a
+                class:list={['ops-filters__chip', { 'ops-filters__chip--active': !filter }]}
+                href={filterHref(null)}
+                aria-current={!filter ? 'page' : undefined}
+              >
+                All ({allRows.length})
+              </a>
+              {LIGHTS.map((light) => (
+                <a
+                  class:list={['ops-filters__chip', 'ops-sh-chip', `ops-sh-chip--${light.toLowerCase()}`, { 'ops-filters__chip--active': filter === light }]}
+                  href={filterHref(light)}
+                  aria-current={filter === light ? 'page' : undefined}
+                >
+                  <span class="ops-sh-chip__icon" aria-hidden="true">{OVERALL_ICONS[light]}</span>
+                  {CHIP_LABELS[light]} ({counts[light]})
+                </a>
+              ))}
+            </div>
+          </nav>
+
+          {rows.length === 0 ? (
+            <p class="ops-pr__empty">{filter ? `No shops are ${CHIP_LABELS[filter].toLowerCase()} right now.` : 'No shops to check yet.'}</p>
+          ) : (
+            <>
+              <ul class="ops-cards ops-sh-cards" aria-label="Shops">
+                {rows.map((row) => {
+                  const issues = truncateIssues(row.issues);
+                  return (
+                    <li class="ops-card ops-sh-card">
+                      <div class="ops-card__top">
+                        <div>
+                          <h2 class="ops-card__name">
+                            <a class="ops-table__name" href={opsShopHealthPath(row.shopId)}>{row.name}</a>
+                          </h2>
+                          <p class="ops-card__meta">
+                            {row.plan} · {row.mode ? MODE_LABELS[row.mode] : '—'} ·{' '}
+                            <time datetime={row.checkedAt?.toISOString()} title={formatLondon(row.checkedAt)}>
+                              {formatRelative(row.checkedAt, now)}
+                            </time>
+                          </p>
+                        </div>
+                        <ShopHealthLight overall={row.overall} readiness={row.readiness} short />
+                      </div>
+                      {issues.shown.length ? (
+                        <p class="ops-sh-issues">
+                          {issues.shown.join(' · ')}
+                          {issues.more ? <span class="ops-sh-issues__more"> +{issues.more}</span> : null}
+                        </p>
+                      ) : null}
+                      <ShopHealthRunButton client:visible shopId={row.shopId} shopName={row.name} compact />
+                    </li>
+                  );
+                })}
+              </ul>
+              <div class="ops-table-wrap">
+                <table class="ops-table ops-sh-table">
+                  <caption class="sr-only">Shop health, red first</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Light</th>
+                      <th scope="col">Shop</th>
+                      <th scope="col">Plan</th>
+                      <th scope="col">Mode</th>
+                      <th scope="col">Last checked</th>
+                      <th scope="col">Failing / warnings</th>
+                      <th scope="col"><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => {
+                      const issues = truncateIssues(row.issues);
+                      return (
+                        <tr>
+                          <td><ShopHealthLight overall={row.overall} readiness={row.readiness} short /></td>
+                          <td>
+                            <a class="ops-table__name" href={opsShopHealthPath(row.shopId)}>{row.name}</a>
+                            <div class="ops-table__muted"><code>{row.shopId}</code></div>
+                          </td>
+                          <td>{row.plan}</td>
+                          <td>{row.mode ? MODE_LABELS[row.mode] : '—'}</td>
+                          <td>
+                            <time datetime={row.checkedAt?.toISOString()} title={formatLondon(row.checkedAt)}>
+                              {formatRelative(row.checkedAt, now)}
+                            </time>
+                          </td>
+                          <td class="ops-sh-table__issues">
+                            {issues.shown.length ? (
+                              <>
+                                {issues.shown.join(' · ')}
+                                {issues.more ? <span class="ops-sh-issues__more"> +{issues.more}</span> : null}
+                              </>
+                            ) : (
+                              <span class="ops-table__muted">—</span>
+                            )}
+                          </td>
+                          <td>
+                            <ShopHealthRunButton client:visible shopId={row.shopId} shopName={row.name} label="Run now" compact />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          <p class="ops-sh-footnote">{SHOP_HEALTH_FOOTNOTE}</p>
+        </div>
+      ) : null
+    }
+  </main>
+</MinimalLayout>

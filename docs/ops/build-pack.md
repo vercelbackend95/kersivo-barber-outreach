@@ -15,6 +15,7 @@ ready to give to an AI tool (or a designer) to design a unique site.
 | `brief.md` | `src/lib/ops/buildPackBrief.ts` |
 | Streaming zip | `src/lib/ops/streamZip.ts` (fflate) |
 | Dashboard images (allowlist, fetch) | `src/lib/ops/buildPackRemoteImages.ts`, tests in `buildPackRemoteImages.test.ts` |
+| Overview thumbnails of dashboard images | `src/lib/ops/buildPackRemoteImageThumb.ts`, `GET /api/ops/preview-requests/[id]/remote-image?ref=<source:ownerId>&w=96\|240` |
 | Endpoint | `GET /api/ops/preview-requests/[id]/build-pack` (`?format=md`, `?format=md&download=1`, `?format=json`) |
 
 The loader is read-only and returns `null` once the request is anonymised. When two sources hold the same
@@ -51,7 +52,10 @@ is `null`. Each zip download records `ops_build_pack_downloaded` (operator email
 Images added through the paid dashboard screens are public Vercel Blob URLs on `Barber.avatarUrl`,
 `Product.imageUrl`, `Service.imageUrl` and `ShopSettings.logoUrl`. They are `pack.remoteImages`
 (`{ id: "<source>:<ownerId>", source, ownerId, ownerName, url }`), downloaded into the zip next to the hub
-originals, named in `brief.md`, and shown on the Overview. `buildPack.coverage.test.ts` fails when a new
+originals, named in `brief.md`, and shown on the Overview as resized WebP thumbnails (96 px, 240 px for
+the shop logo) from the `remote-image` route. That route looks the URL up from the request's draft shop by
+`ref` (never from the query), uses the same allowlist and limits as the zip, and sends
+`Cache-Control: private, max-age=3600`. Downloads and the zip keep the originals. `buildPack.coverage.test.ts` fails when a new
 image-like URL column appears on those models without a mapping.
 
 These URLs come from admin input, so the server fetches one only when **all** of these hold:
