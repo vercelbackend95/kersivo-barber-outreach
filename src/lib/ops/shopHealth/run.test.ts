@@ -43,6 +43,8 @@ describe('runCheck', () => {
     const r = await runCheck(check({ run: () => { throw new Error(message); } }), healthyContext());
     expect(r.message).toBe("The check could not finish: The provided key [Stripe key] does not have access to account 'acct_1'.");
     expect(redactSecrets('rk_live_abc whsec_def Bearer abc.def')).toBe('[Stripe key] [webhook secret] Bearer [token]');
+    const dotted = await runCheck(check({ run: () => { throw new Error('Access revoked.'); } }), healthyContext());
+    expect(dotted.message).toBe('The check could not finish: Access revoked.');
   });
 
   it('turns a thrown check into inconclusive', async () => {

@@ -75,7 +75,8 @@ export function redactSecrets(text: string): string {
 }
 
 function errorText(error: unknown): string {
-  const text = redactSecrets(error instanceof Error ? error.message : String(error));
+  // Callers add the full stop, so drop the error's own trailing punctuation.
+  const text = redactSecrets(error instanceof Error ? error.message : String(error)).trim().replace(/[.!?]+$/, '');
   return text.length > 200 ? `${text.slice(0, 200)}…` : text;
 }
 
