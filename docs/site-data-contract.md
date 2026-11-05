@@ -145,7 +145,8 @@ type SiteService = {
 <script type="application/ld+json" set:html={JSON.stringify(site.seo.jsonLd)} />
 ```
 
-- `@graph` with `WebSite` (`{canonical}#website`) and `BarberShop` (`{canonical}#barbershop`). The `BarberShop` node carries name, url, telephone, email, `PostalAddress`, logo, `openingHoursSpecification` (closed days omitted), `specialOpeningHoursSpecification` (exceptions), `sameAs` (socials), `ReserveAction` (only when booking is available), and `priceRange` (only when derivable from real service prices).
+- `@graph` with `WebSite` (`{canonical}#website`) and `HairSalon` (`{canonical}#barbershop`). The `HairSalon` node carries name, url, telephone, email, `PostalAddress`, logo, `openingHoursSpecification` (closed days omitted), `specialOpeningHoursSpecification` (exceptions), `sameAs` (socials), `ReserveAction` (only when booking is available), and `priceRange` (only when derivable from real service prices).
+- **Why `HairSalon`:** schema.org has no `BarberShop` type. The subtypes of `HealthAndBeautyBusiness` are `BeautySalon`, `DaySpa`, `HairSalon`, `HealthClub`, `NailSalon` and `TattooParlor` ([schema.org/HealthAndBeautyBusiness](https://schema.org/HealthAndBeautyBusiness)); `HairSalon` is the one that fits a barbershop. An unknown type is flagged by validators and search engines cannot read the node as a local business. The node `@id` stays `{canonical}#barbershop`, so references to it are unchanged (it is an identifier, not a type).
 - **Home and services pages:** `hasOfferCatalog` → `OfferCatalog` per category → `Offer` with `itemOffered: Service`, `price` + `priceCurrency: "GBP"`. "From" prices use `priceSpecification.minPrice`.
 - **Home and shop pages:** a `Product` + `Offer` (price, GBP, availability) for each listed product with a price.
 - **Sub-pages:** `BreadcrumbList` (Home › Page).

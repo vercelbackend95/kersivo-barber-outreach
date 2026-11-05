@@ -16,7 +16,7 @@ exports[`JSON-LD > matches the snapshot for the seeded shop 1`] = `
     },
     {
       "@id": "https://fixturebarbers.example.test#barbershop",
-      "@type": "BarberShop",
+      "@type": "HairSalon",
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "GB",

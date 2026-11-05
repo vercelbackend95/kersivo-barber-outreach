@@ -135,7 +135,7 @@ function barberShopNode(site: SiteData, options: { includeCatalog: boolean }): J
   const address = site.location.address;
   const hasAddress = address.lines.length > 0;
   return withoutEmpty({
-    '@type': 'BarberShop',
+    '@type': 'HairSalon',
     '@id': id,
     name: site.business.name,
     url: root,
@@ -195,10 +195,10 @@ function breadcrumbNode(site: SiteData, page: { name: string; url: string }): Js
 
 /**
  * The JSON-LD document for one page. `site.seo` must already carry `canonicalUrl`.
- * - home: WebSite + BarberShop (with service catalogue) + products
- * - services: BarberShop (with catalogue) + breadcrumb
- * - team / contact: BarberShop (no catalogue) + breadcrumb
- * - shop: BarberShop + products + breadcrumb
+ * - home: WebSite + HairSalon (with service catalogue) + products
+ * - services: HairSalon (with catalogue) + breadcrumb
+ * - team / contact: HairSalon (no catalogue) + breadcrumb
+ * - shop: HairSalon + products + breadcrumb
  */
 export function buildSiteJsonLd(
   site: Omit<SiteData, 'seo'> & { seo: Pick<SiteData['seo'], 'canonicalUrl'> },

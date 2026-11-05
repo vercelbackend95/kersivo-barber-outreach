@@ -118,7 +118,7 @@ describe('empty states', () => {
 
   it('keeps JSON-LD to what exists: no catalogue, hours, address or price range', () => {
     const shop = (site.seo.jsonLd['@graph'] as Array<Record<string, unknown>>)[1];
-    expect(shop['@type']).toBe('BarberShop');
+    expect(shop['@type']).toBe('HairSalon');
     expect(shop).not.toHaveProperty('hasOfferCatalog');
     expect(shop).not.toHaveProperty('openingHoursSpecification');
     expect(shop).not.toHaveProperty('address');
@@ -129,7 +129,7 @@ describe('empty states', () => {
 describe('JSON-LD', () => {
   const site = buildSiteData(seededShopSource());
   const graph = site.seo.jsonLd['@graph'] as Array<Record<string, unknown>>;
-  const shop = graph.find((n) => n['@type'] === 'BarberShop')!;
+  const shop = graph.find((n) => n['@type'] === 'HairSalon')!;
 
   it('matches the snapshot for the seeded shop', () => {
     expect(site.seo.jsonLd).toMatchSnapshot();
@@ -141,6 +141,17 @@ describe('JSON-LD', () => {
     expect(types).not.toContain('Review');
     expect(types).not.toContain('AggregateRating');
     expect(JSON.stringify(all)).not.toMatch(/aggregateRating|"review"/i);
+  });
+
+  it('uses a real schema.org business type (HairSalon; schema.org has no BarberShop)', () => {
+    const all = [site.seo.jsonLd, ...site.seo.pages.map((p) => p.jsonLd)];
+    const types = collectTypes(all);
+    expect(types).not.toContain('BarberShop');
+    for (const doc of all) {
+      const business = (doc['@graph'] as Array<Record<string, unknown>>)[1];
+      expect(business['@type']).toBe('HairSalon');
+      expect(business['@id']).toBe('https://fixturebarbers.example.test#barbershop');
+    }
   });
 
   it('matches visible content: open days, active services, priced products', () => {
