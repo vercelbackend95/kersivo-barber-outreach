@@ -57,6 +57,9 @@ export function AdminHubWebsite(props: {
   websiteHref: string;
   bookingHref: string;
   draft: HubWebsiteDraft;
+  /** Test booking deep link (`?view=booking&service=<id>&barber=<id>`), already validated. */
+  initialServiceId?: string;
+  initialBarberId?: string;
   changeItems: HubChangePublic[];
   includedChangeRounds: number;
   changeRoundsUsed: number;
@@ -225,6 +228,8 @@ export function AdminHubWebsite(props: {
                   publicDemoMode={true}
                   services={props.draft.services}
                   barbers={props.draft.barbers}
+                  initialServiceId={props.initialServiceId}
+                  initialBarberId={props.initialBarberId}
                   openingHours={props.draft.hours}
                   shopDetails={{
                     timezone: props.draft.timezone,

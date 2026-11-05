@@ -281,6 +281,7 @@ These are the **only** supported parameters. Anything else is ignored.
   Only combine a barber with a service they perform (`member.serviceIds.includes(service.id)`).
 - The booking page validates both ids against the shop's bookable services and the barbers shown on the website. An unknown id, another shop's id, an inactive service, a barber not on the website, or a barber who does not perform the chosen service is dropped silently: the flow opens without that preselection. The visitor can always change the selection.
 - The parameters survive the legacy `/book/{shopId}` → `/book/{slug}` redirect. The booking page's canonical URL never includes them.
+- The owner's test booking in the preview hub accepts the same parameters: `/admin/website?view=booking&service=<id>&barber=<id>` (old `/preview/{token}/website?view=booking&…` links redirect there and keep them).
 
 ### Own-domain booking path
 
