@@ -331,8 +331,9 @@ async function anonymisePreviewRequest(id: string, now: Date): Promise<boolean> 
   }
 
   if (row.draftShop?.sitePreviewUrl) {
-    // Hosted outside this app, so this job cannot delete it: ops must take the site down.
-    console.warn('[free-preview] retention: remove the externally hosted preview site', {
+    // Hosted outside this app (its own repo + Vercel project). It is never deleted: ops archives it as a
+    // reusable design template and removes the shop's content (docs/ops/shop-site-projects.md).
+    console.warn("[free-preview] retention: archive the shop website project (template mode, remove the shop's content)", {
       id,
       sitePreviewUrl: row.draftShop.sitePreviewUrl,
     });

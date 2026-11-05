@@ -9,7 +9,7 @@ A shop website is a **design bound to one object**: `SiteData`. Everything the o
 - JSON-LD: `src/lib/siteData/jsonLd.ts`
 - Shared validation for every write path: `src/lib/shopData/schema.ts`
 
-Shop websites are built outside this repo (one Vercel project per shop, attached via `sitePreviewUrl`; decision in `docs/free-preview-discovery.md` §14). They get `SiteData` over HTTP.
+Shop websites are built outside this repo (one Vercel project per shop, attached via `sitePreviewUrl`; decision in `docs/free-preview-discovery.md` §14). They get `SiteData` over HTTP. Naming, modes (`preview` / `live` / `template`), expiry, archive and reuse of those projects: [`docs/ops/shop-site-projects.md`](ops/shop-site-projects.md). A fictional `SiteData` for template mode and local work: [`docs/site-data/fixture.json`](site-data/fixture.json).
 
 ---
 

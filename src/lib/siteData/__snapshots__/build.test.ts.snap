@@ -139,7 +139,7 @@ exports[`JSON-LD > matches the snapshot for the seeded shop 1`] = `
       },
       "priceRange": "£12.50–£30",
       "sameAs": [
-        "https://www.instagram.com/fixturebarbers/",
+        "https://instagram.example.test/fixturebarbers",
       ],
       "specialOpeningHoursSpecification": [
         {

@@ -1,0 +1,1153 @@
+{
+  "contractVersion": 1,
+  "generatedAt": "2026-11-04T10:00:00.000Z",
+  "business": {
+    "id": "shop_fixture",
+    "name": "Fixture Barbers",
+    "tagline": "Sharp cuts on Briggate.",
+    "description": "A small barbershop for fades, classic cuts and beard work.",
+    "logoUrl": "https://cdn.example.test/logo.png",
+    "brand": {
+      "primaryColour": "#B91C1C",
+      "secondaryColour": null
+    },
+    "websiteUrl": "https://fixturebarbers.example.test",
+    "socialLinks": [
+      {
+        "platform": "instagram",
+        "label": "Instagram",
+        "url": "https://instagram.example.test/fixturebarbers"
+      }
+    ]
+  },
+  "location": {
+    "id": "shop_fixture",
+    "name": "Fixture Barbers",
+    "address": {
+      "line1": "1 Example Street",
+      "line2": null,
+      "town": "Leeds",
+      "postcode": "LS1 6AA",
+      "country": "GB",
+      "lines": [
+        "1 Example Street",
+        "Leeds",
+        "LS1 6AA"
+      ],
+      "formatted": "1 Example Street, Leeds, LS1 6AA"
+    },
+    "phone": "0113 000 0000",
+    "phoneHref": "tel:01130000000",
+    "email": "hello@example.test",
+    "timezone": "Europe/London"
+  },
+  "locations": [
+    {
+      "id": "shop_fixture",
+      "name": "Fixture Barbers",
+      "address": {
+        "line1": "1 Example Street",
+        "line2": null,
+        "town": "Leeds",
+        "postcode": "LS1 6AA",
+        "country": "GB",
+        "lines": [
+          "1 Example Street",
+          "Leeds",
+          "LS1 6AA"
+        ],
+        "formatted": "1 Example Street, Leeds, LS1 6AA"
+      },
+      "phone": "0113 000 0000",
+      "phoneHref": "tel:01130000000",
+      "email": "hello@example.test",
+      "timezone": "Europe/London"
+    }
+  ],
+  "openingHours": {
+    "days": [
+      {
+        "dayOfWeek": 1,
+        "dayName": "Monday",
+        "shortName": "Mon",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "18:00"
+          }
+        ],
+        "display": "09:00–18:00"
+      },
+      {
+        "dayOfWeek": 2,
+        "dayName": "Tuesday",
+        "shortName": "Tue",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "18:00"
+          }
+        ],
+        "display": "09:00–18:00"
+      },
+      {
+        "dayOfWeek": 3,
+        "dayName": "Wednesday",
+        "shortName": "Wed",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "18:00"
+          }
+        ],
+        "display": "09:00–18:00"
+      },
+      {
+        "dayOfWeek": 4,
+        "dayName": "Thursday",
+        "shortName": "Thu",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        "display": "09:00–20:00"
+      },
+      {
+        "dayOfWeek": 5,
+        "dayName": "Friday",
+        "shortName": "Fri",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "20:00"
+          }
+        ],
+        "display": "09:00–20:00"
+      },
+      {
+        "dayOfWeek": 6,
+        "dayName": "Saturday",
+        "shortName": "Sat",
+        "isOpen": true,
+        "periods": [
+          {
+            "opens": "08:00",
+            "closes": "16:00"
+          }
+        ],
+        "display": "08:00–16:00"
+      },
+      {
+        "dayOfWeek": 7,
+        "dayName": "Sunday",
+        "shortName": "Sun",
+        "isOpen": false,
+        "periods": [],
+        "display": "Closed"
+      }
+    ],
+    "exceptions": [
+      {
+        "date": "2026-12-24",
+        "dateDisplay": "Thursday 24 December",
+        "closed": false,
+        "periods": [
+          {
+            "opens": "09:00",
+            "closes": "14:00"
+          }
+        ],
+        "label": "Christmas Eve",
+        "display": "09:00–14:00"
+      },
+      {
+        "date": "2026-12-25",
+        "dateDisplay": "Friday 25 December",
+        "closed": true,
+        "periods": [],
+        "label": "Christmas Day",
+        "display": "Closed"
+      }
+    ]
+  },
+  "team": [
+    {
+      "id": "b1",
+      "name": "Sam",
+      "title": "Senior Barber",
+      "bio": "Fades and skin fades.",
+      "photoUrl": "https://cdn.example.test/sam.webp",
+      "serviceIds": [
+        "s1",
+        "s2"
+      ],
+      "bookingUrl": "https://fixturebarbers.example.test/book?barber=b1"
+    }
+  ],
+  "services": {
+    "all": [
+      {
+        "id": "s1",
+        "name": "Skin fade",
+        "category": "Haircuts",
+        "description": null,
+        "durationMinutes": 45,
+        "durationDisplay": "45 min",
+        "pricePence": 2500,
+        "currency": "GBP",
+        "priceFrom": false,
+        "priceDisplay": "£25",
+        "teamMemberIds": [
+          "b1"
+        ],
+        "featured": true,
+        "bookingUrl": "https://fixturebarbers.example.test/book?service=s1"
+      },
+      {
+        "id": "s2",
+        "name": "Beard trim",
+        "category": "Beards",
+        "description": "Shape and line-up.",
+        "durationMinutes": 20,
+        "durationDisplay": "20 min",
+        "pricePence": 1250,
+        "currency": "GBP",
+        "priceFrom": false,
+        "priceDisplay": "£12.50",
+        "teamMemberIds": [
+          "b1"
+        ],
+        "featured": false,
+        "bookingUrl": "https://fixturebarbers.example.test/book?service=s2"
+      },
+      {
+        "id": "s3",
+        "name": "Long hair cut",
+        "category": "Haircuts",
+        "description": null,
+        "durationMinutes": 75,
+        "durationDisplay": "1 hr 15 min",
+        "pricePence": 3000,
+        "currency": "GBP",
+        "priceFrom": true,
+        "priceDisplay": "From £30",
+        "teamMemberIds": [],
+        "featured": false,
+        "bookingUrl": "https://fixturebarbers.example.test/book?service=s3"
+      }
+    ],
+    "categories": [
+      {
+        "name": "Haircuts",
+        "services": [
+          {
+            "id": "s1",
+            "name": "Skin fade",
+            "category": "Haircuts",
+            "description": null,
+            "durationMinutes": 45,
+            "durationDisplay": "45 min",
+            "pricePence": 2500,
+            "currency": "GBP",
+            "priceFrom": false,
+            "priceDisplay": "£25",
+            "teamMemberIds": [
+              "b1"
+            ],
+            "featured": true,
+            "bookingUrl": "https://fixturebarbers.example.test/book?service=s1"
+          },
+          {
+            "id": "s3",
+            "name": "Long hair cut",
+            "category": "Haircuts",
+            "description": null,
+            "durationMinutes": 75,
+            "durationDisplay": "1 hr 15 min",
+            "pricePence": 3000,
+            "currency": "GBP",
+            "priceFrom": true,
+            "priceDisplay": "From £30",
+            "teamMemberIds": [],
+            "featured": false,
+            "bookingUrl": "https://fixturebarbers.example.test/book?service=s3"
+          }
+        ]
+      },
+      {
+        "name": "Beards",
+        "services": [
+          {
+            "id": "s2",
+            "name": "Beard trim",
+            "category": "Beards",
+            "description": "Shape and line-up.",
+            "durationMinutes": 20,
+            "durationDisplay": "20 min",
+            "pricePence": 1250,
+            "currency": "GBP",
+            "priceFrom": false,
+            "priceDisplay": "£12.50",
+            "teamMemberIds": [
+              "b1"
+            ],
+            "featured": false,
+            "bookingUrl": "https://fixturebarbers.example.test/book?service=s2"
+          }
+        ]
+      }
+    ]
+  },
+  "products": [
+    {
+      "id": "p1",
+      "name": "Matte clay",
+      "description": null,
+      "imageUrl": "https://cdn.example.test/clay.webp",
+      "pricePence": 1400,
+      "currency": "GBP",
+      "priceDisplay": "£14",
+      "inStock": true,
+      "availabilityDisplay": "In stock",
+      "url": "https://kersivo.co.uk/shop/shop_fixture/p1"
+    },
+    {
+      "id": "p2",
+      "name": "Beard oil",
+      "description": null,
+      "imageUrl": null,
+      "pricePence": 1200,
+      "currency": "GBP",
+      "priceDisplay": "£12",
+      "inStock": false,
+      "availabilityDisplay": "Out of stock",
+      "url": "https://kersivo.co.uk/shop/shop_fixture/p2"
+    }
+  ],
+  "booking": {
+    "available": true,
+    "url": "https://fixturebarbers.example.test/book",
+    "hostedUrl": "https://kersivo.co.uk/book/fixture-barbers",
+    "label": "Book an appointment"
+  },
+  "planFeatures": {
+    "plan": "full",
+    "brandedSite": true,
+    "onlineBooking": true,
+    "retail": true
+  },
+  "has": {
+    "description": true,
+    "address": true,
+    "contact": true,
+    "socials": true,
+    "openingHours": true,
+    "team": true,
+    "services": true,
+    "products": true,
+    "booking": true
+  },
+  "seo": {
+    "title": "Fixture Barbers | Barbershop in Leeds",
+    "description": "Sharp cuts on Briggate.",
+    "canonicalUrl": "https://fixturebarbers.example.test",
+    "jsonLd": {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://fixturebarbers.example.test#website",
+          "url": "https://fixturebarbers.example.test",
+          "name": "Fixture Barbers",
+          "inLanguage": "en-GB",
+          "publisher": {
+            "@id": "https://fixturebarbers.example.test#barbershop"
+          }
+        },
+        {
+          "@type": "HairSalon",
+          "@id": "https://fixturebarbers.example.test#barbershop",
+          "name": "Fixture Barbers",
+          "url": "https://fixturebarbers.example.test",
+          "description": "A small barbershop for fades, classic cuts and beard work.",
+          "telephone": "0113 000 0000",
+          "email": "hello@example.test",
+          "image": "https://cdn.example.test/logo.png",
+          "logo": "https://cdn.example.test/logo.png",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "1 Example Street",
+            "addressLocality": "Leeds",
+            "postalCode": "LS1 6AA",
+            "addressCountry": "GB"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Monday",
+              "opens": "09:00",
+              "closes": "18:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Tuesday",
+              "opens": "09:00",
+              "closes": "18:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Wednesday",
+              "opens": "09:00",
+              "closes": "18:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Thursday",
+              "opens": "09:00",
+              "closes": "20:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Friday",
+              "opens": "09:00",
+              "closes": "20:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": "https://schema.org/Saturday",
+              "opens": "08:00",
+              "closes": "16:00"
+            }
+          ],
+          "specialOpeningHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "validFrom": "2026-12-24",
+              "validThrough": "2026-12-24",
+              "opens": "09:00",
+              "closes": "14:00"
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              "validFrom": "2026-12-25",
+              "validThrough": "2026-12-25",
+              "opens": "00:00",
+              "closes": "00:00"
+            }
+          ],
+          "priceRange": "£12.50–£30",
+          "sameAs": [
+            "https://instagram.example.test/fixturebarbers"
+          ],
+          "potentialAction": {
+            "@type": "ReserveAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://fixturebarbers.example.test/book"
+            },
+            "name": "Book an appointment"
+          },
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "@id": "https://fixturebarbers.example.test#services",
+            "name": "Services",
+            "itemListElement": [
+              {
+                "@type": "OfferCatalog",
+                "name": "Haircuts",
+                "itemListElement": [
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Skin fade",
+                      "category": "Haircuts"
+                    },
+                    "price": "25.00",
+                    "priceCurrency": "GBP",
+                    "seller": {
+                      "@id": "https://fixturebarbers.example.test#barbershop"
+                    }
+                  },
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Long hair cut",
+                      "category": "Haircuts"
+                    },
+                    "priceSpecification": {
+                      "@type": "PriceSpecification",
+                      "minPrice": "30.00",
+                      "priceCurrency": "GBP"
+                    },
+                    "seller": {
+                      "@id": "https://fixturebarbers.example.test#barbershop"
+                    }
+                  }
+                ]
+              },
+              {
+                "@type": "OfferCatalog",
+                "name": "Beards",
+                "itemListElement": [
+                  {
+                    "@type": "Offer",
+                    "itemOffered": {
+                      "@type": "Service",
+                      "name": "Beard trim",
+                      "description": "Shape and line-up.",
+                      "category": "Beards"
+                    },
+                    "price": "12.50",
+                    "priceCurrency": "GBP",
+                    "seller": {
+                      "@id": "https://fixturebarbers.example.test#barbershop"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "@type": "Product",
+          "@id": "https://kersivo.co.uk/shop/shop_fixture/p1#product",
+          "name": "Matte clay",
+          "image": "https://cdn.example.test/clay.webp",
+          "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+          "offers": {
+            "@type": "Offer",
+            "price": "14.00",
+            "priceCurrency": "GBP",
+            "availability": "https://schema.org/InStock",
+            "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+            "seller": {
+              "@id": "https://fixturebarbers.example.test#barbershop"
+            }
+          }
+        },
+        {
+          "@type": "Product",
+          "@id": "https://kersivo.co.uk/shop/shop_fixture/p2#product",
+          "name": "Beard oil",
+          "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+          "offers": {
+            "@type": "Offer",
+            "price": "12.00",
+            "priceCurrency": "GBP",
+            "availability": "https://schema.org/OutOfStock",
+            "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+            "seller": {
+              "@id": "https://fixturebarbers.example.test#barbershop"
+            }
+          }
+        }
+      ]
+    },
+    "pages": [
+      {
+        "key": "services",
+        "path": "/services",
+        "url": "https://fixturebarbers.example.test/services",
+        "name": "Services",
+        "title": "Services | Fixture Barbers",
+        "description": "Services and prices at Fixture Barbers.",
+        "jsonLd": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://fixturebarbers.example.test#website",
+              "url": "https://fixturebarbers.example.test",
+              "name": "Fixture Barbers",
+              "inLanguage": "en-GB",
+              "publisher": {
+                "@id": "https://fixturebarbers.example.test#barbershop"
+              }
+            },
+            {
+              "@type": "HairSalon",
+              "@id": "https://fixturebarbers.example.test#barbershop",
+              "name": "Fixture Barbers",
+              "url": "https://fixturebarbers.example.test",
+              "description": "A small barbershop for fades, classic cuts and beard work.",
+              "telephone": "0113 000 0000",
+              "email": "hello@example.test",
+              "image": "https://cdn.example.test/logo.png",
+              "logo": "https://cdn.example.test/logo.png",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "1 Example Street",
+                "addressLocality": "Leeds",
+                "postalCode": "LS1 6AA",
+                "addressCountry": "GB"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Monday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Tuesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Wednesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Thursday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Friday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Saturday",
+                  "opens": "08:00",
+                  "closes": "16:00"
+                }
+              ],
+              "specialOpeningHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-24",
+                  "validThrough": "2026-12-24",
+                  "opens": "09:00",
+                  "closes": "14:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-25",
+                  "validThrough": "2026-12-25",
+                  "opens": "00:00",
+                  "closes": "00:00"
+                }
+              ],
+              "priceRange": "£12.50–£30",
+              "sameAs": [
+                "https://instagram.example.test/fixturebarbers"
+              ],
+              "potentialAction": {
+                "@type": "ReserveAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://fixturebarbers.example.test/book"
+                },
+                "name": "Book an appointment"
+              },
+              "hasOfferCatalog": {
+                "@type": "OfferCatalog",
+                "@id": "https://fixturebarbers.example.test#services",
+                "name": "Services",
+                "itemListElement": [
+                  {
+                    "@type": "OfferCatalog",
+                    "name": "Haircuts",
+                    "itemListElement": [
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Skin fade",
+                          "category": "Haircuts"
+                        },
+                        "price": "25.00",
+                        "priceCurrency": "GBP",
+                        "seller": {
+                          "@id": "https://fixturebarbers.example.test#barbershop"
+                        }
+                      },
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Long hair cut",
+                          "category": "Haircuts"
+                        },
+                        "priceSpecification": {
+                          "@type": "PriceSpecification",
+                          "minPrice": "30.00",
+                          "priceCurrency": "GBP"
+                        },
+                        "seller": {
+                          "@id": "https://fixturebarbers.example.test#barbershop"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "@type": "OfferCatalog",
+                    "name": "Beards",
+                    "itemListElement": [
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Beard trim",
+                          "description": "Shape and line-up.",
+                          "category": "Beards"
+                        },
+                        "price": "12.50",
+                        "priceCurrency": "GBP",
+                        "seller": {
+                          "@id": "https://fixturebarbers.example.test#barbershop"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://fixturebarbers.example.test/services#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://fixturebarbers.example.test"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Services",
+                  "item": "https://fixturebarbers.example.test/services"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "key": "team",
+        "path": "/team",
+        "url": "https://fixturebarbers.example.test/team",
+        "name": "Team",
+        "title": "Team | Fixture Barbers",
+        "description": "Meet the team at Fixture Barbers.",
+        "jsonLd": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://fixturebarbers.example.test#website",
+              "url": "https://fixturebarbers.example.test",
+              "name": "Fixture Barbers",
+              "inLanguage": "en-GB",
+              "publisher": {
+                "@id": "https://fixturebarbers.example.test#barbershop"
+              }
+            },
+            {
+              "@type": "HairSalon",
+              "@id": "https://fixturebarbers.example.test#barbershop",
+              "name": "Fixture Barbers",
+              "url": "https://fixturebarbers.example.test",
+              "description": "A small barbershop for fades, classic cuts and beard work.",
+              "telephone": "0113 000 0000",
+              "email": "hello@example.test",
+              "image": "https://cdn.example.test/logo.png",
+              "logo": "https://cdn.example.test/logo.png",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "1 Example Street",
+                "addressLocality": "Leeds",
+                "postalCode": "LS1 6AA",
+                "addressCountry": "GB"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Monday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Tuesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Wednesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Thursday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Friday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Saturday",
+                  "opens": "08:00",
+                  "closes": "16:00"
+                }
+              ],
+              "specialOpeningHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-24",
+                  "validThrough": "2026-12-24",
+                  "opens": "09:00",
+                  "closes": "14:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-25",
+                  "validThrough": "2026-12-25",
+                  "opens": "00:00",
+                  "closes": "00:00"
+                }
+              ],
+              "priceRange": "£12.50–£30",
+              "sameAs": [
+                "https://instagram.example.test/fixturebarbers"
+              ],
+              "potentialAction": {
+                "@type": "ReserveAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://fixturebarbers.example.test/book"
+                },
+                "name": "Book an appointment"
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://fixturebarbers.example.test/team#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://fixturebarbers.example.test"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Team",
+                  "item": "https://fixturebarbers.example.test/team"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "key": "contact",
+        "path": "/contact",
+        "url": "https://fixturebarbers.example.test/contact",
+        "name": "Contact",
+        "title": "Contact | Fixture Barbers",
+        "description": "Find Fixture Barbers in Leeds: address, opening hours and contact details.",
+        "jsonLd": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://fixturebarbers.example.test#website",
+              "url": "https://fixturebarbers.example.test",
+              "name": "Fixture Barbers",
+              "inLanguage": "en-GB",
+              "publisher": {
+                "@id": "https://fixturebarbers.example.test#barbershop"
+              }
+            },
+            {
+              "@type": "HairSalon",
+              "@id": "https://fixturebarbers.example.test#barbershop",
+              "name": "Fixture Barbers",
+              "url": "https://fixturebarbers.example.test",
+              "description": "A small barbershop for fades, classic cuts and beard work.",
+              "telephone": "0113 000 0000",
+              "email": "hello@example.test",
+              "image": "https://cdn.example.test/logo.png",
+              "logo": "https://cdn.example.test/logo.png",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "1 Example Street",
+                "addressLocality": "Leeds",
+                "postalCode": "LS1 6AA",
+                "addressCountry": "GB"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Monday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Tuesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Wednesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Thursday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Friday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Saturday",
+                  "opens": "08:00",
+                  "closes": "16:00"
+                }
+              ],
+              "specialOpeningHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-24",
+                  "validThrough": "2026-12-24",
+                  "opens": "09:00",
+                  "closes": "14:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-25",
+                  "validThrough": "2026-12-25",
+                  "opens": "00:00",
+                  "closes": "00:00"
+                }
+              ],
+              "priceRange": "£12.50–£30",
+              "sameAs": [
+                "https://instagram.example.test/fixturebarbers"
+              ],
+              "potentialAction": {
+                "@type": "ReserveAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://fixturebarbers.example.test/book"
+                },
+                "name": "Book an appointment"
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://fixturebarbers.example.test/contact#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://fixturebarbers.example.test"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Contact",
+                  "item": "https://fixturebarbers.example.test/contact"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "key": "shop",
+        "path": "/shop",
+        "url": "https://fixturebarbers.example.test/shop",
+        "name": "Shop",
+        "title": "Shop | Fixture Barbers",
+        "description": "Products to order online and collect at Fixture Barbers.",
+        "jsonLd": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://fixturebarbers.example.test#website",
+              "url": "https://fixturebarbers.example.test",
+              "name": "Fixture Barbers",
+              "inLanguage": "en-GB",
+              "publisher": {
+                "@id": "https://fixturebarbers.example.test#barbershop"
+              }
+            },
+            {
+              "@type": "HairSalon",
+              "@id": "https://fixturebarbers.example.test#barbershop",
+              "name": "Fixture Barbers",
+              "url": "https://fixturebarbers.example.test",
+              "description": "A small barbershop for fades, classic cuts and beard work.",
+              "telephone": "0113 000 0000",
+              "email": "hello@example.test",
+              "image": "https://cdn.example.test/logo.png",
+              "logo": "https://cdn.example.test/logo.png",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "1 Example Street",
+                "addressLocality": "Leeds",
+                "postalCode": "LS1 6AA",
+                "addressCountry": "GB"
+              },
+              "openingHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Monday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Tuesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Wednesday",
+                  "opens": "09:00",
+                  "closes": "18:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Thursday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Friday",
+                  "opens": "09:00",
+                  "closes": "20:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "dayOfWeek": "https://schema.org/Saturday",
+                  "opens": "08:00",
+                  "closes": "16:00"
+                }
+              ],
+              "specialOpeningHoursSpecification": [
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-24",
+                  "validThrough": "2026-12-24",
+                  "opens": "09:00",
+                  "closes": "14:00"
+                },
+                {
+                  "@type": "OpeningHoursSpecification",
+                  "validFrom": "2026-12-25",
+                  "validThrough": "2026-12-25",
+                  "opens": "00:00",
+                  "closes": "00:00"
+                }
+              ],
+              "priceRange": "£12.50–£30",
+              "sameAs": [
+                "https://instagram.example.test/fixturebarbers"
+              ],
+              "potentialAction": {
+                "@type": "ReserveAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://fixturebarbers.example.test/book"
+                },
+                "name": "Book an appointment"
+              }
+            },
+            {
+              "@type": "Product",
+              "@id": "https://kersivo.co.uk/shop/shop_fixture/p1#product",
+              "name": "Matte clay",
+              "image": "https://cdn.example.test/clay.webp",
+              "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+              "offers": {
+                "@type": "Offer",
+                "price": "14.00",
+                "priceCurrency": "GBP",
+                "availability": "https://schema.org/InStock",
+                "url": "https://kersivo.co.uk/shop/shop_fixture/p1",
+                "seller": {
+                  "@id": "https://fixturebarbers.example.test#barbershop"
+                }
+              }
+            },
+            {
+              "@type": "Product",
+              "@id": "https://kersivo.co.uk/shop/shop_fixture/p2#product",
+              "name": "Beard oil",
+              "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+              "offers": {
+                "@type": "Offer",
+                "price": "12.00",
+                "priceCurrency": "GBP",
+                "availability": "https://schema.org/OutOfStock",
+                "url": "https://kersivo.co.uk/shop/shop_fixture/p2",
+                "seller": {
+                  "@id": "https://fixturebarbers.example.test#barbershop"
+                }
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://fixturebarbers.example.test/shop#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://fixturebarbers.example.test"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Shop",
+                  "item": "https://fixturebarbers.example.test/shop"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
