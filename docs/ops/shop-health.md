@@ -24,6 +24,11 @@ handset (only the provider's status), and how the site looks on each device.*
 | Availability + dry-run booking | `src/lib/ops/shopHealth/checks/bookingProbe.ts` |
 | Runner (timeouts, persistence) | `src/lib/ops/shopHealth/run.ts` → `runShopHealth(shopId, { trigger, probes })` |
 | Light rules | `src/lib/ops/shopHealth/overall.ts` |
+| HTTP / Stripe probe checks | `src/lib/ops/shopHealth/checks/probes.ts` |
+| SSRF-guarded fetch | `src/lib/ops/shopHealth/probe.ts` |
+| Probe identity (header + secret) | `src/lib/ops/healthProbeAuth.ts` |
+| Hourly cron | `src/lib/ops/shopHealth/cron.ts`, `GET /api/cron/shop-health` (`vercel.json`, minute 7) |
+| Ops alerts | `src/lib/ops/shopHealth/alerts.ts` |
 | Storage | `ShopHealthRun` (latest 50 per shop), `ShopSettings.healthOverall / healthCheckedAt / healthAlertedAt` |
 
 ## Modes
@@ -72,6 +77,92 @@ Probe checks run on the cron, on "Run checks now" and in PRELAUNCH runs:
 | --- | --- | --- |
 | booking.availability | critical | a slot in the next 14 days (warns for each active service with none) |
 | booking.dry_run | critical | a dry-run booking of the first free slot goes through the whole create path |
+
+HTTP and Stripe probe checks (cron, "Run checks now", launch guard):
+
+| id | severity | applies | passes when |
+| --- | --- | --- | --- |
+| booking.page | critical | live | `https://kersivo.co.uk/book/<slug>` returns 200 and the HTML contains the shop name |
+| website.site_data | critical | live + `BRANDED_SITE` | `/api/public/site/<slug>` returns 200, `contractVersion === 1`, `planFeatures.onlineBooking === true` |
+| website.up | critical | live + site URL | 200 over HTTPS within 10 s (warns over 3 s) |
+| website.booking_link | critical | live + site URL | the site HTML links to `booking.url` from the site data |
+| website.indexable | critical | live + site URL | no `noindex` in `<meta name="robots\|googlebot">` or `X-Robots-Tag`. A live shop whose only site is still the preview URL gets a warning, not a fail |
+| website.shows_shop | warning | live + site URL | the HTML shows the shop name and its phone or postcode from the site data |
+| website.tls | warning | live + verified own domain | the certificate is valid for more than 14 days |
+| website.preview_up | warning | PRELAUNCH + `sitePreviewUrl` | the preview URL returns 200 (noindex is expected there) |
+| retail.page | critical | live + retail on | `/shop/<id>` returns 200 and lists at least one active product |
+| payments.stripe_account | critical | when payments.connect applies and an account is connected | read-only `GET /v1/accounts/<id>`: charges enabled and no `requirements.disabled_reason`. Warns on `currently_due` items or paused payouts. Cached for 1 h |
+
+The site URL is the origin of the shop's `VERIFIED_LIVE` FullBookingDestination, or else `sitePreviewUrl`.
+No URL is ever taken from user input or a request.
+
+## Probe safety (SSRF guard)
+
+Every HTTP probe goes through `probeUrl` (`probe.ts`):
+
+- **https only**, on the default port, with no credentials in the URL. `localhost`, `*.local` and `*.internal` are refused.
+- **DNS is resolved once per hop.** Every returned address is checked against the loopback, private (RFC 1918),
+  CGNAT, link-local (including the 169.254.169.254 metadata address), documentation, multicast and reserved
+  IPv4 ranges. For IPv6 it checks `::`, `::1`, `fc00::/7` (including the `fd00:ec2::254` metadata address),
+  `fe80::/10`, multicast and documentation, plus IPv4-mapped, NAT64 and 6to4 addresses (the embedded IPv4 is
+  checked). The connection then goes to that **pinned** address with SNI set to the host name, so a DNS
+  rebinding answer can never swap it.
+- **Redirects are followed by hand:** at most 3, https only, and on the same registrable domain
+  (e.g. `fade.co.uk` → `www.fade.co.uk` is allowed, a different site is not). DNS is checked again on each hop.
+- **Limits:** 10 s for the whole probe and a 2 MB body cap (declared or streamed).
+- **Identity:** `User-Agent: KERSIVO-HealthCheck/1.0` and `X-Kersivo-Health: 1`.
+
+### Probe identity and exemptions
+
+`X-Kersivo-Health: 1` alone proves nothing. KERSIVO's own routes treat a request as a probe only when it
+also carries `X-Kersivo-Health-Secret` equal to `KERSIVO_HEALTH_PROBE_SECRET` (constant-time compare,
+at least 24 characters, fail closed). The secret is only sent to `https://kersivo.co.uk`, never to a
+tenant's website.
+
+Audit of what a probe could count or trigger:
+
+| Concern | Finding |
+| --- | --- |
+| Preview views (`recordPreviewView`: `firstViewedAt`, `viewCount`, the `preview_viewed` server event) | Skipped for a verified probe (`previewHubPage.ts`, `preview/[token]/website.astro`). Probes do not normally reach `/preview/*`: the site URL is the tenant build, not the hub. |
+| Analytics | GA and the funnel events run in the browser; probes do not run JavaScript. No server-side analytics run on `/book`, `/shop` or `/api/public/site`. |
+| Rate limits | `checkBookingRateLimit` and the other durable IP limits only guard POST create routes and hub/contact routes. Probes are GET-only and never call them, so no bypass was added. |
+| Bookings | The booking proof is the in-process dry run, never an HTTP POST. |
+
+## Cron
+
+`GET /api/cron/shop-health` (Bearer `CRON_SECRET`, every hour at minute 7):
+
+- **Live shops** are shops that are paid, on Starter, launched or on SMS reminders, and have not departed
+  (demo shops excluded). They get a full run with probes when last checked more than ~55 minutes ago.
+- **Draft shops** are linked to a preview request in IN_PROGRESS / READY / CHANGES_REQUESTED. They get a
+  PRELAUNCH run once a day.
+- Shops are processed one at a time, oldest `healthCheckedAt` first (never checked first). The cron does not
+  start a shop that would likely end past **80% of maxDuration** (`SHOP_HEALTH_CRON_MAX_DURATION_S`,
+  default 60 s). The rest stay the oldest, so the next hour resumes with them.
+- A shop whose run cannot start is logged and its `healthCheckedAt` is stamped, so it never blocks the queue.
+- Runs beyond the newest 50 per shop are deleted.
+
+## Alerts (LIVE shops only, ops only)
+
+- **Red on two consecutive runs** (anti-flap) → a Sentry message (tag `shopId`) plus an email to every
+  address in `KERSIVO_OPS_EMAILS`. Subject: `[KERSIVO] Red: <shop> — <first failing check>`. The body lists
+  the failing checks and links to `/ops/shops/<id>`. `healthAlertedAt` is stamped.
+- **Still red:** no repeat, except one "Still red" reminder per 24 h.
+- **No longer red** after an alert → one "Back to green" email (or "No longer red (amber)"), and
+  `healthAlertedAt` is cleared.
+- Emails use the outbox (`SHOP_HEALTH_ALERT_INTERNAL`, `shopId` null so they never count against the shop's
+  own `messaging.email` check), de-duplicated per run and recipient. Outside Production they are stored
+  as SUPPRESSED with a `[Preview]` subject, and never sent.
+- Launch-guard runs never alert. No email ever goes to shop owners.
+
+## Environment
+
+| Variable | Purpose |
+| --- | --- |
+| `KERSIVO_HEALTH_PROBE_SECRET` | **New.** Server-only random string, at least 24 characters. Set it in Production and Preview. Without it, probes still run but are never treated as verified. |
+| `SHOP_HEALTH_CRON_MAX_DURATION_S` | Optional. The function maxDuration (seconds) the cron budgets against. Default 60. |
+| `KERSIVO_OPS_EMAILS` | Existing. The alert recipients (also the ops sign-in allowlist). |
+| `CRON_SECRET` | Existing. Cron auth. |
 
 ## Dry-run booking
 

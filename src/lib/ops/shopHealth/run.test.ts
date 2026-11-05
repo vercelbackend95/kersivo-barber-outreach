@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { loadShopHealthContext, shopHealthRun, shopSettings } = vi.hoisted(() => ({
+const { loadShopHealthContext, shopHealthRun, shopSettings, applyShopHealthAlert } = vi.hoisted(() => ({
   loadShopHealthContext: vi.fn(),
+  applyShopHealthAlert: vi.fn(),
   shopHealthRun: { findFirst: vi.fn(), create: vi.fn() },
   shopSettings: { update: vi.fn() },
 }));
 
 vi.mock('@/lib/db/client', () => ({ prisma: { shopHealthRun, shopSettings } }));
+vi.mock('./alerts', () => ({ applyShopHealthAlert: (...args: unknown[]) => applyShopHealthAlert(...args) }));
 vi.mock('./context', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./context')>()),
   loadShopHealthContext: (...args: unknown[]) => loadShopHealthContext(...args),
@@ -31,6 +33,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   shopHealthRun.findFirst.mockResolvedValue(null);
   shopHealthRun.create.mockResolvedValue({ id: 'run_1' });
+  shopSettings.update.mockResolvedValue({ healthAlertedAt: null });
+  applyShopHealthAlert.mockResolvedValue('none');
 });
 
 describe('runCheck', () => {
@@ -70,7 +74,27 @@ describe('runShopHealth', () => {
     expect(shopSettings.update).toHaveBeenCalledWith({
       where: { id: 'shop_1' },
       data: { healthOverall: 'GREEN', healthCheckedAt: expect.any(Date) },
+      select: { healthAlertedAt: true },
     });
+    expect(applyShopHealthAlert).toHaveBeenCalledWith(expect.objectContaining({ runId: 'run_1', overall: 'GREEN', previousOverall: null }));
+  });
+
+  it('compares with the previous run in the same mode and passes its light to the alert step', async () => {
+    loadShopHealthContext.mockResolvedValue(healthyContext());
+    shopHealthRun.findFirst.mockResolvedValue({ results: [], overall: 'RED' });
+    shopSettings.update.mockResolvedValue({ healthAlertedAt: new Date('2026-11-04T08:00:00Z') });
+    await runShopHealth('shop_1', { trigger: 'CRON', probes: false, checks: [check({ run: () => ({ status: 'fail', message: 'x' }) })] });
+    expect(shopHealthRun.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { shopId: 'shop_1', mode: 'LIVE' } }));
+    expect(applyShopHealthAlert).toHaveBeenCalledWith(
+      expect.objectContaining({ overall: 'RED', previousOverall: 'RED', alertedAt: new Date('2026-11-04T08:00:00Z') }),
+    );
+  });
+
+  it('an alert failure never loses the run', async () => {
+    loadShopHealthContext.mockResolvedValue(healthyContext());
+    applyShopHealthAlert.mockRejectedValueOnce(new Error('smtp down'));
+    const result = await runShopHealth('shop_1', { trigger: 'CRON', probes: false, checks: [check({})] });
+    expect(result.runId).toBe('run_1');
   });
 
   it('a check that throws never crashes the run', async () => {
@@ -107,6 +131,7 @@ describe('runShopHealth', () => {
     expect(result.overall).toBe('RED');
     expect(shopHealthRun.create).toHaveBeenCalled();
     expect(shopSettings.update).not.toHaveBeenCalled();
+    expect(applyShopHealthAlert).not.toHaveBeenCalled();
   });
 
   it('persist: false stores nothing', async () => {

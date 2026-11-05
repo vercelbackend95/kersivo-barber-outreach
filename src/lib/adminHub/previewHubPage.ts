@@ -18,6 +18,7 @@ import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { HUB_DRAFT_DECLINED, HUB_DRAFT_REOPEN, HUB_NAV } from '@/lib/freePreview/hubCopy';
 import { hubNotFound, recordHubOwnerView, type HubPageContext } from '@/lib/freePreview/hubPage';
 import { recordPreviewView, shouldRecordOwnerView } from '@/lib/freePreview/previewAccess';
+import { isVerifiedHealthProbe } from '@/lib/ops/healthProbeAuth';
 import { EXTRA_FRAME_SRC_HEADER } from '@/lib/security/headers';
 
 export type PreviewHubPageData = {
@@ -115,6 +116,8 @@ export async function preparePreviewHubPage(input: {
       context.response.headers.set(EXTRA_FRAME_SRC_HEADER, sitePreviewUrl);
     }
     if (
+      // A verified shop health probe (docs/ops/shop-health.md) is never an owner view.
+      !isVerifiedHealthProbe(context.request) &&
       shouldRecordOwnerView({
         kind: 'preview',
         request: ctx.request,

@@ -7,6 +7,8 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { CONFIG_CHECKS } from './checks/config';
 import { bookingAvailability, bookingDryRun } from './checks/bookingProbe';
+import { PROBE_CHECKS } from './checks/probes';
+import { applyShopHealthAlert, type ShopHealthAlertAction } from './alerts';
 import { loadShopHealthContext, naturalHealthMode } from './context';
 import { summariseShopHealth, type ShopHealthSummary } from './overall';
 import type {
@@ -14,13 +16,14 @@ import type {
   ShopHealthCheckResult,
   ShopHealthContext,
   ShopHealthMode,
+  ShopHealthOverall,
   ShopHealthTrigger,
 } from './types';
 
 export const CHECK_TIMEOUT_MS = 10_000;
 
-/** Every check, in display order inside each area. H2 appends the HTTP / Stripe probes. */
-export const SHOP_HEALTH_CHECKS: ShopHealthCheck[] = [...CONFIG_CHECKS, bookingAvailability, bookingDryRun];
+/** Every check, in display order inside each area. */
+export const SHOP_HEALTH_CHECKS: ShopHealthCheck[] = [...CONFIG_CHECKS, bookingAvailability, bookingDryRun, ...PROBE_CHECKS];
 
 class CheckTimeoutError extends Error {}
 
@@ -76,6 +79,8 @@ export type RunShopHealthOptions = {
   mode?: ShopHealthMode;
   /** Store the run (default true). Page-load config runs pass false. */
   persist?: boolean;
+  /** Send ops alerts for LIVE shops (default: true for stored runs, except LAUNCH). */
+  alerts?: boolean;
   now?: Date;
   checks?: readonly ShopHealthCheck[];
 };
@@ -88,15 +93,24 @@ export type ShopHealthRunResult = ShopHealthSummary & {
   results: ShopHealthCheckResult[];
   startedAt: Date;
   durationMs: number;
+  previousOverall: ShopHealthOverall | null;
+  alert: ShopHealthAlertAction;
 };
 
-export async function loadPreviousResults(shopId: string): Promise<ShopHealthCheckResult[] | null> {
+/** The latest stored run in the same mode (a launch-guard LIVE run never counts for a PRELAUNCH shop). */
+export async function loadPreviousRun(
+  shopId: string,
+  mode: ShopHealthMode,
+): Promise<{ results: ShopHealthCheckResult[] | null; overall: ShopHealthOverall | null }> {
   const previous = await prisma.shopHealthRun.findFirst({
-    where: { shopId },
+    where: { shopId, mode },
     orderBy: { startedAt: 'desc' },
-    select: { results: true },
+    select: { results: true, overall: true },
   });
-  return Array.isArray(previous?.results) ? (previous!.results as unknown as ShopHealthCheckResult[]) : null;
+  return {
+    results: Array.isArray(previous?.results) ? (previous!.results as unknown as ShopHealthCheckResult[]) : null,
+    overall: previous ? (String(previous.overall) as ShopHealthOverall) : null,
+  };
 }
 
 export async function runShopHealth(shopId: string, options: RunShopHealthOptions): Promise<ShopHealthRunResult> {
@@ -109,11 +123,12 @@ export async function runShopHealth(shopId: string, options: RunShopHealthOption
   for (const check of checks) results.push(await runCheck(check, ctx));
 
   const persist = options.persist !== false;
-  const previous = persist ? await loadPreviousResults(shopId) : null;
-  const summary = summariseShopHealth(ctx.mode, results, previous);
+  const previous = persist ? await loadPreviousRun(shopId, ctx.mode) : { results: null, overall: null };
+  const summary = summariseShopHealth(ctx.mode, results, previous.results);
   const durationMs = Date.now() - started;
 
   let runId: string | null = null;
+  let alert: ShopHealthAlertAction = 'none';
   if (persist) {
     const run = await prisma.shopHealthRun.create({
       data: {
@@ -131,12 +146,42 @@ export async function runShopHealth(shopId: string, options: RunShopHealthOption
     // The list light follows the shop's own mode only: a launch-guard LIVE run of a draft shop is
     // stored as a run but does not turn the draft red in /ops/shops.
     if (ctx.mode === naturalHealthMode(ctx.access, ctx.shop)) {
-      await prisma.shopSettings.update({
+      const updated = await prisma.shopSettings.update({
         where: { id: shopId },
         data: { healthOverall: summary.overall, healthCheckedAt: startedAt },
+        select: { healthAlertedAt: true },
       });
+      if (options.alerts ?? options.trigger !== 'LAUNCH') {
+        try {
+          alert = await applyShopHealthAlert({
+            shopId,
+            shopName: ctx.shop.name,
+            runId,
+            mode: ctx.mode,
+            overall: summary.overall,
+            previousOverall: previous.overall,
+            alertedAt: updated.healthAlertedAt,
+            failing: summary.failing,
+            now: startedAt,
+          });
+        } catch (error) {
+          // An alert failure never loses the run; the next run tries again (healthAlertedAt unchanged).
+          console.error('[shop-health] alert failed', error instanceof Error ? error.message : error);
+        }
+      }
     }
   }
 
-  return { ...summary, runId, shopId, trigger: options.trigger, mode: ctx.mode, results, startedAt, durationMs };
+  return {
+    ...summary,
+    runId,
+    shopId,
+    trigger: options.trigger,
+    mode: ctx.mode,
+    results,
+    startedAt,
+    durationMs,
+    previousOverall: previous.overall,
+    alert,
+  };
 }

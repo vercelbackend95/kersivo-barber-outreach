@@ -110,6 +110,8 @@ enum EmailOutboundPurpose {
   FREE_PREVIEW_HUB_LAUNCH_APPROVED_INTERNAL
   /// Shop Hub: site is live — transactional email to the owner.
   FREE_PREVIEW_HUB_SITE_LIVE
+  /// Shop health ops alert (red / still red / back to green) to KERSIVO_OPS_EMAILS. docs/ops/shop-health.md
+  SHOP_HEALTH_ALERT_INTERNAL
 }
 
 enum EmailOutboundStatus {

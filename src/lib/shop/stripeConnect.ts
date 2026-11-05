@@ -168,6 +168,30 @@ export async function retrieveConnectAccount(accountId: string): Promise<{
   };
 }
 
+export type ConnectAccountHealth = {
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  disabledReason: string | null;
+  currentlyDue: string[];
+};
+
+/** Read-only account status for shop health (docs/ops/shop-health.md). GET only; never changes the account. */
+export async function retrieveConnectAccountHealth(accountId: string): Promise<ConnectAccountHealth> {
+  const account = await stripeGet(`/accounts/${encodeURIComponent(accountId)}`);
+  const requirements =
+    typeof account.requirements === 'object' && account.requirements
+      ? (account.requirements as { disabled_reason?: unknown; currently_due?: unknown })
+      : {};
+  return {
+    chargesEnabled: Boolean(account.charges_enabled),
+    payoutsEnabled: Boolean(account.payouts_enabled),
+    detailsSubmitted: Boolean(account.details_submitted),
+    disabledReason: typeof requirements.disabled_reason === 'string' && requirements.disabled_reason ? requirements.disabled_reason : null,
+    currentlyDue: Array.isArray(requirements.currently_due) ? requirements.currently_due.map(String) : [],
+  };
+}
+
 /** Idempotency key for legacy booking_deposit sessions. */
 export function bookingDepositCheckoutIdempotencyKey(bookingId: string): string {
   return `booking_deposit_checkout_${bookingId.trim()}`;
