@@ -92,6 +92,67 @@ describe('buildSiteData', () => {
   });
 });
 
+describe('booking links', () => {
+  it('gives the own-domain booking URL, the hosted URL and per-service / per-barber deep links', () => {
+    const site = buildSiteData(seededShopSource());
+    expect(site.booking).toEqual({
+      available: true,
+      url: 'https://fixturebarbers.example.test/book',
+      hostedUrl: 'https://kersivo.co.uk/book/fixture-barbers',
+      label: 'Book an appointment',
+    });
+    expect(site.team.map((m) => m.bookingUrl)).toEqual(['https://fixturebarbers.example.test/book?barber=b1']);
+    expect(site.services.all.map((s) => s.bookingUrl)).toEqual([
+      'https://fixturebarbers.example.test/book?service=s1',
+      'https://fixturebarbers.example.test/book?service=s2',
+      'https://fixturebarbers.example.test/book?service=s3',
+    ]);
+    // categories hold the same objects
+    expect(site.services.categories.flatMap((c) => c.services).map((s) => s.bookingUrl).sort()).toEqual(
+      site.services.all.map((s) => s.bookingUrl).sort(),
+    );
+  });
+
+  it('uses the hosted URL for both when there is no own domain', () => {
+    const site = buildSiteData(
+      seededShopSource({
+        bookingUrl: 'https://kersivo.co.uk/book/fixture-barbers',
+        hostedBookingUrl: 'https://kersivo.co.uk/book/fixture-barbers',
+        websiteUrl: null,
+      }),
+    );
+    expect(site.booking.url).toBe('https://kersivo.co.uk/book/fixture-barbers');
+    expect(site.booking.hostedUrl).toBe('https://kersivo.co.uk/book/fixture-barbers');
+    expect(site.team[0].bookingUrl).toBe('https://kersivo.co.uk/book/fixture-barbers?barber=b1');
+    expect(site.services.all[0].bookingUrl).toBe('https://kersivo.co.uk/book/fixture-barbers?service=s1');
+  });
+
+  it('nulls every booking link when booking is not available', () => {
+    for (const source of [
+      seededShopSource({ features: { brandedSite: true, onlineBooking: false, retail: true } }),
+      seededShopSource({ bookingUrl: null }),
+      // preview mode: no booking at all
+      seededShopSource({ plan: 'preview', bookingUrl: null, hostedBookingUrl: null, features: { brandedSite: true, onlineBooking: false, retail: false } }),
+    ]) {
+      const site = buildSiteData(source);
+      expect(site.booking.available).toBe(false);
+      expect(site.booking.url).toBeNull();
+      expect(site.booking.hostedUrl).toBeNull();
+      expect(site.team.every((m) => m.bookingUrl === null)).toBe(true);
+      expect(site.services.all.every((s) => s.bookingUrl === null)).toBe(true);
+    }
+  });
+
+  it('matches the snapshot of every booking link', () => {
+    const site = buildSiteData(seededShopSource());
+    expect({
+      booking: site.booking,
+      team: site.team.map((m) => ({ id: m.id, bookingUrl: m.bookingUrl })),
+      services: site.services.all.map((s) => ({ id: s.id, bookingUrl: s.bookingUrl })),
+    }).toMatchSnapshot();
+  });
+});
+
 describe('empty states', () => {
   const site = buildSiteData(emptyShopSource());
 
@@ -107,7 +168,7 @@ describe('empty states', () => {
       products: false,
       booking: false,
     });
-    expect(site.booking).toEqual({ available: false, url: null, label: 'Book an appointment' });
+    expect(site.booking).toEqual({ available: false, url: null, hostedUrl: null, label: 'Book an appointment' });
     expect(site.seo.pages).toEqual([]);
   });
 

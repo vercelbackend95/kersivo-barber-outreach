@@ -53,7 +53,10 @@ type SiteData = {
     days: SiteOpeningDay[];            // always 7, Monday first
     exceptions: SiteOpeningException[]; // today onwards, soonest first
   };
-  team: { id; name; title: string | null; bio: string | null; photoUrl: string | null; serviceIds: string[] }[];
+  team: {
+    id; name; title: string | null; bio: string | null; photoUrl: string | null; serviceIds: string[];
+    bookingUrl: string | null;         // booking.url + "?barber=<id>"; null when booking is unavailable
+  }[];
   services: {
     categories: { name: string; services: SiteService[] }[];
     all: SiteService[];
@@ -64,7 +67,12 @@ type SiteData = {
     inStock: boolean; availabilityDisplay: 'In stock' | 'Out of stock';
     url: string;                       // pickup page on kersivo.co.uk
   }[];
-  booking: { available: boolean; url: string | null; label: string };
+  booking: {
+    available: boolean;
+    url: string | null;                // where booking buttons link (own-domain /book once live)
+    hostedUrl: string | null;          // https://kersivo.co.uk/book/{slug}; null when booking is unavailable
+    label: string;
+  };
   seo: {
     title: string; description: string; canonicalUrl: string;
     jsonLd: object;                    // home page @graph
@@ -102,6 +110,7 @@ type SiteService = {
   pricePence: number; currency: 'GBP'; priceFrom: boolean;
   priceDisplay: string;                               // "£25" | "£25.50" | "From £25"
   teamMemberIds: string[]; featured: boolean;
+  bookingUrl: string | null;                          // booking.url + "?service=<id>"; null when booking is unavailable
 };
 ```
 
@@ -121,6 +130,8 @@ type SiteService = {
 | `services` | `Service` where `isActive`, in dashboard order. Categories appear in the order of their first service. A service without a category goes under "Services". The price is integer pence; `priceFrom` shows "From £X". |
 | `products` | `Product` where `active`, in dashboard order. **Empty unless `planFeatures.retail`.** Out-of-stock items stay listed with `inStock: false`. |
 | `booking.available` | True only when the shop accepts new online bookings now. `url` is the own-domain booking URL when verified, else `https://kersivo.co.uk/book/{slug}`. |
+| `booking.hostedUrl` | The KERSIVO-hosted booking URL `https://kersivo.co.uk/book/{slug}` whenever booking is available, also when `url` is the own-domain URL. Null when booking is unavailable, and always null in preview mode. |
+| `team[].bookingUrl`, `services.all[].bookingUrl` | Booking deep links (§7): `booking.url` with `?barber=<id>` / `?service=<id>`. The service objects under `services.categories` are the same objects. Null whenever `booking.available` is false. |
 | `seo.canonicalUrl` | `business.websiteUrl`, else the hosted booking page |
 | `planFeatures` | What the plan lets this site show. Gating happens here, never in storage. |
 
@@ -182,6 +193,7 @@ const site: SiteData = await res.json();
     <h1>{site.business.name}</h1>
     {site.business.tagline && <p>{site.business.tagline}</p>}
     {site.has.booking && <a href={site.booking.url}>{site.booking.label}</a>}
+    {/* per-service and per-barber buttons use s.bookingUrl / m.bookingUrl (§7) */}
 
     {site.has.services && (
       <section>
@@ -244,3 +256,28 @@ A plan controls what is **published**, never what is **stored** (`src/lib/shop/k
 ### Locations
 
 Today one `ShopSettings` row is one shop and one location. The contract already returns `locations[]` and accepts `locationId`, so designs will not change when multi-location arrives. A real `Location` model touches bookings, availability and Stripe quantities, and is its own batch.
+
+---
+
+## 7. Booking deep links
+
+A booking button can open the flow with a service and/or a barber already chosen.
+
+| Parameter | Value | Effect |
+|---|---|---|
+| `service` | a `services.all[].id` | that service is selected |
+| `barber` | a `team[].id` | that barber is selected |
+
+These are the **only** supported parameters. Anything else is ignored.
+
+- Use the ready-made links: `services.all[].bookingUrl` (`?service=<id>`) and `team[].bookingUrl` (`?barber=<id>`). They are null whenever `booking.available` is false; show no booking button then.
+- For a combined link ("Skin fade with Callum"), build it from `booking.url` with `URLSearchParams`; never concatenate strings:
+  ```ts
+  const url = new URL(site.booking.url!);
+  url.searchParams.set('service', service.id);
+  url.searchParams.set('barber', member.id);
+  // https://kersivo.co.uk/book/sharp-cuts?service=<id>&barber=<id>
+  ```
+  Only combine a barber with a service they perform (`member.serviceIds.includes(service.id)`).
+- The booking page validates both ids against the shop's bookable services and the barbers shown on the website. An unknown id, another shop's id, an inactive service, a barber not on the website, or a barber who does not perform the chosen service is dropped silently: the flow opens without that preselection. The visitor can always change the selection.
+- The parameters survive the legacy `/book/{shopId}` → `/book/{slug}` redirect. The booking page's canonical URL never includes them.

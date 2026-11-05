@@ -128,6 +128,11 @@ export type SiteTeamMember = {
   photoUrl: string | null;
   /** Ids of services in `services.all` this person performs. */
   serviceIds: string[];
+  /**
+   * `booking.url` with `?barber=<id>`: opens booking with this person preselected.
+   * Null whenever `booking.available` is false.
+   */
+  bookingUrl: string | null;
 };
 
 export type SiteService = {
@@ -146,6 +151,11 @@ export type SiteService = {
   /** Ids of team members in `team` who perform it. */
   teamMemberIds: string[];
   featured: boolean;
+  /**
+   * `booking.url` with `?service=<id>`: opens booking with this service preselected.
+   * Null whenever `booking.available` is false.
+   */
+  bookingUrl: string | null;
 };
 
 export type SiteServiceCategory = {
@@ -179,8 +189,18 @@ export type SiteProduct = {
 export type SiteBooking = {
   /** True when new online bookings are accepted right now. */
   available: boolean;
-  /** Absolute booking URL. Null when booking is unavailable. */
+  /**
+   * Absolute booking URL to link to. Null when booking is unavailable. Once the shop is live this
+   * is the ops-verified own-domain URL (e.g. "https://sharpcuts.co.uk/book"), otherwise the
+   * KERSIVO-hosted one.
+   */
   url: string | null;
+  /**
+   * The KERSIVO-hosted booking URL ("https://kersivo.co.uk/book/{slug}") whenever booking is
+   * available, also when `url` is the own-domain URL (the shop site's `/book` redirects here).
+   * Null when booking is unavailable (always null in preview mode).
+   */
+  hostedUrl: string | null;
   /** CTA label to use on buttons. */
   label: string;
 };

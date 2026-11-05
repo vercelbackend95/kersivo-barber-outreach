@@ -196,3 +196,34 @@ exports[`JSON-LD > matches the snapshot for the seeded shop 1`] = `
   ],
 }
 `;
+
+exports[`booking links > matches the snapshot of every booking link 1`] = `
+{
+  "booking": {
+    "available": true,
+    "hostedUrl": "https://kersivo.co.uk/book/fixture-barbers",
+    "label": "Book an appointment",
+    "url": "https://fixturebarbers.example.test/book",
+  },
+  "services": [
+    {
+      "bookingUrl": "https://fixturebarbers.example.test/book?service=s1",
+      "id": "s1",
+    },
+    {
+      "bookingUrl": "https://fixturebarbers.example.test/book?service=s2",
+      "id": "s2",
+    },
+    {
+      "bookingUrl": "https://fixturebarbers.example.test/book?service=s3",
+      "id": "s3",
+    },
+  ],
+  "team": [
+    {
+      "bookingUrl": "https://fixturebarbers.example.test/book?barber=b1",
+      "id": "b1",
+    },
+  ],
+}
+`;

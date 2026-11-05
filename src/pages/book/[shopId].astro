@@ -13,6 +13,7 @@ import {
   publicBookingPageSeo,
   resolvePublicBookingIdentifier,
 } from '../../lib/booking/resolvePublicBookingIdentifier';
+import { resolveBookingPreselection } from '../../lib/booking/initialSelection';
 import '../../styles/tokens.css';
 import '../../styles/fonts.css';
 import '../../styles/global.css';
@@ -89,6 +90,7 @@ async function loadBookingPage() {
       select: {
         id: true,
         name: true,
+        showOnWebsite: true,
         barberServices: { select: { serviceId: true } },
       },
     }),
@@ -138,6 +140,16 @@ const bookingUnavailable = !resolvedPage || resolvedPage.bookingUnavailable;
 const seo = shop ? publicBookingPageSeo(shop) : null;
 const pageTitle = shop ? `Book — ${shop.name}` : 'Book — KERSIVO';
 const createUrl = shop ? `/api/public/bookings/${shop.id}/create` : '';
+// Deep link `?service=<id>&barber=<id>` (docs/site-data-contract.md). Ids that are not this shop's
+// bookable service / website barber are dropped silently. The canonical stays the bare slug URL.
+const preselection = resolveBookingPreselection(Astro.url.searchParams, {
+  services,
+  barbers: barbers.map((b) => ({
+    id: b.id,
+    showOnWebsite: b.showOnWebsite,
+    serviceIds: b.barberServices.map((x) => x.serviceId),
+  })),
+});
 ---
 
 <MinimalLayout
@@ -167,6 +179,8 @@ const createUrl = shop ? `/api/public/bookings/${shop.id}/create` : '';
           publicCreateUrl={createUrl}
           bookingPaymentMode={bookingPaymentMode}
           starterPaymentPolicy={starterPaymentPolicy}
+          initialServiceId={preselection.initialServiceId}
+          initialBarberId={preselection.initialBarberId}
           services={services.map((s) => ({
             id: s.id,
             name: s.name,

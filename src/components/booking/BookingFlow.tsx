@@ -13,6 +13,11 @@ import BookingDateCarousel from './BookingDateCarousel';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
+import {
+  barberOffersService,
+  resolveInitialBarberId,
+  resolveInitialServiceId,
+} from '../../lib/booking/initialSelection';
 import type { BookingPaymentMode } from '@prisma/client';
 import { resolveRequiredBookingPayment } from '../../lib/booking/bookingPaymentPolicy';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
@@ -245,24 +250,6 @@ export function depositSubmitLabel(servicePricePence: number): string | null {
   return bookingPaymentSubmitLabel('DEPOSIT', servicePricePence);
 }
 
-function resolveInitialServiceId(services: Service[], initialServiceId?: string): string {
-  if (!initialServiceId) return '';
-  return services.some((service) => service.id === initialServiceId) ? initialServiceId : '';
-}
-
-function barberOffersService(barber: Barber, serviceId: string): boolean {
-  if (!barber.serviceIds || barber.serviceIds.length === 0) return true;
-  return barber.serviceIds.includes(serviceId);
-}
-
-function resolveInitialBarberId(barbers: Barber[], initialBarberId?: string, serviceId = ''): string {
-  if (!initialBarberId) return '';
-  const barber = barbers.find((item) => item.id === initialBarberId);
-  if (!barber) return '';
-  if (serviceId && !barberOffersService(barber, serviceId)) return '';
-  return barber.id;
-}
-
 function resolveInitialWizardStep(serviceId: string, barberId: string): number {
   if (serviceId && barberId) return 3;
   if (serviceId) return 2;
@@ -422,6 +409,11 @@ export default function BookingFlow({
   );
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
+  // Deep link with a barber but no service yet (`?barber=<id>`): show who was chosen on the service step.
+  const preselectedBarberName =
+    !serviceId && barberId && barberId !== ANY_BARBER_ID
+      ? barbers.find((barber) => barber.id === barberId)?.name ?? null
+      : null;
   const normalizedDate = normalizeToIsoDate(date);
   const bookingDateSummary = normalizedDate ? formatDateForSummary(normalizedDate, bookingTimezone) : 'Select date';
   const minBookingDate = getCurrentIsoDateInTimezone(bookingTimezone);
@@ -1159,6 +1151,10 @@ export default function BookingFlow({
               {compactBookingSummary && wizardStep > 1 ? (
                 <p className="booking-flow__picks" aria-live="polite">
                   {compactBookingSummary}
+                </p>
+              ) : wizardStep === 1 && preselectedBarberName ? (
+                <p className="booking-flow__picks" aria-live="polite">
+                  With {preselectedBarberName}
                 </p>
               ) : null}
 

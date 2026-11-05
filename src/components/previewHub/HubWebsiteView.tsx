@@ -28,7 +28,7 @@ export type HubWebsiteDraft = {
     category: string | null;
     description: string | null;
   }>;
-  barbers: Array<{ id: string; name: string; serviceIds: string[] }>;
+  barbers: Array<{ id: string; name: string; serviceIds: string[]; showOnWebsite?: boolean }>;
   hours: Array<{ dayOfWeek: number; open: boolean }>;
 };
 
@@ -48,6 +48,9 @@ export function HubWebsiteView(props: {
   bookingHref: string;
   changesHref: string;
   draft: HubWebsiteDraft;
+  /** Test booking deep link (`?view=booking&service=<id>&barber=<id>`), already validated. */
+  initialServiceId?: string;
+  initialBarberId?: string;
   changeItems: HubChangePublic[];
   includedChangeRounds: number;
   changeRoundsUsed: number;
@@ -171,6 +174,8 @@ export function HubWebsiteView(props: {
               publicDemoMode={true}
               services={props.draft.services}
               barbers={props.draft.barbers}
+              initialServiceId={props.initialServiceId}
+              initialBarberId={props.initialBarberId}
               openingHours={props.draft.hours}
               shopDetails={{
                 timezone: props.draft.timezone,

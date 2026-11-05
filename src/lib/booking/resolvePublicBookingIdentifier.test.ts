@@ -56,6 +56,16 @@ describe('resolvePublicBookingIdentifier', () => {
     expect(result).toMatchObject({ location: '/book/blackline-barbers?deposit=cancelled' });
   });
 
+  it('M2: the legacy-id redirect keeps the booking deep-link parameters (service, barber)', async () => {
+    const { db } = fakeDb([freeShop]);
+    const search = '?service=svc_1&barber=brb_2';
+    const result = await resolvePublicBookingIdentifier('cmfree123', search, db);
+    expect(result).toEqual({ kind: 'redirect', location: '/book/blackline-barbers?service=svc_1&barber=brb_2', status: 308 });
+    const location = new URL((result as { location: string }).location, 'https://kersivo.co.uk');
+    expect(location.searchParams.get('service')).toBe('svc_1');
+    expect(location.searchParams.get('barber')).toBe('brb_2');
+  });
+
   it('N: a legacy Full shop without a slug keeps working on its raw id route', async () => {
     const { db } = fakeDb([legacyFullShop]);
     expect(await resolvePublicBookingIdentifier('cmlegacyfull', '?x=1', db)).toEqual({
@@ -163,5 +173,10 @@ describe('booking page SEO', () => {
     expect(page).toContain('noindex={true}');
     expect(page).toContain('robotsFollow={true}');
     expect(page).toContain('publicBookingPageSeo(shop)');
+    // Deep links: the query string feeds only the preselection, never the canonical.
+    expect(page).toContain('resolveBookingPreselection(Astro.url.searchParams');
+    expect(page).toContain('initialServiceId={preselection.initialServiceId}');
+    expect(page).toContain('initialBarberId={preselection.initialBarberId}');
+    expect(page).toContain("canonicalPath={seo?.canonicalPath ?? '/book'}");
   });
 });

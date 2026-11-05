@@ -13,6 +13,7 @@ import {
   formatServicePrice,
   phoneHref,
 } from './format';
+import { bookingDeepLink } from '@/lib/booking/initialSelection';
 import { buildSiteJsonLd } from './jsonLd';
 import {
   SITE_DATA_CONTRACT_VERSION,
@@ -101,6 +102,8 @@ export type SiteDataSource = {
   features: { brandedSite: boolean; onlineBooking: boolean; retail: boolean };
   /** Absolute booking URL, or null when booking is not available. */
   bookingUrl: string | null;
+  /** The KERSIVO-hosted booking URL (https://kersivo.co.uk/book/{slug}), or null when there is none. */
+  hostedBookingUrl: string | null;
   /** Verified own-domain origin, or null. */
   websiteUrl: string | null;
   /** Fallback canonical URL when there is no own domain (the hosted booking page). */
@@ -210,7 +213,7 @@ function buildExceptions(source: SiteDataSource): SiteOpeningException[] {
     });
 }
 
-function buildServicesAndTeam(source: SiteDataSource) {
+function buildServicesAndTeam(source: SiteDataSource, bookingUrl: string | null) {
   const activeServices = source.services.filter((s) => s.isActive);
   const visibleTeam = source.barbers.filter((b) => b.active && b.showOnWebsite);
   const serviceIds = new Set(activeServices.map((s) => s.id));
@@ -223,6 +226,7 @@ function buildServicesAndTeam(source: SiteDataSource) {
     bio: clean(b.bio),
     photoUrl: clean(b.avatarUrl),
     serviceIds: b.serviceIds.filter((id) => serviceIds.has(id)),
+    bookingUrl: bookingDeepLink(bookingUrl, { barber: b.id }),
   }));
 
   const all: SiteService[] = activeServices.map((s) => ({
@@ -238,6 +242,7 @@ function buildServicesAndTeam(source: SiteDataSource) {
     priceDisplay: formatServicePrice(s.pricePence, s.priceFrom),
     teamMemberIds: visibleTeam.filter((b) => b.serviceIds.includes(s.id) && teamIds.has(b.id)).map((b) => b.id),
     featured: s.featured,
+    bookingUrl: bookingDeepLink(bookingUrl, { service: s.id }),
   }));
 
   const categories: SiteServiceCategory[] = [];
@@ -284,7 +289,9 @@ export function buildSiteData(source: SiteDataSource): SiteData {
   const socialLinks = buildSocialLinks(source);
   const days = buildDays(source);
   const exceptions = buildExceptions(source);
-  const { team, services } = buildServicesAndTeam(source);
+  const bookingAvailable = source.features.onlineBooking && Boolean(source.bookingUrl);
+  const bookingUrl = bookingAvailable ? source.bookingUrl : null;
+  const { team, services } = buildServicesAndTeam(source, bookingUrl);
   const products = buildProducts(source);
   const name = source.shop.name.trim();
   const town = address.town;
@@ -293,7 +300,6 @@ export function buildSiteData(source: SiteDataSource): SiteData {
   const phone = clean(source.profile?.phone);
   const email = clean(source.profile?.email);
 
-  const bookingAvailable = source.features.onlineBooking && Boolean(source.bookingUrl);
   const canonicalUrl = source.websiteUrl ?? source.fallbackCanonicalUrl;
 
   const location = {
@@ -356,7 +362,8 @@ export function buildSiteData(source: SiteDataSource): SiteData {
     products,
     booking: {
       available: bookingAvailable,
-      url: bookingAvailable ? source.bookingUrl : null,
+      url: bookingUrl,
+      hostedUrl: bookingAvailable ? source.hostedBookingUrl : null,
       label: BOOKING_CTA_LABEL,
     },
     planFeatures: { plan: source.plan, ...source.features },

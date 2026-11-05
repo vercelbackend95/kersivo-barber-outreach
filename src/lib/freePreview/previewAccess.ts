@@ -163,7 +163,7 @@ export async function loadPreviewDraftShop(shopId: string) {
     prisma.barber.findMany({
       where: { active: true, shopId },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, barberServices: { select: { serviceId: true } } },
+      select: { id: true, name: true, showOnWebsite: true, barberServices: { select: { serviceId: true } } },
     }),
     prisma.shopOpeningHours.findMany({
       where: { shopId },
@@ -178,6 +178,7 @@ export async function loadPreviewDraftShop(shopId: string) {
     barbers: barbers.map((barber) => ({
       id: barber.id,
       name: barber.name,
+      showOnWebsite: barber.showOnWebsite,
       serviceIds: barber.barberServices.map((link) => link.serviceId),
     })),
   };
