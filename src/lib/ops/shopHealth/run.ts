@@ -66,8 +66,16 @@ export async function runCheck(
   }
 }
 
+/** Key-shaped strings (Stripe sk_/rk_/pk_, webhook secrets, bearer tokens) never reach stored results or the UI. */
+export function redactSecrets(text: string): string {
+  return text
+    .replace(/'?\b(?:sk|rk|pk)_(?:test|live)_[A-Za-z0-9*]+'?/g, '[Stripe key]')
+    .replace(/\bwhsec_[A-Za-z0-9*]+/g, '[webhook secret]')
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, 'Bearer [token]');
+}
+
 function errorText(error: unknown): string {
-  const text = error instanceof Error ? error.message : String(error);
+  const text = redactSecrets(error instanceof Error ? error.message : String(error));
   return text.length > 200 ? `${text.slice(0, 200)}…` : text;
 }
 

@@ -15,7 +15,7 @@ vi.mock('./context', async (importOriginal) => ({
 }));
 
 import { healthyContext } from './fixtures';
-import { runCheck, runShopHealth } from './run';
+import { redactSecrets, runCheck, runShopHealth } from './run';
 import type { ShopHealthCheck } from './types';
 
 const check = (overrides: Partial<ShopHealthCheck>): ShopHealthCheck => ({
@@ -38,6 +38,13 @@ beforeEach(() => {
 });
 
 describe('runCheck', () => {
+  it('never stores key fragments from a thrown error (Stripe masks most of the key, not all)', async () => {
+    const message = "The provided key 'sk_test_****************xxkL1W' does not have access to account 'acct_1'";
+    const r = await runCheck(check({ run: () => { throw new Error(message); } }), healthyContext());
+    expect(r.message).toBe("The check could not finish: The provided key [Stripe key] does not have access to account 'acct_1'.");
+    expect(redactSecrets('rk_live_abc whsec_def Bearer abc.def')).toBe('[Stripe key] [webhook secret] Bearer [token]');
+  });
+
   it('turns a thrown check into inconclusive', async () => {
     const r = await runCheck(check({ run: () => { throw new Error('db down'); } }), healthyContext());
     expect(r).toMatchObject({ status: 'inconclusive', message: 'The check could not finish: db down.' });
