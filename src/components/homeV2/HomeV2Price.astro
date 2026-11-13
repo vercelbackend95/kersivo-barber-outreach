@@ -24,7 +24,9 @@ const money = (amount: number) => (Number.isInteger(amount) ? `£${amount}` : `�
 
 const rows = Array.from({ length: MAX_BARBERS }, (_, index) => {
   const estimate = estimateBooksyMonthlySubscription(index + 1);
-  return { users: estimate.users, ex: money(estimate.exVatGbp), inc: money(estimate.incVatGbp), incValue: estimate.incVatGbp };
+  // Difference against the Booksy price before VAT, the more conservative of the two figures.
+  const less = Math.max(0, estimate.exVatGbp - SAAS_MONTHLY_GBP);
+  return { users: estimate.users, ex: money(estimate.exVatGbp), inc: money(estimate.incVatGbp), incValue: estimate.incVatGbp, less: money(less) };
 });
 const scaleMax = rows[rows.length - 1].incValue;
 const initial = rows[DEFAULT_BARBERS - 1];
@@ -38,7 +40,8 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
     <header class="hv2-head hv2-price__head">
       <p class="hv2-eyebrow">Pricing</p>
       <h2 id="hv2-price-title" class="hv2-h2">One price per shop, not per barber</h2>
-      <p class="hv2-lead">Full KERSIVO is {offer.price.full} per location, whether you have one barber or ten.</p>
+      <p class="hv2-lead">Take on your next barber without your software bill going up. Full KERSIVO is {offer.price.full} per location, whether you have one barber or ten.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph={`£${SAAS_MONTHLY_GBP}`}></span>
     </header>
 
     <div class="hv2-price__grid">
@@ -116,6 +119,13 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
           aria-describedby="hv2-compare-source"
           data-hv2-compare-range
         />
+        <ol class="hv2-compare__seats" role="list" aria-hidden="true" data-hv2-compare-seats>
+          {rows.map((row) => (
+            <li class:list={['hv2-compare__seat', row.users <= DEFAULT_BARBERS && 'is-on']}>
+              <svg viewBox="0 0 24 24" width="24" height="24" focusable="false"><circle cx="12" cy="6.5" r="3.5" /><path d="M5 21v-4.5A4.5 4.5 0 0 1 9.5 12h5a4.5 4.5 0 0 1 4.5 4.5V21" /></svg>
+            </li>
+          ))}
+        </ol>
         <div class="hv2-compare__bars" aria-live="polite">
           <div class="hv2-compare__row">
             <p class="hv2-compare__name">{offer.plans.full}</p>
@@ -131,13 +141,18 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
             <span class="hv2-compare__bar" style={`--w: ${pct(initial.incValue)}`} aria-hidden="true" data-hv2-compare-bar></span>
           </div>
         </div>
+        <p class="hv2-compare__less">
+          <span>With <span data-hv2-compare-team>{initial.users} barbers</span> you pay</span>
+          <strong data-hv2-compare-less>{initial.less}</strong>
+          <span>a month less than the Booksy subscription before VAT, and the gap grows with every barber you add.</span>
+        </p>
         <p id="hv2-compare-source" class="hv2-compare__source">
           Booksy lists {money(BOOKSY_BASE_PRICE_GBP)}/month plus {money(BOOKSY_ADDITIONAL_USER_GBP)} for each additional user, before VAT. Prices checked {BOOKSY_FACTS_CHECKED_DATE} on <a href={BOOKSY_SOURCE_PRICING}>Booksy's UK pricing page</a>. Card processing fees apply on both. <a href="/barber-software-cost-calculator">Compare the full cost</a>
         </p>
         <script
           type="application/json"
           data-hv2-compare-data
-          set:html={JSON.stringify(rows.map(({ users, ex, inc, incValue }) => ({ users, ex, inc, w: pct(incValue) })))}
+          set:html={JSON.stringify(rows.map(({ users, ex, inc, incValue, less }) => ({ users, ex, inc, less, w: pct(incValue) })))}
         />
       </div>
     </div>

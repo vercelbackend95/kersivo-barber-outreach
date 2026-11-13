@@ -25,7 +25,7 @@
   align-items: center;
   gap: 0.55rem;
   margin: 0;
-  color: var(--hv2-muted);
+  color: var(--hv2-sand);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -65,7 +65,7 @@
 .hv2 .hv2-section a:not(.btn) {
   color: var(--hv2-ink);
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-decoration-color: color-mix(in srgb, var(--hv2-sand) 45%, transparent);
   text-underline-offset: 0.2em;
   transition: text-decoration-color 160ms ease;
 }
@@ -76,9 +76,9 @@
 
 .hv2-card {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(236, 220, 194, 0.09);
   border-radius: 20px;
-  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  background: linear-gradient(180deg, #120f0c 0%, #0a0807 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 40px 90px -50px #000;
@@ -492,7 +492,7 @@
   padding: 0.3rem;
   border: 1px solid var(--hv2-line);
   border-radius: 999px;
-  background: #0b0b0c;
+  background: #0d0b09;
 }
 
 .hv2-system__tabs[hidden] {
@@ -846,7 +846,7 @@
 
 .hv2-tick__diary .is-online {
   border-color: var(--color-brand);
-  background: color-mix(in srgb, var(--color-brand) 22%, #141416);
+  background: color-mix(in srgb, var(--color-brand) 22%, #171310);
   color: #ffb3b9;
 }
 
@@ -1448,13 +1448,13 @@
 .hv2-compare__range::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-brand) var(--fill, 44%), #2a2a2d var(--fill, 44%));
+  background: linear-gradient(90deg, var(--color-brand) var(--fill, 44%), #2e2924 var(--fill, 44%));
 }
 
 .hv2-compare__range::-moz-range-track {
   height: 4px;
   border-radius: 999px;
-  background: #2a2a2d;
+  background: #2e2924;
 }
 
 .hv2-compare__range::-moz-range-progress {
@@ -1469,7 +1469,7 @@
   margin-top: calc(-0.8rem + 2px);
   border: 2px solid var(--color-brand);
   border-radius: 50%;
-  background: #0a0a0a;
+  background: #0c0a08;
   -webkit-appearance: none;
   appearance: none;
   transition: transform 160ms var(--hv2-ease);
@@ -1480,7 +1480,7 @@
   height: 1.45rem;
   border: 2px solid var(--color-brand);
   border-radius: 50%;
-  background: #0a0a0a;
+  background: #0c0a08;
 }
 
 .hv2-compare__range:active::-webkit-slider-thumb {
@@ -1529,7 +1529,7 @@
   width: var(--w);
   height: 0.55rem;
   border-radius: 999px;
-  background: #3a3b3e;
+  background: #3e372e;
   transition: width 420ms var(--hv2-ease);
 }
 
@@ -1581,7 +1581,7 @@
   inset: 0;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(236, 220, 194, 0.09);
 }
 
 .hv2-steps__line span {
@@ -1617,7 +1617,7 @@
   left: calc(var(--hv2-pad) + 0.6rem);
   width: 2px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(236, 220, 194, 0.09);
 }
 
 .hv2-steps__list::after {
@@ -1638,9 +1638,9 @@
   left: -2.15rem;
   width: 0.9rem;
   height: 0.9rem;
-  border: 2px solid #3a3b3e;
+  border: 2px solid #3e372e;
   border-radius: 50%;
-  background: #0b0b0c;
+  background: #0d0b09;
   transition:
     border-color 300ms ease,
     background-color 300ms ease,
@@ -1661,9 +1661,9 @@
   height: 100%;
   padding: clamp(1.25rem, 2.2vw, 1.75rem);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(236, 220, 194, 0.09);
   border-radius: 20px;
-  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  background: linear-gradient(180deg, #120f0c 0%, #0a0807 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 40px 90px -50px #000;
@@ -1869,12 +1869,12 @@
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 50%;
-  background: #3a3b3e;
+  background: #3e372e;
 }
 
 .hv2-vis__block {
   border-radius: 0.3rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(236, 220, 194, 0.09);
 }
 
 .hv2-vis__block--nav {
@@ -1907,7 +1907,7 @@
 .hv2-vis__block--row i {
   height: 1.3rem;
   border-radius: 0.25rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(236, 220, 194, 0.09);
 }
 
 .hv2-vis__phone {
@@ -2105,7 +2105,7 @@
     height: 2.2rem;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 50%;
-    background: #0b0b0c;
+    background: #0d0b09;
     color: var(--hv2-muted);
     font-size: 0.85rem;
     font-weight: 700;
@@ -2557,7 +2557,7 @@
 .hv2-system__tab-rail {
   background: linear-gradient(180deg, #222225, #17171a);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(236, 220, 194, 0.09),
     0 0 0 1px color-mix(in srgb, var(--color-brand) 30%, transparent),
     0 8px 24px -10px color-mix(in srgb, var(--color-brand) 60%, transparent);
 }
@@ -2838,5 +2838,163 @@
   .hv2-vis__signal {
     width: 4rem;
     height: 4rem;
+  }
+}
+
+/* ---------- Sand glyph slots ----------
+   Empty boxes the WebGL sand sculpts a chapter's key word into. CSS decides where they sit: in the
+   band above the heading on phones, in the free space beside it on wide screens. The text lives in
+   data-hv2-glyph; the font and alignment here are what the sand copies. */
+.hv2-head,
+.hv2-final .hv2-shell {
+  position: relative;
+}
+
+/* Phones and tablets: the word lands under the lead as its punchline, in space the head reserves. */
+.hv2-head:has(> .hv2-glyph) {
+  padding-bottom: calc(clamp(3.8rem, 20vw, 5.5rem) + 0.5rem);
+}
+
+.hv2-glyph {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(3.8rem, 20vw, 5.5rem);
+  font-family: var(--font-heading);
+  text-align: left;
+  pointer-events: none;
+}
+
+.hv2-final .hv2-glyph--band {
+  left: var(--hv2-pad);
+  right: var(--hv2-pad);
+  bottom: calc(100% + 0.6rem);
+  height: clamp(2.6rem, 8vw, 6rem);
+}
+
+@media (min-width: 80rem) {
+  .hv2-head:has(> .hv2-glyph) {
+    padding-bottom: 0;
+  }
+
+  .hv2-head > .hv2-glyph {
+    left: calc(100% + 3rem);
+    right: auto;
+    top: 50%;
+    bottom: auto;
+    width: calc(min(100vw, var(--hv2-max)) - 2 * var(--hv2-pad) - 46rem - 3rem);
+    max-width: 40rem;
+    height: clamp(10rem, 15vw, 15rem);
+    transform: translateY(-50%);
+    text-align: right;
+  }
+
+  /* Wide screens: the word fills the empty top-right of the closing card, above the terms. */
+  .hv2-final .hv2-glyph--band {
+    top: 3.25rem;
+    right: calc(var(--hv2-pad) + 4rem);
+    bottom: auto;
+    left: auto;
+    width: 34%;
+    height: 7.5rem;
+    text-align: right;
+  }
+}
+
+/* ---------- Team-size seats and difference ---------- */
+.hv2-compare__seats {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: -0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hv2-compare__seat {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  max-height: 2.5rem;
+  border: 1px solid var(--hv2-line);
+  border-radius: 10px;
+  color: #4a433a;
+  transition:
+    color 260ms var(--hv2-ease),
+    background-color 260ms var(--hv2-ease),
+    border-color 260ms var(--hv2-ease),
+    transform 260ms var(--hv2-ease);
+}
+
+.hv2-compare__seat svg {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.hv2-compare__seat svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.hv2-compare__seat.is-on {
+  border-color: color-mix(in srgb, var(--hv2-sand) 45%, transparent);
+  background: color-mix(in srgb, var(--hv2-sand) 10%, transparent);
+  color: var(--hv2-sand);
+}
+
+.hv2 .hv2-compare__less {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--hv2-sand) 22%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--hv2-sand) 6%, transparent);
+  color: var(--hv2-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.hv2-compare__less strong {
+  color: var(--hv2-sand);
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  transform-origin: 0% 70%;
+}
+
+.hv2-compare__less strong.is-bump {
+  animation: hv2-bump 320ms var(--hv2-ease);
+}
+
+.hv2-compare__less [data-hv2-compare-team] {
+  color: var(--hv2-ink);
+  font-weight: 600;
+}
+
+@keyframes hv2-bump {
+  0% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hv2-compare__seat {
+    transition: none;
+  }
+
+  .hv2-compare__less strong.is-bump {
+    animation: none;
   }
 }

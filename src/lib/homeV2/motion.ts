@@ -208,7 +208,7 @@ function bindHeadings(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docu
   for (const head of heads) {
     const eyebrow = head.querySelector('.hv2-eyebrow');
     const title = head.querySelector('.hv2-h2');
-    const rest = Array.from(head.children).filter((child) => child !== eyebrow && child !== title);
+    const rest = Array.from(head.children).filter((child) => child !== eyebrow && child !== title && !child.hasAttribute('data-hv2-glyph'));
     if (eyebrow) gsap.set(eyebrow, { autoAlpha: 0, x: -14 });
     if (title) gsap.set(title, { clipPath: 'inset(100% 0% 0% 0%)', y: 48 });
     if (rest.length) gsap.set(rest, { autoAlpha: 0, y: 18 });
@@ -295,39 +295,43 @@ function bindPrice(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Documen
     }, 'top 82%');
   }
 
-  // Team-size comparison counts up once, from one barber to the default, unless the visitor got there first.
+  // Team-size comparison follows the scroll: the shop grows from one barber to ten while the card
+  // passes through the screen, and the KERSIVO line stays put. Once the visitor uses the slider, it is theirs.
   const compare = root.querySelector<HTMLElement>('[data-hv2-compare]');
   const range = compare?.querySelector<HTMLInputElement>('[data-hv2-compare-range]');
   let touched = false;
+  let grow: ReturnType<ScrollTriggerStatic['create']> | null = null;
   const touch = () => {
     touched = true;
+    grow?.kill();
+    grow = null;
   };
   if (compare && range) {
     range.addEventListener('pointerdown', touch);
     range.addEventListener('keydown', touch);
-    const goal = Number(range.value);
     const min = Number(range.min) || 1;
-    once(ScrollTrigger, compare, () => {
+    const max = Number(range.max) || 10;
+    let last = Number(range.value);
+    const follow = (progress: number) => {
       if (touched) return;
-      const state = { value: min };
-      let last = -1;
-      gsap.to(state, {
-        value: goal,
-        duration: 1.8,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-          if (touched) return;
-          const value = Math.round(state.value);
-          if (value === last) return;
-          last = value;
-          range.value = String(value);
-          range.dispatchEvent(new Event('input', { bubbles: true }));
-        },
-      });
-    }, 'top 75%');
+      const value = Math.round(min + progress * (max - min));
+      if (value === last) return;
+      last = value;
+      range.value = String(value);
+      range.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    grow = ScrollTrigger.create({
+      trigger: compare,
+      start: 'top 80%',
+      end: 'bottom 40%',
+      onUpdate: (self) => follow(self.progress),
+      onRefresh: (self) => follow(self.progress),
+    });
+    follow(grow.progress);
   }
 
   return () => {
+    grow?.kill();
     range?.removeEventListener('pointerdown', touch);
     range?.removeEventListener('keydown', touch);
     gsap.set([...cols, per, glow, sheen, receipt, ...lines, ...included].filter(Boolean), { clearProps: 'all' });

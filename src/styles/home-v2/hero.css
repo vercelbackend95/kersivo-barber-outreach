@@ -2,12 +2,15 @@
 .hv2 {
   --hv2-pad: clamp(1rem, 3.6vw, 3.25rem);
   --hv2-max: 90rem;
-  --hv2-ink: #f3f2ee;
-  --hv2-muted: #9a9ca1;
-  --hv2-quiet: #8f9091;
-  --hv2-line: rgba(255, 255, 255, 0.08);
+  /* Warm sand palette: ivory ink, sand-grey text, umber-black ground. Brand red stays for actions. */
+  --hv2-ink: #f5efe4;
+  --hv2-muted: #aba293;
+  --hv2-quiet: #998f81;
+  --hv2-line: rgba(236, 220, 194, 0.09);
+  --hv2-sand: #dcc5a0;
+  --hv2-ground: #0d0b09;
   --hv2-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  background: var(--bg);
+  background: var(--hv2-ground);
   color: var(--hv2-ink);
 }
 
@@ -47,7 +50,7 @@
   max-width: 41.5em;
   margin: 0.55rem 0 0;
   letter-spacing: -0.01em;
-  color: #e4e4e2;
+  color: #e9e1d3;
   font-size: clamp(1rem, 1.3vw, 1.2rem);
   line-height: 1.33;
   text-wrap: pretty;
@@ -78,7 +81,7 @@
 
 .hv2 .hv2-btn--secondary {
   border-color: rgba(255, 255, 255, 0.16);
-  background: #0c0c0c;
+  background: #0e0c0a;
 }
 
 .hv2-hero__facts {
@@ -153,7 +156,7 @@
   right: 0;
   width: max(100%, 51.5cqw);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  background: linear-gradient(180deg, #120f0c 0%, #0a0807 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 40px 90px -50px #000;
@@ -1012,7 +1015,7 @@
   padding: 0;
   border: 2px solid #3b3c3d;
   border-radius: 50%;
-  background: #0a0a0a;
+  background: #0c0a08;
   color: #f3f3f3;
   cursor: ew-resize;
   touch-action: none;
@@ -1193,15 +1196,16 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60% 45% at 78% 8%, color-mix(in srgb, var(--color-brand) 14%, transparent), transparent 70%),
-    radial-gradient(50% 40% at 10% 90%, color-mix(in srgb, var(--color-brand) 7%, transparent), transparent 70%);
+    radial-gradient(60% 45% at 78% 8%, color-mix(in srgb, var(--hv2-sand) 9%, transparent), transparent 70%),
+    radial-gradient(45% 35% at 92% 0%, color-mix(in srgb, var(--color-brand) 7%, transparent), transparent 70%),
+    radial-gradient(50% 40% at 10% 90%, color-mix(in srgb, var(--hv2-sand) 6%, transparent), transparent 70%);
 }
 
 .hv2-scene::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 90% at 50% 45%, transparent 35%, rgba(6, 7, 9, 0.75) 100%);
+  background: radial-gradient(120% 90% at 50% 45%, transparent 35%, rgba(8, 6, 4, 0.75) 100%);
 }
 
 .hv2-scene__canvas {
@@ -1299,7 +1303,7 @@
     margin-right: 1.125rem;
     border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 50%;
-    background: #0b0d10;
+    background: #0d0b09;
     transition:
       background-color 250ms ease,
       border-color 250ms ease;
