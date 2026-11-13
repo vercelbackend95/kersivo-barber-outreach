@@ -13,25 +13,25 @@ const states = [
     stamp: 'Booked',
     sub: 'Sat · 10:15',
     title: 'Booked on your website',
-    body: 'The client chooses a service, barber and time in the browser. No app download and no marketplace page in between.',
+    body: 'The client picks a service, barber and time on your website, even while you are mid-cut. No phone call, no DMs, no app download and no marketplace showing them other shops on the way.',
   },
   {
     stamp: 'Deposit paid',
     sub: `${deposit} · Stripe`,
     title: `${deposit} deposit paid`,
-    body: `You choose Pay at shop, a ${deposit} deposit or full payment upfront to help reduce no-shows.`,
+    body: `You choose Pay at shop, a ${deposit} deposit or full payment upfront to help reduce no-shows, so a Saturday slot is not left empty and unpaid.`,
   },
   {
     stamp: 'Reminder sent',
     sub: 'Email + SMS',
     title: 'Reminder sent',
-    body: 'Email confirmations and reminders, plus SMS reminders within a monthly allowance.',
+    body: 'The client gets an email confirmation and reminders, plus SMS reminders within a monthly allowance. You do not have to chase anyone.',
   },
   {
     stamp: 'In your diary',
     sub: 'Admin dashboard',
     title: 'In your diary',
-    body: 'The booking sits in your admin dashboard next to walk-ins and phone bookings, and the client record stays with your shop.',
+    body: 'The booking sits in your diary next to walk-ins and phone bookings, and the client’s details stay with your shop for their next visit.',
   },
 ] as const;
 ---
@@ -50,8 +50,9 @@ const states = [
   <div class="hv2-shell hv2-booking__grid">
     <header class="hv2-head hv2-booking__head">
       <p class="hv2-eyebrow">One booking</p>
-      <h2 id="hv2-booking-title" class="hv2-h2">From your website to your diary</h2>
-      <p class="hv2-lead">Follow one Saturday booking at the demo shop, from the client's tap to your admin view.</p>
+      <h2 id="hv2-booking-title" class="hv2-h2">Bookings land while you cut</h2>
+      <p class="hv2-lead">Online booking for your barbershop that works without you picking up the phone. Follow one Saturday booking at the demo shop, from the client's tap to your diary.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph="BOOKED."></span>
     </header>
 
     <div class="hv2-ticket-wrap">
