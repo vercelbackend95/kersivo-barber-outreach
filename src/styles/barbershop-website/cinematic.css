@@ -1378,14 +1378,14 @@
 
 .bw-diary__slot {
   padding: 0.4rem 0.55rem;
-  border-left: 2px solid var(--bw-line-strong);
-  border-radius: 0.35rem;
+  border: 1px solid var(--bw-line);
+  border-radius: 0.4rem;
   background: rgba(236, 220, 194, 0.04);
   color: var(--bw-soft);
 }
 
 .bw-diary__slot--free {
-  border-left-style: dashed;
+  border-style: dashed;
   background: none;
   color: var(--bw-quiet);
 }
@@ -1394,7 +1394,7 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  border-left-color: var(--bw-red);
+  border-color: rgba(215, 38, 56, 0.5);
   background: rgba(215, 38, 56, 0.14);
   color: var(--bw-ink);
 }
@@ -1670,8 +1670,8 @@
   display: grid;
   gap: 0.15rem;
   padding: 0.5rem 0.7rem;
-  border-left: 2px solid var(--bw-red);
-  border-radius: 0.4rem;
+  border: 1px solid rgba(215, 38, 56, 0.22);
+  border-radius: 0.5rem;
   background: rgba(215, 38, 56, 0.06);
   font-size: 0.82rem;
   line-height: 1.4;
