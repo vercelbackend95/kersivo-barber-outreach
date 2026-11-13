@@ -1,49 +1,125 @@
 ---
 /**
- * What a professional online presence looks like, as a self-check. Native checkboxes; the tally and
- * verdict update in the browser and nothing is stored or sent.
+ * What a professional online presence looks like, as a self-check. Native checkboxes; each item also
+ * says how Full KERSIVO handles it. The ring, tally, verdict and gap list update in the browser and
+ * nothing is stored or sent. Without JS the checklist and the KERSIVO lines still read in full.
  */
-type Check = { id: string; title: string; hint: string; kersivo: boolean };
+type Check = { id: string; title: string; hint: string; kersivo: string };
 
 const checks: Check[] = [
-  { id: 'domain', title: 'Your shop has its own domain', hint: 'yourshop.co.uk rather than a page on someone else’s site.', kersivo: true },
-  { id: 'prices', title: 'Services and prices are on your website', hint: 'Clients can see what a cut costs before they message you.', kersivo: true },
-  { id: 'book', title: 'Clients can book online in under a minute', hint: 'On a phone, from any page, without calling or sending a DM.', kersivo: true },
-  { id: 'reminders', title: 'Every booking gets a confirmation and reminder', hint: 'Sent automatically, without you texting each client.', kersivo: true },
-  { id: 'google', title: 'Your Google Business Profile links to your website', hint: 'The Website and Book buttons on Google lead to your own pages.', kersivo: false },
-  { id: 'instagram', title: 'Your Instagram bio links to your booking page', hint: 'One tap from your work to an open slot.', kersivo: false },
-  { id: 'consistent', title: 'Name, address and hours match everywhere', hint: 'Your website, Google, Instagram and shopfront say the same thing.', kersivo: false },
-  { id: 'photos', title: 'Photos show your real shop and work', hint: 'Recent, your own, and taken in good light.', kersivo: false },
+  {
+    id: 'domain',
+    title: 'Your shop has its own domain',
+    hint: 'yourshop.co.uk rather than a page on someone else’s site.',
+    kersivo: 'We register a standard domain for your shop, connect it to your website and cover the cost. Already have one? We connect that instead.',
+  },
+  {
+    id: 'prices',
+    title: 'Services and prices are on your website',
+    hint: 'Clients can see what a cut costs before they message you.',
+    kersivo: 'We build your services and prices into your website, and you can change them any time in your dashboard.',
+  },
+  {
+    id: 'book',
+    title: 'Clients can book online in under a minute',
+    hint: 'On a phone, from any page, without calling or sending a DM.',
+    kersivo: 'Online booking is built into your website, with a Book now button on every page.',
+  },
+  {
+    id: 'reminders',
+    title: 'Every booking gets a confirmation and reminder',
+    hint: 'Sent automatically, without you texting each client.',
+    kersivo: 'Email confirmations and reminders go out automatically, plus SMS reminders within a monthly allowance.',
+  },
+  {
+    id: 'google',
+    title: 'Your Google Business Profile links to your website',
+    hint: 'The Website and Book buttons on Google lead to your own pages.',
+    kersivo: 'We give you your website and booking links, ready to add to your Google Business Profile.',
+  },
+  {
+    id: 'instagram',
+    title: 'Your Instagram bio links to your booking page',
+    hint: 'One tap from your work to an open slot.',
+    kersivo: 'You get a booking link ready for your Instagram bio, so one tap opens your booking page.',
+  },
+  {
+    id: 'consistent',
+    title: 'Name, address and hours match everywhere',
+    hint: 'Your website, Google, Instagram and shopfront say the same thing.',
+    kersivo: 'We set up your website with the same name, address and hours as your Google listing.',
+  },
+  {
+    id: 'photos',
+    title: 'Photos show your real shop and work',
+    hint: 'Recent, your own, and taken in good light.',
+    kersivo: 'Upload photos of your shop and barbers in your KERSIVO dashboard, and we build them into your site.',
+  },
 ];
+
+const RADIUS = 52;
+const CIRC = 2 * Math.PI * RADIUS;
+const GAP = 5;
+const SEG = CIRC / checks.length;
 ---
 
-<section class="bw-section bw-presence" aria-labelledby="bw-presence-title" data-bw-presence>
+<section class="bw-section bw-presence" id="bw-presence" aria-labelledby="bw-presence-title" data-bw-presence>
   <div class="bw-shell">
     <div class="bw-presence__grid">
-      <div class="bw-head">
+      <div class="bw-head bw-presence__head">
+        <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 05 · The check-up</p>
         <h2 id="bw-presence-title" class="bw-h2">What a professional online presence looks like</h2>
         <p class="bw-lead">
           Your website sits at the centre, and everything else points to it. Tick what is already
-          true for your shop to see where the gaps are.
+          true for your shop to see where the gaps are, and how KERSIVO closes each one.
         </p>
 
-        <div class="bw-score" data-bw-score aria-live="polite">
-          <p class="bw-score__count"><span data-bw-score-count>0</span><span class="bw-score__of"> of {checks.length}</span></p>
-          <span class="bw-score__bar" aria-hidden="true">
-            {checks.map(() => <i></i>)}
-          </span>
-          <p class="bw-score__verdict" data-bw-score-verdict>Tick the ones that are true today.</p>
-          <p class="bw-score__kersivo" data-bw-score-kersivo hidden>
-            Full KERSIVO covers the first four for you: your domain, a website with your services and
-            prices, online booking and automatic confirmations and reminders.
+        <div class="bw-score" data-bw-score data-level="partial">
+          <div class="bw-score__dial">
+            <svg class="bw-score__ring" viewBox="0 0 120 120" aria-hidden="true">
+              {checks.map((_, index) => (
+                <circle
+                  cx="60"
+                  cy="60"
+                  r={RADIUS}
+                  pathLength={CIRC}
+                  stroke-dasharray={`${SEG - GAP} ${CIRC - SEG + GAP}`}
+                  stroke-dashoffset={-index * SEG}
+                  data-bw-seg={index}
+                />
+              ))}
+            </svg>
+            <p class="bw-score__count">
+              <span data-bw-score-count>0</span><span class="bw-score__of"> of {checks.length}</span>
+              <span class="bw-visually-hidden"> ticked</span>
+            </p>
+          </div>
+
+          <div class="bw-score__body">
+            <p class="bw-score__verdict" aria-live="polite" data-bw-score-verdict>Tick the ones that are true today.</p>
+            <button type="button" class="bw-score__with" aria-pressed="false" data-bw-score-with>
+              <span class="bw-score__with-dot" aria-hidden="true"></span>
+              <span data-bw-score-with-label>See it with Full KERSIVO</span>
+            </button>
+          </div>
+
+          <div class="bw-score__gaps" data-bw-score-gaps hidden>
+            <p class="bw-score__gaps-title">Your gaps, and how KERSIVO closes them</p>
+            <ul class="bw-score__gaps-list" role="list" data-bw-score-gaps-list></ul>
+          </div>
+
+          <p class="bw-score__kersivo">
+            Full KERSIVO handles or helps with all eight: your domain, website, booking and reminders
+            are set up for you, you get the links for Google and Instagram, your details match your
+            Google listing, and you add your own photos from the dashboard.
           </p>
         </div>
       </div>
 
       <fieldset class="bw-checks">
         <legend class="bw-visually-hidden">Online presence checklist</legend>
-        {checks.map((check) => (
-          <label class="bw-check" data-kersivo={check.kersivo ? 'true' : 'false'}>
+        {checks.map((check, index) => (
+          <label class="bw-check" data-check={check.id} style={`--i:${index}`}>
             <input type="checkbox" name="presence" value={check.id} />
             <span class="bw-check__box" aria-hidden="true">
               <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" pathLength="1" /></svg>
@@ -51,6 +127,9 @@ const checks: Check[] = [
             <span class="bw-check__text">
               <span class="bw-check__title">{check.title}</span>
               <span class="bw-check__hint">{check.hint}</span>
+              <span class="bw-check__kersivo" data-bw-check-kersivo>
+                <span class="bw-check__kersivo-k">KERSIVO</span>{check.kersivo}
+              </span>
             </span>
           </label>
         ))}

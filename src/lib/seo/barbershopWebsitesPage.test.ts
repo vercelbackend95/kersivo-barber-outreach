@@ -36,7 +36,7 @@ describe('/barbershop-websites previous (v1) hero', () => {
   it('uses the approved metadata and canonical URL', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_PATH).toBe('/barbershop-websites');
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-websites');
-    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website UK: What to Include & How Clients Book | KERSIVO');
+    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website UK with Online Booking – £39/mo | KERSIVO');
     expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION).toContain('£39/month');
     expect(livePage).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
     // The kept previous version canonicalises to the live page and stays out of the index.

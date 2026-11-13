@@ -28,9 +28,10 @@ const steps: Step[] = [
 ];
 ---
 
-<section class="bw-section bw-booking" aria-labelledby="bw-booking-title" data-bw-booking>
+<section class="bw-section bw-booking" id="bw-booking" aria-labelledby="bw-booking-title" data-bw-booking>
   <div class="bw-shell">
     <div class="bw-head bw-head--wide">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 04 · The booking</p>
       <h2 id="bw-booking-title" class="bw-h2">How clients book appointments from your website</h2>
       <p class="bw-lead">
         The best barbershop websites turn a visit into a booking without a phone call or a DM. With
@@ -52,6 +53,7 @@ const steps: Step[] = [
               tabindex={index === 0 ? '0' : '-1'}
               data-bw-tab={index}
             >
+              <span class="bw-booking__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               <span class="bw-booking__bar" aria-hidden="true"><span></span></span>
               <span class="bw-booking__tab-title">{step.title}</span>
               <span class="bw-booking__tab-copy">{step.copy}</span>
@@ -63,12 +65,16 @@ const steps: Step[] = [
         </button>
       </div>
 
-      <div class="bw-phone" aria-hidden="false">
+      <div class="bw-booking__device">
+      <span class="bw-booking__glow" aria-hidden="true"></span>
+      <div class="bw-phone">
+        <span class="bw-phone__tap" aria-hidden="true" data-bw-tap></span>
         <div class="bw-phone__screen">
           <div class="bw-phone__top" aria-hidden="true">
             <img src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
             <span class="bw-phone__url">cutstate.co.uk/book</span>
           </div>
+          <span class="bw-phone__progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
 
           <div class="bw-phone__panel is-active" role="tabpanel" id="bw-panel-service" aria-labelledby="bw-tab-service" data-bw-panel="0">
             <p class="bw-phone__h">Choose a service</p>
@@ -123,7 +129,22 @@ const steps: Step[] = [
             <p class="bw-phone__sent">Confirmation sent by email</p>
             <p class="bw-phone__sent">Reminder before the appointment</p>
           </div>
+
+          <p class="bw-phone__cta" aria-hidden="true">
+            <span class="bw-phone__cta-sum"><strong>{chosenService.name} · {formatDemoPriceGbp(chosenService.pricePence)}</strong><small>with {chosenBarber.name}, Saturday 10:15</small></span>
+            <span class="bw-phone__cta-btn">Continue</span>
+          </p>
         </div>
+      </div>
+
+      <div class="bw-diary" aria-hidden="true">
+        <p class="bw-diary__head"><span>Your diary</span><span>Saturday</span></p>
+        <p class="bw-diary__row"><time>09:30</time><span class="bw-diary__slot">Haircut · {team[0].name.split(' ')[0]}</span></p>
+        <p class="bw-diary__row bw-diary__row--new"><time>10:15</time><span class="bw-diary__slot bw-diary__slot--new"><b>{chosenService.name}</b> · {chosenBarber.name.split(' ')[0]}<em>New</em></span></p>
+        <p class="bw-diary__row"><time>11:00</time><span class="bw-diary__slot bw-diary__slot--free">Free</span></p>
+        <p class="bw-diary__row"><time>11:45</time><span class="bw-diary__slot">Beard trim · {team[2].name.split(' ')[0]}</span></p>
+      </div>
+      <p class="bw-booking__toast" aria-hidden="true"><span class="bw-booking__toast-dot"></span>Confirmation email sent to Sam</p>
       </div>
     </div>
 

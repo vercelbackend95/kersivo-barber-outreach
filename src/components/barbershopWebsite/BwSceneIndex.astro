@@ -1,0 +1,28 @@
+---
+/**
+ * A film-style chapter index pinned to the left edge on wide screens. Plain in-page links; init.ts
+ * marks the chapter in view with aria-current="step". Hidden below 80rem where there is no gutter.
+ */
+const scenes = [
+  { id: 'bw-hero', label: 'Your website' },
+  { id: 'bw-why', label: 'Why it matters' },
+  { id: 'bw-include', label: 'What it includes' },
+  { id: 'bw-booking', label: 'How clients book' },
+  { id: 'bw-presence', label: 'Your presence' },
+  { id: 'get-your-website', label: 'Get yours' },
+];
+---
+
+<nav class="bw-scenes" aria-label="Page chapters" data-bw-scenes>
+  <ol role="list">
+    {scenes.map((scene, index) => (
+      <li>
+        <a href={`#${scene.id}`} data-bw-scene-link={scene.id}>
+          <span class="bw-scenes__num">{String(index + 1).padStart(2, '0')}</span>
+          <span class="bw-scenes__label">{scene.label}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+  <span class="bw-scenes__reel" aria-hidden="true"><span data-bw-scenes-progress></span></span>
+</nav>

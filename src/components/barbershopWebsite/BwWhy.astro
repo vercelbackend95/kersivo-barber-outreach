@@ -1,8 +1,14 @@
 ---
 /**
- * Why a shop needs its own website: where clients come from, and what changes between a
- * booking-app profile and the shop's own site. Qualitative only; features vary by provider.
+ * Why a shop needs its own website, staged as the second scene of the opening film: the places
+ * clients find a shop are wired into one address, and that address runs the website, online booking
+ * and the retail pickup shop (the three.js sparks settle onto the same lines). Then a toggle compares
+ * a booking-app profile with the shop's own site. Qualitative only; features vary by provider. All
+ * illustrations are decorative; the labels and the hub's modules are real text.
  */
+import { DEMO_PRODUCTS } from '@/lib/demo/products';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
+
 type Row = { label: string; profile: string; own: string };
 
 const rows: Row[] = [
@@ -22,70 +28,197 @@ const rows: Row[] = [
     own: 'Your logo, colours and real photos of your shop.',
   },
   {
+    label: 'Products you sell',
+    profile: 'Depends on what the platform offers.',
+    own: 'A retail pickup shop on your own site, next to Book now.',
+  },
+  {
     label: 'Where you send clients',
     profile: 'To someone else’s page.',
     own: 'To yours, from Google, Instagram, your shopfront and every message.',
   },
 ];
 
-const sources = ['Google search', 'Google Maps', 'Instagram bio', 'A link you send', 'QR code at the till'];
+type Source = { id: string; label: string; lane: number };
+// Left column feeds the hub's left ports, right column its right ports.
+const left: Source[] = [
+  { id: 'search', label: 'Google search', lane: 0 },
+  { id: 'maps', label: 'Google Maps', lane: 1 },
+  { id: 'instagram', label: 'Instagram bio', lane: 2 },
+];
+const right: Source[] = [
+  { id: 'message', label: 'A link you send', lane: 3 },
+  { id: 'qr', label: 'QR code at the till', lane: 4 },
+  { id: 'retail', label: 'A product you post', lane: 5 },
+];
+
+const product = DEMO_PRODUCTS.find((item) => item.slug === 'ironclad-pomade') ?? DEMO_PRODUCTS[0];
+
+const modules = [
+  { id: 'site', title: 'Website', copy: 'Your shop, your barbers, your prices.' },
+  { id: 'book', title: 'Online booking', copy: 'Real free slots, straight into your diary.' },
+  { id: 'retail', title: 'Retail pickup shop', copy: 'Products clients order and collect in the shop.' },
+];
+
+// A fixed 9x9 pattern so the QR illustration is identical on every render.
+const qr = [
+  '111010111', '101011101', '111001111', '000110000', '101101011', '010011100', '111000101', '101010010', '111011101',
+];
 ---
 
-<section class="bw-section bw-why" aria-labelledby="bw-why-title">
+<section class="bw-section bw-why" id="bw-why" aria-labelledby="bw-why-title" data-bw-film-why>
   <div class="bw-shell">
-    <div class="bw-why__grid">
-      <div class="bw-head">
-        <h2 id="bw-why-title" class="bw-h2">Why your barbershop needs its own website</h2>
-        <p class="bw-lead">
-          Clients look you up in more places than ever. A website on your own domain is the one
-          address every one of those places can point to, and the one page where only your shop
-          is on show.
-        </p>
-      </div>
-
-      <figure class="bw-sources" aria-labelledby="bw-sources-caption">
-        <ul class="bw-sources__list" role="list">
-          {sources.map((source, index) => (
-            <li class="bw-sources__item" style={`--i:${index}`}>{source}</li>
-          ))}
-        </ul>
-        <svg class="bw-sources__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {sources.map((_, index) => {
-            const y = 10 + index * 20;
-            return <path d={`M0 ${y} C 45 ${y}, 55 50, 100 50`} pathLength="1" />;
-          })}
-        </svg>
-        <div class="bw-sources__target">
-          <span class="bw-sources__domain">yourshop.co.uk</span>
-          <span class="bw-sources__sub">Services, barbers, prices, Book now</span>
-        </div>
-        <figcaption id="bw-sources-caption" class="bw-note">
-          Every place clients find you can point to one address.
-        </figcaption>
-      </figure>
+    <div class="bw-why__intro">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 02 · One address</p>
+      <h2 id="bw-why-title" class="bw-h2">Why your barbershop needs its own website</h2>
+      <p class="bw-lead">
+        Clients look you up in more places than ever. A website on your own domain is the one
+        address every one of those places can point to, where they book, buy the products you sell
+        and see only your shop.
+      </p>
     </div>
 
-    <div class="bw-compare" data-bw-compare>
-      <div class="bw-compare__switch" role="radiogroup" aria-label="Compare a booking-app profile with your own website">
-        <button type="button" role="radio" aria-checked="false" data-bw-view="profile">Booking-app profile</button>
-        <button type="button" role="radio" aria-checked="true" data-bw-view="own">Your own website</button>
-        <span class="bw-compare__thumb" aria-hidden="true"></span>
+    <figure class="bw-sys" aria-labelledby="bw-sources-caption" data-bw-sys>
+      <svg class="bw-sys__lines" aria-hidden="true" data-bw-sys-lines>
+        <g class="bw-sys__paths">
+          {[0, 1, 2, 3, 4, 5].map((lane) => <path pathLength="1" style={`--i:${lane}`} data-bw-sys-path={lane} />)}
+        </g>
+        <g class="bw-sys__pulses">
+          {[0, 1, 2, 3, 4, 5].map((lane) => <path pathLength="1" style={`--i:${lane}`} data-bw-sys-pulse={lane} />)}
+        </g>
+      </svg>
+
+      {[left, right].map((column, side) => (
+        <ul class:list={['bw-sys__col', side === 0 ? 'bw-sys__col--left' : 'bw-sys__col--right']} role="list">
+          {column.map((source) => (
+            <li class={`bw-src bw-src--${source.id}`} style={`--i:${source.lane}`}>
+              <span class="bw-src__head">
+                <span class="bw-src__icon" aria-hidden="true">
+                  {source.id === 'search' && <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.25" /><path d="M10.2 10.2 13.5 13.5" /></svg>}
+                  {source.id === 'maps' && <svg viewBox="0 0 16 16"><path d="M8 14s4.5-4.2 4.5-7.6a4.5 4.5 0 0 0-9 0C3.5 9.8 8 14 8 14Z" /><circle cx="8" cy="6.4" r="1.6" /></svg>}
+                  {source.id === 'instagram' && <svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="3.2" /><circle cx="8" cy="8" r="2.6" /><circle cx="11.4" cy="4.6" r="0.4" /></svg>}
+                  {source.id === 'message' && <svg viewBox="0 0 16 16"><path d="M2.5 4.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4.5a2 2 0 0 1-2 2H7l-3 2.5v-2.5h0a2 2 0 0 1-1.5-2Z" /></svg>}
+                  {source.id === 'qr' && <svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4" height="4" rx="0.6" /><rect x="9.5" y="2.5" width="4" height="4" rx="0.6" /><rect x="2.5" y="9.5" width="4" height="4" rx="0.6" /><path d="M9.5 9.5h1.5v1.5M13.5 9.5v4h-4" /></svg>}
+                  {source.id === 'retail' && <svg viewBox="0 0 16 16"><path d="M3 5.5h10l-.8 8H3.8Z" /><path d="M5.8 5.5V4.4a2.2 2.2 0 0 1 4.4 0v1.1" /></svg>}
+                </span>
+                <span class="bw-src__label">{source.label}</span>
+              </span>
+              <span class="bw-src__body" aria-hidden="true">
+                {source.id === 'search' && (
+                  <>
+                    <span class="bw-src__search"><i></i>barbers near me</span>
+                    <span class="bw-src__result">
+                      <small>yourshop.co.uk</small>
+                      <b>Your barbershop · Book online</b>
+                    </span>
+                  </>
+                )}
+                {source.id === 'maps' && (
+                  <span class="bw-src__maprow">
+                    <span class="bw-src__map"><i class="bw-src__pin"></i></span>
+                    <span class="bw-src__buttons"><span>Website</span><span class="is-on">Book</span></span>
+                  </span>
+                )}
+                {source.id === 'instagram' && (
+                  <span class="bw-src__igrow">
+                    <span class="bw-src__ig"><i></i></span>
+                    <span class="bw-src__bio"><b>yourshop</b>Fades, beards, hot towel.<u>yourshop.co.uk/book</u></span>
+                  </span>
+                )}
+                {source.id === 'message' && (
+                  <span class="bw-src__bubble">See you Saturday. Book here: <u>yourshop.co.uk/book</u></span>
+                )}
+                {source.id === 'qr' && (
+                  <span class="bw-src__qrrow">
+                    <span class="bw-src__qr">
+                      {qr.map((row) => row.split('').map((cell) => <i class:list={{ 'is-on': cell === '1' }}></i>))}
+                    </span>
+                    <span class="bw-src__scan"><b>Scan to book</b><u>yourshop.co.uk/book</u></span>
+                  </span>
+                )}
+                {source.id === 'retail' && (
+                  <span class="bw-src__product">
+                    <img src={product.image.src} alt="" width="72" height="72" loading="lazy" decoding="async" />
+                    <span><b>{product.name} · {formatDemoPriceGbp(product.pricePence)}</b>Collect in the shop<u>yourshop.co.uk/shop</u></span>
+                  </span>
+                )}
+              </span>
+              <span class="bw-src__port" aria-hidden="true" data-bw-lane-from={source.lane}></span>
+            </li>
+          ))}
+        </ul>
+      ))}
+
+      <div class="bw-hub" data-bw-film-target>
+        <span class="bw-hub__ports" aria-hidden="true">
+          {[0, 1, 2, 3, 4, 5].map((lane) => <span class={`bw-hub__port bw-hub__port--${lane}`} data-bw-lane-to={lane}></span>)}
+        </span>
+        <span class="bw-hub__ring" aria-hidden="true"></span>
+        <p class="bw-hub__eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Your one address</p>
+        <p class="bw-hub__bar">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>
+          <span class="bw-hub__domain">yourshop.co.uk</span>
+        </p>
+        <ul class="bw-hub__modules" role="list">
+          {modules.map((module) => (
+            <li class={`bw-hub__module bw-hub__module--${module.id}`}>
+              <span class="bw-hub__icon" aria-hidden="true">
+                {module.id === 'site' && <svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.8" /><path d="M2 6h12" /></svg>}
+                {module.id === 'book' && <svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="1.8" /><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3M6 10l1.4 1.3L10 8.8" /></svg>}
+                {module.id === 'retail' && <svg viewBox="0 0 16 16"><path d="M3 5.5h10l-.8 8H3.8Z" /><path d="M5.8 5.5V4.4a2.2 2.2 0 0 1 4.4 0v1.1" /></svg>}
+              </span>
+              <span class="bw-hub__text"><strong>{module.title}</strong><span>{module.copy}</span></span>
+            </li>
+          ))}
+        </ul>
+        <span class="bw-hub__foot" aria-hidden="true">
+          <span class="bw-hub__btn bw-hub__btn--book">Book now</span>
+          <span class="bw-hub__btn">Shop</span>
+        </span>
       </div>
 
-      <dl class="bw-compare__rows" data-view="own">
-        {rows.map((row) => (
-          <div class="bw-compare__row">
-            <dt>{row.label}</dt>
-            <dd>
-              <span class="bw-compare__value bw-compare__value--profile">{row.profile}</span>
-              <span class="bw-compare__value bw-compare__value--own">{row.own}</span>
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <figcaption id="bw-sources-caption" class="bw-note bw-sys__caption">
+        Every place clients find you can point to one address, and everything behind it runs from there.
+      </figcaption>
+    </figure>
+
+    <div class="bw-compare" data-bw-compare data-view="own">
+      <div class="bw-compare__top">
+        <div class="bw-compare__heading">
+          <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Cut to · Two ways to be found</p>
+          <p class="bw-compare__title">A booking-app profile, or your own website?</p>
+        </div>
+        <div class="bw-compare__switch" role="radiogroup" aria-label="Compare a booking-app profile with your own website">
+          <button type="button" role="radio" aria-checked="false" data-bw-view="profile">Booking-app profile</button>
+          <button type="button" role="radio" aria-checked="true" data-bw-view="own">Your own website</button>
+          <span class="bw-compare__thumb" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="bw-compare__card">
+        <p class="bw-compare__address" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="13" height="13"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>
+          <span class="bw-compare__url">
+            <span class="bw-compare__url-v bw-compare__url-v--profile">bookingapp.example/shops/<b>your-shop</b></span>
+            <span class="bw-compare__url-v bw-compare__url-v--own"><b>yourshop.co.uk</b></span>
+          </span>
+        </p>
+        <dl class="bw-compare__rows" data-view="own">
+          {rows.map((row) => (
+            <div class="bw-compare__row">
+              <dt>{row.label}</dt>
+              <dd>
+                <span class="bw-compare__mark" aria-hidden="true"></span>
+                <span class="bw-compare__value bw-compare__value--profile">{row.profile}</span>
+                <span class="bw-compare__value bw-compare__value--own">{row.own}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
       <p class="bw-note">
         Features vary between providers, and the two can work together: you can keep a profile and
-        point clients to your own website.
+        point clients to your own website. The booking-app address above is a generic illustration.
       </p>
     </div>
   </div>

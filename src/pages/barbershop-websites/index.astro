@@ -8,6 +8,7 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import BwHero from '@/components/barbershopWebsite/BwHero.astro';
+import BwSceneIndex from '@/components/barbershopWebsite/BwSceneIndex.astro';
 import BwWhy from '@/components/barbershopWebsite/BwWhy.astro';
 import BwAnatomy from '@/components/barbershopWebsite/BwAnatomy.astro';
 import BwBooking from '@/components/barbershopWebsite/BwBooking.astro';
@@ -15,13 +16,18 @@ import BwPresence from '@/components/barbershopWebsite/BwPresence.astro';
 import BwOffer from '@/components/barbershopWebsite/BwOffer.astro';
 import BwFaqClose from '@/components/barbershopWebsite/BwFaqClose.astro';
 import '@/styles/barbershop-website/page.css';
+import '@/styles/barbershop-website/cinematic.css';
+import '@/styles/barbershop-website/system.css';
 import {
   BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  buildBarbershopWebsitesFaqJsonLd,
   buildBarbershopWebsitesJsonLd,
+  buildBarbershopWebsitesServiceJsonLd,
 } from '@/lib/seo/barbershopWebsitesPage';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -36,12 +42,21 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={buildBarbershopWebsitesJsonLd()}
+  jsonLd={[
+    buildBarbershopWebsitesJsonLd(),
+    buildBarbershopWebsitesServiceJsonLd(),
+    buildBarbershopWebsitesFaqJsonLd(isFreePreviewFlowEnabled()),
+  ]}
 >
   <link slot="head" rel="preload" as="image" href="/images/barbershop-websites/site-hero-1100.webp" fetchpriority="high" />
   <main class="bw">
-    <BwHero />
-    <BwWhy />
+    <div class="bw-grain" aria-hidden="true"></div>
+    <BwSceneIndex />
+    <div class="bw-film" data-bw-film>
+      <canvas class="bw-film__canvas" data-bw-film-canvas aria-hidden="true"></canvas>
+      <BwHero />
+      <BwWhy />
+    </div>
     <BwAnatomy />
     <BwBooking />
     <BwPresence />

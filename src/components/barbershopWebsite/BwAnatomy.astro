@@ -53,9 +53,10 @@ const essentials: Essential[] = [
 ];
 ---
 
-<section class="bw-section bw-anatomy" aria-labelledby="bw-anatomy-title" data-bw-anatomy>
+<section class="bw-section bw-anatomy" id="bw-include" aria-labelledby="bw-anatomy-title" data-bw-anatomy>
   <div class="bw-shell">
     <div class="bw-head bw-head--wide">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 03 · The walkthrough</p>
       <h2 id="bw-anatomy-title" class="bw-h2">What a barbershop website should include</h2>
       <p class="bw-lead">
         A good barbershop website answers a new client’s questions in seconds: who you are, what you
@@ -67,10 +68,15 @@ const essentials: Essential[] = [
     <div class="bw-anatomy__layout">
       <div class="bw-anatomy__stage">
         <div class="bw-anatomy__sticky">
+          <span class="bw-anatomy__count" aria-hidden="true"><span data-bw-anatomy-num>01</span><small>/ 0{essentials.length}</small></span>
+          <div class="bw-anatomy__camera" data-bw-camera>
           <BwSite
             class="bw-site--anatomy"
             label="Example barbershop website for the fictional CUTSTATE Barbers, used to point out each essential part."
           />
+          <span class="bw-reticle" aria-hidden="true" data-bw-reticle><i></i><i></i><i></i><i></i><span class="bw-reticle__tag" data-bw-reticle-tag>01 · Your own domain</span></span>
+          </div>
+          <span class="bw-anatomy__rail" aria-hidden="true"><span data-bw-anatomy-rail></span></span>
           <p class="bw-anatomy__now" aria-live="polite" data-bw-anatomy-now>Your own domain</p>
         </div>
       </div>
@@ -84,6 +90,7 @@ const essentials: Essential[] = [
               aria-pressed={index === 0 ? 'true' : 'false'}
               data-bw-part-trigger={item.part}
             >
+              <span class="bw-anatomy__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               <span class="bw-anatomy__tick" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
               </span>
