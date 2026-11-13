@@ -1,0 +1,1153 @@
+/*
+ * KERSIVO day timeline — horizontal progress stripes + inline booking tickets.
+ *
+ * Imported by TodayTimeline.tsx so the admin dashboard and the landing embeds
+ * share one look. Selectors are new (tl-*) so they never fight the legacy
+ * admin-vtl rules in booking.css; only container hooks (.admin-vtl,
+ * .admin-vtl-scroll, .admin-vtl-now-row) are shared with the old markup.
+ *
+ * Motion: avatar position is a CSS custom property (--p) updated on the 15 s
+ * clock tick; a linear transform transition bridges each tick on the
+ * compositor. Only transform/opacity animate.
+ */
+
+.tl,
+.tl-popover,
+.tl-sheet-backdrop {
+  --tl-surface-top: #0d0d0e;
+  --tl-surface-bottom: #080809;
+  --tl-raised-top: #131315;
+  --tl-raised-bottom: #0c0c0d;
+  --tl-line: rgba(255, 255, 255, 0.07);
+  --tl-line-strong: rgba(255, 255, 255, 0.12);
+  --tl-hover: rgba(255, 255, 255, 0.03);
+  --tl-text: #f5f1ea;
+  --tl-text-2: #b9b3aa;
+  --tl-text-3: #8d877f;
+  --tl-brand: var(--color-brand, #e11d2e);
+  --tl-ok: #4ade80;
+  --tl-warn: #facc15;
+  --tl-violet: #c084fc;
+  --tl-danger: #f87171;
+  --tl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tl-time-col: 3.25rem;
+  --tl-pin: 28px;
+  --tl-tick: 15s;
+}
+
+/* ── Shell ─────────────────────────────────────────────────────────────────── */
+
+.admin-vtl.tl {
+  container: tl / inline-size;
+  border: 1px solid var(--tl-line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--tl-surface-top) 0%, var(--tl-surface-bottom) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 40px -24px rgba(0, 0, 0, 0.85);
+  color: var(--tl-text);
+}
+
+.tl .admin-vtl-scroll {
+  padding: 0.5rem 0;
+}
+
+/* ── Slot row ──────────────────────────────────────────────────────────────── */
+
+.tl-slot {
+  position: relative;
+}
+
+.tl-row {
+  display: grid;
+  grid-template-columns: var(--tl-time-col) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.875rem;
+  min-height: 1.875rem;
+  padding: 0 1rem;
+}
+
+.tl-row--booked {
+  grid-template-columns: var(--tl-time-col) minmax(0, 1fr) auto 1rem;
+  min-height: 3.875rem;
+  margin: 0.125rem 0.375rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.tl-row--booked:hover {
+  background: var(--tl-hover);
+}
+
+.tl .tl-row--booked:focus-visible {
+  outline: 2px solid var(--tl-brand);
+  outline-offset: -2px;
+  background: var(--tl-hover);
+}
+
+.tl-slot[data-expanded='true'] > .tl-row--booked {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.tl-time {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--tl-text-3);
+}
+
+.tl-slot--hour .tl-time {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--tl-text-2);
+}
+
+.tl-slot--live .tl-time {
+  color: var(--tl-text);
+}
+
+.tl-hair {
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+}
+
+.tl-slot--hour .tl-hair {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025));
+}
+
+.tl-blocks {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding-block: 0.25rem;
+}
+
+.tl-block-chip {
+  flex: 0 1 auto;
+  max-width: 60%;
+  overflow: hidden;
+  padding: 0.125rem 0.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--tl-text-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-hair--block {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.07) 0 4px, transparent 4px 8px);
+}
+
+/* ── Lane: label + stripe ──────────────────────────────────────────────────── */
+
+.tl-lane {
+  display: grid;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.tl-lane-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.tl-lane-title,
+.tl-lane-sub {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-lane-title {
+  flex: 0 1 auto;
+  font-weight: 600;
+  color: var(--tl-text);
+}
+
+.tl-lane-sub {
+  flex: 0 1 auto;
+  color: var(--tl-text-3);
+}
+
+.tl-slot--past .tl-lane-title {
+  color: var(--tl-text-2);
+}
+
+.tl-track {
+  position: relative;
+  height: var(--tl-pin);
+}
+
+.tl-rail,
+.tl-fill {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 999px;
+}
+
+.tl-rail {
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tl-slot--past .tl-rail {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* Fill runs from the first avatar centre to the current one. */
+.tl-fill {
+  left: calc(var(--tl-pin) / 2);
+  right: calc(var(--tl-pin) / 2);
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  background: var(--tl-fill-c, rgba(255, 255, 255, 0.18));
+}
+
+.tl-fill--past {
+  --tl-fill-c: rgba(255, 255, 255, 0.16);
+}
+
+.tl-fill--live {
+  --tl-fill-c: linear-gradient(90deg, color-mix(in srgb, var(--tl-brand) 30%, transparent), var(--tl-brand));
+}
+
+.tl-fill--live.tl-fill--rescheduled {
+  --tl-fill-c: linear-gradient(90deg, color-mix(in srgb, var(--tl-violet) 30%, transparent), var(--tl-violet));
+}
+
+.tl-fill--live.tl-fill--pending {
+  --tl-fill-c: linear-gradient(90deg, color-mix(in srgb, var(--tl-warn) 30%, transparent), var(--tl-warn));
+}
+
+.tl-fill--cancelled {
+  opacity: 0;
+}
+
+.tl-pin-frame {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  /* Same-time bookings fan out 10px apart; the last pin still ends on the track. */
+  right: calc(var(--tl-pin) + (var(--stack-n, 1) - 1) * 10px);
+  pointer-events: none;
+  transform: translateX(calc(var(--p, 0) * 100%));
+}
+
+.tl[data-tl-motion='on'] .tl-fill,
+.tl[data-tl-motion='on'] .tl-pin-frame {
+  transition: transform var(--tl-tick) linear;
+}
+
+.tl-pin {
+  --tl-ring: rgba(255, 255, 255, 0.26);
+  position: absolute;
+  left: calc(var(--stack, 0) * 10px);
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--tl-pin);
+  height: var(--tl-pin);
+  margin-top: calc(var(--tl-pin) / -2);
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: #1b1b1e;
+  box-shadow:
+    0 0 0 2px #0b0b0c,
+    0 0 0 3.5px var(--tl-ring);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 160ms var(--tl-ease),
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.tl-pin:hover {
+  transform: scale(1.08);
+}
+
+.tl-pin:active {
+  transform: scale(0.96);
+}
+
+.tl-pin:focus-visible {
+  outline: 2px solid var(--tl-brand);
+  outline-offset: 4px;
+}
+
+.tl-pin--live {
+  --tl-ring: var(--tl-brand);
+  box-shadow:
+    0 0 0 2px #0b0b0c,
+    0 0 0 3.5px var(--tl-ring),
+    0 0 14px 2px color-mix(in srgb, var(--tl-brand) 35%, transparent);
+}
+
+.tl-pin--past {
+  --tl-ring: rgba(255, 255, 255, 0.14);
+}
+
+.tl-pin--past .admin-vtl-avatar-img {
+  opacity: 0.72;
+}
+
+.tl-pin--rescheduled {
+  --tl-ring: var(--tl-violet);
+}
+
+.tl-pin--pending {
+  --tl-ring: var(--tl-warn);
+}
+
+.tl-pin--cancelled {
+  --tl-ring: color-mix(in srgb, var(--tl-danger) 45%, transparent);
+  opacity: 0.5;
+}
+
+.tl-pin--cancelled .admin-vtl-avatar-img {
+  filter: grayscale(1);
+}
+
+.tl-pin--active {
+  --tl-ring: var(--tl-text);
+  transform: scale(1.08);
+}
+
+.tl-pin--search {
+  opacity: 0.5;
+}
+
+.tl-pin-initials {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--tl-text-2);
+}
+
+.tl-overflow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 999px;
+  background: #1b1b1e;
+  box-shadow: 0 0 0 1px var(--tl-line-strong);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tl-text-2);
+}
+
+.tl-end {
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--tl-text-3);
+}
+
+.tl-slot--live .tl-end {
+  color: var(--tl-text);
+}
+
+.tl-chevron {
+  color: var(--tl-text-3);
+  transition:
+    transform 200ms var(--tl-ease),
+    color 140ms ease;
+}
+
+.tl-slot[data-expanded='true'] .tl-chevron {
+  transform: rotate(180deg);
+  color: var(--tl-text);
+}
+
+/* ── Now marker ────────────────────────────────────────────────────────────── */
+
+.admin-vtl .tl-now {
+  display: grid;
+  grid-template-columns: var(--tl-time-col) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.875rem;
+  padding: 0.25rem 1rem;
+}
+
+.tl-now-time {
+  justify-self: start;
+  padding: 0.1875rem 0.4375rem;
+  border-radius: 999px;
+  background: var(--tl-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tl-brand) 18%, transparent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.tl-now-line {
+  position: relative;
+  display: block;
+  height: 1px;
+  background: linear-gradient(90deg, var(--tl-brand), color-mix(in srgb, var(--tl-brand) 8%, transparent));
+}
+
+.tl-now-dot {
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--tl-brand);
+}
+
+/* ── Inline tickets ────────────────────────────────────────────────────────── */
+
+.tl-expansion {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.375rem 1rem 0.875rem calc(1rem + var(--tl-time-col) + 0.875rem);
+}
+
+.tl-ticket {
+  --tl-accent: rgba(255, 255, 255, 0.22);
+  position: relative;
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--tl-line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--tl-raised-top) 0%, var(--tl-raised-bottom) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 28px -18px rgba(0, 0, 0, 0.9);
+  outline: none;
+  animation: tl-ticket-in 220ms var(--tl-ease) both;
+  animation-delay: calc(var(--tl-i, 0) * 40ms);
+}
+
+.tl-ticket::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--tl-accent), transparent 72%);
+  pointer-events: none;
+}
+
+.tl-ticket--live {
+  --tl-accent: var(--tl-brand);
+}
+
+.tl-ticket--past {
+  --tl-accent: rgba(255, 255, 255, 0.12);
+}
+
+.tl-ticket--rescheduled {
+  --tl-accent: var(--tl-violet);
+}
+
+.tl-ticket--cancelled {
+  --tl-accent: color-mix(in srgb, var(--tl-danger) 60%, transparent);
+}
+
+.tl-ticket:focus-visible {
+  outline: 2px solid var(--tl-brand);
+  outline-offset: 2px;
+}
+
+.tl-ticket.admin-booking-hit-flash {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 2px color-mix(in srgb, var(--tl-brand) 55%, transparent);
+}
+
+@keyframes tl-ticket-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.tl-ticket-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tl-ticket-avatars {
+  position: relative;
+  width: 46px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.tl .tl-ava {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #1c1c1f;
+}
+
+.tl .tl-ava--barber {
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.tl .tl-ava--client {
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #111113;
+  background: #26262a;
+}
+
+.tl-ava-initials {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--tl-text-2);
+}
+
+.tl-ava--client .tl-ava-initials {
+  font-size: 0.5rem;
+}
+
+.tl-ticket-id {
+  min-width: 0;
+}
+
+.tl-ticket-client,
+.tl-ticket-service {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tl-ticket-client {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--tl-text);
+}
+
+.tl-ticket-service {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--tl-text-2);
+}
+
+.tl-ticket-amount {
+  display: grid;
+  justify-items: end;
+  gap: 0.3125rem;
+}
+
+.tl-ticket-price {
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tl-text);
+}
+
+.tl-ticket-pay {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--tl-text-2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tl-ticket-pay--paid {
+  color: var(--tl-ok);
+  background: color-mix(in srgb, var(--tl-ok) 12%, transparent);
+}
+
+.tl-ticket-pay-method {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.tl-ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tl-text-2);
+}
+
+.tl-ticket-time {
+  font-weight: 500;
+  color: var(--tl-text);
+}
+
+.tl-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--tl-text-3);
+}
+
+.tl-ticket-timing {
+  margin-left: auto;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tl-text-2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tl-ticket-timing--live {
+  color: color-mix(in srgb, var(--tl-brand) 55%, #fff);
+  background: color-mix(in srgb, var(--tl-brand) 16%, transparent);
+}
+
+.tl-ticket-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tl-ticket-tag {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--tl-line-strong);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--tl-text-2);
+}
+
+/* ── Ticket actions ────────────────────────────────────────────────────────── */
+
+.tl-ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--tl-line);
+}
+
+.tl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--tl-line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--tl-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    transform 120ms var(--tl-ease);
+}
+
+.tl-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.065);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.tl-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.tl-btn:focus-visible,
+.tl-icon-btn:focus-visible {
+  outline: 2px solid var(--tl-brand);
+  outline-offset: 2px;
+}
+
+.tl-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tl-btn.is-open {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.tl-btn-icon {
+  flex-shrink: 0;
+  color: var(--tl-text-2);
+}
+
+.tl-btn-chevron {
+  flex-shrink: 0;
+  margin-right: -0.25rem;
+  color: var(--tl-text-3);
+  transition: transform 200ms var(--tl-ease);
+}
+
+.tl-btn.is-open .tl-btn-chevron {
+  transform: rotate(180deg);
+}
+
+.tl-btn--primary {
+  border-color: transparent;
+  background: var(--tl-brand);
+  color: #fff;
+}
+
+.tl-btn--primary:hover:not(:disabled) {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--tl-brand) 86%, #fff);
+}
+
+.tl-btn--tone-confirmed,
+.tl-menu-item--confirmed {
+  --tl-tone: var(--tl-ok);
+}
+
+.tl-btn--tone-pending,
+.tl-menu-item--pending {
+  --tl-tone: var(--tl-warn);
+}
+
+.tl-btn--tone-rescheduled,
+.tl-menu-item--rescheduled {
+  --tl-tone: var(--tl-violet);
+}
+
+.tl-btn--tone-cancelled,
+.tl-menu-item--cancelled {
+  --tl-tone: var(--tl-danger);
+}
+
+.tl-status-dot,
+.tl-menu-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tl-tone, var(--tl-text-3));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tl-tone, var(--tl-text-3)) 18%, transparent);
+}
+
+.tl-status-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-height: 2.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tl-text);
+}
+
+.tl-ticket-readonly {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--tl-text-3);
+}
+
+/* ── Status / service menu (desktop popover + mobile sheet) ────────────────── */
+
+.admin-vtl-action-popover.tl-popover {
+  width: min(19rem, calc(100vw - 16px));
+  transform: none;
+  border: 1px solid var(--tl-line-strong);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #141416 0%, #0e0e10 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 24px 48px -16px rgba(0, 0, 0, 0.85);
+  color: var(--tl-text);
+  transform-origin: top left;
+  animation: tl-pop-in 160ms var(--tl-ease) both;
+}
+
+@keyframes tl-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.tl-menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--tl-line);
+}
+
+.tl-menu-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--tl-text);
+}
+
+.tl-menu-sub {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tl-text-3);
+}
+
+.tl-icon-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tl-text-2);
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.tl-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.admin-vtl-action-sheet-content.tl-menu {
+  display: grid;
+  align-content: start;
+  gap: 0.125rem;
+  min-height: 0;
+  max-height: none;
+  padding: 0.375rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tl-menu-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5625rem 0.625rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--tl-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.tl-menu-item--service {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.tl-menu-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.tl-menu-item:focus-visible {
+  outline: 2px solid var(--tl-brand);
+  outline-offset: -2px;
+}
+
+.tl-menu-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.tl-menu-item--current {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tl-menu-text {
+  min-width: 0;
+}
+
+.tl-menu-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tl-menu-reason {
+  display: block;
+  margin-top: 0.0625rem;
+  font-size: 0.75rem;
+  color: var(--tl-text-3);
+}
+
+.tl-menu-check {
+  color: var(--tl-ok);
+}
+
+.tl-menu-price {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tl-text-2);
+}
+
+.tl-menu-note {
+  margin: 0;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--tl-text-3);
+}
+
+.tl-confirm {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.375rem;
+}
+
+.tl-confirm-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.tl-confirm-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--tl-text-2);
+}
+
+.tl-confirm-copy strong {
+  font-weight: 600;
+  color: var(--tl-text);
+}
+
+.tl-confirm-arrow {
+  color: var(--tl-text-3);
+}
+
+.tl-confirm-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.tl-confirm-facts dt {
+  font-size: 0.6875rem;
+  color: var(--tl-text-3);
+}
+
+.tl-confirm-facts dd {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.admin-vtl-bottom-sheet.tl-sheet {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  max-height: 82vh;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+  border: 1px solid var(--tl-line-strong);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(180deg, #141416 0%, #0d0d0f 100%);
+  box-shadow: 0 -18px 40px -12px rgba(0, 0, 0, 0.8);
+  color: var(--tl-text);
+  animation: tl-sheet-in 240ms var(--tl-ease) both;
+}
+
+@keyframes tl-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.tl-sheet-grip {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0.5rem auto 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.tl-sheet .tl-menu-item {
+  padding-block: 0.75rem;
+}
+
+.tl-sheet .tl-menu {
+  padding-bottom: 0.75rem;
+}
+
+/* ── Narrow containers (phones, landing embeds) ────────────────────────────── */
+
+@container tl (max-width: 40rem) {
+  .tl-expansion {
+    padding: 0.25rem 0.75rem 0.75rem;
+  }
+
+  .tl-row--booked {
+    column-gap: 0.625rem;
+  }
+}
+
+@container tl (max-width: 30rem) {
+  .tl-slot,
+  .admin-vtl .tl-now {
+    --tl-time-col: 2.75rem;
+  }
+
+  .tl-row,
+  .admin-vtl .tl-now {
+    column-gap: 0.625rem;
+    padding-inline: 0.75rem;
+  }
+
+  .tl-row--booked {
+    margin-inline: 0.25rem;
+    padding-inline: 0.5rem;
+  }
+
+  .tl-lane-sub {
+    display: none;
+  }
+
+  .tl-ticket {
+    padding: 0.75rem;
+  }
+
+  .tl-ticket-timing {
+    margin-left: 0;
+  }
+
+  .tl-ticket-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tl-ticket-actions > .tl-btn--status,
+  .tl-ticket-actions > .tl-status-static,
+  .tl-ticket-actions > .tl-ticket-readonly,
+  .tl-ticket-actions > .tl-btn:not(.tl-btn--status):last-child:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .tl-btn {
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+
+  .tl-btn--status {
+    justify-content: flex-start;
+  }
+
+  .tl-btn--status .tl-btn-chevron {
+    margin-left: auto;
+  }
+
+  .tl-ticket-readonly {
+    margin-left: 0;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-ticket,
+  .admin-vtl-action-popover.tl-popover,
+  .admin-vtl-bottom-sheet.tl-sheet {
+    animation: none;
+  }
+
+  .tl-pin,
+  .tl-btn,
+  .tl-chevron,
+  .tl-btn-chevron {
+    transition: none;
+  }
+
+  .tl-pin:hover,
+  .tl-pin--active {
+    transform: none;
+  }
+}
+
+/* Global prose rules cap <p> width; timeline text spans its own layout. */
+.tl p,
+.tl-popover p,
+.tl-sheet p {
+  max-width: none;
+}
+
+/* Time, end time and chevron sit on the stripe, not between label and stripe. */
+.tl-row--booked > .tl-time,
+.tl-row--booked > .tl-end,
+.tl-row--booked > .tl-chevron {
+  align-self: end;
+}
+
+.tl-row--booked > .tl-time,
+.tl-row--booked > .tl-end {
+  display: flex;
+  align-items: center;
+  height: var(--tl-pin);
+}
+
+.tl-row--booked > .tl-chevron {
+  margin-bottom: calc((var(--tl-pin) - 16px) / 2);
+}

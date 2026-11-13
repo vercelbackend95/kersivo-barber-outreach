@@ -17,7 +17,7 @@ describe('Services settings demo lock', () => {
     expect(block.indexOf('isPublicAdminDemoMode()')).toBeLessThan(block.indexOf('notifyAdminDemoBlocked()'));
     expect(block.indexOf('notifyAdminDemoBlocked()')).toBeLessThan(block.indexOf('setEditingId'));
     expect(source).toContain('Service settings — sample data is read-only');
-    expect(source).toMatch(/className="admin-product-row__edit-btn"/);
-    expect(source).not.toMatch(/className="admin-product-row__edit-btn"[^>]*\bdisabled\b/);
+    expect(source).toMatch(/className="[^"]*\badmin-product-row__edit-btn\b[^"]*"/);
+    expect(source).not.toMatch(/className="[^"]*\badmin-product-row__edit-btn\b[^"]*"[^>]*\bdisabled\b/);
   });
 });

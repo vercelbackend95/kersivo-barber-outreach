@@ -36,7 +36,7 @@ import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
 import NewBookingPanel from './NewBookingPanel';
-import { Clock, ListOrdered, Lock } from '../lucide-react';
+import { Check, Clock, ListOrdered, Lock } from '../lucide-react';
 import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { isCapabilityLocked } from '@/lib/admin/productLocks';
@@ -2887,7 +2887,7 @@ export default function BookingsAdminPanel({
                 </div>
               ) : null}
               <div className="admin-history-row">
-                <label>Recent barbers</label>
+                <span className="admin-history-row-label" aria-hidden="true">Barber</span>
                 <div className="admin-history-barber-controls">
                   <div className="admin-filter-scroll-wrap">
                     <div ref={historyRecentBarbersScrollRef} className="admin-history-recent-scroll">
@@ -2923,11 +2923,14 @@ export default function BookingsAdminPanel({
                     {historyWithinBookings ? (
                       <button
                         type="button"
-                        className="btn btn--secondary"
+                        className={`admin-history-today-toggle${includeTodayInHistory ? ' is-on' : ''}`}
                         aria-pressed={includeTodayInHistory}
                         onClick={() => setIncludeTodayInHistory((current) => !current)}
                       >
-                        {includeTodayInHistory ? 'Today included' : 'Include today'}
+                        <span className="admin-history-today-check" aria-hidden="true">
+                          {includeTodayInHistory ? <Check width={12} height={12} /> : null}
+                        </span>
+                        Include today
                       </button>
                     ) : null}
                     <div className="admin-history-more" ref={historyMoreRef}>
@@ -2990,6 +2993,18 @@ export default function BookingsAdminPanel({
               </div>
             </section>
           )}
+          historyFooter={
+            historyHasMore ? (
+              <button
+                type="button"
+                className="adt-action"
+                onClick={() => void loadMoreHistory()}
+                disabled={historyLoadingMore}
+              >
+                {historyLoadingMore ? 'Loading…' : 'Load more bookings'}
+              </button>
+            ) : undefined
+          }
           historyToolbar={(
             <div className="admin-bookings-history-search-toolbar">
               {opsFilteredViewActive ? (
@@ -3032,7 +3047,6 @@ export default function BookingsAdminPanel({
           )}
         />
       ) : null}
-      {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
     </>
   )}
 </>
