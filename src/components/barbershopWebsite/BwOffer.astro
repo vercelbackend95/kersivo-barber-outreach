@@ -33,6 +33,7 @@ const payment = freePreview
 <section class="bw-section bw-offer" id="get-your-website" aria-labelledby="bw-offer-title">
   <div class="bw-shell">
     <div class="bw-head bw-head--wide">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 06 · Your turn</p>
       <h2 id="bw-offer-title" class="bw-h2">Get your barbershop website from KERSIVO</h2>
       <p class="bw-lead">
         Everything on this page, set up for you: a website in your shop’s brand on your own domain,
@@ -42,8 +43,10 @@ const payment = freePreview
     </div>
 
     <div class="bw-offer__layout">
-      <div class="bw-offer__card" data-bw-reveal>
-        <p class="bw-offer__plan">Full KERSIVO</p>
+      <div class="bw-offer__card" data-bw-reveal data-bw-tilt>
+        <span class="bw-offer__edge" aria-hidden="true"></span>
+        <span class="bw-offer__glare" aria-hidden="true"></span>
+        <p class="bw-offer__plan"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Full KERSIVO</p>
         <p class="bw-offer__price">
           <span class="bw-offer__amount">£{SAAS_MONTHLY_GBP}</span>
           <span class="bw-offer__per">/month<br />per location</span>
@@ -78,9 +81,11 @@ const payment = freePreview
       </div>
 
       <div class="bw-offer__side">
-        <ol class="bw-steps" role="list">
-          {steps.map((step) => (
-            <li class="bw-steps__item">
+        <p class="bw-offer__side-title">From subscribe to live</p>
+        <ol class="bw-steps" role="list" data-bw-steps>
+          {steps.map((step, index) => (
+            <li class="bw-steps__item" style={`--i:${index}`}>
+              <span class="bw-steps__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               <span class="bw-steps__who">{step.owner === 'KERSIVO' ? 'KERSIVO' : 'You'}</span>
               <h3 class="bw-steps__title">{step.title}</h3>
               <p class="bw-steps__copy">{step.body}</p>

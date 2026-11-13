@@ -13,7 +13,9 @@ const lead = words.slice(0, -4).join(' ');
 const tail = words.slice(-4).join(' ');
 ---
 
-<section class="bw-hero" aria-labelledby="bw-hero-title">
+<section class="bw-hero" id="bw-hero" aria-labelledby="bw-hero-title">
+  <span class="bw-letterbox bw-letterbox--top" aria-hidden="true"></span>
+  <span class="bw-letterbox bw-letterbox--bottom" aria-hidden="true"></span>
   <div class="bw-shell bw-hero__inner">
     <nav class="bw-crumbs" aria-label="Breadcrumb">
       <ol>
@@ -23,6 +25,7 @@ const tail = words.slice(-4).join(' ');
     </nav>
 
     <div class="bw-hero__copy">
+      <p class="bw-eyebrow bw-hero__eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 01 · The address</p>
       <h1 id="bw-hero-title" class="bw-hero__title" data-bw-split>
         {lead} <span class="bw-hero__mark">{tail}</span>
       </h1>
@@ -53,13 +56,26 @@ const tail = words.slice(-4).join(' ');
       </ul>
     </div>
 
-    <div class="bw-hero__stage">
+    <div class="bw-hero__stage" data-bw-film-stage>
+      <span class="bw-hero__halo" aria-hidden="true"></span>
+      <span class="bw-hero__chip bw-hero__chip--search" aria-hidden="true">
+        <span class="bw-hero__chip-k">Google</span>
+        <span class="bw-hero__chip-t">CUTSTATE Barbers</span>
+        <span class="bw-hero__chip-u">cutstate.co.uk</span>
+      </span>
+      <span class="bw-hero__chip bw-hero__chip--booked" aria-hidden="true">
+        <span class="bw-hero__chip-tick"><svg viewBox="0 0 16 16" width="12" height="12"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+        <span class="bw-hero__chip-t">New booking</span>
+        <span class="bw-hero__chip-u">Skin fade · Sat 10:15</span>
+      </span>
       <BwSite
         eager
         class="bw-site--hero"
         label="Illustration of a barbershop website on its own domain, cutstate.co.uk: the shop logo, a Book now button, a photo of a barber at work, services with prices, the barbers and opening hours."
       />
+      <span class="bw-hero__floor" aria-hidden="true"></span>
       <p class="bw-note">CUTSTATE Barbers is a fictional demonstration shop.</p>
     </div>
   </div>
+  <a class="bw-hero__cue" href="#bw-why"><span>Why it matters</span><span class="bw-hero__cue-line" aria-hidden="true"></span></a>
 </section>

@@ -123,3 +123,36 @@ describe('/barbershop-websites previous version is kept', () => {
     expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 });
+
+describe('/barbershop-websites cinematic pass', () => {
+  it('says how KERSIVO handles every presence item and drops the "first four" claim', () => {
+    const presence = component('BwPresence');
+    expect(presence).not.toContain('covers the first four');
+    expect(presence).toContain('handles or helps with all eight');
+    const lines = presence.match(/kersivo: '/g) ?? [];
+    expect(lines).toHaveLength(8);
+    expect(presence).toContain('cover the cost');
+    expect(presence).toContain('SMS reminders within a monthly allowance');
+    expect(presence).toContain('aria-pressed="false"');
+  });
+
+  it('keeps the final domain playground local: no form, no field name, clear disclaimer', () => {
+    const close = component('BwFaqClose');
+    const input = close.slice(close.indexOf('<input'), close.indexOf('/>', close.indexOf('<input')));
+    expect(input).not.toMatch(/\bname=/);
+    expect(close).not.toMatch(/<form\b/);
+    expect(close).toContain('<label class="bw-final__label" for="bw-final-name">');
+    expect(close).toContain('nothing you type is saved or sent');
+    expect(close).toContain('one standard domain per location is included');
+  });
+
+  it('loads three.js lazily inside a reduced-motion guard', () => {
+    const film = read('../../lib/barbershopWebsite/film.ts');
+    const init = read('../../lib/barbershopWebsite/init.ts');
+    expect(film).toMatch(/import\('three'\)/);
+    expect(film).not.toMatch(/^import .* from 'three'/m);
+    const motionAt = init.indexOf("function bindMotion");
+    expect(init.indexOf('createFilm(film)', motionAt)).toBeGreaterThan(init.indexOf('MOTION_OK).matches', motionAt));
+    expect(page).toContain('data-bw-film-canvas aria-hidden="true"');
+  });
+});

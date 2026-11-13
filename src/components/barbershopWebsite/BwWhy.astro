@@ -1,7 +1,9 @@
 ---
 /**
- * Why a shop needs its own website: where clients come from, and what changes between a
- * booking-app profile and the shop's own site. Qualitative only; features vary by provider.
+ * Why a shop needs its own website, staged as the second scene of the opening film: the places
+ * clients find a shop beam into one domain (the three.js dust converges on it too), then a
+ * split-screen compares a booking-app profile with the shop's own site. Qualitative only; features
+ * vary by provider. All illustrations are decorative and described once.
  */
 type Row = { label: string; profile: string; own: string };
 
@@ -28,48 +30,145 @@ const rows: Row[] = [
   },
 ];
 
-const sources = ['Google search', 'Google Maps', 'Instagram bio', 'A link you send', 'QR code at the till'];
+const sources = [
+  { id: 'search', label: 'Google search' },
+  { id: 'maps', label: 'Google Maps' },
+  { id: 'instagram', label: 'Instagram bio' },
+  { id: 'message', label: 'A link you send' },
+  { id: 'qr', label: 'QR code at the till' },
+];
+
+// Beam paths in the 1000x560 stage, in source order: search, maps, instagram (left), message, QR (right).
+const beams = [
+  'M195 92 C 340 92, 380 280, 500 280',
+  'M195 280 C 330 280, 380 280, 500 280',
+  'M195 468 C 340 468, 380 280, 500 280',
+  'M805 140 C 660 140, 620 280, 500 280',
+  'M805 420 C 660 420, 620 280, 500 280',
+];
+
+// A fixed 9x9 pattern so the QR illustration is identical on every render.
+const qr = [
+  '111010111', '101011101', '111001111', '000110000', '101101011', '010011100', '111000101', '101010010', '111011101',
+];
 ---
 
-<section class="bw-section bw-why" aria-labelledby="bw-why-title">
+<section class="bw-section bw-why" id="bw-why" aria-labelledby="bw-why-title" data-bw-film-why>
   <div class="bw-shell">
-    <div class="bw-why__grid">
-      <div class="bw-head">
-        <h2 id="bw-why-title" class="bw-h2">Why your barbershop needs its own website</h2>
-        <p class="bw-lead">
-          Clients look you up in more places than ever. A website on your own domain is the one
-          address every one of those places can point to, and the one page where only your shop
-          is on show.
-        </p>
-      </div>
-
-      <figure class="bw-sources" aria-labelledby="bw-sources-caption">
-        <ul class="bw-sources__list" role="list">
-          {sources.map((source, index) => (
-            <li class="bw-sources__item" style={`--i:${index}`}>{source}</li>
-          ))}
-        </ul>
-        <svg class="bw-sources__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          {sources.map((_, index) => {
-            const y = 10 + index * 20;
-            return <path d={`M0 ${y} C 45 ${y}, 55 50, 100 50`} pathLength="1" />;
-          })}
-        </svg>
-        <div class="bw-sources__target">
-          <span class="bw-sources__domain">yourshop.co.uk</span>
-          <span class="bw-sources__sub">Services, barbers, prices, Book now</span>
-        </div>
-        <figcaption id="bw-sources-caption" class="bw-note">
-          Every place clients find you can point to one address.
-        </figcaption>
-      </figure>
+    <div class="bw-why__intro">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 02 · One address</p>
+      <h2 id="bw-why-title" class="bw-h2">Why your barbershop needs its own website</h2>
+      <p class="bw-lead">
+        Clients look you up in more places than ever. A website on your own domain is the one
+        address every one of those places can point to, and the one page where only your shop
+        is on show.
+      </p>
     </div>
 
-    <div class="bw-compare" data-bw-compare>
-      <div class="bw-compare__switch" role="radiogroup" aria-label="Compare a booking-app profile with your own website">
-        <button type="button" role="radio" aria-checked="false" data-bw-view="profile">Booking-app profile</button>
-        <button type="button" role="radio" aria-checked="true" data-bw-view="own">Your own website</button>
-        <span class="bw-compare__thumb" aria-hidden="true"></span>
+    <figure class="bw-orbit" aria-labelledby="bw-sources-caption" data-bw-orbit>
+      <svg class="bw-orbit__beams" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
+        <g class="bw-orbit__paths">
+          {beams.map((d, index) => <path d={d} pathLength="1" style={`--i:${index}`} />)}
+        </g>
+        <g class="bw-orbit__pulses">
+          {beams.map((d, index) => <path d={d} pathLength="1" style={`--i:${index}`} />)}
+        </g>
+      </svg>
+
+      <ul class="bw-orbit__sources" role="list">
+        {sources.map((source, index) => (
+          <li class={`bw-src bw-src--${source.id}`} style={`--i:${index}`}>
+            <span class="bw-src__label">{source.label}</span>
+            <span class="bw-src__card" aria-hidden="true">
+              {source.id === 'search' && (
+                <>
+                  <span class="bw-src__search"><i></i>barbers near me</span>
+                  <span class="bw-src__result">
+                    <small>yourshop.co.uk</small>
+                    <b>Your barbershop · Book online</b>
+                  </span>
+                </>
+              )}
+              {source.id === 'maps' && (
+                <>
+                  <span class="bw-src__map"><i class="bw-src__pin"></i></span>
+                  <span class="bw-src__buttons"><span>Website</span><span class="is-on">Book</span></span>
+                </>
+              )}
+              {source.id === 'instagram' && (
+                <>
+                  <span class="bw-src__ig"><i></i><b>yourshop</b></span>
+                  <span class="bw-src__bio">Fades, beards, hot towel.<br /><u>yourshop.co.uk/book</u></span>
+                </>
+              )}
+              {source.id === 'message' && (
+                <span class="bw-src__bubble">See you Saturday. Book here: <u>yourshop.co.uk/book</u></span>
+              )}
+              {source.id === 'qr' && (
+                <>
+                  <span class="bw-src__qr">
+                    {qr.map((row) => row.split('').map((cell) => <i class:list={{ 'is-on': cell === '1' }}></i>))}
+                  </span>
+                  <span class="bw-src__scan">Scan to book</span>
+                </>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div class="bw-orbit__target" data-bw-film-target>
+        <span class="bw-orbit__pulse" aria-hidden="true"></span>
+        <span class="bw-orbit__bar">
+          <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>
+          <span class="bw-orbit__domain">yourshop.co.uk</span>
+        </span>
+        <span class="bw-orbit__sub">Services, barbers, prices, Book now</span>
+      </div>
+
+      <figcaption id="bw-sources-caption" class="bw-note bw-orbit__caption">
+        Every place clients find you can point to one address.
+      </figcaption>
+    </figure>
+
+    <div class="bw-compare" data-bw-compare data-view="own">
+      <div class="bw-compare__top">
+        <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Cut to · Two ways to be found</p>
+        <div class="bw-compare__switch" role="radiogroup" aria-label="Compare a booking-app profile with your own website">
+          <button type="button" role="radio" aria-checked="false" data-bw-view="profile">Booking-app profile</button>
+          <button type="button" role="radio" aria-checked="true" data-bw-view="own">Your own website</button>
+          <span class="bw-compare__thumb" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="bw-split" aria-hidden="true">
+        <div class="bw-split__frame bw-split__frame--profile">
+          <span class="bw-split__chrome"><i></i><span>bookingapp.example/shops/your-shop</span></span>
+          <span class="bw-split__body">
+            <span class="bw-split__platform">Booking app</span>
+            <span class="bw-split__listing">
+              <span class="bw-split__thumb"></span>
+              <span class="bw-split__lines"><b>Your barbershop</b><i></i><i></i></span>
+            </span>
+            <span class="bw-split__nearby">Nearby shops</span>
+            <span class="bw-split__others">
+              <span><span class="bw-split__thumb"></span><i></i></span>
+              <span><span class="bw-split__thumb"></span><i></i></span>
+              <span><span class="bw-split__thumb"></span><i></i></span>
+            </span>
+          </span>
+        </div>
+        <div class="bw-split__frame bw-split__frame--own">
+          <span class="bw-split__chrome"><i></i><span>yourshop.co.uk</span></span>
+          <span class="bw-split__body bw-split__body--own">
+            <span class="bw-split__nav"><b>YOUR SHOP</b><span>Book now</span></span>
+            <span class="bw-split__hero">
+              <img src="/images/barbershop-websites/site-hero-640.webp" alt="" width="640" height="524" loading="lazy" decoding="async" />
+              <span>Your work. Your barbers. Your prices.</span>
+            </span>
+            <span class="bw-split__tiles"><i>Services</i><i>Barbers</i><i>Visit</i></span>
+          </span>
+        </div>
       </div>
 
       <dl class="bw-compare__rows" data-view="own">
@@ -85,7 +184,7 @@ const sources = ['Google search', 'Google Maps', 'Instagram bio', 'A link you se
       </dl>
       <p class="bw-note">
         Features vary between providers, and the two can work together: you can keep a profile and
-        point clients to your own website.
+        point clients to your own website. The booking-app page above is a generic illustration.
       </p>
     </div>
   </div>

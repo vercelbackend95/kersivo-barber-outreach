@@ -35,8 +35,49 @@ const placement = 'barbershop_websites_final_full_cta';
 
 <section class="bw-final" aria-labelledby="bw-final-title" data-bw-final>
   <div class="bw-shell bw-final__inner">
+    <p class="bw-eyebrow bw-final__eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Final scene · Your name in lights</p>
     <p class="bw-final__domain" aria-hidden="true"><span data-bw-final-domain>yourshop.co.uk</span></p>
     <h2 id="bw-final-title" class="bw-final__title">Put your shop’s name in the address bar</h2>
+
+    <div class="bw-final__try" data-bw-final-try>
+      <label class="bw-final__label" for="bw-final-name">Try it with your shop’s name</label>
+      <div class="bw-final__field">
+        <input
+          id="bw-final-name"
+          class="bw-final__input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="40"
+          placeholder="e.g. Fade Street Barbers"
+          aria-describedby="bw-final-hint"
+          data-bw-final-input
+        />
+        <span class="bw-final__bar" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="13" height="13"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>
+          <span data-bw-final-preview>yourshop.co.uk</span>
+        </span>
+      </div>
+      <ul class="bw-final__places" role="list" aria-hidden="true">
+        <li class="bw-final__place bw-final__place--sign">
+          <small>On your shopfront</small>
+          <span class="bw-final__sign"><b data-bw-final-name>YOUR SHOP</b><i data-bw-final-out>yourshop.co.uk</i></span>
+        </li>
+        <li class="bw-final__place bw-final__place--ig">
+          <small>In your Instagram bio</small>
+          <span class="bw-final__ig">Book your next cut<br /><u data-bw-final-out>yourshop.co.uk</u>/book</span>
+        </li>
+        <li class="bw-final__place bw-final__place--google">
+          <small>On Google</small>
+          <span class="bw-final__g"><i data-bw-final-out>yourshop.co.uk</i><b data-bw-final-name>Your shop</b><span>Website · Book online</span></span>
+        </li>
+      </ul>
+      <p class="bw-final__hint" id="bw-final-hint">
+        An example of how your address could look; nothing you type is saved or sent. We check the
+        name is available when we set it up, and one standard domain per location is included.
+      </p>
+    </div>
     <p class="bw-lead bw-final__lead">
       Your barbershop website, online booking and the tools behind it, set up by KERSIVO for
       £{SAAS_MONTHLY_GBP}/month per location. You approve it before it goes live.
