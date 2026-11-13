@@ -33,7 +33,7 @@ export function initHomeV2Motion(root: Document, wipe: WipeController | null): (
       cleanups.push(bindTicket(gsap, ScrollTrigger, root));
       bindHeadings(gsap, ScrollTrigger, root);
       bindLedger(gsap, ScrollTrigger, root);
-      cleanups.push(bindValues(gsap, ScrollTrigger, root));
+      cleanups.push(bindLedgerTicks(root));
       cleanups.push(bindPrice(gsap, ScrollTrigger, root));
       cleanups.push(bindRail(gsap, ScrollTrigger, root));
       cleanups.push(bindFinal(gsap, ScrollTrigger, root));
@@ -230,45 +230,26 @@ function bindLedger(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
   }
 }
 
-/** Value cards are dealt onto the table in a cascade; each card's proof plays once it is well in view. */
-function bindValues(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
-  const grid = root.querySelector<HTMLElement>('.hv2-values');
-  if (!grid) return undefined;
-  const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-hv2-value]'));
-  grid.classList.add('is-armed');
-  gsap.set(cards, { autoAlpha: 0, y: 56, rotation: (index: number) => (index % 2 ? 1.6 : -1.6), scale: 0.97 });
-
-  const batch = ScrollTrigger.batch(cards, {
-    start: 'top 88%',
-    once: true,
-    onEnter: (entered) =>
-      gsap.to(entered, {
-        autoAlpha: 1,
-        y: 0,
-        rotation: 0,
-        scale: 1,
-        duration: 0.95,
-        ease: 'expo.out',
-        stagger: 0.09,
-        overwrite: true,
-      }),
-  });
-  const proofs = cards.map((card) =>
-    ScrollTrigger.create({ trigger: card, start: 'top 72%', once: true, onEnter: () => card.classList.add('is-on') }),
+/**
+ * Ledger widgets loop only while their item is on screen. Each item also lights its index and
+ * draws its hairline the first time it arrives.
+ */
+function bindLedgerTicks(root: Document) {
+  const ledger = root.querySelector<HTMLElement>('.hv2-ledger');
+  if (!ledger) return undefined;
+  const items = Array.from(ledger.querySelectorAll<HTMLElement>('[data-hv2-tick-host]'));
+  ledger.classList.add('is-armed');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) (entry.target as HTMLElement).classList.toggle('is-on', entry.isIntersecting);
+    },
+    { rootMargin: '-12% 0px -12% 0px' },
   );
-  proofs.forEach((trigger, index) => {
-    if (trigger.scroll() >= trigger.start) {
-      cards[index].classList.add('is-on');
-      gsap.set(cards[index], { autoAlpha: 1, y: 0, rotation: 0, scale: 1 });
-    }
-  });
-
+  items.forEach((item) => observer.observe(item));
   return () => {
-    batch.forEach((trigger) => trigger.kill());
-    proofs.forEach((trigger) => trigger.kill());
-    grid.classList.remove('is-armed');
-    cards.forEach((card) => card.classList.remove('is-on'));
-    gsap.set(cards, { clearProps: 'all' });
+    observer.disconnect();
+    ledger.classList.remove('is-armed');
+    items.forEach((item) => item.classList.remove('is-on'));
   };
 }
 
@@ -511,63 +492,109 @@ function bindRail(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document
     .filter((item): item is { link: HTMLAnchorElement; target: HTMLElement } => item.target !== null);
   if (items.length === 0) return undefined;
 
+  // Section tops in page coordinates. Re-measured after every ScrollTrigger refresh (pins add
+  // spacing) and whenever the page height changes (demo widgets hydrate, FAQ items open).
   let tops: number[] = [];
   let end = 0;
   const measure = () => {
     tops = items.map(({ target }) => target.getBoundingClientRect().top + window.scrollY);
-    const lastTarget = items[items.length - 1].target;
-    end = lastTarget.getBoundingClientRect().bottom + window.scrollY;
+    end = items[items.length - 1].target.getBoundingClientRect().bottom + window.scrollY;
   };
 
   let current = -1;
   let flashTimer = 0;
+  // While a rail jump is scrolling, the rail shows the destination instead of every chapter it passes.
+  let lockedTo = -1;
+  let lockTimer = 0;
   const setFill = fill ? gsap.quickTo(fill, 'scaleY', { duration: 0.35, ease: 'power3.out' }) : null;
+
+  const setCurrent = (index: number) => {
+    if (index === current) return;
+    current = index;
+    items.forEach(({ link }, i) => {
+      if (i === index) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+      link.classList.toggle('is-passed', i < index);
+    });
+    rail.classList.add('is-flash');
+    window.clearTimeout(flashTimer);
+    flashTimer = window.setTimeout(() => rail.classList.remove('is-flash'), 1600);
+  };
 
   const update = () => {
     const line = window.scrollY + window.innerHeight * 0.4;
     let index = 0;
-    for (let i = 0; i < tops.length; i++) if (line >= tops[i]) index = i;
+    for (let i = 0; i < tops.length; i++) if (line >= tops[i] - 1) index = i;
     const next = index + 1 < tops.length ? tops[index + 1] : end;
     const local = Math.min(1, Math.max(0, (line - tops[index]) / Math.max(1, next - tops[index])));
-    // The last dot is reached as the last chapter starts; its own span fills nothing further.
+    // The fill touches a dot at the exact moment its chapter starts.
     const steps = Math.max(1, items.length - 1);
-    const progress = index >= steps ? 1 : (index + local) / steps;
-    setFill?.(progress);
-
-    if (index !== current) {
-      current = index;
-      items.forEach(({ link }, i) => {
-        if (i === index) link.setAttribute('aria-current', 'true');
-        else link.removeAttribute('aria-current');
-        link.classList.toggle('is-passed', i < index);
-      });
-      rail.classList.add('is-flash');
-      window.clearTimeout(flashTimer);
-      flashTimer = window.setTimeout(() => rail.classList.remove('is-flash'), 1600);
-    }
+    setFill?.(index >= steps ? 1 : (index + local) / steps);
+    setCurrent(lockedTo >= 0 ? lockedTo : index);
   };
 
+  const release = () => {
+    lockedTo = -1;
+    window.clearTimeout(lockTimer);
+    window.removeEventListener('scrollend', release);
+    update();
+  };
+
+  const onClick = (event: MouseEvent) => {
+    const index = items.findIndex(({ link }) => link === event.currentTarget);
+    if (index < 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    measure();
+    const nav = parseFloat(getComputedStyle(items[index].target).scrollMarginTop) || 0;
+    const top = Math.max(0, tops[index] - nav);
+    const smooth = window.matchMedia(MOTION_OK).matches;
+    lockedTo = index;
+    setCurrent(index);
+    window.clearTimeout(lockTimer);
+    window.addEventListener('scrollend', release, { once: true });
+    lockTimer = window.setTimeout(release, 2500);
+    window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+    history.replaceState(history.state, '', items[index].link.getAttribute('href') ?? '');
+    const target = items[index].target;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  };
+
+  links.forEach((link) => link.addEventListener('click', onClick));
+  const onRefresh = () => {
+    measure();
+    update();
+  };
+  ScrollTrigger.addEventListener('refresh', onRefresh);
+  const main = root.querySelector<HTMLElement>('.hv2');
+  let resizeTimer = 0;
+  const observer = main
+    ? new ResizeObserver(() => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(onRefresh, 120);
+      })
+    : null;
+  if (main && observer) observer.observe(main);
+
   measure();
-  const trigger = ScrollTrigger.create({
-    start: 0,
-    end: 'max',
-    onUpdate: update,
-    onRefresh: () => {
-      measure();
-      update();
-    },
-  });
+  const trigger = ScrollTrigger.create({ start: 0, end: 'max', onUpdate: update });
   update();
   rail.classList.remove('is-flash');
 
   return () => {
     trigger.kill();
+    observer?.disconnect();
+    ScrollTrigger.removeEventListener('refresh', onRefresh);
+    window.removeEventListener('scrollend', release);
     window.clearTimeout(flashTimer);
-    rail.classList.remove('is-flash');
+    window.clearTimeout(lockTimer);
+    window.clearTimeout(resizeTimer);
     links.forEach((link) => {
+      link.removeEventListener('click', onClick);
       link.removeAttribute('aria-current');
       link.classList.remove('is-passed');
     });
+    rail.classList.remove('is-flash');
     if (fill) gsap.set(fill, { clearProps: 'all' });
   };
 }

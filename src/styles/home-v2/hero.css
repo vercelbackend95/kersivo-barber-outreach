@@ -1182,7 +1182,7 @@
 }
 
 /* ---------- Cinematic layer: WebGL backdrop and chapter rail ---------- */
-.hv2 > :not(.hv2-scene, .hv2-rail) {
+.hv2 > :not(.hv2-scene, .hv2-rail, .hv2-sand) {
   position: relative;
   z-index: 1;
 }
@@ -1214,6 +1214,26 @@
 
 .hv2-scene.is-ready .hv2-scene__canvas {
   opacity: 0.85;
+}
+
+/* Sand that marks key elements: above the page content, below the navbar and rail, never interactive. */
+.hv2-sand {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.hv2-sand.is-ready {
+  opacity: 1;
+}
+
+.hv2-sand__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .hv2-rail {

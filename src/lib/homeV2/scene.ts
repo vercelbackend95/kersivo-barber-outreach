@@ -1,31 +1,42 @@
 /**
- * The /home-v2 backdrop: a field of sand grains that drifts into a new shape for each chapter
- * (scissors, the 10:15 booking clock, a diary, 0%, £39, a tick, a question mark) and blows through
- * a short sandstorm in between. The shape follows the section on screen, not raw page progress.
+ * The /home-v2 sand layer. A few thousand grains of sand gather around the most important element
+ * in view: they brush an underline under a key heading, trace a frame around a call to action, or
+ * mark the corners of a demo. As the visitor scrolls, the sand lifts and drifts on to the next
+ * important element, so the eye is led through each section.
  *
- * three.js loads lazily, after first paint, and only when motion is allowed and WebGL works;
- * otherwise the CSS glow stays.
+ * Positions are measured from the DOM every frame (in CSS pixels, with an orthographic camera), so
+ * the sand stays glued to its element while the page scrolls. three.js loads lazily after first
+ * paint, only when motion is allowed and WebGL works.
  */
 type Three = typeof import('three');
 
-/** Shape per chapter, in page order. A dune opens and closes the journey. */
-const CHAPTERS: Array<{ selector: string; shape: ShapeName }> = [
-  { selector: '#hero', shape: 'scissors' },
-  { selector: '#one-booking', shape: 'clock' },
-  { selector: '#live-demo', shape: 'diary' },
-  { selector: '#why-kersivo-is-different', shape: 'zero' },
-  { selector: '#pricing', shape: 'price' },
-  { selector: '#setup', shape: 'tick' },
-  { selector: '#faq', shape: 'question' },
-  { selector: '.hv2-contact', shape: 'dune' },
+type Mark = 'underline' | 'frame' | 'corners';
+
+/** Highlight targets in page order. `text` underlines the last line of text instead of the box. */
+const TARGETS: Array<{ selector: string; mark: Mark; text?: boolean }> = [
+  { selector: '#hv2-hero-title .hv2-hero__line:last-child', mark: 'underline', text: true },
+  { selector: '#hero .hv2-hero__actions .hv2-btn--primary', mark: 'frame' },
+  { selector: '#hero [data-hv2-wipe]', mark: 'corners' },
+  { selector: '#hv2-booking-title', mark: 'underline', text: true },
+  { selector: '[data-hv2-ticket]', mark: 'corners' },
+  { selector: '#hv2-system-title', mark: 'underline', text: true },
+  { selector: '[data-hv2-tablist]', mark: 'frame' },
+  { selector: '#hv2-included-title', mark: 'underline', text: true },
+  { selector: '.hv2-ledger__item:last-child .hv2-ledger__title', mark: 'underline', text: true },
+  { selector: '#hv2-price-title', mark: 'underline', text: true },
+  { selector: '.hv2-plan__amount', mark: 'underline' },
+  { selector: '[data-hv2-plan] .hv2-plan__actions .hv2-btn--primary', mark: 'frame' },
+  { selector: '#hv2-steps-title', mark: 'underline', text: true },
+  { selector: '#hv2-faq-title', mark: 'underline', text: true },
+  { selector: '#hv2-final-title', mark: 'underline', text: true },
+  { selector: '.hv2-final__actions .hv2-btn--primary', mark: 'frame' },
 ];
 
-type ShapeName = 'dune' | 'scissors' | 'clock' | 'diary' | 'zero' | 'price' | 'tick' | 'question';
-
-/** Normalised shape: x/y roughly in [-0.5, 0.5] (height 1), w = grain brightness. */
-type Shape = Float32Array;
-
 const BRAND = [0xd7 / 255, 0x26 / 255, 0x38 / 255];
+const MORPH_SECONDS = 1.5;
+const INTRO_HOLD = 1.9;
+
+type Box = { x: number; y: number; w: number; h: number };
 
 export function createScene(host: HTMLElement): () => void {
   let disposed = false;
@@ -74,11 +85,7 @@ function hasWebGL(): boolean {
   }
 }
 
-/* ---------- Shape sampling ---------- */
-
-const SIZE = 320;
-
-/** Deterministic random, so every visit draws the same grains. */
+/** Deterministic random, so the marks look the same on every visit. */
 function rng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -90,320 +97,199 @@ function rng(seed: number) {
   };
 }
 
-function headingFont(): string {
-  const value = getComputedStyle(document.documentElement).getPropertyValue('--font-heading').trim();
-  return value || '"Bebas Neue", Impact, sans-serif';
+function gauss(rand: () => number) {
+  return (rand() + rand() + rand() - 1.5) / 1.5;
 }
 
-function drawShape(ctx: CanvasRenderingContext2D, name: ShapeName) {
-  const c = SIZE / 2;
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#fff';
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+/** Measures a target in viewport pixels; text targets use the last line box of their text. */
+function measure(el: HTMLElement, text: boolean | undefined, range: Range): Box | null {
+  if (text) {
+    range.selectNodeContents(el);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 2 && r.height > 2);
+    if (rects.length) {
+      // Width comes from the last line's text; height from the element's line box, because a text
+      // range includes the font's whole content area and would push the underline into the next block.
+      const bottom = Math.max(...rects.map((r) => r.bottom));
+      const line = rects.filter((r) => r.bottom > bottom - 4);
+      const left = Math.min(...line.map((r) => r.left));
+      const right = Math.max(...line.map((r) => r.right));
+      const box = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.15;
+      const h = Math.min(lineHeight, box.height);
+      return { x: left, y: box.bottom - h, w: right - left, h };
+    }
+  }
+  const r = el.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return null;
+  return { x: r.left, y: r.top, w: r.width, h: r.height };
+}
 
-  const fitText = (text: string, weight = '400') => {
-    const family = headingFont();
-    ctx.font = `${weight} 100px ${family}`;
-    const m = ctx.measureText(text);
-    const h = (m.actualBoundingBoxAscent || 72) + (m.actualBoundingBoxDescent || 0);
-    const scale = Math.min((SIZE * 0.86) / m.width, (SIZE * 0.82) / h);
-    ctx.font = `${weight} ${Math.floor(100 * scale)}px ${family}`;
-    const m2 = ctx.measureText(text);
-    const asc = m2.actualBoundingBoxAscent || 72 * scale;
-    const desc = m2.actualBoundingBoxDescent || 0;
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(text, c - m2.width / 2, c + (asc - desc) / 2);
+/**
+ * Lays `count` grains out as a mark around a box of size w × h, as offsets from the box's top-left
+ * corner, plus a brightness. About one grain in eight hangs loose around the mark like blown sand.
+ */
+function layout(mark: Mark | 'scatter', w: number, h: number, count: number, seed: number): Float32Array {
+  const out = new Float32Array(count * 3);
+  const rand = rng(seed);
+  const put = (i: number, x: number, y: number, b: number) => {
+    out[i * 3] = x;
+    out[i * 3 + 1] = y;
+    out[i * 3 + 2] = b;
   };
 
-  switch (name) {
-    case 'scissors': {
-      // Open barber scissors lying on their side, tips to the right: ring handles, crossed blades, pivot screw.
-      ctx.translate(c, c);
-      ctx.rotate(Math.PI / 2);
-      ctx.translate(-c, -c);
-      const blade = (bx: number, by: number, tx: number, ty: number, w: number) => {
-        const dx = tx - bx;
-        const dy = ty - by;
-        const len = Math.hypot(dx, dy);
-        const nx = -dy / len;
-        const ny = dx / len;
-        ctx.beginPath();
-        ctx.moveTo(bx + nx * w, by + ny * w);
-        ctx.quadraticCurveTo(bx + dx * 0.55 + nx * w * 1.1, by + dy * 0.55 + ny * w * 1.1, tx, ty);
-        ctx.lineTo(bx - nx * w * 0.4, by - ny * w * 0.4);
-        ctx.closePath();
-        ctx.fill();
-      };
-      blade(118, 238, 262, 22, 17);
-      blade(202, 238, 58, 22, 17);
-      ctx.lineWidth = 15;
-      ctx.beginPath();
-      ctx.arc(96, 262, 40, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(224, 262, 40, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 11;
-      ctx.beginPath();
-      ctx.moveTo(122, 232);
-      ctx.lineTo(132, 214);
-      ctx.moveTo(198, 232);
-      ctx.lineTo(188, 214);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(160, 150, 9, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'clock': {
-      // The demo booking's time: 10:15.
-      ctx.lineWidth = 14;
-      ctx.beginPath();
-      ctx.arc(c, c, 132, 0, Math.PI * 2);
-      ctx.stroke();
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2;
-        const inner = i % 3 === 0 ? 96 : 108;
-        ctx.lineWidth = i % 3 === 0 ? 10 : 6;
-        ctx.beginPath();
-        ctx.moveTo(c + Math.sin(a) * inner, c - Math.cos(a) * inner);
-        ctx.lineTo(c + Math.sin(a) * 118, c - Math.cos(a) * 118);
-        ctx.stroke();
-      }
-      const hand = (angle: number, len: number, w: number) => {
-        ctx.lineWidth = w;
-        ctx.beginPath();
-        ctx.moveTo(c, c);
-        ctx.lineTo(c + Math.sin(angle) * len, c - Math.cos(angle) * len);
-        ctx.stroke();
-      };
-      hand(((10 + 15 / 60) / 12) * Math.PI * 2, 62, 14);
-      hand((15 / 60) * Math.PI * 2, 92, 9);
-      ctx.beginPath();
-      ctx.arc(c, c, 13, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case 'diary': {
-      // A week view: header bar, binder rings and a grid with booked slots.
-      const x0 = 32;
-      const y0 = 58;
-      const w = 256;
-      const h = 228;
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.roundRect(x0, y0, w, h, 18);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.roundRect(x0, y0, w, 44, [18, 18, 0, 0]);
-      ctx.fill();
-      ctx.lineWidth = 11;
-      for (const rx of [92, 160, 228]) {
-        ctx.beginPath();
-        ctx.moveTo(rx, 36);
-        ctx.lineTo(rx, 72);
-        ctx.stroke();
-      }
-      const booked = new Set([1, 4, 9, 10, 15, 19, 20, 24, 30, 33]);
-      const cols = 7;
-      const rows = 5;
-      const gx = x0 + 18;
-      const gy = y0 + 62;
-      const cw = (w - 36) / cols;
-      const ch = (h - 80) / rows;
-      for (let r = 0; r < rows; r++) {
-        for (let k = 0; k < cols; k++) {
-          const i = r * cols + k;
-          const x = gx + k * cw + cw / 2;
-          const y = gy + r * ch + ch / 2;
-          if (booked.has(i)) {
-            ctx.beginPath();
-            ctx.roundRect(x - cw * 0.38, y - ch * 0.34, cw * 0.76, ch * 0.68, 5);
-            ctx.fill();
-          } else {
-            ctx.beginPath();
-            ctx.arc(x, y, 3.2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-      break;
-    }
-    case 'zero':
-      fitText('0%');
-      break;
-    case 'price':
-      fitText('£39');
-      break;
-    case 'question':
-      fitText('?');
-      break;
-    case 'tick': {
-      ctx.lineWidth = 12;
-      ctx.beginPath();
-      ctx.arc(c, c, 128, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 34;
-      ctx.beginPath();
-      ctx.moveTo(98, 166);
-      ctx.lineTo(142, 210);
-      ctx.lineTo(226, 114);
-      ctx.stroke();
-      break;
-    }
-    case 'dune':
-      break;
-  }
-}
-
-/** Samples `count` grains: two thirds inside the shape, a third along its edge (brighter), plus loose drift. */
-function sampleShape(name: ShapeName, count: number, seed: number): Shape {
-  const out = new Float32Array(count * 4);
-  const rand = rng(seed);
-
-  if (name === 'dune') {
-    // A wide, low dune of settled sand; x spans [-1.6, 1.6] and is stretched to the viewport later.
-    for (let i = 0; i < count; i++) {
-      const x = (rand() * 2 - 1) * 1.6;
-      const ridge = -0.38 + Math.sin(x * 1.7 + 0.6) * 0.05 + Math.sin(x * 4.3) * 0.018;
-      const depth = Math.pow(rand(), 1.8) * 0.28;
-      out[i * 4] = x;
-      out[i * 4 + 1] = ridge - depth;
-      out[i * 4 + 2] = (rand() - 0.5) * 0.6;
-      out[i * 4 + 3] = depth < 0.02 ? 1 : 0.55 - depth;
-    }
-    return out;
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = SIZE;
-  canvas.height = SIZE;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return out;
-  drawShape(ctx, name);
-  const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
-  const filled = (x: number, y: number) => x >= 0 && y >= 0 && x < SIZE && y < SIZE && data[(y * SIZE + x) * 4 + 3] > 110;
-
-  const fill: number[] = [];
-  const edge: number[] = [];
-  let minX = SIZE;
-  let maxX = 0;
-  let minY = SIZE;
-  let maxY = 0;
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
-      if (!filled(x, y)) continue;
-      const index = y * SIZE + x;
-      if (!filled(x - 1, y) || !filled(x + 1, y) || !filled(x, y - 1) || !filled(x, y + 1)) edge.push(index);
-      else fill.push(index);
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-  }
-  if (!fill.length && !edge.length) return out;
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
-  const span = Math.max(maxY - minY, (maxX - minX) / 1.2, 1);
-
   for (let i = 0; i < count; i++) {
-    const roll = rand();
-    let x: number;
-    let y: number;
-    let w: number;
-    if (roll < 0.09) {
-      // Loose grains hanging around the shape.
-      const a = rand() * Math.PI * 2;
-      const r = 0.42 + Math.pow(rand(), 0.6) * 0.5;
-      x = Math.cos(a) * r * 1.1;
-      y = Math.sin(a) * r * 0.85;
-      out[i * 4] = x;
-      out[i * 4 + 1] = y;
-      out[i * 4 + 2] = (rand() - 0.5) * 0.5;
-      out[i * 4 + 3] = 0.25;
+    if (mark === 'scatter') {
+      put(i, w / 2 + gauss(rand) * w * 0.7, h / 2 + gauss(rand) * Math.max(h, 120), 0.2 + rand() * 0.2);
       continue;
     }
-    const fromEdge = (roll < 0.4 && edge.length) || !fill.length;
-    const pool = fromEdge ? edge : fill;
-    const index = pool[Math.floor(rand() * pool.length)];
-    x = ((index % SIZE) + rand() - cx) / span;
-    y = -((Math.floor(index / SIZE) + rand() - cy) / span);
-    w = fromEdge ? 1 : 0.55 + rand() * 0.2;
-    out[i * 4] = x;
-    out[i * 4 + 1] = y;
-    out[i * 4 + 2] = (rand() - 0.5) * 0.07;
-    out[i * 4 + 3] = w;
+    if (rand() < 0.12) {
+      // Loose grains: a faint halo of sand around the mark.
+      const a = rand() * Math.PI * 2;
+      const spread = 16 + rand() * 46;
+      const cx = mark === 'underline' ? rand() * w : w / 2 + Math.cos(a) * (w / 2 + spread);
+      const cy = mark === 'underline' ? h + 10 + Math.abs(gauss(rand)) * 26 : h / 2 + Math.sin(a) * (h / 2 + spread * 0.7);
+      put(i, cx, cy, 0.18 + rand() * 0.15);
+      continue;
+    }
+
+    if (mark === 'underline') {
+      // A brushed stroke: thick in the middle, tapering at both ends, with a slight wave.
+      const u = rand();
+      const x = -0.015 * w + u * w * 1.03;
+      const taper = Math.pow(Math.sin(Math.PI * u), 0.55);
+      const thick = Math.min(4.5, Math.max(2.2, h * 0.055)) * taper;
+      const y = h + 4 + thick + Math.sin(u * 9.5) * 1.2 + gauss(rand) * thick;
+      put(i, x, y, 0.65 + rand() * 0.35);
+    } else if (mark === 'frame') {
+      // A rounded outline a little outside the box.
+      const pad = 9;
+      const W = w + pad * 2;
+      const H = h + pad * 2;
+      const r = Math.min(18, H / 2);
+      const quarter = (Math.PI * r) / 2;
+      const sides: Array<[number, number, number, number, number]> = [
+        // length, start x, start y, dx, dy
+        [W - 2 * r, r, 0, 1, 0],
+        [H - 2 * r, W, r, 0, 1],
+        [W - 2 * r, W - r, H, -1, 0],
+        [H - 2 * r, 0, H - r, 0, -1],
+      ];
+      const corners: Array<[number, number, number]> = [
+        [W - r, r, -Math.PI / 2],
+        [W - r, H - r, 0],
+        [r, H - r, Math.PI / 2],
+        [r, r, Math.PI],
+      ];
+      const total = sides.reduce((sum, side) => sum + Math.max(0, side[0]), 0) + quarter * 4;
+      let d = rand() * total;
+      let x = 0;
+      let y = 0;
+      for (let k = 0; k < 4; k++) {
+        const [len, sx, sy, dx, dy] = sides[k];
+        const run = Math.max(0, len);
+        if (d < run) {
+          x = sx + dx * d;
+          y = sy + dy * d;
+          break;
+        }
+        d -= run;
+        if (d < quarter) {
+          const [cx, cy, a0] = corners[k];
+          const a = a0 + (d / quarter) * (Math.PI / 2);
+          x = cx + Math.cos(a) * r;
+          y = cy + Math.sin(a) * r;
+          break;
+        }
+        d -= quarter;
+      }
+      put(i, x - pad + gauss(rand) * 1.4, y - pad + gauss(rand) * 1.4, 0.6 + rand() * 0.4);
+    } else {
+      // Corner marks, like a viewfinder.
+      const pad = 12;
+      const arm = Math.min(46, Math.max(18, Math.min(w, h) * 0.12));
+      const corner = Math.floor(rand() * 4);
+      const sx = corner % 2 ? w + pad : -pad;
+      const sy = corner > 1 ? h + pad : -pad;
+      const along = rand() * arm;
+      const horizontal = rand() < 0.5;
+      const dirX = corner % 2 ? -1 : 1;
+      const dirY = corner > 1 ? -1 : 1;
+      const x = sx + (horizontal ? dirX * along : 0) + gauss(rand) * 1.5;
+      const y = sy + (horizontal ? 0 : dirY * along) + gauss(rand) * 1.5;
+      put(i, x, y, 0.65 + rand() * 0.35);
+    }
   }
 
-  // Sort grains left to right (with a little noise) so a morph sweeps across like wind, instead of
-  // every grain crossing the whole shape.
+  // Order grains left to right so a move sweeps across like wind instead of every grain crossing.
   const order = Array.from({ length: count }, (_, i) => i);
   const key = new Float32Array(count);
-  for (let i = 0; i < count; i++) key[i] = out[i * 4] + out[i * 4 + 1] * 0.25 + (rand() - 0.5) * 0.12;
+  for (let i = 0; i < count; i++) key[i] = out[i * 3] + (rand() - 0.5) * 30;
   order.sort((a, b) => key[a] - key[b]);
-  const sorted = new Float32Array(count * 4);
-  order.forEach((from, to) => sorted.set(out.subarray(from * 4, from * 4 + 4), to * 4));
+  const sorted = new Float32Array(count * 3);
+  order.forEach((from, to) => sorted.set(out.subarray(from * 3, from * 3 + 3), to * 3));
   return sorted;
 }
-
-/* ---------- Scene ---------- */
 
 function mount(THREE: Three, host: HTMLElement): () => void {
   if (!hasWebGL()) return () => {};
 
   const small = window.matchMedia('(max-width: 47.99rem)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const count = small ? 9000 : 24000;
+  const count = small ? 3600 : 7000;
+  const range = document.createRange();
 
-  const chapters = CHAPTERS.map((chapter) => ({ ...chapter, el: document.querySelector<HTMLElement>(chapter.selector) })).filter(
-    (chapter): chapter is (typeof CHAPTERS)[number] & { el: HTMLElement } => chapter.el !== null,
+  const targets = TARGETS.map((target) => ({ ...target, el: document.querySelector<HTMLElement>(target.selector) })).filter(
+    (target): target is (typeof TARGETS)[number] & { el: HTMLElement } => target.el !== null,
   );
-  // Index 0 is the opening dune the sand rises from.
-  const names: ShapeName[] = ['dune', ...chapters.map((chapter) => chapter.shape)];
-  const shapes = names.map((name, index) => sampleShape(name, count, 1013 + index * 7919));
+  if (targets.length === 0) return () => {};
+
+  // The sand sits above the page (so it can mark elements inside cards) but never takes input.
+  const layer = document.createElement('div');
+  layer.className = 'hv2-sand';
+  layer.setAttribute('aria-hidden', 'true');
+  (host.parentElement ?? document.body).appendChild(layer);
 
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
-  const dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 1.75);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
-  renderer.domElement.className = 'hv2-scene__canvas';
-  host.appendChild(renderer.domElement);
+  renderer.domElement.className = 'hv2-sand__canvas';
+  layer.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-  camera.position.set(0, 0, 10);
+  const camera = new THREE.OrthographicCamera(0, 1, 0, -1, -10, 10);
 
   const geometry = new THREE.BufferGeometry();
-  const from = new Float32Array(count * 4);
-  const to = new Float32Array(count * 4);
+  const from = new Float32Array(count * 3);
+  const to = new Float32Array(count * 3);
   const seeds = new Float32Array(count * 4);
   const seedRand = rng(42);
   for (let i = 0; i < count; i++) {
     seeds[i * 4] = seedRand();
-    seeds[i * 4 + 1] = 0.8 + Math.pow(seedRand(), 2.2) * 1.7;
+    seeds[i * 4 + 1] = 1.1 + Math.pow(seedRand(), 2.4) * 1.9;
     seeds[i * 4 + 2] = seedRand();
     seeds[i * 4 + 3] = seedRand();
   }
-  const fromAttr = new THREE.BufferAttribute(from, 4);
-  const toAttr = new THREE.BufferAttribute(to, 4);
+  const fromAttr = new THREE.BufferAttribute(from, 3);
+  const toAttr = new THREE.BufferAttribute(to, 3);
   fromAttr.setUsage(THREE.DynamicDrawUsage);
   toAttr.setUsage(THREE.DynamicDrawUsage);
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
   geometry.setAttribute('aFrom', fromAttr);
   geometry.setAttribute('aTo', toAttr);
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4));
-  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 100);
 
   const uniforms = {
+    uFromO: { value: new THREE.Vector2() },
+    uToO: { value: new THREE.Vector2() },
+    uSpan: { value: 1 },
     uMix: { value: 0 },
     uTime: { value: 0 },
-    uPx: { value: dpr * (small ? 1.05 : 1) },
-    uOpacity: { value: small ? 0.4 : 1.05 },
-    uPointer: { value: new THREE.Vector2(99, 99) },
+    uDpr: { value: dpr },
+    uOpacity: { value: small ? 0.75 : 0.9 },
+    uPointer: { value: new THREE.Vector2(-999, -999) },
     uPush: { value: 0 },
-    uWind: { value: 1 },
     uBrand: { value: new THREE.Vector3(BRAND[0], BRAND[1], BRAND[2]) },
   };
 
@@ -414,55 +300,56 @@ function mount(THREE: Three, host: HTMLElement): () => void {
     blending: THREE.AdditiveBlending,
     uniforms,
     vertexShader: /* glsl */ `
-      attribute vec4 aFrom;
-      attribute vec4 aTo;
+      attribute vec3 aFrom;
+      attribute vec3 aTo;
       attribute vec4 aSeed; // x: phase, y: size, z: tone, w: delay jitter
+      uniform vec2 uFromO;
+      uniform vec2 uToO;
+      uniform float uSpan;
       uniform float uMix;
       uniform float uTime;
-      uniform float uPx;
+      uniform float uDpr;
       uniform vec2 uPointer;
       uniform float uPush;
-      uniform float uWind;
       varying float vBright;
       varying float vTone;
       varying float vStorm;
 
       void main() {
-        // Grains leave in a sweep from left to right; each waits for the wind to reach it.
-        float sweep = clamp((aFrom.x + 0.9) / 2.6, 0.0, 1.0);
-        float delay = sweep * 0.38 + aSeed.w * 0.12;
-        float t = clamp((uMix - delay) / 0.5, 0.0, 1.0);
+        // Grains leave left to right, each a moment after the one before: sand blown off the mark.
+        float sweep = clamp(aFrom.x / max(uSpan, 1.0), 0.0, 1.0);
+        float delay = sweep * 0.22 + aSeed.w * 0.26;
+        float t = clamp((uMix - delay) / 0.52, 0.0, 1.0);
         float e = t * t * (3.0 - 2.0 * t);
         float storm = sin(3.14159265 * t);
 
-        vec3 p = mix(aFrom.xyz, aTo.xyz, e);
+        vec2 a = uFromO + aFrom.xy;
+        vec2 b = uToO + aTo.xy;
+        vec2 p = mix(a, b, e);
 
-        // In flight, grains lift, swirl and are carried by the wind.
+        // In flight the grains spread into a drifting ribbon and swirl a little.
+        vec2 dir = b - a;
+        float len = length(dir);
+        vec2 n = len > 0.001 ? vec2(-dir.y, dir.x) / len : vec2(0.0, 1.0);
+        p += n * storm * (aSeed.x - 0.5) * min(len * 0.3, 150.0);
         float ph = aSeed.x * 6.2831;
-        vec3 swirl = vec3(
-          sin(p.y * 1.3 + uTime * 0.9 + ph),
-          cos(p.x * 1.1 - uTime * 0.7 + ph * 1.7),
-          sin((p.x - p.y) * 0.9 + uTime * 0.5 + ph)
-        );
-        p += swirl * storm * (0.35 + aSeed.x * 0.9);
-        p.x += storm * (0.6 + aSeed.w * 0.9) * uWind;
-        p.y += storm * (0.25 + aSeed.z * 0.35);
+        p += vec2(sin(uTime * 1.3 + ph * 7.0), cos(uTime * 1.1 + aSeed.z * 30.0)) * storm * (10.0 + aSeed.z * 22.0);
 
-        // At rest, the sand still breathes; loose grains drift more.
-        float loose = step(aTo.w, 0.3) * (1.0 - storm);
-        p.x += sin(uTime * 0.31 + ph * 3.0) * (0.006 + loose * 0.12);
-        p.y += cos(uTime * 0.27 + ph * 2.0) * (0.006 + loose * 0.09) + loose * sin(uTime * 0.12 + ph) * 0.06;
+        // At rest the sand still shimmers; loose grains drift further.
+        float bright = mix(aFrom.z, aTo.z, e);
+        float rest = 1.0 - storm;
+        float loose = 1.0 - step(0.4, bright);
+        p.x += sin(uTime * 0.7 + ph * 9.0) * (0.7 + loose * 7.0) * rest;
+        p.y += cos(uTime * 0.6 + aSeed.z * 50.0) * (0.5 + loose * 5.0) * rest;
 
         // A fine pointer brushes grains aside.
-        vec2 d = p.xy - uPointer;
+        vec2 d = p - uPointer;
         float r2 = dot(d, d);
-        p.xy += normalize(d + 0.0001) * uPush * exp(-r2 / 0.45) * (0.35 + aSeed.x * 0.4);
+        p += normalize(d + 0.0001) * uPush * exp(-r2 / 1800.0) * (10.0 + aSeed.x * 16.0);
 
-        vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_Position = projectionMatrix * mv;
-        gl_PointSize = aSeed.y * uPx * (1.0 + storm * 0.5) * (10.0 / -mv.z);
-
-        vBright = mix(aFrom.w, aTo.w, e);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p.x, -p.y, 0.0, 1.0);
+        gl_PointSize = aSeed.y * uDpr * (1.0 + storm * 0.25);
+        vBright = bright;
         vTone = aSeed.z;
         vStorm = storm;
       }`,
@@ -477,14 +364,14 @@ function mount(THREE: Three, host: HTMLElement): () => void {
         vec2 c = gl_PointCoord - 0.5;
         float d = length(c);
         if (d > 0.5) discard;
-        float soft = smoothstep(0.5, 0.15, d);
-        vec3 sandDark = vec3(0.55, 0.47, 0.38);
-        vec3 sandLight = vec3(0.96, 0.89, 0.78);
-        vec3 col = mix(sandDark, sandLight, vTone * 0.7 + vBright * 0.3);
-        // About one grain in twelve is brand red; more glow red while the sand is in the air.
-        float red = step(0.915 - vStorm * 0.12, vTone);
-        col = mix(col, uBrand * 1.25, red);
-        float a = soft * uOpacity * (0.28 + vBright * 0.72) * (1.0 - vStorm * 0.3);
+        float soft = smoothstep(0.5, 0.1, d);
+        vec3 sandDark = vec3(0.62, 0.53, 0.42);
+        vec3 sandLight = vec3(0.98, 0.92, 0.82);
+        vec3 col = mix(sandDark, sandLight, vTone * 0.6 + vBright * 0.4);
+        // Roughly one grain in seven is brand red, so the marks read as KERSIVO, not decoration.
+        float red = step(0.86, vTone);
+        col = mix(col, uBrand * 1.3, red);
+        float a = soft * uOpacity * vBright * (1.0 - vStorm * 0.35);
         gl_FragColor = vec4(col * a, a);
       }`,
   });
@@ -493,98 +380,103 @@ function mount(THREE: Three, host: HTMLElement): () => void {
   points.frustumCulled = false;
   scene.add(points);
 
-  /* World placement: shapes sit in the empty upper-right beside section headings on wide screens,
-     and high in the centre, smaller and dimmer, on phones. */
-  let halfW = 1;
-  let halfH = 1;
-  let worlds: Float32Array[] = [];
-  const place = (name: ShapeName, shape: Shape): Float32Array => {
-    const world = new Float32Array(shape.length);
-    const wide = halfW / halfH > 1.1;
-    let sx: number;
-    let sy: number;
-    let ox: number;
-    let oy: number;
-    if (name === 'dune') {
-      sx = halfW * 0.72;
-      sy = halfH * 1.6;
-      ox = 0;
-      oy = -halfH * 0.42;
-    } else if (wide) {
-      // Hero: beside the headline, above the compare stage. Chapters: beside the section heading.
-      const s = Math.min(halfH * 0.82, halfW * 0.5);
-      sx = sy = name === 'scissors' ? s * 0.78 : s;
-      ox = name === 'scissors' ? halfW * 0.5 : halfW * 0.46;
-      oy = name === 'scissors' ? halfH * 0.56 : halfH * 0.3;
-    } else {
-      const s = Math.min(halfW * 1.25, halfH * 0.75);
-      sx = sy = s;
-      ox = 0;
-      oy = halfH * 0.32;
+  /* ---------- Which mark is current ---------- */
+
+  type Live = { index: number; box: Box; shape: Float32Array; w: number; h: number };
+  const shapeFor = (index: number, box: Box) => layout(targets[index].mark, box.w, box.h, count, 1013 + index * 7919);
+  const boxOf = (index: number) => measure(targets[index].el, targets[index].text, range);
+
+  /** The last target, in page order, whose centre has passed the middle of the viewport and is still on screen. */
+  const pick = (): number => {
+    const vh = window.innerHeight;
+    let chosen = -1;
+    for (let i = 0; i < targets.length; i++) {
+      const r = targets[i].el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      const centre = r.top + r.height / 2;
+      if (centre < vh * 0.52 && r.bottom > vh * 0.1) chosen = i;
     }
-    for (let i = 0; i < shape.length; i += 4) {
-      world[i] = shape[i] * sx + ox;
-      world[i + 1] = shape[i + 1] * sy + oy;
-      world[i + 2] = shape[i + 2] * Math.min(sx, 3);
-      world[i + 3] = shape[i + 3];
-    }
-    return world;
+    return chosen;
   };
 
-  let segment = -1;
-  const assign = (next: number) => {
-    segment = next;
-    from.set(worlds[next]);
-    to.set(worlds[Math.min(worlds.length - 1, next + 1)]);
+  const firstBox = boxOf(0) ?? { x: window.innerWidth * 0.1, y: window.innerHeight * 0.2, w: 300, h: 40 };
+  let source: { origin: Box; shape: Float32Array; follow: number } = {
+    origin: firstBox,
+    shape: layout('scatter', firstBox.w, firstBox.h, count, 7),
+    follow: 0,
+  };
+  let current: Live = { index: 0, box: firstBox, shape: shapeFor(0, firstBox), w: firstBox.w, h: firstBox.h };
+  let mix = 0;
+
+  const upload = () => {
+    from.set(source.shape);
+    to.set(current.shape);
     fromAttr.needsUpdate = true;
     toAttr.needsUpdate = true;
+    let span = 1;
+    for (let i = 0; i < count; i++) span = Math.max(span, source.shape[i * 3]);
+    uniforms.uSpan.value = span;
   };
+  upload();
+
+  /** Freezes where every grain is right now (ignoring the in-flight swirl) as the start of the next move. */
+  const settleInto = (origin: Box): Float32Array => {
+    const out = new Float32Array(count * 3);
+    const fx = source.origin.x;
+    const fy = source.origin.y;
+    for (let i = 0; i < count; i++) {
+      const sweep = Math.min(1, Math.max(0, from[i * 3] / Math.max(uniforms.uSpan.value, 1)));
+      const delay = sweep * 0.22 + seeds[i * 4 + 3] * 0.26;
+      const t = Math.min(1, Math.max(0, (mix - delay) / 0.52));
+      const e = t * t * (3 - 2 * t);
+      const ax = fx + from[i * 3];
+      const ay = fy + from[i * 3 + 1];
+      const bx = current.box.x + to[i * 3];
+      const by = current.box.y + to[i * 3 + 1];
+      out[i * 3] = ax + (bx - ax) * e - origin.x;
+      out[i * 3 + 1] = ay + (by - ay) * e - origin.y;
+      out[i * 3 + 2] = from[i * 3 + 2] + (to[i * 3 + 2] - from[i * 3 + 2]) * e;
+    }
+    return out;
+  };
+
+  const moveTo = (index: number) => {
+    const box = boxOf(index);
+    if (!box) return;
+    // The new move starts from wherever the sand is now, anchored to the mark it was heading for.
+    source = { origin: current.box, shape: mix >= 0.999 ? current.shape : settleInto(current.box), follow: current.index };
+    current = { index, box, shape: shapeFor(index, box), w: box.w, h: box.h };
+    mix = 0;
+    upload();
+  };
+
+  /* ---------- Sizing, pointer, loop ---------- */
 
   const resize = () => {
-    const w = host.clientWidth || window.innerWidth;
-    const h = host.clientHeight || window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+    camera.left = 0;
+    camera.right = w;
+    camera.top = 0;
+    camera.bottom = -h;
     camera.updateProjectionMatrix();
-    halfH = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
-    halfW = halfH * camera.aspect;
-    worlds = names.map((name, index) => place(name, shapes[index]));
-    if (segment >= 0) assign(segment);
-    measure();
+    // Marks are laid out in pixels; rebuild the current one for the new size.
+    const box = boxOf(current.index);
+    if (box) {
+      current = { ...current, box, shape: shapeFor(current.index, box), w: box.w, h: box.h };
+      if (mix >= 0.999) source = { ...source, shape: current.shape, origin: box, follow: current.index };
+      upload();
+    }
   };
 
-  /* Scroll position in "shapes": 1 = hero shape, 2 = next chapter's shape, and so on. Each morph runs
-     while the next chapter's top travels from the bottom of the viewport to 35% down it. */
-  let tops: number[] = [];
-  const measure = () => {
-    tops = chapters.map((chapter) => chapter.el.getBoundingClientRect().top + window.scrollY);
-  };
-  const scrollShape = () => {
-    const vh = window.innerHeight;
-    const y = window.scrollY;
-    let s = 0;
-    for (let k = 1; k < tops.length; k++) s += Math.min(1, Math.max(0, (y + vh - tops[k]) / (vh * 0.65)));
-    return s;
-  };
-
-  let intro = 0;
-  let target = 0;
-  let current = 0;
-  let px = 99;
-  let py = 99;
-  let tx = 99;
-  let ty = 99;
+  let px = -999;
+  let py = -999;
   let push = 0;
   let pushTarget = 0;
-  let tilt = 0;
-  let tiltTarget = 0;
-
   const onPointer = (event: PointerEvent) => {
-    const nx = (event.clientX / window.innerWidth) * 2 - 1;
-    const ny = -((event.clientY / window.innerHeight) * 2 - 1);
-    tx = nx * halfW;
-    ty = ny * halfH;
-    tiltTarget = nx;
+    px = event.clientX;
+    py = event.clientY;
     pushTarget = 1;
   };
   const onLeave = () => {
@@ -592,49 +484,55 @@ function mount(THREE: Three, host: HTMLElement): () => void {
   };
 
   resize();
-  assign(0);
   window.addEventListener('resize', resize);
   if (finePointer) {
     window.addEventListener('pointermove', onPointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
   }
-  // Layout shifts as widgets hydrate; re-measure chapter tops now and then.
-  const observer = new ResizeObserver(() => measure());
-  const main = document.querySelector('.hv2');
-  if (main) observer.observe(main);
 
   const clock = new THREE.Clock();
   let running = false;
   let last = 0;
+  let candidate = -1;
+  let candidateSince = 0;
 
   const frame = () => {
     const time = clock.getElapsedTime();
     const dt = Math.min(0.05, time - last);
     last = time;
 
-    // The sand rises from the dune into the first shape on arrival.
-    intro = Math.min(1, intro + dt / 2.4);
-    target = scrollShape();
-    const goal = Math.min(names.length - 1, intro + target);
-    // Ease toward the scroll position; a fast scroll becomes a longer sandstorm, never a jump.
-    current += (goal - current) * Math.min(1, dt * 2.6);
-    if (Math.abs(goal - current) < 0.0005) current = goal;
+    // After the intro, follow the most important element in view (with a short debounce).
+    if (time > INTRO_HOLD) {
+      const next = pick();
+      if (next !== candidate) {
+        candidate = next;
+        candidateSince = time;
+      }
+      if (candidate >= 0 && candidate !== current.index && time - candidateSince > 0.14) moveTo(candidate);
+    }
 
-    let seg = Math.min(names.length - 2, Math.floor(current));
-    if (seg < 0) seg = 0;
-    if (seg !== segment) assign(seg);
-    uniforms.uMix.value = Math.min(1, Math.max(0, current - seg));
-    uniforms.uWind.value = goal >= current ? 1 : -1;
+    mix = Math.min(1, mix + dt / MORPH_SECONDS);
+
+    // Re-measure both ends every frame so the sand rides along with the page.
+    const toBox = boxOf(current.index);
+    if (toBox) {
+      if (Math.abs(toBox.w - current.w) > 3 || Math.abs(toBox.h - current.h) > 3) {
+        current = { ...current, box: toBox, shape: shapeFor(current.index, toBox), w: toBox.w, h: toBox.h };
+        to.set(current.shape);
+        toAttr.needsUpdate = true;
+      }
+      current.box = toBox;
+    }
+    const fromBox = source.follow === current.index ? current.box : boxOf(source.follow);
+    if (fromBox) source.origin = fromBox;
+    uniforms.uFromO.value.set(source.origin.x, source.origin.y);
+    uniforms.uToO.value.set(current.box.x, current.box.y);
+    uniforms.uMix.value = mix;
     uniforms.uTime.value = time;
 
-    px += (tx - px) * Math.min(1, dt * 6);
-    py += (ty - py) * Math.min(1, dt * 6);
-    push += (pushTarget * 0.5 - push) * Math.min(1, dt * 3);
+    push += (pushTarget - push) * Math.min(1, dt * 3);
     uniforms.uPointer.value.set(px, py);
     uniforms.uPush.value = push;
-    tilt += (tiltTarget - tilt) * Math.min(1, dt * 1.5);
-    points.rotation.y = Math.sin(time * 0.18) * 0.12 + tilt * 0.1;
-    points.rotation.x = Math.cos(time * 0.14) * 0.04;
 
     renderer.render(scene, camera);
   };
@@ -653,19 +551,18 @@ function mount(THREE: Three, host: HTMLElement): () => void {
   document.addEventListener('visibilitychange', onVisibility);
 
   play();
-  requestAnimationFrame(() => host.classList.add('is-ready'));
+  requestAnimationFrame(() => layer.classList.add('is-ready'));
 
   return () => {
     pause();
-    host.classList.remove('is-ready');
-    observer.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('resize', resize);
     window.removeEventListener('pointermove', onPointer);
     document.documentElement.removeEventListener('pointerleave', onLeave);
+    range.detach();
     geometry.dispose();
     material.dispose();
     renderer.dispose();
-    renderer.domElement.remove();
+    layer.remove();
   };
 }
