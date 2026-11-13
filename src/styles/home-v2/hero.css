@@ -1241,6 +1241,14 @@
   height: 100%;
 }
 
+/* Phones: the sand canvas sits inside the current word slot and scrolls with the page. */
+.hv2-sand--local {
+  position: absolute;
+  inset: calc(var(--hv2-sand-pad, 28px) * -1);
+  z-index: 0;
+  transition-duration: 0.5s;
+}
+
 .hv2-rail {
   display: none;
 }

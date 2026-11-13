@@ -30,7 +30,6 @@ export function initHomeV2Motion(root: Document, wipe: WipeController | null): (
       const cleanups: Cleanup[] = [];
       if (wipe) sweepWipe(gsap, wipe);
       cleanups.push(bindStagePan(gsap, root));
-      cleanups.push(bindTicket(gsap, ScrollTrigger, root));
       bindHeadings(gsap, ScrollTrigger, root);
       bindLedger(gsap, ScrollTrigger, root);
       cleanups.push(bindLedgerTicks(root));
@@ -40,6 +39,8 @@ export function initHomeV2Motion(root: Document, wipe: WipeController | null): (
       return () => cleanups.forEach((fn) => fn && fn());
     });
 
+    mm.add(`${MOTION_OK} and ${DESKTOP}`, () => bindTicket(gsap, ScrollTrigger, root, 'steps'));
+    mm.add(`${MOTION_OK} and (max-width: 63.99rem)`, () => bindTicket(gsap, ScrollTrigger, root, 'pinned'));
     mm.add(`${MOTION_OK} and ${DESKTOP}`, () => bindStepsPinned(gsap, ScrollTrigger, root));
     mm.add(`${MOTION_OK} and (max-width: 63.99rem)`, () => bindStepsStacked(gsap, ScrollTrigger, root));
     mm.add(`${MOTION_OK} and ${FINE_POINTER}`, () => bindMagnetic(gsap, root));
@@ -138,8 +139,13 @@ function bindStagePan(gsap: Gsap, root: Document) {
   };
 }
 
-/** Each booking step slams its rubber stamp onto the ticket as it reaches the middle of the screen. */
-function bindTicket(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
+/**
+ * Each booking step slams its rubber stamp onto the ticket.
+ * - 'steps' (desktop): as each step in the list reaches the middle of the screen.
+ * - 'pinned' (phones): the ticket and one step caption share a pinned screen, and scrolling through
+ *   the section's track advances the step, so the ticket never covers the copy it illustrates.
+ */
+function bindTicket(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document, mode: 'steps' | 'pinned') {
   const ticket = root.querySelector<HTMLElement>('[data-hv2-ticket]');
   const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-hv2-booking-step]'));
   if (!ticket || steps.length === 0) return undefined;
@@ -183,22 +189,43 @@ function bindTicket(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
   };
 
   states.forEach((state) => state.classList.remove('is-done'));
-  const triggers = steps.map((step, index) =>
-    ScrollTrigger.create({
-      trigger: step,
-      start: 'top 62%',
-      onEnter: () => show(index),
-      onLeaveBack: () => show(index - 1),
-    }),
-  );
-  const already = triggers.reduce((last, trigger, index) => (trigger.scroll() >= trigger.start ? index : last), -1);
-  if (already >= 0) show(already);
+  const section = ticket.closest<HTMLElement>('[data-hv2-booking]');
+  const track = section?.querySelector<HTMLElement>('[data-hv2-booking-track]') ?? null;
+
+  if (mode === 'pinned' && section && track) {
+    section.classList.add('is-scrolly');
+    const stepAt = (progress: number) => Math.min(steps.length - 1, Math.floor(progress * steps.length));
+    const pinned = ScrollTrigger.create({
+      trigger: track,
+      start: 'top top',
+      end: 'bottom bottom',
+      onEnter: (self) => show(stepAt(self.progress)),
+      onUpdate: (self) => {
+        const next = stepAt(self.progress);
+        if (next !== reached) show(next);
+      },
+      onLeaveBack: () => show(-1),
+    });
+    ScrollTrigger.refresh();
+    if (pinned.scroll() >= pinned.start) show(stepAt(pinned.progress));
+  } else {
+    const triggers = steps.map((step, index) =>
+      ScrollTrigger.create({
+        trigger: step,
+        start: 'top 62%',
+        onEnter: () => show(index),
+        onLeaveBack: () => show(index - 1),
+      }),
+    );
+    const already = triggers.reduce((last, trigger, index) => (trigger.scroll() >= trigger.start ? index : last), -1);
+    if (already >= 0) show(already);
+  }
 
   return () => {
+    section?.classList.remove('is-scrolly');
     states.forEach((state) => state.classList.add('is-done'));
     steps.forEach((step) => step.classList.remove('is-active'));
     gsap.set([...inks, ticket, progress].filter(Boolean), { clearProps: 'all' });
-    void reached;
   };
 }
 

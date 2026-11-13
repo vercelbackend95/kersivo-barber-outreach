@@ -209,9 +209,53 @@ function bindAnatomy(section: HTMLElement): Cleanup {
   observe();
   desktop.addEventListener('change', observe);
 
+  // Phones with motion: the stage and one caption are pinned (CSS, .is-scrolly) and scroll progress
+  // through the track picks the step, so the red frame moves without tapping the list.
+  const track = section.querySelector<HTMLElement>('[data-bw-anatomy-track]');
+  const pin = section.querySelector<HTMLElement>('.bw-anatomy__pin');
+  const motion = window.matchMedia(MOTION_OK);
+  let scrollRaf = 0;
+  const fromScroll = () => {
+    scrollRaf = 0;
+    if (!track || !pin || triggers.length === 0) return;
+    const top = parseFloat(getComputedStyle(pin).top) || 0;
+    const travel = track.offsetHeight - pin.offsetHeight;
+    if (travel <= 0) return;
+    const progress = Math.min(1, Math.max(0, (top - track.getBoundingClientRect().top) / travel));
+    const at = Math.min(triggers.length - 1, Math.floor(progress * triggers.length));
+    setActive(triggers[at].dataset.bwPartTrigger ?? '');
+  };
+  const onScroll = () => {
+    if (!scrollRaf) scrollRaf = requestAnimationFrame(fromScroll);
+  };
+  let scrolly = false;
+  const syncScrolly = () => {
+    const next = !desktop.matches && motion.matches && Boolean(track && pin);
+    if (next === scrolly) return;
+    scrolly = next;
+    section.classList.toggle('is-scrolly', next);
+    if (next) {
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      fromScroll();
+    } else {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    }
+  };
+  syncScrolly();
+  desktop.addEventListener('change', syncScrolly);
+  motion.addEventListener('change', syncScrolly);
+
   return () => {
     section.removeEventListener('click', onClick);
     desktop.removeEventListener('change', observe);
+    desktop.removeEventListener('change', syncScrolly);
+    motion.removeEventListener('change', syncScrolly);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    cancelAnimationFrame(scrollRaf);
+    section.classList.remove('is-scrolly');
     observer?.disconnect();
     rig?.dispose();
   };
@@ -294,9 +338,13 @@ function createCameraRig(camera: HTMLElement) {
     const zoom = motion.matches ? Math.min(maxZoom, Math.max(1, fit)) : 1;
     const cx = off.x + box.x + box.w / 2;
     const cy = off.y + box.y + box.h / 2;
-    // The site scales from its own top-left corner, which sits at `off` inside the camera.
-    const x = Math.min(0, Math.max(cw - cw * zoom, cw / 2 - (cx - off.x) * zoom - off.x));
-    const y = Math.min(0, Math.max(ch - ch * zoom, ch / 2 - (cy - off.y) * zoom - off.y));
+    // The site scales from its own top-left corner, which sits at `off` inside the camera. It may be
+    // taller than the camera (the pinned phone scene shows a window onto it), so the pan is clamped to
+    // the site's own size: the camera never shows past its edges.
+    const sw = Math.max(cw, site.offsetWidth);
+    const sh = Math.max(ch, site.offsetHeight);
+    const x = Math.min(0, Math.max(cw - off.x - sw * zoom, cw / 2 - (cx - off.x) * zoom - off.x));
+    const y = Math.min(0, Math.max(ch - off.y - sh * zoom, ch / 2 - (cy - off.y) * zoom - off.y));
     setCamera({ s: zoom, x, y });
     setReticle(off.x + x + box.x * zoom, off.y + y + box.y * zoom, box.w * zoom, box.h * zoom);
   };

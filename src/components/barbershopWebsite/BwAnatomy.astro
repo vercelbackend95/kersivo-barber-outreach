@@ -1,8 +1,9 @@
 ---
 /**
  * What a barbershop website should include. Each essential is a button that highlights the matching
- * region of the sticky example site; on desktop the active item also follows scroll. Without JS
- * the list reads as a plain ordered checklist.
+ * region of the sticky example site; on desktop the active item also follows scroll. On phones (with
+ * motion allowed) the site and one caption share a pinned screen and scrolling moves the red frame
+ * from part to part. Without JS the list reads as a plain ordered checklist.
  */
 import BwSite from '@/components/barbershopWebsite/BwSite.astro';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
@@ -61,11 +62,12 @@ const essentials: Essential[] = [
       <p class="bw-lead">
         A good barbershop website answers a new client’s questions in seconds: who you are, what you
         do, what it costs, who is cutting, where you are and how to book. These are the eight parts
-        that do it. Select one to see where it sits.
+        that do it. Scroll or select one to see where it sits.
       </p>
     </div>
 
-    <div class="bw-anatomy__layout">
+    <div class="bw-anatomy__layout" style={`--bw-steps: ${essentials.length}`} data-bw-anatomy-track>
+      <div class="bw-anatomy__pin">
       <div class="bw-anatomy__stage">
         <div class="bw-anatomy__sticky">
           <span class="bw-anatomy__count" aria-hidden="true"><span data-bw-anatomy-num>01</span><small>/ 0{essentials.length}</small></span>
@@ -100,6 +102,7 @@ const essentials: Essential[] = [
           </li>
         ))}
       </ol>
+      </div>
     </div>
 
     <p class="bw-aside">
