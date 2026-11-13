@@ -39,7 +39,7 @@ describe('homepage hero markup', () => {
     expect(homepage).toContain("import HomeV2Hero from '@/components/homeV2/HomeV2Hero.astro';");
     expect(homepage).toMatch(/<HomeV2Journey \/>\s*<HomeV2Hero \/>\s*<HomeV2Booking \/>/);
     expect(homepage).not.toMatch(/SystemChooser|LandingValueCards/);
-    expect(homepage).not.toMatch(/BarbershopBookingHero|hero227|phone-5|iphonemockup|fetchpriority/);
+    expect(homepage).not.toMatch(/BarbershopBookingHero|hero227|phone-5|iphonemockup/);
     expect(existsSync(join(process.cwd(), 'src/components/barbershopBookingHero.astro'))).toBe(false);
     expect(existsSync(join(process.cwd(), 'src/components/barbershopBookingHero.tsx'))).toBe(false);
   });

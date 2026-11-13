@@ -17,7 +17,7 @@
 .hv2-hero {
   width: min(100%, var(--hv2-max));
   margin-inline: auto;
-  padding: clamp(0.5rem, 0.7vw, 1rem) var(--hv2-pad) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 3vw, 3rem) var(--hv2-pad) clamp(2.5rem, 5vw, 4rem);
 }
 
 .hv2-hero__title {
@@ -48,7 +48,7 @@
 
 .hv2 .hv2-hero__lead {
   max-width: 41.5em;
-  margin: 0.55rem 0 0;
+  margin: clamp(1rem, 1.5vw, 1.5rem) 0 0;
   letter-spacing: -0.01em;
   color: #e9e1d3;
   font-size: clamp(1rem, 1.3vw, 1.2rem);
@@ -1086,9 +1086,10 @@
   }
 }
 
+/* Starts partly visible so the stage photo (the LCP element) paints with the first frame. */
 @keyframes hv2-stage-in {
   from {
-    opacity: 0;
+    opacity: 0.4;
     transform: translateY(26px) scale(0.985);
   }
 }

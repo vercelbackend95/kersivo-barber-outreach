@@ -30,6 +30,8 @@ const currentYear = new Date().getFullYear();
   jsonLd={buildHomepageJsonLd(freePreview)}
 >
   <link slot="head" rel="preload" as="image" href="/images/brand/logo-mark-nav-36.webp" />
+  <!-- LCP: the demo shop hero photo in the hero stage. -->
+  <link slot="head" rel="preload" as="image" href="/images/home-v2/cutstate-hero.webp" fetchpriority="high" />
   <main class="hv2 landing-overflow-guard">
     <HomeV2Journey />
     <HomeV2Hero />
