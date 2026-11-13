@@ -331,8 +331,8 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
     note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, including your own domain. Run the test above first: not every shop needs a website.`,
   },
   [INSIGHTS_SECOND_VISIT.slug]: {
-    href: '/pricing#plan',
-    label: 'See what Full KERSIVO includes for client history',
+    href: '/compare#who-owns-your-clients',
+    label: 'Compare which booking platforms let you keep and export your client list',
     note: 'Full KERSIVO includes Advanced Clients and full booking history. Retention outcomes depend on the shop and its clients.',
   },
   [INSIGHTS_DECEMBER_HOURS.slug]: {
@@ -341,8 +341,8 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
     note: 'Read about the booking journey when planning seasonal opening hours; this does not claim that longer opening is more profitable.',
   },
   [INSIGHTS_HAIRCUT_PRICING.slug]: {
-    href: '/barber-software-cost-calculator',
-    label: 'Check one component of your shop overhead: booking software',
+    href: '/compare#cost-by-team-size',
+    label: 'Check one component of your shop overhead: booking software for your team size',
     note: 'Software cost is only one input in haircut pricing. Use your own full shop costs when making pricing decisions.',
   },
   [INSIGHTS_GOOGLE_REVIEWS.slug]: {
@@ -356,8 +356,8 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
     note: `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, with your own domain and online booking. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   },
   [INSIGHTS_CARD_FEES.slug]: {
-    href: '/barbershop-online-booking',
-    label: 'See how online deposits and payments work in KERSIVO',
+    href: '/compare#new-client-fees',
+    label: 'Compare what each UK booking platform charges on top of card fees',
     note: `${KERSIVO_COMMISSION_CLAIM} Card fees are charged by Stripe, not KERSIVO: ${STRIPE_FEES_NOTE.charAt(0).toLowerCase()}${STRIPE_FEES_NOTE.slice(1)}`,
   },
 };

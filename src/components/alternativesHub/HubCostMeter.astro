@@ -1,0 +1,92 @@
+---
+import {
+  COST_METER_DEFAULT_BARBERS,
+  COST_METER_MAX_BARBERS,
+  COST_METER_MIN_BARBERS,
+  COST_METER_NOTE,
+  COST_METER_ROWS,
+  costMeterValue,
+  costMeterYearlyGap,
+  formatMoney,
+} from '@/lib/compare/bestSoftwareData';
+
+const n: number = COST_METER_DEFAULT_BARBERS;
+const values = COST_METER_ROWS.map((row) => costMeterValue(row, n));
+const max = Math.max(...values);
+const gap = costMeterYearlyGap(n);
+---
+
+<div
+  id="cost-by-team-size"
+  class="ks-glass-card ks-glass-card--accent cb-meter"
+  data-cb-meter
+  data-min={COST_METER_MIN_BARBERS}
+>
+  <div class="cb-meter__head">
+    <p class="ks-eyebrow">Monthly software cost</p>
+    <p class="cb-meter__team" aria-hidden="true">
+      <span class="cb-meter__team-n" data-cb-meter-count>{n}</span>
+      <span class="cb-meter__team-label" data-cb-meter-unit>{n === 1 ? 'barber' : 'barbers'}</span>
+    </p>
+  </div>
+
+  <div class="cb-meter__control">
+    <label for="cb-meter-range" class="cb-meter__label">Bookable barbers in your shop</label>
+    <div class="cb-meter__stepper">
+      <button type="button" class="cb-meter__step" data-cb-meter-step="-1" aria-label="One fewer barber">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 8h8" /></svg>
+      </button>
+      <input
+        id="cb-meter-range"
+        class="cb-range"
+        type="range"
+        min={COST_METER_MIN_BARBERS}
+        max={COST_METER_MAX_BARBERS}
+        step="1"
+        value={n}
+        style={`--fill: ${((n - COST_METER_MIN_BARBERS) / (COST_METER_MAX_BARBERS - COST_METER_MIN_BARBERS)) * 100}%`}
+        aria-valuetext={`${n} barbers`}
+        data-cb-meter-range
+      />
+      <button type="button" class="cb-meter__step" data-cb-meter-step="1" aria-label="One more barber">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 8h8M8 4v8" /></svg>
+      </button>
+    </div>
+  </div>
+
+  <ul class="cb-meter__rows">
+    {
+      COST_METER_ROWS.map((row, i) => (
+        <li
+          class={`cb-meter__row${row.isFirstParty ? ' cb-meter__row--ours' : ''}`}
+          data-cb-meter-row
+          data-series={JSON.stringify(row.monthlyGbp)}
+          data-name={row.name}
+          data-first-party={row.isFirstParty ? "true" : "false"}
+          style={`--row: ${i}`}
+        >
+          <div class="cb-meter__name">
+            <a href={row.href} class="cb-meter__link" data-track="compare_hub_meter_click" data-track-placement={row.id}>
+              {row.name}
+            </a>
+            <span class="cb-meter__basis">{row.basis}</span>
+          </div>
+          <span class="cb-meter__value">
+            <span data-cb-meter-value>{formatMoney(values[i])}</span>
+            <span class="cb-meter__per">/mo</span>
+          </span>
+          <span class="cb-meter__track" aria-hidden="true">
+            <span class="cb-meter__bar" data-cb-meter-bar style={`--scale: ${(values[i] / max).toFixed(4)}`} />
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="cb-meter__gap" aria-live="polite" data-cb-meter-gap>
+    With <span data-cb-gap-n>{n}</span> barbers, <span data-cb-gap-name>{gap.name}</span> costs
+    <strong data-cb-gap-gbp>{formatMoney(gap.gbp)}</strong> more a year than Full KERSIVO, and Full KERSIVO’s price
+    already includes your branded website and own domain.
+  </p>
+  <p class="cb-meter__note">{COST_METER_NOTE}</p>
+</div>

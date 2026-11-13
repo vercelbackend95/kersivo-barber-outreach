@@ -1,0 +1,110 @@
+---
+import HubStatusIcon from '@/components/alternativesHub/HubStatusIcon.astro';
+import { HUB_STATUS_LABELS } from '@/lib/compare/alternativesHubData';
+import { DUEL_CRITERIA, DUEL_DEFAULT_ID, DUEL_KERSIVO_NOTES, duelPlatforms } from '@/lib/compare/bestSoftwareData';
+
+const { kersivo, competitors } = duelPlatforms();
+---
+
+<section id="head-to-head" class="cb-section cb-duel" aria-labelledby="cb-duel-title" data-cb-duel>
+  <div class="alt-hub__container">
+    <header class="cb-section__head">
+      <p class="ks-eyebrow">Head to head</p>
+      <h2 id="cb-duel-title" class="cb-section__title">KERSIVO vs each system, on the things that cost you money</h2>
+      <p class="cb-section__lead">
+        Pick a platform. Each answer comes from that provider’s official UK pages, on the date in the sources.
+      </p>
+    </header>
+
+    <div class="cb-duel__tabs" role="tablist" aria-label="Choose a platform to compare with KERSIVO">
+      {
+        competitors.map((p) => {
+          const active = p.id === DUEL_DEFAULT_ID;
+          return (
+            <button
+              type="button"
+              role="tab"
+              id={`cb-duel-tab-${p.id}`}
+              class="cb-duel__tab"
+              aria-selected={active ? 'true' : 'false'}
+              aria-controls={`cb-duel-panel-${p.id}`}
+              tabindex={active ? 0 : -1}
+              data-cb-duel-tab={p.id}
+            >
+              {p.name}
+            </button>
+          );
+        })
+      }
+    </div>
+
+    <div class="ks-glass-card ks-glass-card--accent cb-duel__card">
+      {
+        competitors.map((p) => (
+          <div
+            role="tabpanel"
+            id={`cb-duel-panel-${p.id}`}
+            class="cb-duel__panel"
+            aria-labelledby={`cb-duel-tab-${p.id}`}
+            hidden={p.id !== DUEL_DEFAULT_ID}
+            data-cb-duel-panel={p.id}
+          >
+            <table class="cb-duel__table">
+              <caption class="sr-only">KERSIVO compared with {p.name}</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="cb-duel__corner"><span class="sr-only">Criterion</span></th>
+                  <th scope="col" class="cb-duel__us">KERSIVO</th>
+                  <th scope="col" class="cb-duel__them">{p.name}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="cb-duel__row cb-duel__row--price">
+                  <th scope="row">Price</th>
+                  <td class="cb-duel__us">
+                    <p class="cb-duel__note cb-duel__note--strong">{kersivo.pricingSummary}</p>
+                  </td>
+                  <td class="cb-duel__them">
+                    <p class="cb-duel__note cb-duel__note--strong">{p.pricingSummary ?? 'UK GBP pricing not verified.'}</p>
+                  </td>
+                </tr>
+                {DUEL_CRITERIA.map((c) => {
+                  const ours = kersivo.attributes[c.id];
+                  const theirs = p.attributes[c.id];
+                  return (
+                    <tr class="cb-duel__row">
+                      <th scope="row">{c.label}</th>
+                      <td class="cb-duel__us">
+                        <span class="cb-duel__status">
+                          <HubStatusIcon status={ours.status} />
+                          {HUB_STATUS_LABELS[ours.status]}
+                        </span>
+                        <p class="cb-duel__note">{DUEL_KERSIVO_NOTES[c.id] ?? ours.note}</p>
+                      </td>
+                      <td class="cb-duel__them">
+                        <span class={`cb-duel__status cb-duel__status--${theirs.status}`}>
+                          <HubStatusIcon status={theirs.status} />
+                          {HUB_STATUS_LABELS[theirs.status]}
+                        </span>
+                        <p class="cb-duel__note">{theirs.note}</p>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <a class="cb-duel__more" href={p.href} data-track="compare_hub_duel_click" data-track-placement={p.id}>
+              Read the full KERSIVO vs {p.name} comparison <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <noscript>
+    <style>
+      .cb-duel__panel[hidden] { display: block !important; margin-top: 2rem; }
+      .cb-duel__tabs { display: none !important; }
+    </style>
+  </noscript>
+</section>

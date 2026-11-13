@@ -16,22 +16,22 @@ import {
 
 export const ALTERNATIVES_HUB_PAGE_PATH = '/compare';
 
-export const ALTERNATIVES_HUB_TITLE = 'Best Barber Booking Software UK: 11 Systems Compared';
+export const ALTERNATIVES_HUB_TITLE = 'Best Barber Software UK 2026: Prices & Fees Compared';
 
 export const ALTERNATIVES_HUB_DESCRIPTION =
-  'Compare 11 barber booking systems for UK barbershops, including Booksy, Fresha, Nearcut and KERSIVO: pricing, deposits, own websites and booking fees.';
+  'KERSIVO vs Booksy, Fresha, Nearcut and 7 more for UK barbershops: monthly cost by team size, new-client fees, your own website and client data.';
 
-export const ALTERNATIVES_HUB_H1_LEAD = 'Find the right';
-export const ALTERNATIVES_HUB_H1_ACCENT = 'barber booking system';
+export const ALTERNATIVES_HUB_H1_LEAD = 'Best barber software UK:';
+export const ALTERNATIVES_HUB_H1_ACCENT = 'cost, fees and control compared';
 export const ALTERNATIVES_HUB_H1 = `${ALTERNATIVES_HUB_H1_LEAD} ${ALTERNATIVES_HUB_H1_ACCENT}`;
 
 /** Three-sentence direct answer shown under the H1. */
 export const ALTERNATIVES_HUB_DIRECT_ANSWER =
-  "There's no single best system for every UK barbershop. If marketplace discovery brings you most new clients, Booksy, Fresha or Treatwell may suit you. If you want clients to book on your own website and domain for one flat price per location, that's what Full KERSIVO is built for.";
+  "There's no single best system for every UK barbershop. If a marketplace brings you most new clients, Booksy, Fresha or Treatwell may suit you. If your regulars should book on your own website and domain, for one flat price per location whatever your team size, that's what Full KERSIVO is built for.";
 
 /** Genuine content date for the hub; never derived from build time. */
-export const ALTERNATIVES_HUB_LAST_UPDATED_ISO = '2026-10-28';
-export const ALTERNATIVES_HUB_LAST_UPDATED_LABEL = '28 October 2026';
+export const ALTERNATIVES_HUB_LAST_UPDATED_ISO = '2026-11-13';
+export const ALTERNATIVES_HUB_LAST_UPDATED_LABEL = '13 November 2026';
 
 export type AlternativesHubFaqItem = { question: string; answer: string };
 

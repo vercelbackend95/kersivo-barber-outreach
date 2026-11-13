@@ -1,0 +1,71 @@
+---
+import HubStatusIcon from '@/components/alternativesHub/HubStatusIcon.astro';
+import { HUB_PLATFORMS, HUB_STATUS_LABELS } from '@/lib/compare/alternativesHubData';
+import { CONTROL_CRITERIA } from '@/lib/compare/bestSoftwareData';
+
+const confirmed = (id: string) =>
+  CONTROL_CRITERIA.filter((c) => HUB_PLATFORMS.find((p) => p.id === id)!.attributes[c.id].status === 'yes').length;
+---
+
+<section id="who-owns-your-clients" class="cb-section cb-control" aria-labelledby="cb-control-title" data-cb-control>
+  <div class="alt-hub__container">
+    <header class="cb-section__head">
+      <p class="ks-eyebrow">Customer control</p>
+      <h2 id="cb-control-title" class="cb-section__title">Who owns the relationship with your clients?</h2>
+      <p class="cb-section__lead">
+        Five checks that decide whether your clients book with you or with an app. A green tick is only given when the
+        provider’s own pages confirm it.
+      </p>
+    </header>
+
+    <div class="ks-glass-card cb-control__card">
+      <table class="cb-control__table">
+        <caption class="sr-only">Customer control features by platform</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="cb-control__platform-head">Platform</th>
+            {
+              CONTROL_CRITERIA.map((c) => (
+                <th scope="col" class="cb-control__col">
+                  <span class="cb-control__col-full">{c.label}</span>
+                  <span class="cb-control__col-short" aria-hidden="true">{c.short}</span>
+                </th>
+              ))
+            }
+            <th scope="col" class="cb-control__total-head"><span class="cb-control__col-full">Confirmed</span><span class="cb-control__col-short">Total</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            HUB_PLATFORMS.map((p, row) => (
+              <tr class={`cb-control__row${p.isFirstParty ? ' cb-control__row--ours' : ''}`} style={`--row: ${row}`}>
+                <th scope="row" class="cb-control__platform">
+                  <a class="cb-link" href={p.href}>{p.name}</a>
+                </th>
+                {CONTROL_CRITERIA.map((c, col) => {
+                  const a = p.attributes[c.id];
+                  return (
+                    <td class="cb-control__cell" data-status={a.status} title={a.note} style={`--col: ${col}`}>
+                      <HubStatusIcon status={a.status} />
+                      <span class="sr-only">{HUB_STATUS_LABELS[a.status]}: {a.note}</span>
+                    </td>
+                  );
+                })}
+                <td class="cb-control__total">
+                  <span class="cb-control__total-n">{confirmed(p.id)}</span>
+                  <span class="cb-control__total-of">/ {CONTROL_CRITERIA.length}</span>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <ul class="alt-hub-legend cb-control__legend" aria-label="Status key">
+        <li><HubStatusIcon status="yes" /> Yes</li>
+        <li><HubStatusIcon status="limited" /> Partial or add-on</li>
+        <li><HubStatusIcon status="no" /> No</li>
+        <li><HubStatusIcon status="unverified" /> Not verified</li>
+      </ul>
+    </div>
+  </div>
+</section>
