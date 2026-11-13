@@ -41,7 +41,7 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
       <p class="hv2-eyebrow">Pricing</p>
       <h2 id="hv2-price-title" class="hv2-h2">One price per shop, not per barber</h2>
       <p class="hv2-lead">Take on your next barber without your software bill going up. Full KERSIVO is {offer.price.full} per location, whether you have one barber or ten.</p>
-      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph={`£${SAAS_MONTHLY_GBP}`}></span>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph={`£${SAAS_MONTHLY_GBP}`} style={`--hv2-glyph-chars: ${`£${SAAS_MONTHLY_GBP}`.length}`}></span>
     </header>
 
     <div class="hv2-price__grid">

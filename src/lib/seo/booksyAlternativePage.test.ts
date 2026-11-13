@@ -72,7 +72,7 @@ const componentDir = '../../components/booksyAlternative';
 const pageSource = readRepoFile('../../pages/booksy-alternative/index.astro');
 const freshaPageSource = readRepoFile('../../pages/fresha-alternative/index.astro');
 const homepageSource = readRepoFile('../../pages/index.astro');
-const switcherSource = readRepoFile('../../components/landingSwitcherReassurance.astro');
+const homepageIncludedSource = readRepoFile('../../components/homeV2/HomeV2Included.astro');
 const calculatorBooksySource = readRepoFile('../../components/costCalculator/CostBooksy.astro');
 const freshaFitSource = readRepoFile('../../components/freshaAlternative/FreshaFit.astro');
 const factsSource = readRepoFile('booksyFacts.ts');
@@ -580,8 +580,8 @@ describe('booksy-alternative: internal links and claim safety', () => {
   });
 
   it('keeps the inbound links from the homepage, Fresha and the calculator', () => {
-    expect(homepageSource).toMatch(/<LandingSwitcherReassurance showBooksyCompareLink\b[^>]*\/>/);
-    expect(countLinks(switcherSource, '/booksy-alternative')).toBe(1);
+    expect(homepageSource).toContain('<HomeV2Included />');
+    expect(countLinks(homepageIncludedSource, '/booksy-alternative')).toBe(1);
     expect(countLinks(freshaFitSource, '/booksy-alternative')).toBe(1);
     expect(countLinks(calculatorBooksySource, '/booksy-alternative')).toBe(1);
   });

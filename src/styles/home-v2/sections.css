@@ -711,8 +711,15 @@
 }
 
 .hv2 .hv2-included__compare {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 46rem;
   margin: 2rem 0 0;
   color: var(--hv2-muted);
+}
+
+.hv2 .hv2-included__compare p {
+  margin: 0;
 }
 
 @media (min-width: 64rem) {
@@ -2288,6 +2295,22 @@
   border-top: 1px solid var(--hv2-line);
 }
 
+/* The shared contact form and footer sit on the warm ground instead of the site-wide cool one. */
+.hv2 .contact16 {
+  background: transparent;
+  border-top: 0;
+}
+
+.hv2 .footer50 {
+  background: color-mix(in srgb, var(--hv2-ground) 82%, #000);
+  border-top-color: var(--hv2-line);
+}
+
+html:has(main.hv2),
+html:has(main.hv2) body {
+  background-color: var(--hv2-ground-solid, #0d0b09);
+}
+
 .hv2-final {
   padding-top: clamp(3rem, 6vw, 5rem);
 }
@@ -2321,6 +2344,23 @@
   align-items: center;
   gap: 0.75rem 1.25rem;
   margin-top: 0.75rem;
+}
+
+/* Phones: one full-width, centred primary action instead of a cramped two-line button. */
+@media (max-width: 29.99rem) {
+  .hv2-final__card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .hv2-final__actions {
+    width: 100%;
+  }
+
+  .hv2 .hv2-final__actions .hv2-btn--primary {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .hv2 .hv2-final .hv2-final__link {
@@ -2899,6 +2939,41 @@
     width: 34%;
     height: 7.5rem;
     text-align: right;
+  }
+}
+
+/* Without the sand (reduced motion, Save-Data, no WebGL) each slot shows its word as a quiet outline,
+   so the space the head reserves for it never reads as a gap. Sized to the slot with container units. */
+.hv2-glyph {
+  container-type: size;
+}
+
+.hv2-glyph::before {
+  content: attr(data-hv2-glyph);
+  display: none;
+  font-size: min(86cqh, calc(230cqw / var(--hv2-glyph-chars, 8)));
+  line-height: 1;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--hv2-sand) 42%, transparent);
+}
+
+.hv2[data-hv2-sand='off'] .hv2-glyph::before {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hv2-glyph::before {
+    display: block;
+  }
+}
+
+@media (min-width: 80rem) {
+  .hv2-head > .hv2-glyph::before {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
   }
 }
 

@@ -1,5 +1,5 @@
 /**
- * The /home-v2 sand layer. Several thousand grains of sand follow the visitor down the page. In the
+ * The homepage sand layer. Several thousand grains of sand follow the visitor down the page. In the
  * hero they brush an underline and frame the main call to action; in every chapter after that they
  * sculpt the one word that chapter is about (BOOKED., ONE DIARY, YOUR CLIENTS, £39, GO LIVE…) in the
  * empty space beside its heading, then blow on to the next one as the visitor scrolls.
@@ -30,7 +30,7 @@ const INTRO_HOLD = 0.45;
 type Box = { x: number; y: number; w: number; h: number };
 type Resolved = Target & { el: HTMLElement; word?: string };
 
-export function createScene(host: HTMLElement): () => void {
+export function createScene(host: HTMLElement, onUnavailable?: () => void): () => void {
   let disposed = false;
   let teardown: (() => void) | null = null;
 
@@ -39,11 +39,12 @@ export function createScene(host: HTMLElement): () => void {
     void Promise.all([import('three'), document.fonts?.ready ?? Promise.resolve()]).then(([THREE]) => {
       if (disposed) return;
       try {
-        teardown = mount(THREE, host);
+        teardown = mount(THREE, host, onUnavailable);
       } catch {
         teardown = null;
+        onUnavailable?.();
       }
-    });
+    }, () => onUnavailable?.());
   };
 
   // Start soon after first paint instead of waiting for every image on the page to load.
@@ -288,8 +289,11 @@ function markLayout(mark: 'underline' | 'frame' | 'scatter', w: number, h: numbe
   return sweepOrder(out, count, rand);
 }
 
-function mount(THREE: Three, host: HTMLElement): () => void {
-  if (!hasWebGL()) return () => {};
+function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () => void {
+  if (!hasWebGL()) {
+    onUnavailable?.();
+    return () => {};
+  }
 
   const small = window.matchMedia('(max-width: 47.99rem)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;

@@ -9,7 +9,7 @@ type ScrollTriggerStatic = typeof import('gsap/ScrollTrigger').ScrollTrigger;
 type Cleanup = (() => void) | void;
 
 /**
- * Scroll and signature motion for /home-v2. GSAP loads after first paint. With reduced motion
+ * Scroll and signature motion for the homepage. GSAP loads after first paint. With reduced motion
  * nothing here runs and every section keeps its static, fully visible state.
  */
 export function initHomeV2Motion(root: Document, wipe: WipeController | null): () => void {

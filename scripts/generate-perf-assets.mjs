@@ -34,6 +34,17 @@ async function main() {
   await resizeWebp(logoSrc, path.join(logoOutDir, 'logo-navbar-228.webp'), 228);
   await resizeWebp(logoSrc, path.join(logoOutDir, 'logo-navbar-456.webp'), 456);
 
+  // K-only crop for the horizontal navbar lockup; same crop as scripts/generate-favicons.mjs.
+  const kMark = await sharp(logoSrc).extract({ left: 230, top: 4, width: 337, height: 371 }).png().toBuffer();
+  for (const height of [36, 72]) {
+    const outputPath = path.join(logoOutDir, `logo-mark-nav-${height}.webp`);
+    await sharp(kMark)
+      .resize({ height, kernel: 'lanczos3' })
+      .webp({ quality: 90, effort: 6, alphaQuality: 100 })
+      .toFile(outputPath);
+    console.info(`[perf-assets] ${path.relative(root, outputPath)} (${height}h) — ${kb(fs.statSync(outputPath).size)}`);
+  }
+
   const valueCardSources = [
     { file: '8.webp', widths: [320, 480, 768, 1024] },
     { file: 'shoppyonline.webp', widths: [320, 480, 768, 1024] },

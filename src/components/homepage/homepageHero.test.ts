@@ -36,8 +36,8 @@ describe('homepage SEO', () => {
 
 describe('homepage hero markup', () => {
   it('renders the product-first hero in place of the phone hero', () => {
-    expect(homepage).toContain("import HomepageHero from '@/components/homepage/HomepageHero.astro';");
-    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>/);
+    expect(homepage).toContain("import HomeV2Hero from '@/components/homeV2/HomeV2Hero.astro';");
+    expect(homepage).toMatch(/<HomeV2Journey \/>\s*<HomeV2Hero \/>\s*<HomeV2Booking \/>/);
     expect(homepage).not.toMatch(/SystemChooser|LandingValueCards/);
     expect(homepage).not.toMatch(/BarbershopBookingHero|hero227|phone-5|iphonemockup|fetchpriority/);
     expect(existsSync(join(process.cwd(), 'src/components/barbershopBookingHero.astro'))).toBe(false);
@@ -70,7 +70,7 @@ describe('homepage hero markup', () => {
     expect(homepage).not.toMatch(/<h1\b/);
     for (const file of imports) {
       const resolved = ['', '.astro', '.tsx'].map((ext) => join(process.cwd(), 'src/components', file + ext)).find(existsSync);
-      if (!resolved || file === 'homepage/HomepageHero.astro') continue;
+      if (!resolved || file === 'homeV2/HomeV2Hero.astro') continue;
       expect(read(resolved.replace(process.cwd(), '')), file).not.toMatch(/<h1\b/);
     }
   });

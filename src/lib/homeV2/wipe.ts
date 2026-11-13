@@ -1,4 +1,4 @@
-/** Listing-to-shop wipe on the /home-v2 hero: pointer drag, keyboard slider and a programmatic setter for motion. */
+/** Listing-to-shop wipe on the homepage hero: pointer drag, keyboard slider and a programmatic setter for motion. */
 export type WipeController = {
   set: (percent: number) => void;
   get: () => number;

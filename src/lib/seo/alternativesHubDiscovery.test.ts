@@ -36,11 +36,10 @@ describe('Alternatives Hub discovery and search intent', () => {
   });
 
   it('offers a crawlable contextual /compare link on the indexed homepage', () => {
-    const homepageSwitcher = readFileSync(join(repoSrc, 'components/landingSwitcherReassurance.astro'), 'utf8');
+    const included = readFileSync(join(repoSrc, 'components/homeV2/HomeV2Included.astro'), 'utf8');
     const homepage = readFileSync(join(repoSrc, 'pages/index.astro'), 'utf8');
-    expect(homepage).toContain('<LandingSwitcherReassurance');
-    expect(homepageSwitcher).toContain('href="/compare"');
-    expect(homepageSwitcher).toContain('compare UK barber booking systems');
+    expect(homepage).toContain('<HomeV2Included />');
+    expect(included).toContain('<a href="/compare">Compare UK barber booking software</a>');
   });
 
   it('describes one properly identified editorial hub and all comparison destinations in schema', () => {
