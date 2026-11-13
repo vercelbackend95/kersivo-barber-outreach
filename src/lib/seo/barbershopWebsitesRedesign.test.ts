@@ -146,6 +146,16 @@ describe('/barbershop-websites cinematic pass', () => {
     expect(close).toContain('one standard domain per location is included');
   });
 
+  it('wires six sources, including retail, into one address that runs website, booking and retail', () => {
+    const why = component('BwWhy');
+    expect((why.match(/lane: \d/g) ?? [])).toHaveLength(6);
+    expect(why).toContain("label: 'A product you post'");
+    expect(why).toContain("title: 'Retail pickup shop'");
+    expect(why).toContain('data-bw-film-target');
+    expect(why).not.toContain('bw-split');
+    expect(why).toContain('role="radiogroup"');
+  });
+
   it('loads three.js lazily inside a reduced-motion guard', () => {
     const film = read('../../lib/barbershopWebsite/film.ts');
     const init = read('../../lib/barbershopWebsite/init.ts');

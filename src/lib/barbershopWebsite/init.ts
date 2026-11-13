@@ -16,6 +16,9 @@ export function initBarbershopWebsite(root: Document): Cleanup {
     if (fn) cleanups.push(fn);
   };
 
+  const system = root.querySelector<HTMLElement>('[data-bw-sys]');
+  if (system) add(bindSystem(system));
+
   const compare = root.querySelector<HTMLElement>('[data-bw-compare]');
   if (compare) add(bindCompare(compare));
 
@@ -38,6 +41,70 @@ export function initBarbershopWebsite(root: Document): Cleanup {
 
   return () => {
     for (const fn of cleanups.splice(0)) fn();
+  };
+}
+
+/**
+ * An element's box relative to a positioned ancestor, from layout offsets. Unlike
+ * getBoundingClientRect it ignores CSS transforms, so it is stable while something is animating.
+ */
+function layoutBox(el: HTMLElement, ancestor: HTMLElement): { x: number; y: number; w: number; h: number } | null {
+  let x = 0;
+  let y = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== ancestor) {
+    x += node.offsetLeft + (node === el ? 0 : node.clientLeft);
+    y += node.offsetTop + (node === el ? 0 : node.clientTop);
+    node = node.offsetParent as HTMLElement | null;
+  }
+  if (node !== ancestor) return null;
+  return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+}
+
+/* ---------- Scene 02: wire every source into the hub ---------- */
+/**
+ * Draws one line from each source card's port to the matching port on the hub, in the figure's own
+ * pixel space, so the lines stay exact at every width. The three.js sparks read the same ports.
+ */
+function bindSystem(figure: HTMLElement): Cleanup {
+  const svg = figure.querySelector<SVGSVGElement>('[data-bw-sys-lines]');
+  if (!svg) return () => {};
+  const paths = Array.from(svg.querySelectorAll<SVGPathElement>('[data-bw-sys-path]'));
+  const pulses = Array.from(svg.querySelectorAll<SVGPathElement>('[data-bw-sys-pulse]'));
+  let raf = 0;
+
+  // Layout positions, not screen boxes: the cards scale in on scroll and that must not bend the lines.
+  const centre = (el: HTMLElement | null) => {
+    const r = el ? layoutBox(el, figure) : null;
+    return r ? { x: r.x + r.w / 2, y: r.y + r.h / 2 } : null;
+  };
+
+  const draw = () => {
+    raf = 0;
+    if (svg.getBoundingClientRect().width === 0) return;
+    svg.setAttribute('viewBox', `0 0 ${figure.clientWidth} ${figure.clientHeight}`);
+    paths.forEach((path, i) => {
+      const a = centre(figure.querySelector<HTMLElement>(`[data-bw-lane-from='${i}']`));
+      const b = centre(figure.querySelector<HTMLElement>(`[data-bw-lane-to='${i}']`));
+      if (!a || !b) return;
+      const dx = (b.x - a.x) * 0.5;
+      const d = `M${a.x.toFixed(1)} ${a.y.toFixed(1)} C ${(a.x + dx).toFixed(1)} ${a.y.toFixed(1)}, ${(b.x - dx).toFixed(1)} ${b.y.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+      path.setAttribute('d', d);
+      pulses[i]?.setAttribute('d', d);
+    });
+  };
+  const schedule = () => {
+    if (!raf) raf = requestAnimationFrame(draw);
+  };
+
+  const ro = new ResizeObserver(schedule);
+  ro.observe(figure);
+  figure.querySelectorAll('.bw-src, .bw-hub').forEach((el) => ro.observe(el));
+  figure.querySelectorAll('img').forEach((img) => img.addEventListener('load', schedule, { once: true }));
+  draw();
+  return () => {
+    cancelAnimationFrame(raf);
+    ro.disconnect();
   };
 }
 
@@ -85,6 +152,8 @@ function bindAnatomy(section: HTMLElement): Cleanup {
   const camera = section.querySelector<HTMLElement>('[data-bw-camera]');
   const num = section.querySelector<HTMLElement>('[data-bw-anatomy-num]');
   const rail = section.querySelector<HTMLElement>('[data-bw-anatomy-rail]');
+  const tag = section.querySelector<HTMLElement>('[data-bw-reticle-tag]');
+  const list = section.querySelector<HTMLElement>('.bw-anatomy__list');
   const rig = camera ? createCameraRig(camera) : null;
   let active = '';
 
@@ -92,14 +161,20 @@ function bindAnatomy(section: HTMLElement): Cleanup {
     if (!part || part === active) return;
     active = part;
     if (site) site.dataset.active = part;
+    const at = triggers.findIndex((trigger) => trigger.dataset.bwPartTrigger === part);
     triggers.forEach((trigger, i) => {
-      const on = trigger.dataset.bwPartTrigger === part;
+      const on = i === at;
       trigger.setAttribute('aria-pressed', String(on));
+      trigger.closest('.bw-anatomy__item')?.classList.toggle('is-done', i < at);
       if (!on) return;
-      if (now) now.textContent = trigger.querySelector('.bw-anatomy__title')?.textContent ?? '';
-      if (num) num.textContent = String(i + 1).padStart(2, '0');
+      const title = trigger.querySelector('.bw-anatomy__title')?.textContent ?? '';
+      const n = String(i + 1).padStart(2, '0');
+      if (now) now.textContent = title;
+      if (num) num.textContent = n;
+      if (tag) tag.textContent = `${n} · ${title}`;
       rail?.parentElement?.style.setProperty('--bw-rail', String((i + 1) / triggers.length));
     });
+    list?.style.setProperty('--bw-list-p', String(at / Math.max(1, triggers.length - 1)));
     rig?.focus(part);
   };
   setActive(triggers[0]?.dataset.bwPartTrigger ?? '');
@@ -146,70 +221,95 @@ type CameraState = { s: number; x: number; y: number };
 
 /**
  * A camera over the example site: it dollies in on the active part and frames it with a reticle.
- * Part boxes are measured on screen and the current transform is backed out to get their natural
- * position, so the maths stays correct mid-transition. Reduced motion keeps scale 1 (reticle only).
+ * Parts are measured from layout offsets (layoutBox), which ignore the camera's own transform, so
+ * the frame lands correctly even when a new step starts mid-transition or images are still loading.
+ * Reduced motion keeps scale 1 (reticle only).
  */
 function createCameraRig(camera: HTMLElement) {
   const site = camera.querySelector<HTMLElement>('[data-bw-site]');
   const reticle = camera.querySelector<HTMLElement>('[data-bw-reticle]');
+  const frame = site?.querySelector<HTMLElement>('.bw-site__frame') ?? null;
   const motion = window.matchMedia(MOTION_OK);
-  let state: CameraState = { s: 1, x: 0, y: 0 };
   let current = '';
   let phoneTimer = 0;
+  let trackRaf = 0;
 
   const setCamera = (next: CameraState) => {
-    state = next;
     camera.style.setProperty('--bw-cam-s', String(next.s));
     camera.style.setProperty('--bw-cam-x', `${next.x}px`);
     camera.style.setProperty('--bw-cam-y', `${next.y}px`);
   };
 
   const setReticle = (x: number, y: number, w: number, h: number) => {
-    reticle?.style.setProperty('--bw-rx', `${x}px`);
-    reticle?.style.setProperty('--bw-ry', `${y}px`);
-    reticle?.style.setProperty('--bw-rw', `${w}px`);
-    reticle?.style.setProperty('--bw-rh', `${h}px`);
+    if (!reticle) return;
+    reticle.style.setProperty('--bw-rx', `${x}px`);
+    reticle.style.setProperty('--bw-ry', `${y}px`);
+    reticle.style.setProperty('--bw-rw', `${w}px`);
+    reticle.style.setProperty('--bw-rh', `${h}px`);
+    // Keep the label inside the frame: below the box near the top edge, right-aligned near the right.
+    reticle.classList.toggle('is-low', y < 40);
+    reticle.classList.toggle('is-right', x + 200 > camera.clientWidth);
+  };
+
+  const framePhone = () => {
+    if (!site || !frame || current !== 'phone') return;
+    const off = layoutBox(site, camera);
+    const box = layoutBox(frame, site);
+    if (!off || !box) return;
+    setReticle(off.x + box.x, off.y + box.y, box.w, box.h);
   };
 
   const apply = () => {
     if (!site || !current) return;
     window.clearTimeout(phoneTimer);
-    const cam = camera.getBoundingClientRect();
-    if (cam.width === 0) return;
+    const cw = camera.clientWidth;
+    const ch = camera.clientHeight;
+    const off = layoutBox(site, camera);
+    if (cw === 0 || !off) return;
 
     if (current === 'phone') {
-      // The phone view narrows the frame itself; frame the whole site once it settles.
+      // The phone view narrows the frame itself: the reticle tracks the frame while it resizes.
       setCamera({ s: 1, x: 0, y: 0 });
-      phoneTimer = window.setTimeout(() => {
-        const frame = site.querySelector<HTMLElement>('.bw-site__frame');
-        if (!frame || current !== 'phone') return;
-        const r = frame.getBoundingClientRect();
-        const c = camera.getBoundingClientRect();
-        setReticle(r.left - c.left, r.top - c.top, r.width, r.height);
-      }, 720);
+      cancelAnimationFrame(trackRaf);
+      reticle?.classList.add('is-tracking');
+      const until = performance.now() + 900;
+      const track = () => {
+        framePhone();
+        if (current === 'phone' && performance.now() < until) trackRaf = requestAnimationFrame(track);
+        else reticle?.classList.remove('is-tracking');
+      };
+      track();
+      phoneTimer = window.setTimeout(framePhone, 960);
       return;
     }
+    cancelAnimationFrame(trackRaf);
+    reticle?.classList.remove('is-tracking');
 
     const part = site.querySelector<HTMLElement>(`[data-bw-part='${current}']`);
-    if (!part) return;
-    const r = part.getBoundingClientRect();
-    const nx = (r.left - cam.left - state.x) / state.s;
-    const ny = (r.top - cam.top - state.y) / state.s;
-    const nw = r.width / state.s;
-    const nh = r.height / state.s;
-    const fit = Math.min((cam.width * 0.62) / nw, (cam.height * 0.6) / nh);
-    const zoom = motion.matches ? Math.min(1.55, Math.max(1, fit)) : 1;
-    const cx = nx + nw / 2;
-    const cy = ny + nh / 2;
-    const x = Math.min(0, Math.max(cam.width - cam.width * zoom, cam.width / 2 - cx * zoom));
-    const y = Math.min(0, Math.max(cam.height - cam.height * zoom, cam.height / 2 - cy * zoom));
+    const box = part ? layoutBox(part, site) : null;
+    if (!box || box.w === 0) return;
+    const fit = Math.min((cw * 0.62) / box.w, (ch * 0.6) / box.h);
+    const zoom = motion.matches ? Math.min(cw < 600 ? 1.25 : 1.55, Math.max(1, fit)) : 1;
+    const cx = off.x + box.x + box.w / 2;
+    const cy = off.y + box.y + box.h / 2;
+    // The site scales from its own top-left corner, which sits at `off` inside the camera.
+    const x = Math.min(0, Math.max(cw - cw * zoom, cw / 2 - (cx - off.x) * zoom - off.x));
+    const y = Math.min(0, Math.max(ch - ch * zoom, ch / 2 - (cy - off.y) * zoom - off.y));
     setCamera({ s: zoom, x, y });
-    setReticle(nx * zoom + x, ny * zoom + y, nw * zoom, nh * zoom);
+    setReticle(off.x + x + box.x * zoom, off.y + y + box.y * zoom, box.w * zoom, box.h * zoom);
   };
+
+  const onFrameEnd = (event: TransitionEvent) => {
+    if (event.target === frame && current === 'phone') framePhone();
+  };
+  frame?.addEventListener('transitionend', onFrameEnd);
 
   camera.classList.add('is-rigged');
   const ro = new ResizeObserver(() => apply());
   ro.observe(camera);
+  if (site) ro.observe(site);
+  const imgs = Array.from(site?.querySelectorAll('img') ?? []);
+  imgs.forEach((img) => img.addEventListener('load', apply));
 
   return {
     focus(part: string) {
@@ -218,7 +318,10 @@ function createCameraRig(camera: HTMLElement) {
     },
     dispose() {
       window.clearTimeout(phoneTimer);
+      cancelAnimationFrame(trackRaf);
       ro.disconnect();
+      frame?.removeEventListener('transitionend', onFrameEnd);
+      imgs.forEach((img) => img.removeEventListener('load', apply));
       camera.classList.remove('is-rigged');
     },
   };
@@ -499,6 +602,7 @@ function bindFinal(root: Document, wrap: HTMLElement): Cleanup {
   const outs = Array.from(wrap.querySelectorAll<HTMLElement>('[data-bw-final-out]'));
   const names = Array.from(wrap.querySelectorAll<HTMLElement>('[data-bw-final-name]'));
   const places = Array.from(wrap.querySelectorAll<HTMLElement>('.bw-final__place'));
+  const initials = Array.from(wrap.querySelectorAll<HTMLElement>('[data-bw-final-initial]'));
   if (!input) return () => {};
   let flashTimer = 0;
 
@@ -511,6 +615,7 @@ function bindFinal(root: Document, wrap: HTMLElement): Cleanup {
       const text = raw || 'Your shop';
       el.textContent = i === 0 ? text.toUpperCase() : text;
     });
+    for (const el of initials) el.textContent = (raw.match(/[a-z0-9]/i)?.[0] ?? 'Y').toUpperCase();
     if (big) {
       big.dataset.bwTyped = 'true';
       big.textContent = domain;
@@ -665,41 +770,36 @@ function bindMotion(root: Document): Cleanup {
       gsap.to('.bw-hero__chip--search', { y: -70, ease: 'none', scrollTrigger: { ...heroScrub } });
       gsap.to('.bw-hero__chip--booked', { y: -150, ease: 'none', scrollTrigger: { ...heroScrub } });
 
-      // Why: each source flies in from depth, its beam draws, then the domain lights up.
-      const orbit = root.querySelector<HTMLElement>('[data-bw-orbit]');
-      if (orbit) {
-        const paths = orbit.querySelectorAll('.bw-orbit__paths path');
+      // Why: the sources deal in from both sides, their lines draw into the hub, then it lights up.
+      const sys = root.querySelector<HTMLElement>('[data-bw-sys]');
+      if (sys && window.matchMedia(DESKTOP).matches) {
+        const paths = sys.querySelectorAll('.bw-sys__paths path');
         gsap.set(paths, { strokeDasharray: 1, strokeDashoffset: 1 });
         gsap
-          .timeline({ scrollTrigger: { trigger: orbit, start: 'top 85%', end: 'center 55%', scrub: 0.8 } })
-          .from(orbit.querySelectorAll('.bw-src'), {
-            opacity: 0,
-            scale: 0.82,
-            filter: 'blur(8px)',
-            stagger: 0.12,
-            ease: 'power2.out',
-            duration: 0.6,
-          }, 0)
-          .to(paths, { strokeDashoffset: 0, stagger: 0.1, ease: 'none', duration: 0.5 }, 0.25)
-          .from(orbit.querySelector('.bw-orbit__target'), { scale: 0.8, opacity: 0.2, ease: 'back.out(1.6)', duration: 0.5 }, 0.55);
-        ScrollTrigger.create({
-          trigger: orbit,
-          start: 'center 55%',
-          onEnter: () => orbit.classList.add('is-lit'),
-          onLeaveBack: () => orbit.classList.remove('is-lit'),
+          .timeline({ scrollTrigger: { trigger: sys, start: 'top 85%', end: 'center 55%', scrub: 0.8 } })
+          .from(sys.querySelectorAll('.bw-sys__col--left .bw-src'), { opacity: 0, x: -60, filter: 'blur(6px)', stagger: 0.1, ease: 'power2.out', duration: 0.6 }, 0)
+          .from(sys.querySelectorAll('.bw-sys__col--right .bw-src'), { opacity: 0, x: 60, filter: 'blur(6px)', stagger: 0.1, ease: 'power2.out', duration: 0.6 }, 0.05)
+          .to(paths, { strokeDashoffset: 0, stagger: 0.06, ease: 'none', duration: 0.5 }, 0.3)
+          .from(sys.querySelectorAll('.bw-hub__module'), { opacity: 0, y: 14, stagger: 0.08, ease: 'power2.out', duration: 0.4 }, 0.55);
+      } else if (sys) {
+        gsap.from(sys.querySelectorAll('.bw-src'), {
+          opacity: 0,
+          y: 24,
+          stagger: 0.06,
+          duration: 0.7,
+          ease: 'power3.out',
+          clearProps: 'opacity,transform',
+          scrollTrigger: { trigger: sys, start: 'top 85%', once: true },
         });
       }
-
-      // Split screen: two shots cut in one after the other.
-      gsap.from('.bw-split__frame', {
-        y: 60,
-        opacity: 0,
-        stagger: 0.12,
-        duration: 1,
-        ease: 'expo.out',
-        clearProps: 'opacity,transform',
-        scrollTrigger: { trigger: '.bw-split', start: 'top 85%', once: true },
-      });
+      if (sys) {
+        ScrollTrigger.create({
+          trigger: sys,
+          start: 'center 60%',
+          onEnter: () => sys.classList.add('is-lit'),
+          onLeaveBack: () => sys.classList.remove('is-lit'),
+        });
+      }
 
       // Booking: the device rises into its light.
       gsap.from('.bw-booking__device', {

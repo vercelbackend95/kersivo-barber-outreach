@@ -67,13 +67,14 @@ const steps: Step[] = [
 
       <div class="bw-booking__device">
       <span class="bw-booking__glow" aria-hidden="true"></span>
-      <div class="bw-phone" aria-hidden="false">
+      <div class="bw-phone">
         <span class="bw-phone__tap" aria-hidden="true" data-bw-tap></span>
         <div class="bw-phone__screen">
           <div class="bw-phone__top" aria-hidden="true">
             <img src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
             <span class="bw-phone__url">cutstate.co.uk/book</span>
           </div>
+          <span class="bw-phone__progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
 
           <div class="bw-phone__panel is-active" role="tabpanel" id="bw-panel-service" aria-labelledby="bw-tab-service" data-bw-panel="0">
             <p class="bw-phone__h">Choose a service</p>
@@ -128,6 +129,11 @@ const steps: Step[] = [
             <p class="bw-phone__sent">Confirmation sent by email</p>
             <p class="bw-phone__sent">Reminder before the appointment</p>
           </div>
+
+          <p class="bw-phone__cta" aria-hidden="true">
+            <span class="bw-phone__cta-sum"><strong>{chosenService.name} · {formatDemoPriceGbp(chosenService.pricePence)}</strong><small>with {chosenBarber.name}, Saturday 10:15</small></span>
+            <span class="bw-phone__cta-btn">Continue</span>
+          </p>
         </div>
       </div>
 

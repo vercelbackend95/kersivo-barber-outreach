@@ -30,3 +30,28 @@ three.js and GSAP load after first paint.
 - Presence copy says photos are uploaded "in your KERSIVO dashboard". Onboarding has an asset
   uploader and barbers have photos, but `claimsPolicy` §3 does not list photos among dashboard
   self-config. Confirm, or reword to "send us your photos during onboarding".
+
+## Second pass
+- **Hero sparks in KERSIVO style.** The warm projector beam and sand dust are gone: the field is now
+  red and white sparks (a few near ones read as soft red stars) under a red light. The sparks follow
+  the scroll: they stream down the page and are fully settled when the Scene 02 hub reaches the
+  middle of the screen.
+- **Scene 02 is a system, not an orbit.** Six sources (Google search, Maps, Instagram bio, a link you
+  send, the QR code at the till and, new, a product you post) are wired by lines into the address
+  card. The card is the lead figure: the domain, then what runs from it (website, online booking,
+  retail pickup shop), Book now and Shop. Lines are routed from each card's port to a port on the
+  hub, so they stay exact at every width; the sparks travel the same lines and hug the hub.
+  Retail also appears in the intro and as a compare row ("Products you sell").
+- **Cut to · Two ways to be found.** The two split-screen browser mock-ups are gone. The toggle now
+  drives one card: an address bar that switches between the platform URL and your domain, and the
+  five rows with a tick or a dash.
+- **Scene 03 walkthrough.** The reticle is measured from layout offsets, so it lands on the right
+  part when the section is entered mid-transition, while images load and on step 08 (it now tracks
+  the frame as it narrows). It carries a "03 · Book now" tag; a workflow line runs through the steps
+  and fills to the current one, and finished steps stay ticked.
+- **Scene 04 booking.** No phone hardware: a polished dark screen with a progress bar, the step, and
+  a summary bar with Continue. The diary sits under the screen instead of covering it.
+- **Final.** The three places are premium cards: a lit shopfront fascia, an Instagram bio with
+  avatar and link, and a dark Google result with the shop's initial and Website / Book online chips.
+
+Screenshots: `C:/tmp/kersivo-shots/bw-cinematic-2/before` and `.../after` (375, 768, 1024, 1440).
