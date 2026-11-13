@@ -1,0 +1,69 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const pillars = [
+  {
+    title: 'Your website. Your identity.',
+    body: 'Give your services, barbers and bookings one branded home on your own domain, instead of a marketplace profile next to other shops.',
+    link: { href: '/insights/do-barbers-need-a-website-uk', label: 'Do barbers need a website?' },
+  },
+  {
+    title: 'Bookings that lead to your shop.',
+    body: 'Clients choose a service, barber and time in the browser — no app download — and you can add walk-ins and phone bookings to the same diary.',
+    link: { href: '/barbershop-online-booking', label: 'How online booking works for barbershops' },
+  },
+  {
+    title: 'More control behind the chair.',
+    body: 'Keep barbers, services, working hours and daily activity in one Full KERSIVO dashboard, built around how your shop runs.',
+  },
+  {
+    title: 'Build direct client relationships.',
+    body: 'Keep client contact details and booking history in your own shop system, so clients deal with your barbershop rather than a marketplace.',
+  },
+  {
+    title: 'Payments on your terms.',
+    body: `Choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront to help reduce no-shows.`,
+    link: {
+      href: '/insights/barbershop-no-show-cost-when-deposit-makes-sense',
+      label: `When a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit makes sense`,
+    },
+  },
+  {
+    title: 'No KERSIVO cut of your bookings.',
+    body: `£${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail, Stripe fees apply. Add your booking link to your Google Business Profile with guided setup.`,
+    link: { href: '/insights/google-business-profile-booking-link-barbershop', label: 'Adding a Google booking link' },
+  },
+] as const;
+---
+
+<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04">
+  <div class="hv2-shell">
+    <header class="hv2-head hv2-included__head">
+      <p class="hv2-eyebrow">Built for independent barbershops</p>
+      <h2 id="hv2-included-title" class="hv2-h2">Clients book your shop, not a marketplace</h2>
+      <p class="hv2-lead">Clients should find your shop, book your barbers and remember your name. Full KERSIVO brings your website and booking experience together on your own domain.</p>
+    </header>
+
+    <ol class="hv2-ledger" role="list">
+      {pillars.map((pillar, index) => (
+        <li class="hv2-ledger__item" data-hv2-reveal>
+          <span class="hv2-ledger__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="hv2-ledger__title">{pillar.title}</h3>
+          <p class="hv2-ledger__body">
+            {pillar.body}
+            {'link' in pillar ? (
+              <>
+                {' '}
+                <a href={pillar.link.href}>{pillar.link.label}</a>
+              </>
+            ) : null}
+          </p>
+        </li>
+      ))}
+    </ol>
+
+    <p class="hv2-included__compare">
+      Comparing options? <a href="/compare">Compare UK barber booking software</a> or work out the numbers with the <a href="/barber-software-cost-calculator">barber software cost calculator</a>.
+    </p>
+  </div>
+</section>

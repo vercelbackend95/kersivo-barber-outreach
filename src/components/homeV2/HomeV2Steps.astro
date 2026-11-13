@@ -1,0 +1,86 @@
+---
+import { getSetupSteps } from '@/content/setupSteps';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { offer } from '@/content/offer';
+
+const freePreview = isFreePreviewFlowEnabled();
+const steps = getSetupSteps(freePreview);
+// One small illustration per stage. Both flows have four stages; only the first two differ in kind.
+const visuals = freePreview ? ['form', 'design', 'review', 'live'] : ['pay', 'form', 'design', 'live'];
+---
+
+<section id="setup" class="hv2-section hv2-steps" aria-labelledby="hv2-steps-title" data-hv2-steps data-hv2-chapter="06">
+  <div class="hv2-steps__pin" data-hv2-steps-pin>
+    <div class="hv2-shell hv2-steps__inner">
+      <header class="hv2-head hv2-steps__head">
+        <p class="hv2-eyebrow">Getting started</p>
+        <h2 id="hv2-steps-title" class="hv2-h2">{freePreview ? 'From free preview to live site' : 'From subscription to live site'}</h2>
+        <p class="hv2-lead">
+          {freePreview
+            ? "Four steps. You don't pay anything for your preview."
+            : 'Four steps. Your site is typically ready in a few days once we receive all required information, and nothing goes live until you approve it.'}
+        </p>
+      </header>
+
+      <div class="hv2-steps__progress" aria-hidden="true">
+        <span class="hv2-steps__line"><span data-hv2-steps-line></span></span>
+        {steps.map((_, index) => (
+          <span class="hv2-steps__node" style={`--i: ${index}`} data-hv2-steps-node>{index + 1}</span>
+        ))}
+      </div>
+    </div>
+
+    <div class="hv2-steps__viewport">
+      <ol class="hv2-steps__list" role="list" data-hv2-steps-track>
+        {steps.map((step, index) => (
+          <li class="hv2-steps__item" data-hv2-step>
+            <div class="hv2-steps__card">
+              <span class="hv2-steps__big" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div class={`hv2-steps__visual hv2-vis hv2-vis--${visuals[index]}`} aria-hidden="true">
+                {visuals[index] === 'form' && (
+                  <>
+                    <span class="hv2-vis__field"><small>Shop name</small><b class="hv2-vis__type">Cutstate Barbers</b></span>
+                    <span class="hv2-vis__field"><small>Current booking page</small><b class="hv2-vis__type">instagram.com/cutstate</b></span>
+                    <span class="hv2-vis__send">Send</span>
+                  </>
+                )}
+                {visuals[index] === 'pay' && (
+                  <>
+                    <span class="hv2-vis__field"><small>{offer.plans.full}</small><b>{offer.price.full}</b></span>
+                    <span class="hv2-vis__card-row"><i></i><i></i><i></i><i></i></span>
+                    <span class="hv2-vis__send">Subscribe</span>
+                  </>
+                )}
+                {visuals[index] === 'design' && (
+                  <span class="hv2-vis__browser">
+                    <span class="hv2-vis__bar"><i></i><i></i><i></i></span>
+                    <span class="hv2-vis__block hv2-vis__block--nav"></span>
+                    <span class="hv2-vis__block hv2-vis__block--hero"><img src="/images/home-v2/mk-fade.webp" alt="" width="240" height="192" loading="lazy" decoding="async" /></span>
+                    <span class="hv2-vis__block hv2-vis__block--row"><i></i><i></i><i></i></span>
+                  </span>
+                )}
+                {visuals[index] === 'review' && (
+                  <span class="hv2-vis__phone">
+                    <span class="hv2-vis__screen-img"><img src="/images/home-v2/cutstate-hero.webp" alt="" width="720" height="1080" loading="lazy" decoding="async" /></span>
+                    <span class="hv2-vis__note">Swap the gallery photo</span>
+                    <span class="hv2-vis__check"></span>
+                  </span>
+                )}
+                {visuals[index] === 'live' && (
+                  <>
+                    <span class="hv2-vis__domain"><i></i>cutstatebarbers.co.uk</span>
+                    <span class="hv2-vis__status"><b>Live</b><small>Approved by you</small></span>
+                    <span class="hv2-vis__rings"><i></i><i></i><i></i></span>
+                  </>
+                )}
+              </div>
+              <p class:list={['hv2-steps__owner', step.owner === 'KERSIVO' && 'is-kersivo']}>{step.owner}</p>
+              <h3 class="hv2-steps__title">{step.title}</h3>
+              <p class="hv2-steps__body">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>

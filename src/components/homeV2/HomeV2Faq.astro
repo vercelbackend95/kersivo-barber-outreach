@@ -1,0 +1,31 @@
+---
+import { getHomepageFaqItems } from '@/lib/seo/barbershopBookingFaq';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+
+const items = getHomepageFaqItems(isFreePreviewFlowEnabled());
+---
+
+<section id="faq" class="hv2-section hv2-faq" aria-labelledby="hv2-faq-title" data-hv2-chapter="07">
+  <div class="hv2-shell hv2-faq__grid">
+    <header class="hv2-head hv2-faq__head">
+      <p class="hv2-eyebrow">FAQ</p>
+      <h2 id="hv2-faq-title" class="hv2-h2">Questions about Full KERSIVO?</h2>
+      <p class="hv2-lead">Price, payments, setup, switching, your domain and cancelling.</p>
+      <p class="hv2-faq__ask">Still have a question? <a href="#contact">Ask a question</a></p>
+    </header>
+
+    <div class="hv2-faq__list">
+      {items.map((item) => (
+        <details class="hv2-faq__item" name="hv2-faq">
+          <summary class="hv2-faq__question">
+            <span>{item.question}</span>
+            <span class="hv2-faq__icon" aria-hidden="true"></span>
+          </summary>
+          <div class="hv2-faq__answer">
+            <p>{item.answer}</p>
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
