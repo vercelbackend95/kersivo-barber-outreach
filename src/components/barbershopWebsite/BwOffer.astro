@@ -1,0 +1,114 @@
+---
+/**
+ * The KERSIVO offer: one price card with the primary CTA, the four setup steps beside it and the
+ * payment qualifiers underneath. Copy comes from claimsPolicy / setupSteps; nothing new is claimed.
+ */
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { getSetupSteps } from '@/content/setupSteps';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_BILLING_CLAIM,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
+  PLAN_SCOPE_HIGHLIGHTS,
+  PLAN_SCOPE_SHORT,
+  PRICE_VAT_DISCLAIMER,
+  STRIPE_FEES_NOTE,
+} from '@/lib/pricing/claimsPolicy';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const freePreview = isFreePreviewFlowEnabled();
+const placement = 'barbershop_websites_full_offer';
+const steps = getSetupSteps(freePreview);
+const conditionsLine2 = getRateCard1LandingLayout().conditionsLine2;
+const payment = freePreview
+  ? [FREE_PREVIEW_BILLING_CLAIM, ONBOARDING_BILLING_INDEPENDENT_CLAIM, conditionsLine2]
+  : [
+      `You pay the first £${SAAS_MONTHLY_GBP} when you subscribe, then monthly on the same day.`,
+      'Billing runs while we prepare your website and doesn’t pause if your materials arrive late.',
+      conditionsLine2,
+    ];
+---
+
+<section class="bw-section bw-offer" id="get-your-website" aria-labelledby="bw-offer-title">
+  <div class="bw-shell">
+    <div class="bw-head bw-head--wide">
+      <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Scene 06 · Your turn</p>
+      <h2 id="bw-offer-title" class="bw-h2">Get your barbershop website from KERSIVO</h2>
+      <p class="bw-lead">
+        Everything on this page, set up for you: a website in your shop’s brand on your own domain,
+        with online booking built in and the tools to run the day behind it. Typically ready in a few
+        days once we receive all required information, and nothing goes live until you approve it.
+      </p>
+    </div>
+
+    <div class="bw-offer__layout">
+      <div class="bw-offer__card" data-bw-reveal data-bw-tilt>
+        <span class="bw-offer__edge" aria-hidden="true"></span>
+        <span class="bw-offer__glare" aria-hidden="true"></span>
+        <p class="bw-offer__plan"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Full KERSIVO</p>
+        <p class="bw-offer__price">
+          <span class="bw-offer__amount">£{SAAS_MONTHLY_GBP}</span>
+          <span class="bw-offer__per">/month<br />per location</span>
+        </p>
+        <p class="bw-offer__scope">{PLAN_SCOPE_SHORT} Not per barber.</p>
+
+        <ul class="bw-offer__list" role="list">
+          {PLAN_SCOPE_HIGHLIGHTS.map((item) => (
+            <li>
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div class="bw-offer__cta">
+          {freePreview ? (
+            <FullPlanCta part="all" primaryClass="bw-btn bw-btn--primary bw-btn--block" placement={placement} />
+          ) : (
+            <a href="/admin/launch" class="btn btn--primary btn--lg bw-btn bw-btn--primary bw-btn--block" data-track="saas_subscribe_click" data-track-placement={placement}>
+              Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+            </a>
+          )}
+        </div>
+
+        <ul class="bw-offer__terms" role="list">
+          <li><span>Setup fee</span>None</li>
+          <li><span>VAT</span>No VAT added</li>
+          <li><span>Commission</span>0% KERSIVO commission</li>
+          <li><span>Card fees</span>{STRIPE_FEES_NOTE}</li>
+        </ul>
+      </div>
+
+      <div class="bw-offer__side">
+        <p class="bw-offer__side-title">From subscribe to live</p>
+        <ol class="bw-steps" role="list" data-bw-steps>
+          {steps.map((step, index) => (
+            <li class="bw-steps__item" style={`--i:${index}`}>
+              <span class="bw-steps__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <span class="bw-steps__who">{step.owner === 'KERSIVO' ? 'KERSIVO' : 'You'}</span>
+              <h3 class="bw-steps__title">{step.title}</h3>
+              <p class="bw-steps__copy">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+
+        <div class="bw-offer__fine">
+          <p class="bw-offer__fine-title">How payment works</p>
+          <ul role="list">
+            {payment.map((line) => <li>{line}</li>)}
+          </ul>
+          <p>
+            {PRICE_VAT_DISCLAIMER} <a href="/terms#subscription">Read the subscription terms</a>
+          </p>
+        </div>
+
+        <p class="bw-offer__starter">
+          Only need online bookings, without your own website?
+          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement={placement}>KERSIVO Starter is £0/month</a>
+          for up to 4 barbers.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

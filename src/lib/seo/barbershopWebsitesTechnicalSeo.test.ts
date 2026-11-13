@@ -6,8 +6,13 @@ import {
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
+  buildBarbershopWebsitesFaqJsonLd,
   buildBarbershopWebsitesJsonLd,
+  buildBarbershopWebsitesServiceJsonLd,
+  getBarbershopWebsitesFaqs,
 } from './barbershopWebsitesPage';
+import { SAAS_MONTHLY_GBP } from './defaults';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from './barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
@@ -46,9 +51,49 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
         ],
       },
     });
-    expect(JSON.stringify(schema)).not.toMatch(/FAQPage|AggregateRating|Review|Offer|ratingValue|testimonial/);
-    expect(page).toContain('jsonLd={buildBarbershopWebsitesJsonLd()}');
+    expect(schema).toMatchObject({
+      mainEntity: { '@id': url + '#service' },
+      hasPart: { '@id': url + '#faq' },
+    });
+    expect(JSON.stringify(schema)).not.toMatch(/AggregateRating|Review|ratingValue|testimonial/);
+    expect(page).toContain('buildBarbershopWebsitesJsonLd(),');
+    expect(page).toContain('buildBarbershopWebsitesServiceJsonLd(),');
+    expect(page).toContain('buildBarbershopWebsitesFaqJsonLd(isFreePreviewFlowEnabled()),');
     expect(page).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
+  });
+
+  it('publishes the service with the real Full price and no invented proof', () => {
+    const siteUrl = getPublicSiteUrl();
+    const url = siteUrl + BARBERSHOP_WEBSITES_PAGE_PATH;
+    const service = buildBarbershopWebsitesServiceJsonLd();
+    expect(service).toMatchObject({
+      '@type': 'Service',
+      '@id': url + '#service',
+      provider: { '@id': getKersivoOrganizationId(siteUrl) },
+      offers: {
+        '@type': 'Offer',
+        price: SAAS_MONTHLY_GBP.toFixed(2),
+        priceCurrency: 'GBP',
+        priceSpecification: { billingDuration: 'P1M', unitText: 'per location per month' },
+      },
+    });
+    expect(JSON.stringify(service)).not.toMatch(/AggregateRating|Review|ratingValue|testimonial/);
+  });
+
+  it('mirrors the visible FAQ in FAQPage markup for both CTA modes', () => {
+    for (const flag of [true, false]) {
+      const faq = buildBarbershopWebsitesFaqJsonLd(flag);
+      const visible = getBarbershopWebsitesFaqs(flag);
+      const questions = faq.mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
+      expect(faq['@type']).toBe('FAQPage');
+      expect(questions.map((q) => q.name)).toEqual(visible.map((q) => q.question));
+      expect(questions.map((q) => q.acceptedAnswer.text)).toEqual(visible.map((q) => q.answer.join(' ')));
+    }
+  });
+
+  it('keeps the search snippet whole: title up to 60 characters, description up to 160', () => {
+    expect(BARBERSHOP_WEBSITES_PAGE_TITLE.length).toBeLessThanOrEqual(60);
+    expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
   });
 
   it('matches visible accessible breadcrumb order to JSON-LD', () => {
@@ -75,7 +120,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
   });
 
   it('keeps global footer outside main and does not add a second primary landmark', () => {
-    const open = page.indexOf('<main class="bsw-page">');
+    const open = page.indexOf('<main class="bw">');
     const close = page.indexOf('</main>');
     const footer = page.indexOf('<Footer50');
     expect(open).toBeGreaterThan(-1);

@@ -1,0 +1,50 @@
+---
+/**
+ * The previous /barbershop-websites page (before the Nov 2026 redesign), kept for reference.
+ * noindex, not in the sitemap; canonical points at the live page.
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import BarbershopWebsitesHero from '@/components/barbershop-websites/BarbershopWebsitesHero.astro';
+import WhatIsBarbershopWebsite from '@/components/barbershop-websites/WhatIsBarbershopWebsite.astro';
+import WebsiteEssentials from '@/components/barbershop-websites/WebsiteEssentials.astro';
+import BrandToBooking from '@/components/barbershop-websites/BrandToBooking.astro';
+import FullOffer from '@/components/barbershop-websites/FullOffer.astro';
+import SetupProcess from '@/components/barbershop-websites/SetupProcess.astro';
+import FaqAndClose from '@/components/barbershop-websites/FaqAndClose.astro';
+import '@/styles/components/barbershop-websites-definition.css';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import {
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title="Barbershop Websites (previous version) | KERSIVO"
+  description="Previous design of the KERSIVO barbershop websites page, kept for reference."
+  canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
+  noindex
+  robotsFollow
+>
+  <main class="bsw-page">
+    <BarbershopWebsitesHero />
+    <WhatIsBarbershopWebsite />
+    <WebsiteEssentials />
+    <BrandToBooking />
+    <FullOffer />
+    <SetupProcess />
+    <FaqAndClose />
+  </main>
+
+  <Footer50
+    showIntro={false}
+    brandLine="Own your brand. Own your bookings."
+    contactEmail={KERSIVO_CONTACT_EMAIL}
+    brandName="KERSIVO"
+    copyright={`© ${currentYear} KERSIVO`}
+    social={getFooterSocialLinks()}
+  />
+</LandingLayout>

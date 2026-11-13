@@ -2808,14 +2808,66 @@ html:has(main.hv2) body {
   }
 }
 
-/* Phones and tablets: the ticket rides along at the top while the steps scroll under it. */
+/* The track and pin only exist for the phone scene; on desktop their children join the grid. */
+.hv2-booking__track,
+.hv2-booking__pin {
+  display: contents;
+}
+
+/* Phones and tablets. Without motion the ticket sits above a plain list of steps. With motion
+   (.is-scrolly, set by bindTicket) the ticket and one step caption share a pinned screen: the ticket
+   on top, the current step's copy below it, never on top of each other. Scrolling advances the step. */
 @media (max-width: 63.99rem) {
   .hv2-ticket-wrap {
-    position: sticky;
-    top: calc(var(--mnav-h, 4.25rem) + 0.75rem);
+    position: relative;
     z-index: 2;
     width: min(100%, 22rem);
     margin-inline: auto;
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__track {
+    display: block;
+    position: relative;
+    height: calc(var(--hv2-booking-steps, 4) * 55svh + 100svh - var(--nav-sticky-offset, 3.75rem));
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__pin {
+    position: sticky;
+    top: var(--nav-sticky-offset, 3.75rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(1rem, 3svh, 1.75rem);
+    height: calc(100svh - var(--nav-sticky-offset, 3.75rem));
+    padding-block: 0.75rem;
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__steps {
+    display: grid;
+    width: min(100%, 26rem);
+    margin-inline: auto;
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__step {
+    grid-area: 1 / 1;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    transform: translateY(0.6rem);
+    visibility: hidden;
+    transition:
+      opacity 320ms var(--hv2-ease),
+      transform 420ms var(--hv2-ease),
+      visibility 0s linear 420ms;
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__step.is-active,
+  .hv2-booking.is-scrolly .hv2-booking__steps:not(:has(.is-active)) .hv2-booking__step:first-child {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
   }
 
   .hv2-ticket__barber,
@@ -2863,21 +2915,67 @@ html:has(main.hv2) body {
     border-width: 3px;
   }
 
-  .hv2-booking__steps {
-    position: relative;
-    z-index: 1;
+}
+
+/* Short phones: a tighter ticket so it and the caption both fit the pinned screen. */
+@media (max-width: 63.99rem) and (max-height: 44rem) {
+  .hv2-booking.is-scrolly .hv2-ticket__slot {
+    height: 2.8rem;
   }
 
-  .hv2-booking__step {
-    min-height: 34svh;
-    align-content: start;
+  .hv2-booking.is-scrolly .hv2-ticket__service {
+    font-size: 1.9rem;
+  }
+
+  .hv2-booking.is-scrolly .hv2-booking__body {
+    font-size: 0.92rem;
   }
 }
 
-@media (max-width: 30rem) {
-  .hv2-vis__signal {
-    width: 4rem;
-    height: 4rem;
+/* Phones: the live card becomes a two-column grid (status left, signal right) under a full-width
+   domain pill, so the signal never sits on the pill and a long domain truncates instead of overflowing. */
+@media (max-width: 47.99rem) {
+  .hv2-vis--live {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    height: auto;
+    min-height: 10.5rem;
+  }
+
+  .hv2-vis--live .hv2-vis__domain {
+    grid-column: 1 / -1;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .hv2-vis--live .hv2-vis__domain i {
+    flex: none;
+  }
+
+  .hv2-vis--live .hv2-vis__status {
+    min-width: 0;
+  }
+
+  .hv2-vis--live .hv2-vis__signal {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: clamp(3.5rem, 18vw, 4.5rem);
+    height: clamp(3.5rem, 18vw, 4.5rem);
+    margin-right: 0.25rem;
+    transform: none;
+  }
+}
+
+@media (max-width: 22rem) {
+  .hv2-vis--live .hv2-vis__domain {
+    font-size: 0.74rem;
+  }
+
+  .hv2-vis--live .hv2-vis__status b {
+    font-size: 2.2rem;
   }
 }
 
@@ -2891,8 +2989,12 @@ html:has(main.hv2) body {
 }
 
 /* Phones and tablets: the word lands under the lead as its punchline, in space the head reserves. */
+.hv2-head {
+  --hv2-glyph-h: clamp(5.25rem, 28vw, 7.5rem);
+}
+
 .hv2-head:has(> .hv2-glyph) {
-  padding-bottom: calc(clamp(3.8rem, 20vw, 5.5rem) + 0.5rem);
+  padding-bottom: calc(var(--hv2-glyph-h) + 0.75rem);
 }
 
 .hv2-glyph {
@@ -2900,7 +3002,7 @@ html:has(main.hv2) body {
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(3.8rem, 20vw, 5.5rem);
+  height: var(--hv2-glyph-h);
   font-family: var(--font-heading);
   text-align: left;
   pointer-events: none;
@@ -2910,7 +3012,7 @@ html:has(main.hv2) body {
   left: var(--hv2-pad);
   right: var(--hv2-pad);
   bottom: calc(100% + 0.6rem);
-  height: clamp(2.6rem, 8vw, 6rem);
+  height: clamp(3.75rem, 17vw, 6rem);
 }
 
 @media (min-width: 80rem) {

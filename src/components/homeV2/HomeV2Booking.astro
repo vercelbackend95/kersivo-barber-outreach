@@ -55,6 +55,9 @@ const states = [
       <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph="BOOKED." style="--hv2-glyph-chars: 7"></span>
     </header>
 
+    <!-- Phones: track + pin turn the ticket and steps into one pinned scene (see bindTicket). Desktop: display: contents. -->
+    <div class="hv2-booking__track" style={`--hv2-booking-steps: ${states.length}`} data-hv2-booking-track>
+    <div class="hv2-booking__pin">
     <div class="hv2-ticket-wrap">
       <div class="hv2-ticket" aria-hidden="true" data-hv2-ticket>
         <div class="hv2-ticket__main">
@@ -114,6 +117,8 @@ const states = [
         </li>
       ))}
     </ol>
+    </div>
+    </div>
 
     <p class="hv2-booking__note">{KERSIVO_COMMISSION_WITH_STRIPE} CUTSTATE is a fictional demonstration shop.</p>
   </div>

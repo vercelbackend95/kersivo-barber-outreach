@@ -1,31 +1,31 @@
 /**
- * The homepage sand layer. Several thousand grains of sand follow the visitor down the page. In the
- * hero they brush an underline and frame the main call to action; in every chapter after that they
- * sculpt the one word that chapter is about (BOOKED., ONE DIARY, YOUR CLIENTS, £39, GO LIVE…) in the
- * empty space beside its heading, then blow on to the next one as the visitor scrolls.
+ * The homepage sand layer. The hero stays clean: the sand first appears at the One booking chapter
+ * and, in every chapter after that, sculpts the one word that chapter is about (BOOKED., ONE DIARY,
+ * YOUR CLIENTS, GO LIVE…) in the space its heading reserves for it.
  *
  * The words live in the markup as empty `[data-hv2-glyph]` slots that CSS places (beside the heading
- * on wide screens, in the band above it on phones), so layout stays in CSS and the text stays in the
- * component. Positions are measured from the DOM every frame (CSS pixels, orthographic camera), so
- * the sand stays glued to its element while the page scrolls. three.js loads lazily shortly after
- * first paint, only when motion is allowed and WebGL works.
+ * on wide screens, under the lead on phones), so layout stays in CSS and the text stays in the
+ * component. three.js loads lazily shortly after first paint, only when motion is allowed and WebGL
+ * works.
+ *
+ * Two modes:
+ * - Wide screens: one fixed full-viewport canvas. Positions are measured from the DOM every frame
+ *   (CSS pixels, orthographic camera) and the sand blows from one chapter's word to the next.
+ * - Phones: a small canvas that lives inside the current slot, so it scrolls with the page natively.
+ *   A fixed overlay that follows the page from JS always trails touch scrolling (scroll runs off the
+ *   main thread) and stretches when the browser toolbar collapses; a canvas in the flow does neither.
+ *   Each word pours in from loose sand as its chapter arrives.
  */
 type Three = typeof import('three');
 
 type Mark = 'underline' | 'frame' | 'glyph';
 type Target = { selector: string; mark: Mark; text?: boolean };
 
-/** Targets in page order. Glyph slots are picked up from the markup, in document order. */
-const HERO_TARGETS: Target[] = [
-  { selector: '#hv2-hero-title .hv2-hero__line:last-child', mark: 'underline', text: true },
-  { selector: '#hero .hv2-hero__actions .hv2-btn--primary', mark: 'frame' },
-];
-
 const BRAND = [0xd7 / 255, 0x26 / 255, 0x38 / 255];
 /** Seconds for a full move between two marks at reading speed; fast scrolling shortens it. */
 const MORPH_SECONDS = 0.95;
-/** How long the hero underline holds before the sand starts following the scroll. */
-const INTRO_HOLD = 0.45;
+/** Phones: the canvas reaches this far past its slot so loose grains and the pour-in are not clipped. */
+const LOCAL_PAD = 28;
 
 type Box = { x: number; y: number; w: number; h: number };
 type Resolved = Target & { el: HTMLElement; word?: string };
@@ -295,30 +295,28 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     return () => {};
   }
 
-  const small = window.matchMedia('(max-width: 47.99rem)').matches;
+  // Phones (and narrow tablets) draw the sand inside the current slot instead of over the viewport.
+  const local = window.matchMedia('(max-width: 47.99rem)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const count = small ? 6000 : 14000;
+  const count = local ? 7000 : 14000;
   const range = document.createRange();
 
-  const resolved: Resolved[] = [];
-  for (const target of HERO_TARGETS) {
-    const el = document.querySelector<HTMLElement>(target.selector);
-    if (el) resolved.push({ ...target, el });
-  }
+  const targets: Resolved[] = [];
   for (const slot of Array.from(document.querySelectorAll<HTMLElement>('[data-hv2-glyph]'))) {
     const word = slot.dataset.hv2Glyph?.trim();
-    if (word) resolved.push({ selector: '', mark: 'glyph', el: slot, word });
+    if (word) targets.push({ selector: '', mark: 'glyph', el: slot, word });
   }
-  const targets = resolved;
   if (targets.length === 0) return () => {};
 
-  // The sand sits above the page (so it can mark elements inside cards) but never takes input.
+  // Wide screens: above the page (so it can reach any chapter) but never taking input.
+  // Phones: inside the active slot, moved from slot to slot as the chapters arrive.
   const layer = document.createElement('div');
-  layer.className = 'hv2-sand';
+  layer.className = local ? 'hv2-sand hv2-sand--local' : 'hv2-sand';
   layer.setAttribute('aria-hidden', 'true');
-  (host.parentElement ?? document.body).appendChild(layer);
+  if (local) layer.style.setProperty('--hv2-sand-pad', `${LOCAL_PAD}px`);
+  else (host.parentElement ?? document.body).appendChild(layer);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: local ? 'default' : 'high-performance' });
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0);
@@ -335,7 +333,8 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   const seedRand = rng(42);
   for (let i = 0; i < count; i++) {
     seeds[i * 4] = seedRand();
-    seeds[i * 4 + 1] = 1.0 + Math.pow(seedRand(), 2.4) * 1.8;
+    // Phones get slightly coarser grains so the word reads at arm's length.
+    seeds[i * 4 + 1] = (1.0 + Math.pow(seedRand(), 2.4) * 1.8) * (local ? 1.25 : 1);
     seeds[i * 4 + 2] = seedRand();
     seeds[i * 4 + 3] = seedRand();
   }
@@ -355,7 +354,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     uMix: { value: 0 },
     uTime: { value: 0 },
     uDpr: { value: dpr },
-    uOpacity: { value: small ? 0.8 : 0.9 },
+    uOpacity: { value: 0.92 },
     uPointer: { value: new THREE.Vector2(-999, -999) },
     uPush: { value: 0 },
     uBrand: { value: new THREE.Vector3(BRAND[0], BRAND[1], BRAND[2]) },
@@ -465,7 +464,18 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     shapes.set(key, shape);
     return shape;
   };
-  const boxOf = (index: number) => measure(targets[index].el, targets[index].text, range);
+
+  /**
+   * Where a target sits in canvas pixels. Wide screens: its viewport box. Phones: its layout size,
+   * offset by the canvas padding, which never changes while the page scrolls.
+   */
+  const boxOf = (index: number): Box | null => {
+    const el = targets[index].el;
+    if (!local) return measure(el, targets[index].text, range);
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    return w < 2 || h < 2 ? null : { x: LOCAL_PAD, y: LOCAL_PAD, w, h };
+  };
 
   /**
    * The last target, in page order, that has come up into the lower part of the viewport and is still
@@ -482,14 +492,12 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     return chosen;
   };
 
-  const firstBox = boxOf(0) ?? { x: window.innerWidth * 0.1, y: window.innerHeight * 0.2, w: 300, h: 40 };
-  let source: { origin: Box; shape: Float32Array; follow: number } = {
-    origin: firstBox,
-    shape: markLayout('scatter', firstBox.w, firstBox.h, count, 7),
-    follow: 0,
-  };
-  let current: Live = { index: 0, box: firstBox, shape: shapeFor(0, firstBox), w: firstBox.w, h: firstBox.h };
-  let mix = 0;
+  // Nothing is drawn until the first chapter word comes into view.
+  let started = false;
+  const blank: Box = { x: 0, y: 0, w: 1, h: 1 };
+  let source: { origin: Box; shape: Float32Array; follow: number } = { origin: blank, shape: new Float32Array(count * 3), follow: -1 };
+  let current: Live = { index: -1, box: blank, shape: new Float32Array(count * 3), w: 1, h: 1 };
+  let mix = 1;
 
   const upload = () => {
     from.set(source.shape);
@@ -500,7 +508,6 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     for (let i = 0; i < count; i++) span = Math.max(span, source.shape[i * 3]);
     uniforms.uSpan.value = span;
   };
-  upload();
 
   /** Freezes where every grain is right now (ignoring the in-flight swirl) as the start of the next move. */
   const settleInto = (origin: Box): Float32Array => {
@@ -524,33 +531,72 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     return out;
   };
 
-  const moveTo = (index: number) => {
-    const box = boxOf(index);
-    if (!box) return;
-    // The new move starts from wherever the sand is now, anchored to the mark it was heading for.
-    source = { origin: current.box, shape: mix >= 0.999 ? current.shape : settleInto(current.box), follow: current.index };
-    current = { index, box, shape: shapeFor(index, box), w: box.w, h: box.h };
-    mix = 0;
-    upload();
-  };
-
-  /* ---------- Sizing, pointer, scroll speed, loop ---------- */
-
-  const resize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+  /** Phones: size the canvas to the slot plus its padding and point the camera at it. */
+  const fitLocal = (box: Box) => {
+    const w = Math.round(box.w + LOCAL_PAD * 2);
+    const h = Math.round(box.h + LOCAL_PAD * 2);
     renderer.setSize(w, h, false);
     camera.left = 0;
     camera.right = w;
     camera.top = 0;
     camera.bottom = -h;
     camera.updateProjectionMatrix();
+  };
+
+  const moveTo = (index: number) => {
+    const box = boxOf(index);
+    if (!box) return;
+    if (local || !started) {
+      // Pour in: the word gathers out of loose sand around its own slot.
+      if (local) {
+        targets[index].el.appendChild(layer);
+        fitLocal(box);
+      }
+      source = { origin: box, shape: markLayout('scatter', box.w, box.h, count, 7 + index), follow: index };
+    } else {
+      // The new move starts from wherever the sand is now, anchored to the mark it was heading for.
+      source = { origin: current.box, shape: mix >= 0.999 ? current.shape : settleInto(current.box), follow: current.index };
+    }
+    current = { index, box, shape: shapeFor(index, box), w: box.w, h: box.h };
+    mix = 0;
+    upload();
+    if (!started) {
+      started = true;
+      requestAnimationFrame(() => layer.classList.add('is-ready'));
+    }
+  };
+
+  /* ---------- Sizing, pointer, scroll speed, loop ---------- */
+
+  let lastW = 0;
+  let lastH = 0;
+  const resize = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    // Phones fire resize whenever the browser toolbar shows or hides; only a width change matters there.
+    if (local && w === lastW) return;
+    if (!local && w === lastW && h === lastH) return;
+    lastW = w;
+    lastH = h;
     shapes.clear();
+    if (!local) {
+      renderer.setSize(w, h, false);
+      camera.left = 0;
+      camera.right = w;
+      camera.top = 0;
+      camera.bottom = -h;
+      camera.updateProjectionMatrix();
+    }
+    if (current.index < 0) return;
     // Marks are laid out in pixels; rebuild the current one for the new size.
     const box = boxOf(current.index);
     if (box) {
+      if (local) fitLocal(box);
       current = { ...current, box, shape: shapeFor(current.index, box), w: box.w, h: box.h };
-      if (mix >= 0.999) source = { ...source, shape: current.shape, origin: box, follow: current.index };
+      if (local || mix >= 0.999) {
+        source = { ...source, shape: current.shape, origin: box, follow: current.index };
+        mix = 1;
+      }
       upload();
     }
   };
@@ -572,8 +618,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   let lastY = window.scrollY;
   let speed = 0;
   // Re-check the target on scroll as well as every frame, so a move starts on the scroll event itself.
-  // At the top of the page the hero underline holds until the visitor scrolls.
-  let dirty = window.scrollY > 40;
+  let dirty = true;
   const onScroll = () => {
     dirty = true;
   };
@@ -581,7 +626,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   resize();
   window.addEventListener('resize', resize);
   window.addEventListener('scroll', onScroll, { passive: true });
-  if (finePointer) {
+  if (finePointer && !local) {
     window.addEventListener('pointermove', onPointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
   }
@@ -600,30 +645,37 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     lastY = y;
     speed += (instant - speed) * Math.min(1, dt * 10);
 
-    // After the intro, follow the most important element in view.
-    if (time > INTRO_HOLD && dirty) {
+    // Follow the chapter word in view.
+    if (dirty) {
       dirty = false;
       const next = pick();
       if (next >= 0 && next !== current.index) moveTo(next);
     }
+    if (!started) return;
 
     // Reading speed: a full move in MORPH_SECONDS. Flicking through: up to three times faster.
     const boost = 1 + Math.min(2, speed / 1400);
     mix = Math.min(1, mix + (dt / MORPH_SECONDS) * boost);
 
-    // Re-measure both ends every frame so the sand rides along with the page.
-    const toBox = boxOf(current.index);
-    if (toBox) {
-      if (Math.abs(toBox.w - current.w) > 3 || Math.abs(toBox.h - current.h) > 3) {
-        current = { ...current, box: toBox, shape: shapeFor(current.index, toBox), w: toBox.w, h: toBox.h };
-        to.set(current.shape);
-        toAttr.needsUpdate = true;
+    if (local) {
+      // The canvas scrolls with its slot. Skip drawing while it is off screen.
+      const r = layer.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) return;
+    } else {
+      // Re-measure both ends every frame so the sand rides along with the page.
+      const toBox = boxOf(current.index);
+      if (toBox) {
+        if (Math.abs(toBox.w - current.w) > 3 || Math.abs(toBox.h - current.h) > 3) {
+          current = { ...current, box: toBox, shape: shapeFor(current.index, toBox), w: toBox.w, h: toBox.h };
+          to.set(current.shape);
+          toAttr.needsUpdate = true;
+        }
+        current.box = toBox;
       }
-      current.box = toBox;
-    }
-    if (mix < 1) {
-      const fromBox = source.follow === current.index ? current.box : boxOf(source.follow);
-      if (fromBox) source.origin = fromBox;
+      if (mix < 1) {
+        const fromBox = source.follow === current.index ? current.box : boxOf(source.follow);
+        if (fromBox) source.origin = fromBox;
+      }
     }
     uniforms.uFromO.value.set(source.origin.x, source.origin.y);
     uniforms.uToO.value.set(current.box.x, current.box.y);
@@ -651,7 +703,6 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   document.addEventListener('visibilitychange', onVisibility);
 
   play();
-  requestAnimationFrame(() => layer.classList.add('is-ready'));
 
   return () => {
     pause();

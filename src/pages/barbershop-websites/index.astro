@@ -1,23 +1,33 @@
 ---
+/**
+ * /barbershop-websites — pillar for "barbershop website": why a shop needs its own site, what it should
+ * include, how clients book and what a professional presence looks like, closing on Full KERSIVO.
+ * Design-specific queries belong to /barbershop-website-design. The previous design is kept at
+ * /design-preview/barbershop-websites-v1.
+ */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
-import BarbershopWebsitesHero from '@/components/barbershop-websites/BarbershopWebsitesHero.astro';
-import WhatIsBarbershopWebsite from '@/components/barbershop-websites/WhatIsBarbershopWebsite.astro';
-import WebsiteEssentials from '@/components/barbershop-websites/WebsiteEssentials.astro';
-import BrandToBooking from '@/components/barbershop-websites/BrandToBooking.astro';
-import FullOffer from '@/components/barbershop-websites/FullOffer.astro';
-import SetupProcess from '@/components/barbershop-websites/SetupProcess.astro';
-import FaqAndClose from '@/components/barbershop-websites/FaqAndClose.astro';
-import '@/styles/components/barbershop-websites-definition.css';
+import BwHero from '@/components/barbershopWebsite/BwHero.astro';
+import BwSceneIndex from '@/components/barbershopWebsite/BwSceneIndex.astro';
+import BwWhy from '@/components/barbershopWebsite/BwWhy.astro';
+import BwAnatomy from '@/components/barbershopWebsite/BwAnatomy.astro';
+import BwBooking from '@/components/barbershopWebsite/BwBooking.astro';
+import BwPresence from '@/components/barbershopWebsite/BwPresence.astro';
+import BwOffer from '@/components/barbershopWebsite/BwOffer.astro';
+import BwFaqClose from '@/components/barbershopWebsite/BwFaqClose.astro';
+import '@/styles/barbershop-website/page.css';
+import '@/styles/barbershop-website/cinematic.css';
+import '@/styles/barbershop-website/system.css';
 import {
   BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  buildBarbershopWebsitesFaqJsonLd,
   buildBarbershopWebsitesJsonLd,
+  buildBarbershopWebsitesServiceJsonLd,
 } from '@/lib/seo/barbershopWebsitesPage';
-import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
-import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -32,16 +42,26 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={buildBarbershopWebsitesJsonLd()}
+  jsonLd={[
+    buildBarbershopWebsitesJsonLd(),
+    buildBarbershopWebsitesServiceJsonLd(),
+    buildBarbershopWebsitesFaqJsonLd(isFreePreviewFlowEnabled()),
+  ]}
 >
-  <main class="bsw-page">
-    <BarbershopWebsitesHero />
-    <WhatIsBarbershopWebsite />
-    <WebsiteEssentials />
-    <BrandToBooking />
-    <FullOffer />
-    <SetupProcess />
-    <FaqAndClose />
+  <link slot="head" rel="preload" as="image" href="/images/barbershop-websites/site-hero-1100.webp" fetchpriority="high" />
+  <main class="bw">
+    <div class="bw-grain" aria-hidden="true"></div>
+    <BwSceneIndex />
+    <div class="bw-film" data-bw-film>
+      <canvas class="bw-film__canvas" data-bw-film-canvas aria-hidden="true"></canvas>
+      <BwHero />
+      <BwWhy />
+    </div>
+    <BwAnatomy />
+    <BwBooking />
+    <BwPresence />
+    <BwOffer />
+    <BwFaqClose />
   </main>
 
   <Footer50
@@ -53,3 +73,18 @@ const currentYear = new Date().getFullYear();
     social={getFooterSocialLinks()}
   />
 </LandingLayout>
+
+<script>
+  import { initBarbershopWebsite } from '@/lib/barbershopWebsite/init';
+
+  let cleanup: (() => void) | null = null;
+  const start = () => {
+    cleanup?.();
+    cleanup = document.querySelector('.bw') ? initBarbershopWebsite(document) : null;
+  };
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>

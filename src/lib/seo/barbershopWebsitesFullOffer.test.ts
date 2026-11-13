@@ -17,7 +17,7 @@ import { SAAS_ADDS_VAT, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-const page = read('../../pages/barbershop-websites/index.astro');
+const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
 const section = read('../../components/barbershop-websites/FullOffer.astro');
 const [, frontmatter = '', markup = ''] = section.split(/^---$/m);
 

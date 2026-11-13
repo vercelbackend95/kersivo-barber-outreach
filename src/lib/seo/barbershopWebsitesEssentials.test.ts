@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-const page = read('../../pages/barbershop-websites/index.astro');
+const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
 const section = read('../../components/barbershop-websites/WebsiteEssentials.astro');
 const styles = read('../../styles/components/barbershop-websites-essentials.css');
 

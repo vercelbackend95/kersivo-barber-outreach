@@ -1,0 +1,98 @@
+---
+/**
+ * A static, illustrative CUTSTATE barbershop website inside a browser frame. Decorative: the
+ * wrapper carries one accessible description and everything inside is aria-hidden. Regions carry
+ * data-bw-part so the anatomy section can point at them.
+ */
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { DEMO_HOURS, DEMO_LOCATION } from '@/lib/demo/site';
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+
+interface Props {
+  /** Domain typed into the address bar. */
+  domain?: string;
+  /** Eager-load the photo (hero use only). */
+  eager?: boolean;
+  class?: string;
+  label: string;
+  id?: string;
+}
+
+const { domain = 'cutstate.co.uk', eager = false, class: className, label, id } = Astro.props;
+const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3);
+const team = DEMO_BARBERS.slice(0, 3);
+const hours = DEMO_HOURS.slice(0, 2);
+---
+
+<div class:list={['bw-site', className]} role="img" aria-label={label} id={id} data-bw-site>
+  <div class="bw-site__frame" aria-hidden="true">
+    <div class="bw-site__chrome">
+      <span class="bw-site__dots"><i></i><i></i><i></i></span>
+      <span class="bw-site__address" data-bw-part="domain">
+        <svg class="bw-site__lock" viewBox="0 0 16 16" width="12" height="12"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>
+        <span class="bw-site__url" data-bw-domain={domain}>{domain}</span><span class="bw-site__caret"></span>
+      </span>
+    </div>
+
+    <div class="bw-site__page">
+      <div class="bw-site__nav">
+        <span class="bw-site__logo" data-bw-part="brand">
+          <img src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+        </span>
+        <span class="bw-site__links"><span>Services</span><span>Barbers</span><span>Visit</span></span>
+        <span class="bw-site__book" data-bw-part="book">Book now</span>
+      </div>
+
+      <div class="bw-site__hero" data-bw-part="photos">
+        <img
+          class="bw-site__photo"
+          src="/images/barbershop-websites/site-hero-1100.webp"
+          alt=""
+          width="1100"
+          height="900"
+          loading={eager ? 'eager' : 'lazy'}
+          fetchpriority={eager ? 'high' : 'auto'}
+          decoding="async"
+        />
+        <span class="bw-site__hero-copy">
+          <span class="bw-site__kicker">{DEMO_LOCATION}</span>
+          <span class="bw-site__display">Precision in every detail.</span>
+          <span class="bw-site__cta">Book an appointment</span>
+        </span>
+      </div>
+
+      <div class="bw-site__grid">
+        <span class="bw-site__block" data-bw-part="services">
+          <span class="bw-site__label">Services</span>
+          {services.map((service) => (
+            <span class="bw-site__row">
+              <span>{service.shortName ?? service.name}</span>
+              <span class="bw-site__price">{formatDemoPriceGbp(service.pricePence)}</span>
+            </span>
+          ))}
+        </span>
+        <span class="bw-site__block" data-bw-part="team">
+          <span class="bw-site__label">Barbers</span>
+          <span class="bw-site__team">
+            {team.map((barber) => (
+              <span class="bw-site__barber">
+                <img src={`/images/barbershop-websites/barber-${barber.slug}.webp`} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                <span>{barber.name.split(' ')[0]}</span>
+              </span>
+            ))}
+          </span>
+        </span>
+        <span class="bw-site__block" data-bw-part="hours">
+          <span class="bw-site__label">Visit</span>
+          {hours.map((row) => (
+            <span class="bw-site__row">
+              <span>{row.days}</span>
+              <span class="bw-site__price">{row.hours}</span>
+            </span>
+          ))}
+          <span class="bw-site__row bw-site__row--muted"><span>Northern Quarter</span><span>Directions</span></span>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
