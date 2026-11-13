@@ -561,20 +561,17 @@ describe('fresha claim safety', () => {
 
 describe('comparison cluster internal links', () => {
   const homepageSource = readRepoFile('../../pages/index.astro');
-  const switcherSource = readRepoFile('../../components/landingSwitcherReassurance.astro');
+  const homepageIncludedSource = readRepoFile('../../components/homeV2/HomeV2Included.astro');
   const booksyFitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
 
   function countLinks(source: string, href: string): number {
     return source.split(`href="${href}"`).length - 1;
   }
 
-  it('links the homepage switching section to /fresha-alternative with a crawlable anchor', () => {
-    expect(homepageSource).toContain(
-      '<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />',
-    );
-    expect(switcherSource).toContain('showFreshaCompareLink');
-    expect(countLinks(switcherSource, '/fresha-alternative')).toBe(1);
-    expect(switcherSource).toContain('href="/fresha-alternative">Fresha</a>');
+  it('links the homepage switching line to /fresha-alternative with a crawlable anchor', () => {
+    expect(homepageSource).toContain('<HomeV2Included />');
+    expect(countLinks(homepageIncludedSource, '/fresha-alternative')).toBe(1);
+    expect(homepageIncludedSource).toContain('href="/fresha-alternative">Fresha</a>');
   });
 
   it('links /booksy-alternative to /fresha-alternative once, from the fit section', () => {
@@ -643,9 +640,9 @@ describe('comparison cluster internal links', () => {
     for (const source of [pageSource, ...newComponentSources, booksyFitSource]) {
       expect(source).not.toMatch(/href="\/compare/);
     }
-    // The shared homepage switching section is a distinct navigation context
+    // The homepage switching line is a distinct navigation context
     // where a direct link to the comparison hub is intentional and useful.
-    expect(switcherSource).toContain('href="/compare"');
+    expect(homepageIncludedSource).toContain('href="/compare"');
   });
 });
 

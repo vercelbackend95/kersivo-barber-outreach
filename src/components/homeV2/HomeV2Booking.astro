@@ -1,0 +1,120 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_COMMISSION_WITH_STRIPE } from '@/lib/pricing/claimsPolicy';
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { formatDemoPriceGbp, getDemoFeaturedServices, resolveDemoServiceSlug } from '@/lib/demo/services';
+
+const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
+const service = resolveDemoServiceSlug('skin-fade') ?? getDemoFeaturedServices()[0];
+const barber = DEMO_BARBERS[0];
+
+const states = [
+  {
+    stamp: 'Booked',
+    sub: 'Sat · 10:15',
+    title: 'Booked on your website',
+    body: 'The client picks a service, barber and time on your website, even while you are mid-cut. No phone call, no DMs, no app download and no marketplace showing them other shops on the way.',
+  },
+  {
+    stamp: 'Deposit paid',
+    sub: `${deposit} · Stripe`,
+    title: `${deposit} deposit paid`,
+    body: `You choose Pay at shop, a ${deposit} deposit or full payment upfront to help reduce no-shows, so a Saturday slot is not left empty and unpaid.`,
+  },
+  {
+    stamp: 'Reminder sent',
+    sub: 'Email + SMS',
+    title: 'Reminder sent',
+    body: 'The client gets an email confirmation and reminders, plus SMS reminders within a monthly allowance. You do not have to chase anyone.',
+  },
+  {
+    stamp: 'In your diary',
+    sub: 'Admin dashboard',
+    title: 'In your diary',
+    body: 'The booking sits in your diary next to walk-ins and phone bookings, and the client’s details stay with your shop for their next visit.',
+  },
+] as const;
+---
+
+<section id="one-booking" class="hv2-section hv2-booking" aria-labelledby="hv2-booking-title" data-hv2-booking data-hv2-chapter="02">
+  <svg class="hv2-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="hv2-ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise" />
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.75 1.32" result="speckle" />
+      <feComposite in="SourceGraphic" in2="speckle" operator="in" result="inked" />
+      <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="2" seed="3" result="warp" />
+      <feDisplacementMap in="inked" in2="warp" scale="1.2" />
+    </filter>
+  </svg>
+
+  <div class="hv2-shell hv2-booking__grid">
+    <header class="hv2-head hv2-booking__head">
+      <p class="hv2-eyebrow">One booking</p>
+      <h2 id="hv2-booking-title" class="hv2-h2">Bookings land while you cut</h2>
+      <p class="hv2-lead">Online booking for your barbershop that works without you picking up the phone. Follow one Saturday booking at the demo shop, from the client's tap to your diary.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph="BOOKED." style="--hv2-glyph-chars: 7"></span>
+    </header>
+
+    <div class="hv2-ticket-wrap">
+      <div class="hv2-ticket" aria-hidden="true" data-hv2-ticket>
+        <div class="hv2-ticket__main">
+          <div class="hv2-ticket__top">
+            <img class="hv2-ticket__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
+            <span class="hv2-ticket__ref">Demo booking</span>
+          </div>
+
+          <p class="hv2-ticket__service">{service?.name ?? 'Skin Fade'}</p>
+          <p class="hv2-ticket__sub">{service ? `${service.durationMinutes} min · ${formatDemoPriceGbp(service.pricePence)}` : ''}</p>
+
+          <div class="hv2-ticket__barber">
+            <img src={`/images/home-v2/${barber.slug}.webp`} alt="" width="360" height="270" loading="lazy" decoding="async" />
+            <span><small>With</small><b>{barber.name}</b></span>
+          </div>
+
+          <dl class="hv2-ticket__meta">
+            <div><dt>Day</dt><dd>Saturday</dd></div>
+            <div><dt>Time</dt><dd>10:15</dd></div>
+            <div><dt>Deposit</dt><dd>{deposit}</dd></div>
+          </dl>
+
+          <ol class="hv2-ticket__slots">
+            {states.map((state, index) => (
+              <li class="hv2-ticket__slot is-done" data-hv2-ticket-state>
+                <span class="hv2-ticket__slot-label">{String(index + 1).padStart(2, '0')} · {state.stamp}</span>
+                <span class={`hv2-stamp hv2-stamp--${index + 1}`} data-hv2-stamp>
+                  <span class="hv2-stamp__ink">
+                    <b>{state.stamp}</b>
+                    <small>{state.sub}</small>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="hv2-ticket__perf"></div>
+
+        <div class="hv2-ticket__stub">
+          <span class="hv2-ticket__barcode"></span>
+          <span class="hv2-ticket__progress"><i data-hv2-ticket-progress></i></span>
+          <span class="hv2-ticket__domain">cutstatebarbers.co.uk</span>
+        </div>
+
+      </div>
+    </div>
+
+    <ol class="hv2-booking__steps" role="list">
+      {states.map((state, index) => (
+        <li class="hv2-booking__step" data-hv2-booking-step>
+          <span class="hv2-booking__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <div>
+            <h3 class="hv2-booking__title">{state.title}</h3>
+            <p class="hv2-booking__body">{state.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <p class="hv2-booking__note">{KERSIVO_COMMISSION_WITH_STRIPE} CUTSTATE is a fictional demonstration shop.</p>
+  </div>
+</section>

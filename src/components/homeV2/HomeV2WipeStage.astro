@@ -1,0 +1,205 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { formatDemoPriceGbp, getDemoFeaturedServices } from '@/lib/demo/services';
+
+// Left pane: a generic, fictional marketplace page. Right pane: the CUTSTATE demo shop, built from the
+// same fixtures as /demo so names, prices and photos match the live demo.
+const services = getDemoFeaturedServices().slice(0, 3);
+const barbers = DEMO_BARBERS.slice(0, 3);
+const slots = ['09:30', '10:15', '11:00', '12:30', '14:00', '15:45'];
+const nearby = [
+  { img: '/images/home-v2/mk-fade.webp', label: 'Shop nearby', meta: '0.2 mi', promoted: true },
+  { img: '/images/home-v2/mk-scissor-cut.webp', label: 'Shop nearby', meta: '0.3 mi', promoted: false },
+  { img: '/images/home-v2/mk-beard.webp', label: 'Shop nearby', meta: '0.5 mi', promoted: true },
+  { img: '/images/home-v2/mk-hairline.webp', label: 'Shop nearby', meta: '0.6 mi', promoted: false },
+];
+const sideRows = ['0.1 mi', '0.3 mi', '0.4 mi', '0.7 mi'];
+---
+
+<div class="hv2-stage" data-hv2-wipe>
+  <div class="hv2-pane hv2-pane--listing" aria-hidden="true">
+    <div class="hv2-frame hv2-frame--listing">
+      <div class="hv2-frame__bar hv2-frame__bar--light">
+        <span class="hv2-frame__dots"><i></i><i></i><i></i></span>
+        <span class="hv2-frame__address">marketplace.example/manchester/barbers/cutstate</span>
+      </div>
+
+      <div class="hv2-mk">
+        <div class="hv2-mk__top">
+          <span class="hv2-mk__logo"><i></i>marketplace</span>
+          <span class="hv2-mk__search">
+            <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.4" /><path d="m8 8 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
+            Barbers near Manchester
+          </span>
+          <span class="hv2-mk__app">Get the app</span>
+          <span class="hv2-mk__avatar"></span>
+        </div>
+        <div class="hv2-mk__chips"><i class="is-on">Open now</i><i>Price</i><i>Distance</i><i>Promoted first</i><i>Offers</i></div>
+
+        <div class="hv2-mk__body">
+          <div class="hv2-mk__main" data-hv2-mk-scroll>
+            <article class="hv2-mk__ad">
+              <img src={nearby[0].img} alt="" width="240" height="192" loading="lazy" decoding="async" />
+              <div>
+                <span class="hv2-mk__tag">Sponsored</span>
+                <b>Another shop nearby</b>
+                <small>Barbershop · 0.2 mi · promoted above your listing</small>
+              </div>
+              <span class="hv2-mk__btn">Book</span>
+            </article>
+
+            <article class="hv2-mk__listing">
+              <div class="hv2-mk__listing-head">
+                <img src="/images/home-v2/mk-cutstate.webp" alt="" width="240" height="180" loading="lazy" decoding="async" />
+                <div>
+                  <b>Cutstate Barbers</b>
+                  <small>Barbershop · 0.4 mi · one of many listings</small>
+                  <span class="hv2-mk__tabs"><i class="is-on">Services</i><i>Team</i><i>About</i></span>
+                </div>
+                <span class="hv2-mk__btn">Book</span>
+              </div>
+              <ul class="hv2-mk__services" role="list">
+                {services.map((service) => (
+                  <li><span>{service.name}</span><span>{formatDemoPriceGbp(service.pricePence)}</span></li>
+                ))}
+              </ul>
+            </article>
+
+            <p class="hv2-mk__section">Clients also viewed</p>
+            <div class="hv2-mk__tiles">
+              {nearby.map((shop) => (
+                <span class="hv2-mk__tile">
+                  <img src={shop.img} alt="" width="240" height="192" loading="lazy" decoding="async" />
+                  {shop.promoted ? <em>Promoted</em> : null}
+                  <b>{shop.label}</b>
+                  <small>{shop.meta}</small>
+                </span>
+              ))}
+            </div>
+
+            <p class="hv2-mk__section">More barbers in Manchester</p>
+            <div class="hv2-mk__rows">
+              {sideRows.map((distance) => (
+                <span class="hv2-mk__row"><i></i><b></b><small>{distance}</small></span>
+              ))}
+            </div>
+            <p class="hv2-mk__foot">Marketplace header, marketplace colours, marketplace rules.</p>
+          </div>
+
+          <aside class="hv2-mk__side">
+            <span class="hv2-mk__map">
+              <i style="--x: 22%; --y: 30%"></i>
+              <i style="--x: 58%; --y: 22%"></i>
+              <i style="--x: 40%; --y: 58%" class="is-you"></i>
+              <i style="--x: 74%; --y: 64%"></i>
+              <i style="--x: 16%; --y: 76%"></i>
+            </span>
+            <p class="hv2-mk__side-title">More shops near you</p>
+            {sideRows.slice(0, 3).map((distance) => (
+              <span class="hv2-mk__side-row"><i></i><b></b><small>{distance}</small></span>
+            ))}
+          </aside>
+        </div>
+
+        <div class="hv2-mk__sheet" data-hv2-mk-sheet>
+          <span class="hv2-mk__sheet-icon"></span>
+          <span><b>Book faster in the app</b><small>Download to continue</small></span>
+          <span class="hv2-mk__btn">Open app</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hv2-divider">
+    <p class="hv2-divider__tag" aria-hidden="true">
+      <svg viewBox="0 0 20 10" width="16" height="8" aria-hidden="true"><path d="M5 1 1 5l4 4M15 1l4 4-4 4M1 5h18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      Drag to compare
+    </p>
+    <button
+      type="button"
+      class="hv2-grip"
+      role="slider"
+      aria-label="Compare a marketplace listing with your own shop website"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="47"
+      aria-valuetext="47% marketplace listing, 53% your own website"
+      data-hv2-grip
+    >
+      <svg class="hv2-grip__icon" viewBox="0 0 24 12" width="22" height="11" aria-hidden="true"><path d="M7 1 2 6l5 5M17 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </button>
+  </div>
+
+  <div class="hv2-pane hv2-pane--shop">
+    <div class="hv2-frame hv2-frame--shop">
+      <div class="hv2-frame__bar hv2-frame__bar--dark" aria-hidden="true">
+        <span class="hv2-frame__dots"><i></i><i></i><i></i></span>
+        <span class="hv2-frame__address hv2-frame__address--shop">
+          <svg viewBox="0 0 10 12" width="8" height="10" aria-hidden="true"><path d="M2 5V3.6a3 3 0 0 1 6 0V5M1.2 5h7.6v6H1.2z" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>
+          cutstatebarbers.co.uk
+        </span>
+        <span class="hv2-frame__demo">Fictional demo shop</span>
+      </div>
+
+      <div class="hv2-cs" aria-hidden="true">
+        <div class="hv2-cs__page" data-hv2-cs-page>
+          <div class="hv2-cs__nav">
+            <img class="hv2-cs__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" decoding="async" />
+            <span class="hv2-cs__links"><i class="is-on">Home</i><i>Services</i><i>Our Barbers</i><i>Gallery</i><i>Shop</i></span>
+            <span class="hv2-cs__book">Book now <svg viewBox="0 0 10 10" width="8" height="8"><path d="M1 5h7M5 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4" /></svg></span>
+          </div>
+
+          <div class="hv2-cs__hero">
+            <div class="hv2-cs__hero-copy">
+              <p class="hv2-cs__eyebrow">Manchester · Appointments &amp; walk-ins</p>
+              <p class="hv2-cs__name">Cutstate Barbers</p>
+              <p class="hv2-cs__title">Precision in every detail.</p>
+              <span class="hv2-cs__actions"><i class="is-primary">Book a chair</i><i>View services</i></span>
+            </div>
+            <span class="hv2-cs__hero-img">
+              <img src="/images/home-v2/cutstate-hero.webp" alt="" width="720" height="1080" decoding="async" fetchpriority="high" />
+            </span>
+          </div>
+
+          <div class="hv2-cs__block">
+            <p class="hv2-cs__label">Popular services</p>
+            <ul class="hv2-cs__services" role="list">
+              {services.map((service, index) => (
+                <li>
+                  <small>{String(index + 1).padStart(2, '0')}</small>
+                  <b>{service.name}</b>
+                  <span>{service.durationMinutes} min</span>
+                  <strong>{formatDemoPriceGbp(service.pricePence)}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="hv2-cs__block">
+            <p class="hv2-cs__label">Our barbers</p>
+            <ul class="hv2-cs__barbers" role="list">
+              {barbers.map((barber) => (
+                <li>
+                  <img src={`/images/home-v2/${barber.slug}.webp`} alt="" width="360" height="270" loading="lazy" decoding="async" style={`object-position: ${barber.rosterObjectPosition ?? '50% 50%'}`} />
+                  <b>{barber.name}</b>
+                  <small>{barber.specialisation}</small>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="hv2-cs__block hv2-cs__booking">
+            <p class="hv2-cs__label">Saturday · pick a time</p>
+            <ul class="hv2-cs__slots" role="list">
+              {slots.map((time, index) => (
+                <li class:list={[index === 1 && 'is-picked']}><b>{time}</b><span>{index === 1 ? 'Selected' : 'Available'}</span></li>
+              ))}
+            </ul>
+            <span class="hv2-cs__confirm">Confirm {services[0]?.name ?? 'booking'} · 10:15</span>
+          </div>
+        </div>
+      </div>
+      <p class="sr-only">CUTSTATE is a fictional demonstration shop.</p>
+    </div>
+  </div>
+</div>

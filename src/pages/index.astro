@@ -1,29 +1,26 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import { DEFAULT_TITLE, getHomepageDescription } from '@/lib/seo/defaults';
-import Faq4 from '@/components/faq4.astro';
-import Contact16 from '@/components/contact16.astro';
-import LandingFinalCta from '@/components/landingFinalCta.astro';
-import LandingDemoPreview from '@/components/landingDemoPreview.astro';
-import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astro';
-import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
-import LandingDifference from '@/components/landingDifference.astro';
-import Footer50 from '@/components/footer50.astro';
 import { buildHomepageJsonLd } from '@/lib/seo/barberDemoJsonLd';
-import { getHomepageFaqItems } from '@/lib/seo/barbershopBookingFaq';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
-import {
-  KERSIVO_CONTACT_EMAIL,
-  getFooterSocialLinks,
-} from '@/lib/seo/footerSocialLinks';
-import { RateCard1 } from '../components/rateCard1';
-import HomepageHero from '@/components/homepage/HomepageHero.astro';
-import HomepagePricingNotes from '@/components/homepage/HomepagePricingNotes.astro';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import Contact16 from '@/components/contact16.astro';
+import Footer50 from '@/components/footer50.astro';
+import HomeV2Hero from '@/components/homeV2/HomeV2Hero.astro';
+import HomeV2Booking from '@/components/homeV2/HomeV2Booking.astro';
+import HomeV2System from '@/components/homeV2/HomeV2System.astro';
+import HomeV2Included from '@/components/homeV2/HomeV2Included.astro';
+import HomeV2Price from '@/components/homeV2/HomeV2Price.astro';
+import HomeV2Steps from '@/components/homeV2/HomeV2Steps.astro';
+import HomeV2Faq from '@/components/homeV2/HomeV2Faq.astro';
+import HomeV2FinalCta from '@/components/homeV2/HomeV2FinalCta.astro';
+import HomeV2Journey from '@/components/homeV2/HomeV2Journey.astro';
+import '@/styles/home-v2/hero.css';
+import '@/styles/home-v2/sections.css';
 
-const currentYear = new Date().getFullYear();
-// FREE_PREVIEW_FLOW_ENABLED (docs/free-preview-spec.md §10.3); off renders the page unchanged.
+// FREE_PREVIEW_FLOW_ENABLED (docs/free-preview-spec.md §10.3) switches the CTAs to the free preview flow.
 const freePreview = isFreePreviewFlowEnabled();
-const faqItems = getHomepageFaqItems(freePreview);
+const currentYear = new Date().getFullYear();
 ---
 
 <LandingLayout
@@ -32,38 +29,28 @@ const faqItems = getHomepageFaqItems(freePreview);
   canonicalPath="/"
   jsonLd={buildHomepageJsonLd(freePreview)}
 >
-  <link
-    slot="head"
-    rel="preload"
-    as="image"
-    href="/images/brand/logo-navbar-228.webp"
-  />
-  <main class="landing-overflow-guard">
-    <HomepageHero />
-    <LandingDifference />
-    <LandingDemoPreview />
-    <RateCard1 variant="landing" freePreview={freePreview} />
-    <HomepagePricingNotes />
-    <LandingPostPurchaseSteps />
-    <LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />
-    <Faq4
-      className="faq4--landing"
-      heading="Questions about Full KERSIVO?"
-      subHeading="Price, payments, setup, switching, your domain and cancelling."
-      supportHeading="Still have a question?"
-      supportText="Send us a message and we’ll give you a clear answer about your shop."
-      supportLinkLabel="Ask a question"
-      supportLinkHref="#contact"
-      faqs={faqItems}
-    />
-    <Contact16
-      eyebrow="CONTACT KERSIVO"
-      submitLabel="Send my question"
-      title="Tell us about your barbershop"
-      description="Already have a booking system or a website? Tell us where you are today and what you want to change. We’ll reply with the relevant next steps."
-      note="We’ll reply by email — no sales call required."
-    />
-    <LandingFinalCta />
+  <link slot="head" rel="preload" as="image" href="/images/brand/logo-mark-nav-36.webp" />
+  <!-- LCP: the demo shop hero photo in the hero stage. -->
+  <link slot="head" rel="preload" as="image" href="/images/home-v2/cutstate-hero.webp" fetchpriority="high" />
+  <main class="hv2 landing-overflow-guard">
+    <HomeV2Journey />
+    <HomeV2Hero />
+    <HomeV2Booking />
+    <HomeV2System />
+    <HomeV2Included />
+    <HomeV2Price />
+    <HomeV2Steps />
+    <HomeV2Faq />
+    <div class="hv2-contact">
+      <Contact16
+        eyebrow="CONTACT KERSIVO"
+        submitLabel="Send my question"
+        title="Tell us about your barbershop"
+        description="Already have a booking system or a website? Tell us where you are today and what you want to change. We’ll reply with the relevant next steps."
+        note="We’ll reply by email — no sales call required."
+      />
+    </div>
+    <HomeV2FinalCta />
     <Footer50
       showIntro={false}
       brandLine="Own your brand. Own your bookings."
@@ -76,23 +63,21 @@ const faqItems = getHomepageFaqItems(freePreview);
 </LandingLayout>
 
 <script>
-  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+  import { initHomeV2 } from '@/lib/homeV2/initHomeV2';
 
-  const scheduleInit = () => {
-    requestAnimationFrame(() => {
-      const section = document.querySelector('.feature261');
-      if (!(section instanceof HTMLElement) || section.dataset.feature261Enhanced === 'true') return;
-      const cleanup = initFeature261StaggerReveal(section);
-      document.addEventListener('astro:before-swap', cleanup, { once: true });
-    });
+  let cleanup: (() => void) | null = null;
+  const start = () => {
+    if (!document.querySelector('.hv2')) return;
+    cleanup?.();
+    cleanup = initHomeV2(document);
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
-  } else {
-    scheduleInit();
-  }
-  document.addEventListener('astro:page-load', scheduleInit);
+  // ClientRouter fires astro:page-load on the first load and after every swap.
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', () => {
+    cleanup?.();
+    cleanup = null;
+  });
 </script>
 
 <style>

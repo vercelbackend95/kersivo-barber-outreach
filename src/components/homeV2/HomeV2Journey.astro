@@ -1,0 +1,28 @@
+---
+// Fixed cinematic layer for the homepage: the WebGL backdrop host and a chapter rail for quick navigation.
+const chapters = [
+  { href: '#hero', label: 'Your own shop' },
+  { href: '#one-booking', label: 'One booking' },
+  { href: '#live-demo', label: 'Inside the system' },
+  { href: '#why-kersivo-is-different', label: 'Why KERSIVO' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '#setup', label: 'Getting started' },
+  { href: '#faq', label: 'FAQ' },
+];
+---
+
+<div class="hv2-scene" aria-hidden="true" data-hv2-scene></div>
+
+<nav class="hv2-rail" aria-label="Homepage chapters" data-hv2-rail>
+  <span class="hv2-rail__track" aria-hidden="true"><i data-hv2-rail-progress></i></span>
+  <ol class="hv2-rail__list" role="list">
+    {chapters.map((chapter, index) => (
+      <li>
+        <a class="hv2-rail__link" href={chapter.href} data-hv2-rail-link>
+          <span class="hv2-rail__dot" aria-hidden="true"></span>
+          <span class="hv2-rail__label"><span class="hv2-rail__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{chapter.label}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>

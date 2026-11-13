@@ -1,0 +1,165 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { offer } from '@/content/offer';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  KERSIVO_COMMISSION_WITH_STRIPE,
+  PLAN_SCOPE_HIGHLIGHTS,
+  PLAN_SCOPE_PILLS,
+} from '@/lib/pricing/claimsPolicy';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  BOOKSY_ADDITIONAL_USER_GBP,
+  BOOKSY_BASE_PRICE_GBP,
+  BOOKSY_FACTS_CHECKED_DATE,
+  BOOKSY_SOURCE_PRICING,
+  estimateBooksyMonthlySubscription,
+} from '@/lib/seo/booksyFacts';
+
+const freePreview = isFreePreviewFlowEnabled();
+const MAX_BARBERS = 10;
+const DEFAULT_BARBERS = 5;
+
+const money = (amount: number) => (Number.isInteger(amount) ? `£${amount}` : `£${amount.toFixed(2)}`);
+
+const rows = Array.from({ length: MAX_BARBERS }, (_, index) => {
+  const estimate = estimateBooksyMonthlySubscription(index + 1);
+  // Difference against the Booksy price before VAT, the more conservative of the two figures.
+  const less = Math.max(0, estimate.exVatGbp - SAAS_MONTHLY_GBP);
+  return { users: estimate.users, ex: money(estimate.exVatGbp), inc: money(estimate.incVatGbp), incValue: estimate.incVatGbp, less: money(less) };
+});
+const scaleMax = rows[rows.length - 1].incValue;
+const initial = rows[DEFAULT_BARBERS - 1];
+const priceDigits = String(SAAS_MONTHLY_GBP).split('').map(Number);
+const reel = Array.from({ length: 20 }, (_, index) => index % 10);
+const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
+---
+
+<section id="pricing" class="hv2-section hv2-price" aria-labelledby="hv2-price-title" data-hv2-chapter="05">
+  <div class="hv2-shell">
+    <header class="hv2-head hv2-price__head">
+      <p class="hv2-eyebrow">Pricing</p>
+      <h2 id="hv2-price-title" class="hv2-h2">One price per shop, not per barber</h2>
+      <p class="hv2-lead">Take on your next barber without your software bill going up. Full KERSIVO is {offer.price.full} per location, whether you have one barber or ten.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph={`£${SAAS_MONTHLY_GBP}`} style={`--hv2-glyph-chars: ${`£${SAAS_MONTHLY_GBP}`.length}`}></span>
+    </header>
+
+    <div class="hv2-price__grid">
+      <article class="hv2-plan hv2-card" aria-labelledby="hv2-plan-title" data-hv2-plan>
+        <span class="hv2-plan__sheen" aria-hidden="true" data-hv2-sheen></span>
+        <p class="hv2-plan__eyebrow"><span class="hv2-dot" aria-hidden="true"></span><span id="hv2-plan-title">{offer.plans.full}</span></p>
+        <p class="hv2-plan__price">
+          <span class="hv2-plan__glow" aria-hidden="true" data-hv2-glow></span>
+          <span class="hv2-plan__amount">
+            <span class="sr-only">£{SAAS_MONTHLY_GBP}</span>
+            <span class="hv2-odo" aria-hidden="true" data-hv2-odometer>
+              <span class="hv2-odo__sym">£</span>
+              {priceDigits.map((digit) => (
+                <span class="hv2-odo__col" style={`--d: ${digit + 10}`} data-hv2-odo-col data-digit={digit}>
+                  {reel.map((n) => <span>{n}</span>)}
+                </span>
+              ))}
+            </span>
+          </span>
+          <span class="hv2-plan__per" data-hv2-per>/month per location<em>not per barber</em></span>
+        </p>
+        <ul class="hv2-plan__terms" role="list">
+          <li>{offer.fees.setup}</li>
+          <li>No VAT added</li>
+          <li>{KERSIVO_COMMISSION_WITH_STRIPE}</li>
+          <li>{offer.billing.cycle}</li>
+        </ul>
+        <div class="hv2-plan__actions">
+          {freePreview ? (
+            <FullPlanCta part="all" placement="rate_card" primaryClass="hv2-btn hv2-btn--primary" />
+          ) : (
+            <a
+              href="/admin/launch"
+              class="btn btn--primary btn--lg hv2-btn hv2-btn--primary"
+              data-track="saas_subscribe_click"
+              data-track-placement="rate_card"
+              data-hv2-magnetic
+            >
+              {offer.cta.subscribeDirect}
+            </a>
+          )}
+        </div>
+        <div class="hv2-plan__included hv2-receipt" data-hv2-receipt>
+          <p class="hv2-plan__label hv2-receipt__head"><span>Included</span><span aria-hidden="true">Full KERSIVO</span></p>
+          <ul class="hv2-plan__list hv2-receipt__list" role="list">
+            {PLAN_SCOPE_HIGHLIGHTS.map((item) => (
+              <li data-hv2-receipt-line><span>{item}</span><i aria-hidden="true"></i><b aria-hidden="true">Included</b></li>
+            ))}
+          </ul>
+          <p class="hv2-receipt__total" data-hv2-receipt-line>
+            <span>Per location, per month</span>
+            <strong>{offer.price.full}</strong>
+          </p>
+          <ul class="hv2-plan__pills" role="list">
+            {PLAN_SCOPE_PILLS.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+        <p class="hv2-plan__small">{offer.fees.vat} {offer.billing.refund}</p>
+      </article>
+
+      <div class="hv2-compare hv2-card" data-hv2-compare>
+        <p class="hv2-plan__eyebrow"><span class="hv2-dot" aria-hidden="true"></span>Compare by team size</p>
+        <label class="hv2-compare__label" for="hv2-barbers">
+          Barbers in your shop
+          <output class="hv2-compare__count" for="hv2-barbers" data-hv2-compare-count>{DEFAULT_BARBERS}</output>
+        </label>
+        <input
+          id="hv2-barbers"
+          class="hv2-compare__range"
+          type="range"
+          min="1"
+          max={MAX_BARBERS}
+          step="1"
+          value={DEFAULT_BARBERS}
+          aria-describedby="hv2-compare-source"
+          data-hv2-compare-range
+        />
+        <ol class="hv2-compare__seats" role="list" aria-hidden="true" data-hv2-compare-seats>
+          {rows.map((row) => (
+            <li class:list={['hv2-compare__seat', row.users <= DEFAULT_BARBERS && 'is-on']}>
+              <svg viewBox="0 0 24 24" width="24" height="24" focusable="false"><circle cx="12" cy="6.5" r="3.5" /><path d="M5 21v-4.5A4.5 4.5 0 0 1 9.5 12h5a4.5 4.5 0 0 1 4.5 4.5V21" /></svg>
+            </li>
+          ))}
+        </ol>
+        <div class="hv2-compare__bars" aria-live="polite">
+          <div class="hv2-compare__row">
+            <p class="hv2-compare__name">{offer.plans.full}</p>
+            <p class="hv2-compare__value"><strong>£{SAAS_MONTHLY_GBP}/month</strong> <span>no VAT added</span></p>
+            <span class="hv2-compare__bar hv2-compare__bar--kersivo" style={`--w: ${pct(SAAS_MONTHLY_GBP)}`} aria-hidden="true"></span>
+          </div>
+          <div class="hv2-compare__row">
+            <p class="hv2-compare__name">Booksy subscription, <span data-hv2-compare-users>{initial.users}</span> users</p>
+            <p class="hv2-compare__value">
+              <strong data-hv2-compare-ex>{initial.ex}/month + VAT</strong>
+              <span>(<span data-hv2-compare-inc>{initial.inc}</span> including VAT)</span>
+            </p>
+            <span class="hv2-compare__bar" style={`--w: ${pct(initial.incValue)}`} aria-hidden="true" data-hv2-compare-bar></span>
+          </div>
+        </div>
+        <p class="hv2-compare__less">
+          <span>With <span data-hv2-compare-team>{initial.users} barbers</span> you pay</span>
+          <strong data-hv2-compare-less>{initial.less}</strong>
+          <span>a month less than the Booksy subscription before VAT, and the gap grows with every barber you add.</span>
+        </p>
+        <p id="hv2-compare-source" class="hv2-compare__source">
+          Booksy lists {money(BOOKSY_BASE_PRICE_GBP)}/month plus {money(BOOKSY_ADDITIONAL_USER_GBP)} for each additional user, before VAT. Prices checked {BOOKSY_FACTS_CHECKED_DATE} on <a href={BOOKSY_SOURCE_PRICING}>Booksy's UK pricing page</a>. Card processing fees apply on both. <a href="/barber-software-cost-calculator">Compare the full cost</a>
+        </p>
+        <script
+          type="application/json"
+          data-hv2-compare-data
+          set:html={JSON.stringify(rows.map(({ users, ex, inc, incValue, less }) => ({ users, ex, inc, less, w: pct(incValue) })))}
+        />
+      </div>
+    </div>
+
+    <p class="hv2-price__starter">
+      Only need online bookings for up to 4 barbers? {offer.plans.starter} is {offer.price.starter}, with clients paying a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or in full online through your Stripe account.
+      <a href="/pricing#plan">Compare plans</a>
+    </p>
+  </div>
+</section>

@@ -38,6 +38,11 @@
       "source": "/barbershop-booking-system",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/home-v2",
+      "destination": "/",
+      "permanent": true
     }
   ],
   "headers": [

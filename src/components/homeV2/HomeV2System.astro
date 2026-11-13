@@ -1,0 +1,125 @@
+---
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { DeferredWidget } from '@/components/landing/DeferredWidget';
+import { offer } from '@/content/offer';
+import '@/styles/components/landingDemoPreview.css';
+
+const views = [
+  {
+    id: 'admin',
+    tab: 'Admin',
+    kicker: 'Admin system',
+    heading: 'Know your day before you open the door',
+    body: 'See today’s appointments, walk-ins and each barber’s hours in one dashboard, and change barbers, services, prices and working hours yourself.',
+    ctaLabel: 'Explore the admin system',
+    ctaHref: blacklineAdminHref('bookings_dashboard'),
+    url: 'cutstatebarbers.co.uk/admin',
+    chips: ['Barber management', 'Service management', 'Working hours', 'Booking reports'],
+  },
+  {
+    id: 'booking',
+    tab: 'Booking',
+    kicker: 'Online booking for barbers',
+    heading: 'Clients book in a few taps, no app',
+    body: 'Clients choose a service, barber and free time on a booking page that looks like your shop, with no app download. Full KERSIVO puts it on your own branded website and domain.',
+    ctaLabel: 'Try the booking experience',
+    ctaHref: DEMO_BOOK_HREF,
+    url: 'cutstatebarbers.co.uk/book',
+    chips: ['No app download', 'Pay at shop or deposit', 'Email reminders', 'Your own domain'],
+  },
+  {
+    id: 'retail',
+    tab: 'Retail',
+    kicker: 'Retail pickup shop',
+    heading: 'Sell your products between cuts',
+    body: 'Clients browse the products you stock, order online for pickup and collect them from your barbershop.',
+    ctaLabel: 'Explore the retail shop',
+    ctaHref: DEMO_SHOP_HREF,
+    url: 'cutstatebarbers.co.uk/shop',
+    chips: ['Retail orders', 'Pickup in store', 'Product sales reports'],
+  },
+] as const;
+---
+
+<section id="live-demo" class="hv2-section hv2-system" aria-labelledby="hv2-system-title" data-hv2-tabs data-hv2-chapter="03">
+  <div class="hv2-shell">
+    <header class="hv2-head hv2-system__head">
+      <p class="hv2-eyebrow">Inside the system</p>
+      <h2 id="hv2-system-title" class="hv2-h2">Your whole shop in one diary</h2>
+      <p class="hv2-lead">The barbershop booking system you run the day from, the booking page your clients use and the retail pickup shop, all included with Full KERSIVO. Open any demo and click around, no sign-up needed.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph="ONE DIARY" style="--hv2-glyph-chars: 9"></span>
+    </header>
+
+    <div class="hv2-system__tabs" role="tablist" aria-label="Demo views" data-hv2-tablist hidden>
+      {views.map((view, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`hv2-tab-${view.id}`}
+          class="hv2-system__tab"
+          aria-controls={`hv2-panel-${view.id}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? 0 : -1}
+          data-hv2-tab
+        >
+          <span class="hv2-system__tab-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          {view.tab}
+        </button>
+      ))}
+      <span class="hv2-system__tab-rail" aria-hidden="true" data-hv2-tab-rail></span>
+    </div>
+
+    <div class="hv2-system__panels">
+      {views.map((view) => (
+        <div
+          id={`hv2-panel-${view.id}`}
+          class="hv2-system__panel"
+          role="tabpanel"
+          aria-labelledby={`hv2-tab-${view.id}`}
+          data-hv2-panel
+        >
+          <div class="hv2-system__copy">
+            <p class="hv2-system__kicker">{view.kicker}</p>
+            <h3 class="hv2-system__heading">{view.heading}</h3>
+            <p class="hv2-system__body">{view.body}</p>
+            <ul class="hv2-system__chips" role="list">
+              {view.chips.map((chip) => <li>{chip}</li>)}
+            </ul>
+            <a
+              href={view.ctaHref}
+              class="btn btn--ghost hv2-btn hv2-btn--secondary hv2-system__cta"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-track="view_live_demo_click"
+            >
+              {view.ctaLabel}
+              <span class="sr-only"> (opens in a new tab)</span>
+            </a>
+          </div>
+          <div class="hv2-system__media hv2-card" data-hv2-spotlight>
+            <div class="hv2-system__chrome" aria-hidden="true">
+              <span class="hv2-frame__dots"><i></i><i></i><i></i></span>
+              <span class="hv2-system__url">
+                <svg viewBox="0 0 10 12" width="8" height="10"><path d="M2 5V3.6a3 3 0 0 1 6 0V5M1.2 5h7.6v6H1.2z" fill="none" stroke="currentColor" stroke-width="1.2" /></svg>
+                {view.url}
+              </span>
+              <span class="hv2-system__live"><i></i>Live demo</span>
+            </div>
+            <div class="hv2-system__screen">
+            {view.id === 'retail' ? (
+              <div class="sf-shop sf-shop--blackline hv2-system__shop" data-sf-theme="blackline">
+                <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="retail" />
+              </div>
+            ) : (
+              <DeferredWidget client:visible={{ rootMargin: '200px' }} kind={view.id} />
+            )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <p class="hv2-system__note">{offer.demo.fictional}</p>
+  </div>
+</section>

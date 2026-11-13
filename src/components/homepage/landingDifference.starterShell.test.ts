@@ -37,7 +37,6 @@ describe('homepage independent barbershops section: Starter design parity', () =
     expect(titles).toContain('No KERSIVO cut of your bookings.');
     expect(difference).toContain("linkHref: '/barbershop-online-booking'");
     expect(difference).not.toMatch(/<h1\b/);
-    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
   });
 
   it('matches Starter shell dimensions, card finish and 3/2/1 breakpoints', () => {

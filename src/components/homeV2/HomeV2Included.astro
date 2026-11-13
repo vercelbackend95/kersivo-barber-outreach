@@ -1,0 +1,104 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
+
+// Each pillar carries a small looping widget (`tick`) that shows the point instead of saying it.
+const pillars = [
+  {
+    tick: 'domain',
+    title: 'Your name, on your own domain.',
+    body: 'Send clients to your own barbershop website, from Instagram, your Google Business Profile or a text, instead of a marketplace page that shows them the shop down the road.',
+    link: { href: '/insights/do-barbers-need-a-website-uk', label: 'Do barbers need a website?' },
+  },
+  {
+    tick: 'booking',
+    title: 'Bookings without the back-and-forth.',
+    body: 'Clients choose a service, barber and time in the browser with no app download, so you are not answering DMs between cuts. Walk-ins and phone bookings go in the same diary.',
+    link: { href: '/barbershop-online-booking', label: 'How online booking works for barbershops' },
+  },
+  {
+    tick: 'diary',
+    title: 'Every barber’s day in one place.',
+    body: 'Barbers, services, prices and working hours in one dashboard you change yourself, set up around how your shop actually runs.',
+  },
+  {
+    tick: 'client',
+    title: 'Regulars who stay your regulars.',
+    body: 'Client contact details and booking history stay in your shop’s own system, so the relationship is with your barbershop, not with a marketplace.',
+  },
+  {
+    tick: 'pay',
+    title: 'Deposits that protect your time.',
+    body: `Choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront to help reduce no-shows.`,
+    link: {
+      href: '/insights/barbershop-no-show-cost-when-deposit-makes-sense',
+      label: `When a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit makes sense`,
+    },
+  },
+  {
+    tick: 'zero',
+    title: 'Keep what you earn.',
+    body: `£${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail, Stripe fees apply. Add your booking link to your Google Business Profile with guided setup.`,
+    link: { href: '/insights/google-business-profile-booking-link-barbershop', label: 'Adding a Google booking link' },
+  },
+] as const;
+---
+
+<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04" data-hv2-ledger>
+  <div class="hv2-shell">
+    <header class="hv2-head hv2-included__head">
+      <p class="hv2-eyebrow">Built for independent barbershops</p>
+      <h2 id="hv2-included-title" class="hv2-h2">Clients book your shop, not a marketplace</h2>
+      <p class="hv2-lead">What your barbershop gets from its own website and booking system: clients who find your shop, book your barbers and come back to you. Full KERSIVO puts it all on your own domain.</p>
+      <span class="hv2-glyph" aria-hidden="true" data-hv2-glyph="YOUR CLIENTS" style="--hv2-glyph-chars: 12"></span>
+    </header>
+
+    <ol class="hv2-ledger" role="list">
+      {pillars.map((pillar, index) => (
+        <li class="hv2-ledger__item" data-hv2-reveal data-hv2-tick-host>
+          <span class="hv2-ledger__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="hv2-ledger__title">{pillar.title}</h3>
+          <span class={`hv2-tick hv2-tick--${pillar.tick}`} aria-hidden="true">
+            {pillar.tick === 'domain' && (
+              <span class="hv2-tick__url"><i class="hv2-tick__lock"></i><span class="hv2-tick__swap"><s>marketplace.example/cutstate</s><b>cutstatebarbers.co.uk</b></span></span>
+            )}
+            {pillar.tick === 'booking' && (
+              <span class="hv2-tick__steps"><span class="hv2-tick__track"><i class="hv2-tick__bar"></i><span>Service</span><span>Barber</span><span>Time</span></span><b>Booked</b></span>
+            )}
+            {pillar.tick === 'diary' && (
+              <span class="hv2-tick__diary"><i class="is-online">Online</i><i class="is-walkin">Walk-in</i><i class="is-phone">Phone</i><small>One diary</small></span>
+            )}
+            {pillar.tick === 'client' && (
+              <span class="hv2-tick__client"><img src="/images/home-v2/noah-reid.webp" alt="" width="96" height="96" loading="lazy" decoding="async" /><span>Contact</span><span>History</span><span>Your shop</span></span>
+            )}
+            {pillar.tick === 'pay' && (
+              <span class="hv2-tick__seg"><i></i><span>Pay at shop</span><span>{deposit} deposit</span><span>Full upfront</span></span>
+            )}
+            {pillar.tick === 'zero' && (
+              <span class="hv2-tick__zero"><span class="hv2-tick__zero-label"><span>Bookings</span><span>Retail</span></span><b>0%</b><small>KERSIVO commission</small></span>
+            )}
+          </span>
+          <p class="hv2-ledger__body">
+            {pillar.body}
+            {'link' in pillar ? (
+              <>
+                {' '}
+                <a href={pillar.link.href}>{pillar.link.label}</a>
+              </>
+            ) : null}
+          </p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="hv2-included__compare">
+      <p>
+        Already using <a href="/booksy-alternative">Booksy</a>, <a href="/fresha-alternative">Fresha</a>, <a href="/treatwell-alternative">Treatwell</a>, <a href="/setora-alternative">Setora</a> or another booking platform? Keep taking bookings through your current system while we prepare your branded KERSIVO setup.
+      </p>
+      <p>
+        Comparing options? <a href="/compare">Compare UK barber booking software</a> or work out the numbers with the <a href="/barber-software-cost-calculator">barber software cost calculator</a>.
+      </p>
+    </div>
+  </div>
+</section>

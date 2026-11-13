@@ -19,7 +19,10 @@ const between = (source: string, start: string, end: string) => {
 };
 
 const homepage = read('src/pages/index.astro');
-const difference = read('src/components/landingDifference.astro');
+const homeHero = read('src/components/homeV2/HomeV2Hero.astro');
+const homeIncluded = read('src/components/homeV2/HomeV2Included.astro');
+const homePrice = read('src/components/homeV2/HomeV2Price.astro');
+const homeFaq = read('src/components/homeV2/HomeV2Faq.astro');
 const demoPreview = read('src/components/landingDemoPreview.astro');
 const switcher = read('src/components/landingSwitcherReassurance.astro');
 const rateCard1Source = read('src/components/rateCard1.tsx');
@@ -94,21 +97,22 @@ describe('homepage SEO phase 1: headings', () => {
       .filter((file) => /<h1\b/.test(read(file.replace(ROOT, ''))))
       .map((file) => file.replace(ROOT, '').replaceAll('\\', '/'))
       .sort();
-    expect(withH1).toEqual(['/src/components/homepage/HomepageHero.astro']);
-    const hero = read('src/components/homepage/HomepageHero.astro');
-    expect(hero.match(/<h1\b/g)).toHaveLength(1);
-    expect(text(between(hero, '<h1', '</h1>'))).toBe(
+    expect(withH1).toEqual(['/src/components/homeV2/HomeV2Hero.astro']);
+    expect(homeHero.match(/<h1\b/g)).toHaveLength(1);
+    expect(text(between(homeHero, '<h1', '</h1>'))).toBe(
       'Your own barbershop website and booking system. Not a marketplace listing.',
     );
     expect(landingPricingMarkup).not.toMatch(/<h1\b/);
   });
 
-  it('opens the content with the barbershop software H2', () => {
-    expect(homepage).toMatch(/<HomepageHero \/>\s*<LandingDifference \/>\s*<LandingDemoPreview /);
-    expect(text(between(difference, '<h2 id="landing-difference-title"', '</h2>'))).toBe(
+  it('keeps the chapter order and the barbershop software H2', () => {
+    expect(homepage).toMatch(
+      /<HomeV2Journey \/>\s*<HomeV2Hero \/>\s*<HomeV2Booking \/>\s*<HomeV2System \/>\s*<HomeV2Included \/>\s*<HomeV2Price \/>\s*<HomeV2Steps \/>\s*<HomeV2Faq \/>/,
+    );
+    expect(text(between(homeIncluded, '<h2 id="hv2-included-title"', '</h2>'))).toBe(
       'Clients book your shop, not a marketplace',
     );
-    expect(difference).toContain("linkHref: '/barbershop-online-booking'");
+    expect(homeIncluded).toContain("href: '/barbershop-online-booking'");
   });
 
   it('names the inside-the-system section as barbershop management software', () => {
@@ -155,15 +159,20 @@ describe('homepage SEO phase 1: headings', () => {
 });
 
 describe('homepage SEO phase 1: internal links', () => {
-  it('server-renders a followed, same-tab calculator link under the landing pricing', () => {
+  it('server-renders a followed, same-tab calculator link in the homepage pricing chapter', () => {
+    const source = between(homePrice, '<p id="hv2-compare-source"', '</p>');
+    expect(source).toContain('<a href="/barber-software-cost-calculator">Compare the full cost</a>');
+    expect(source).not.toMatch(/nofollow|target=/);
+    expect(homepage).toContain('<HomeV2Price />');
+  });
+
+  it('server-renders a followed, same-tab calculator link under the landing pricing card', () => {
     const paragraph = landingPricingMarkup.match(/<p class="rate-card1__landing-calculator">([\s\S]*?)<\/p>/)?.[0] ?? '';
     expect(paragraph.replace(/<[^>]+>/g, '')).toBe(
       'Comparing platforms? See the real cost of Booksy, Fresha and KERSIVO with our Barber Software Cost Calculator.',
     );
     expect(paragraph).toContain('<a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a>');
     expect(paragraph).not.toMatch(/nofollow|target=/);
-    expect(homepage).toMatch(/<RateCard1 variant="landing" freePreview=\{freePreview\} \/>/);
-    expect(homepage).not.toMatch(/<RateCard1[^>]*client:/);
   });
 
   it('keeps the calculator link off the Booksy and Fresha pricing sections', () => {
@@ -175,13 +184,22 @@ describe('homepage SEO phase 1: internal links', () => {
     }
   });
 
-  it('keeps a single compare hub link in the switching link row', () => {
-    expect(homepage).toContain('<LandingSwitcherReassurance showBooksyCompareLink showFreshaCompareLink />');
-    const nav = switcher.split('<nav class="landing-switcher-reassurance__compare-links"')[1]?.split('</nav>')[0] ?? '';
-    expect(nav).toContain('<a href="/compare">Compare all booking systems</a>');
-    expect(nav.match(/<a /g)).toHaveLength(1);
-    expect(nav).not.toContain('/booksy-alternative');
-    expect(nav).not.toContain('/fresha-alternative');
+  it('links switchers to each comparison page and the compare hub once', () => {
+    const block = between(homeIncluded, '<div class="hv2-included__compare">', '</div>');
+    for (const href of [
+      '/booksy-alternative',
+      '/fresha-alternative',
+      '/treatwell-alternative',
+      '/setora-alternative',
+      '/compare',
+      '/barber-software-cost-calculator',
+    ]) {
+      expect(block.split(`href="${href}"`).length - 1, href).toBe(1);
+    }
+    expect(text(block)).toContain(
+      'Keep taking bookings through your current system while we prepare your branded KERSIVO setup.',
+    );
+    expect(block).not.toMatch(/nofollow|target=/);
   });
 });
 
@@ -214,12 +232,10 @@ describe('homepage visual style parity with /starter', () => {
 describe('homepage lower-funnel conversion controls', () => {
   it('does not put a demo-email form between pricing and onboarding', () => {
     expect(homepage).not.toMatch(/LandingDemoCapture/);
-    expect(homepage).toMatch(
-      /<RateCard1 variant="landing" freePreview=\{freePreview\} \/>\s*<HomepagePricingNotes \/>\s*<LandingPostPurchaseSteps \/>/,
-    );
+    expect(homepage).toMatch(/<HomeV2Price \/>\s*<HomeV2Steps \/>/);
     expect(homepage).toContain('<Contact16');
     expect(homepage).toContain('submitLabel="Send my question"');
-    expect(homepage).toMatch(/<Contact16[\s\S]*?\/>\s*<LandingFinalCta \/>\s*<Footer50/);
+    expect(homepage).toMatch(/<Contact16[\s\S]*?\/>\s*<\/div>\s*<HomeV2FinalCta \/>\s*<Footer50/);
   });
 
   it('keeps transparent commercial conditions without the unrequested VAT-status claim', () => {
@@ -243,8 +259,9 @@ describe('homepage lower-funnel conversion controls', () => {
 
 describe('homepage SEO phase 1: FAQ', () => {
   it('renders the three new questions in the visible FAQ and the FAQPage JSON-LD', () => {
-    expect(homepage).toContain('faqs={faqItems}');
-    expect(homepage).toContain('const faqItems = getHomepageFaqItems(freePreview);');
+    expect(homepage).toContain('<HomeV2Faq />');
+    expect(homeFaq).toContain('const items = getHomepageFaqItems(isFreePreviewFlowEnabled());');
+    expect(homeFaq).toContain('<section id="faq"');
     const visible = HOMEPAGE_FAQ_ITEMS.map((item) => item.question);
     const structured = (buildBarbershopBookingFaqJsonLd().mainEntity as Array<{ name: string }>).map(
       (entity) => entity.name,

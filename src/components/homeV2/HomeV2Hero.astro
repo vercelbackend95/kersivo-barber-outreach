@@ -1,0 +1,84 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import HomeV2WipeStage from '@/components/homeV2/HomeV2WipeStage.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const freePreview = isFreePreviewFlowEnabled();
+---
+
+<section id="hero" class="hv2-hero" aria-labelledby="hv2-hero-title" data-hv2-chapter="01">
+  <div class="hv2-hero__copy">
+    <h1 id="hv2-hero-title" class="hv2-hero__title">
+      <span class="hv2-hero__line">Your own barbershop website and booking system.</span>
+      <span class="hv2-hero__line">Not a marketplace listing.</span>
+    </h1>
+
+    {freePreview ? (
+      <p class="hv2-hero__lead">
+        Clients book your barbers on your own website, from Google, Instagram or a link you send, and
+        remember your name, not a marketplace’s. Full KERSIVO designs your branded site, online booking,
+        client records and retail pickup individually for your shop, for £{SAAS_MONTHLY_GBP} a month per location, not per barber.
+      </p>
+    ) : (
+      <p class="hv2-hero__lead">
+        Clients book your barbers on your own website, from Google, Instagram or a link you send, and
+        remember your name, not a marketplace’s. Full KERSIVO sets up your branded site, online booking,
+        client records and retail pickup for you, for £{SAAS_MONTHLY_GBP} a month per location, not per barber.
+      </p>
+    )}
+
+    <div class="hv2-hero__actions">
+      {freePreview ? (
+        <FullPlanCta part="primary" primaryClass="hv2-btn hv2-btn--primary" placement="homepage_hero" />
+      ) : (
+        <a
+          href="/admin/launch"
+          class="btn btn--primary btn--lg hv2-btn hv2-btn--primary"
+          data-track="saas_subscribe_click"
+          data-track-placement="homepage_hero"
+          data-hv2-magnetic
+        >
+          Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+        </a>
+      )}
+      <a
+        href="#live-demo"
+        class="btn btn--outline btn--lg hv2-btn hv2-btn--secondary"
+        data-track="view_live_demo_click"
+        data-track-placement="homepage_hero"
+      >
+        See it working
+      </a>
+    </div>
+
+    <ul class="hv2-hero__facts" role="list" aria-label="KERSIVO commercial model">
+      <li>No setup fee</li>
+      <li>No VAT added</li>
+      <li>0% KERSIVO commission, Stripe fees apply</li>
+      <li>Cancel anytime</li>
+    </ul>
+  </div>
+
+  <HomeV2WipeStage />
+  <p class="hv2-stage__caption" aria-hidden="true">CUTSTATE is a fictional demonstration shop.</p>
+
+  <div class="hv2-hero__notes">
+    {freePreview ? (
+      <>
+        <FullPlanCta part="subscribe" placement="homepage_hero" />
+        <p>We design a private preview of your website first — no card, no call. You only pay if you decide to launch.</p>
+      </>
+    ) : (
+      <p>
+        Your first payment is taken when you subscribe. Your site is typically ready in a few days once we
+        receive all required information, and nothing goes live until you approve it.
+      </p>
+    )}
+    <p>
+      Just need online bookings? KERSIVO Starter is £0/month for up to 4 barbers, with every online booking
+      secured by a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through Stripe.
+      <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="homepage_hero">Explore KERSIVO Starter</a>
+    </p>
+  </div>
+</section>

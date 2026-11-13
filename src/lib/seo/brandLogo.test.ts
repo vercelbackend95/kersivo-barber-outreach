@@ -77,6 +77,6 @@ describe('KERSIVO approved brand identity', () => {
     });
     expect(read('scripts/generate-favicons.mjs')).toContain("const CANVAS = 512;");
     expect(read('src/components/navigation/marketing/MarketingNavbar.astro'))
-      .toContain('src="/images/brand/logo-navbar-228.webp"');
+      .toContain('src="/images/brand/logo-mark-nav-36.webp"');
   });
 });
