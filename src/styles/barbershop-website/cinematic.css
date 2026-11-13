@@ -219,6 +219,14 @@
   background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
 }
 
+/* The hero's light and vignette fade out before its bottom edge, so Scene 02 continues the same
+   frame instead of starting under a visible seam. */
+.bw-hero::before,
+.bw-hero::after {
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+}
+
 .bw-hero__inner {
   z-index: 1;
 }
@@ -445,12 +453,16 @@
   }
 }
 
+/* The shutters end hidden: a parked shutter's red edge otherwise shows as a hairline at the seam
+   between the hero and Scene 02. */
 @keyframes bw-shutter-top {
-  to { transform: translateY(-101%); }
+  99% { visibility: visible; }
+  to { transform: translateY(-101%); box-shadow: none; visibility: hidden; }
 }
 
 @keyframes bw-shutter-bottom {
-  to { transform: translateY(101%); }
+  99% { visibility: visible; }
+  to { transform: translateY(101%); box-shadow: none; visibility: hidden; }
 }
 
 @keyframes bw-rise {

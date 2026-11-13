@@ -289,7 +289,9 @@ function createCameraRig(camera: HTMLElement) {
     const box = part ? layoutBox(part, site) : null;
     if (!box || box.w === 0) return;
     const fit = Math.min((cw * 0.62) / box.w, (ch * 0.6) / box.h);
-    const zoom = motion.matches ? Math.min(cw < 600 ? 1.25 : 1.55, Math.max(1, fit)) : 1;
+    // On a phone-width frame any dolly crops the site's own text at the edges, so it stays at 1 there.
+    const maxZoom = cw < 480 ? 1 : cw < 600 ? 1.25 : 1.55;
+    const zoom = motion.matches ? Math.min(maxZoom, Math.max(1, fit)) : 1;
     const cx = off.x + box.x + box.w / 2;
     const cy = off.y + box.y + box.h / 2;
     // The site scales from its own top-left corner, which sits at `off` inside the camera.

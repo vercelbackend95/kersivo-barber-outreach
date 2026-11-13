@@ -12,11 +12,19 @@ export const BARBERSHOP_WEBSITES_PAGE_PATH = '/barbershop-websites';
  * - /barbershop-website-design owns "design" queries (branding, layout, photography, mobile design);
  * - /barbershop-online-booking owns booking-system queries.
  */
+/**
+ * Commercial intent first: searchers for "barbershop website" want one, so the snippet leads with the
+ * offer (own domain, booking built in, the price) and stays under ~60 / ~160 characters so Google
+ * shows it whole.
+ */
 export const BARBERSHOP_WEBSITES_PAGE_TITLE =
-  'Barbershop Website UK: What to Include & How Clients Book | KERSIVO';
+  `Barbershop Website UK with Online Booking – £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
 
 export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
-  `Why your barbershop needs its own website, what it should include and how clients book from it. Get yours set up on your own domain for £${SAAS_MONTHLY_GBP}/month per location.`;
+  `A barbershop website on your own domain with online booking, deposits and reminders built in. £${SAAS_MONTHLY_GBP}/month per location, no setup fee. Approve it before launch.`;
+
+/** Name of the service entity in JSON-LD and the visible topic of the page. */
+export const BARBERSHOP_WEBSITES_SERVICE_NAME = 'Barbershop website with online booking';
 
 export const BARBERSHOP_WEBSITES_PAGE_H1 = 'A barbershop website clients can find, trust and book from';
 
@@ -115,20 +123,91 @@ export function getBarbershopWebsitesFaqs(freePreview: boolean): BarbershopWebsi
   ];
 }
 
-/** WebPage linked into KERSIVO's WebSite/Organization entities. The visible FAQ stays without FAQPage schema. */
+function pageUrlFor(siteUrl: string): string {
+  return `${siteUrl}${BARBERSHOP_WEBSITES_PAGE_PATH}`;
+}
+
+/** WebPage linked into KERSIVO's WebSite/Organization entities, pointing at the service and the FAQ blocks. */
 export function buildBarbershopWebsitesJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
-  const pageUrl = `${siteUrl}${BARBERSHOP_WEBSITES_PAGE_PATH}`;
+  const pageUrl = pageUrlFor(siteUrl);
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     '@id': `${pageUrl}#webpage`,
     url: pageUrl,
     name: BARBERSHOP_WEBSITES_PAGE_TITLE,
+    headline: BARBERSHOP_WEBSITES_PAGE_H1,
     description: BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
     inLanguage: 'en-GB',
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
+    about: { '@id': `${pageUrl}#service` },
+    mainEntity: { '@id': `${pageUrl}#service` },
+    hasPart: { '@id': `${pageUrl}#faq` },
+    primaryImageOfPage: {
+      '@type': 'ImageObject',
+      url: `${siteUrl}/images/barbershop-websites/site-hero-1100.webp`,
+    },
     breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_WEBSITES_BREADCRUMBS, { siteUrl, withContext: false }),
+  };
+}
+
+/**
+ * The service this page sells, with the real Full KERSIVO price as its Offer (per location, monthly).
+ * No ratings, reviews or customer numbers are published.
+ */
+export function buildBarbershopWebsitesServiceJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const pageUrl = pageUrlFor(siteUrl);
+  const organizationId = getKersivoOrganizationId(siteUrl);
+  const uk = { '@type': 'Country', name: 'United Kingdom', identifier: 'GB' };
+  const price = SAAS_MONTHLY_GBP.toFixed(2);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${pageUrl}#service`,
+    name: BARBERSHOP_WEBSITES_SERVICE_NAME,
+    serviceType: 'Barbershop website',
+    url: pageUrl,
+    description:
+      'A branded website for an independent barbershop on its own domain, with services and prices, barbers, opening hours, and online booking with payment control and reminders, set up by KERSIVO.',
+    provider: { '@id': organizationId },
+    areaServed: uk,
+    audience: { '@type': 'BusinessAudience', audienceType: 'Independent barbershops' },
+    offers: {
+      '@type': 'Offer',
+      name: 'Full KERSIVO',
+      url: `${siteUrl}/pricing`,
+      price,
+      priceCurrency: 'GBP',
+      availability: 'https://schema.org/InStock',
+      eligibleRegion: uk,
+      seller: { '@id': organizationId },
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price,
+        priceCurrency: 'GBP',
+        billingDuration: 'P1M',
+        unitText: 'per location per month',
+      },
+    },
+  };
+}
+
+/** FAQPage built from the FAQ rendered on the page, so the markup always matches the visible answers. */
+export function buildBarbershopWebsitesFaqJsonLd(freePreview: boolean): Record<string, unknown> {
+  const pageUrl = pageUrlFor(getPublicSiteUrl());
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${pageUrl}#faq`,
+    url: pageUrl,
+    inLanguage: 'en-GB',
+    mainEntity: getBarbershopWebsitesFaqs(freePreview).map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer.join(' ') },
+    })),
   };
 }

@@ -23,8 +23,11 @@ import {
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  buildBarbershopWebsitesFaqJsonLd,
   buildBarbershopWebsitesJsonLd,
+  buildBarbershopWebsitesServiceJsonLd,
 } from '@/lib/seo/barbershopWebsitesPage';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -39,7 +42,11 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={buildBarbershopWebsitesJsonLd()}
+  jsonLd={[
+    buildBarbershopWebsitesJsonLd(),
+    buildBarbershopWebsitesServiceJsonLd(),
+    buildBarbershopWebsitesFaqJsonLd(isFreePreviewFlowEnabled()),
+  ]}
 >
   <link slot="head" rel="preload" as="image" href="/images/barbershop-websites/site-hero-1100.webp" fetchpriority="high" />
   <main class="bw">
