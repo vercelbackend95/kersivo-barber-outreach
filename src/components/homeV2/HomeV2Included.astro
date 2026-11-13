@@ -1,42 +1,51 @@
 ---
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 
+const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
+
+// Each value pairs approved copy with a small product proof that plays when the card arrives.
 const pillars = [
   {
+    key: 'domain',
+    word: 'Your domain',
     title: 'Your website. Your identity.',
     body: 'Give your services, barbers and bookings one branded home on your own domain, instead of a marketplace profile next to other shops.',
     link: { href: '/insights/do-barbers-need-a-website-uk', label: 'Do barbers need a website?' },
   },
   {
+    key: 'browser',
+    word: 'No app',
     title: 'Bookings that lead to your shop.',
     body: 'Clients choose a service, barber and time in the browser — no app download — and you can add walk-ins and phone bookings to the same diary.',
     link: { href: '/barbershop-online-booking', label: 'How online booking works for barbershops' },
   },
   {
+    key: 'diary',
+    word: 'One dashboard',
     title: 'More control behind the chair.',
     body: 'Keep barbers, services, working hours and daily activity in one Full KERSIVO dashboard, built around how your shop runs.',
   },
   {
+    key: 'clients',
+    word: 'Your clients',
     title: 'Build direct client relationships.',
     body: 'Keep client contact details and booking history in your own shop system, so clients deal with your barbershop rather than a marketplace.',
   },
   {
+    key: 'payments',
+    word: 'Your terms',
     title: 'Payments on your terms.',
-    body: `Choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront to help reduce no-shows.`,
+    body: `Choose Pay at shop, a ${deposit} deposit or full payment upfront to help reduce no-shows.`,
     link: {
       href: '/insights/barbershop-no-show-cost-when-deposit-makes-sense',
-      label: `When a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit makes sense`,
+      label: `When a ${deposit} deposit makes sense`,
     },
-  },
-  {
-    title: 'No KERSIVO cut of your bookings.',
-    body: `£${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail, Stripe fees apply. Add your booking link to your Google Business Profile with guided setup.`,
-    link: { href: '/insights/google-business-profile-booking-link-barbershop', label: 'Adding a Google booking link' },
   },
 ] as const;
 ---
 
-<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04">
+<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04" data-hv2-values>
   <div class="hv2-shell">
     <header class="hv2-head hv2-included__head">
       <p class="hv2-eyebrow">Built for independent barbershops</p>
@@ -44,12 +53,53 @@ const pillars = [
       <p class="hv2-lead">Clients should find your shop, book your barbers and remember your name. Full KERSIVO brings your website and booking experience together on your own domain.</p>
     </header>
 
-    <ol class="hv2-ledger" role="list">
+    <ol class="hv2-values" role="list">
       {pillars.map((pillar, index) => (
-        <li class="hv2-ledger__item" data-hv2-reveal>
-          <span class="hv2-ledger__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-          <h3 class="hv2-ledger__title">{pillar.title}</h3>
-          <p class="hv2-ledger__body">
+        <li class={`hv2-value hv2-value--${pillar.key}`} data-hv2-value data-hv2-spotlight>
+          <div class="hv2-value__proof" aria-hidden="true">
+            {pillar.key === 'domain' && (
+              <span class="hv2-proof-url">
+                <span class="hv2-proof-url__row hv2-proof-url__row--old"><i class="hv2-proof-url__pin"></i><s>marketplace.example/barbers/cutstate</s></span>
+                <span class="hv2-proof-url__row hv2-proof-url__row--new">
+                  <i class="hv2-proof-url__lock"></i>
+                  <b>cutstatebarbers.co.uk</b>
+                  <em>Your brand</em>
+                </span>
+              </span>
+            )}
+            {pillar.key === 'browser' && (
+              <span class="hv2-proof-flow">
+                <span class="hv2-proof-flow__chip"><small>Service</small>Skin Fade</span>
+                <span class="hv2-proof-flow__chip"><small>Barber</small>Ellis Ward</span>
+                <span class="hv2-proof-flow__chip"><small>Time</small>Sat 10:15</span>
+                <span class="hv2-proof-flow__done">Booked in the browser</span>
+              </span>
+            )}
+            {pillar.key === 'diary' && (
+              <span class="hv2-proof-diary">
+                <span class="hv2-proof-diary__col"><small>Ellis</small><i class="is-online">Online</i><i class="is-walkin">Walk-in</i><i class="is-phone">Phone</i></span>
+                <span class="hv2-proof-diary__col"><small>Marcus</small><i class="is-phone">Phone</i><i class="is-online">Online</i></span>
+                <span class="hv2-proof-diary__col"><small>Noah</small><i class="is-walkin">Walk-in</i><i class="is-online">Online</i><i class="is-online">Online</i></span>
+              </span>
+            )}
+            {pillar.key === 'clients' && (
+              <span class="hv2-proof-client">
+                <span class="hv2-proof-client__head"><img src="/images/home-v2/noah-reid.webp" alt="" width="96" height="96" loading="lazy" decoding="async" /><span><b>Client record</b><small>Cutstate Barbers</small></span></span>
+                <span class="hv2-proof-client__row">Contact details<i></i></span>
+                <span class="hv2-proof-client__row">Booking history<i></i></span>
+                <span class="hv2-proof-client__row">Kept by your shop<i></i></span>
+              </span>
+            )}
+            {pillar.key === 'payments' && (
+              <span class="hv2-proof-pay">
+                <span class="hv2-proof-pay__seg"><i></i><span>Pay at shop</span><span>{deposit} deposit</span><span>Full upfront</span></span>
+                <span class="hv2-proof-pay__note">You choose, per shop</span>
+              </span>
+            )}
+          </div>
+          <p class="hv2-value__word" aria-hidden="true"><span class="hv2-value__num">{String(index + 1).padStart(2, '0')}</span>{pillar.word}</p>
+          <h3 class="hv2-value__title">{pillar.title}</h3>
+          <p class="hv2-value__body">
             {pillar.body}
             {'link' in pillar ? (
               <>
@@ -60,6 +110,25 @@ const pillars = [
           </p>
         </li>
       ))}
+
+      <li class="hv2-value hv2-value--zero" data-hv2-value data-hv2-spotlight>
+        <div class="hv2-zero">
+          <p class="hv2-zero__figure" aria-hidden="true"><span class="hv2-zero__digits"><span>0</span><span>%</span></span></p>
+          <div class="hv2-zero__copy">
+            <p class="hv2-value__word" aria-hidden="true"><span class="hv2-value__num">06</span>No KERSIVO cut</p>
+            <h3 class="hv2-value__title">No KERSIVO cut of your bookings.</h3>
+            <p class="hv2-value__body">
+              £{SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail, Stripe fees apply. Add your booking link to your Google Business Profile with guided setup.
+              {' '}<a href="/insights/google-business-profile-booking-link-barbershop">Adding a Google booking link</a>
+            </p>
+            <ul class="hv2-zero__facts" role="list">
+              <li><b>£{SAAS_MONTHLY_GBP}</b><span>per month, per location</span></li>
+              <li><b>0%</b><span>KERSIVO commission</span></li>
+            </ul>
+            <p class="hv2-zero__note">{STRIPE_FEES_NOTE}</p>
+          </div>
+        </div>
+      </li>
     </ol>
 
     <p class="hv2-included__compare">

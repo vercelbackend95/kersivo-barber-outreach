@@ -35,7 +35,11 @@ const visuals = freePreview ? ['form', 'design', 'review', 'live'] : ['pay', 'fo
         {steps.map((step, index) => (
           <li class="hv2-steps__item" data-hv2-step>
             <div class="hv2-steps__card">
-              <span class="hv2-steps__big" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div class="hv2-steps__meta">
+                <span class="hv2-steps__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="hv2-steps__rule" aria-hidden="true"></span>
+                <p class:list={['hv2-steps__owner', step.owner === 'KERSIVO' && 'is-kersivo']}>{step.owner}</p>
+              </div>
               <div class={`hv2-steps__visual hv2-vis hv2-vis--${visuals[index]}`} aria-hidden="true">
                 {visuals[index] === 'form' && (
                   <>
@@ -70,11 +74,10 @@ const visuals = freePreview ? ['form', 'design', 'review', 'live'] : ['pay', 'fo
                   <>
                     <span class="hv2-vis__domain"><i></i>cutstatebarbers.co.uk</span>
                     <span class="hv2-vis__status"><b>Live</b><small>Approved by you</small></span>
-                    <span class="hv2-vis__rings"><i></i><i></i><i></i></span>
+                    <span class="hv2-vis__signal"><span class="hv2-vis__rings"><i></i><i></i><i></i></span><b></b></span>
                   </>
                 )}
               </div>
-              <p class:list={['hv2-steps__owner', step.owner === 'KERSIVO' && 'is-kersivo']}>{step.owner}</p>
               <h3 class="hv2-steps__title">{step.title}</h3>
               <p class="hv2-steps__body">{step.body}</p>
             </div>

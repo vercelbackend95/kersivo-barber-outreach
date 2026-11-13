@@ -1220,6 +1220,11 @@
   display: none;
 }
 
+/* Rail jumps land the chapter below the sticky navbar. */
+.hv2 [data-hv2-chapter] {
+  scroll-margin-top: calc(var(--mnav-h, 4.25rem) + 0.5rem);
+}
+
 @media (min-width: 80rem) {
   .hv2-rail {
     position: fixed;
@@ -1243,6 +1248,7 @@
     display: block;
     height: 100%;
     background: var(--color-brand);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-brand) 70%, transparent);
     transform: scaleY(0);
     transform-origin: top;
   }
@@ -1267,6 +1273,7 @@
   }
 
   .hv2-rail__dot {
+    position: relative;
     width: 0.5rem;
     height: 0.5rem;
     margin-right: 1.125rem;
@@ -1274,16 +1281,42 @@
     border-radius: 50%;
     background: #0b0d10;
     transition:
-      transform 300ms var(--hv2-ease),
-      background-color 300ms ease,
-      border-color 300ms ease;
+      background-color 250ms ease,
+      border-color 250ms ease;
+  }
+
+  /* The current chapter gets a crisp ring instead of a scaled (blurry) dot. */
+  .hv2-rail__dot::after {
+    content: '';
+    position: absolute;
+    inset: -0.3rem;
+    border: 1.5px solid var(--color-brand);
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.5);
+    transition:
+      opacity 250ms ease,
+      transform 400ms var(--hv2-ease);
+  }
+
+  .hv2-rail__link.is-passed .hv2-rail__dot {
+    border-color: var(--color-brand);
+    background: var(--color-brand);
   }
 
   .hv2-rail__link[aria-current='true'] .hv2-rail__dot {
     border-color: var(--color-brand);
     background: var(--color-brand);
-    transform: scale(1.5);
-    box-shadow: 0 0 12px var(--color-brand);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-brand) 80%, transparent);
+  }
+
+  .hv2-rail__link[aria-current='true'] .hv2-rail__dot::after {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hv2-rail__link:hover .hv2-rail__dot {
+    border-color: #fff;
   }
 
   .hv2-rail__label {
@@ -1312,7 +1345,8 @@
   }
 
   .hv2-rail__link:hover .hv2-rail__label,
-  .hv2-rail__link:focus-visible .hv2-rail__label {
+  .hv2-rail__link:focus-visible .hv2-rail__label,
+  .hv2-rail.is-flash .hv2-rail__link[aria-current='true'] .hv2-rail__label {
     opacity: 1;
     transform: none;
   }

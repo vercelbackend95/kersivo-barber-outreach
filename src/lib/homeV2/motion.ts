@@ -33,6 +33,7 @@ export function initHomeV2Motion(root: Document, wipe: WipeController | null): (
       cleanups.push(bindTicket(gsap, ScrollTrigger, root));
       bindHeadings(gsap, ScrollTrigger, root);
       bindLedger(gsap, ScrollTrigger, root);
+      cleanups.push(bindValues(gsap, ScrollTrigger, root));
       cleanups.push(bindPrice(gsap, ScrollTrigger, root));
       cleanups.push(bindRail(gsap, ScrollTrigger, root));
       cleanups.push(bindFinal(gsap, ScrollTrigger, root));
@@ -158,7 +159,7 @@ function bindTicket(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
       .timeline()
       .fromTo(ink, { autoAlpha: 0, scale: 2.6, y: -24 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.24, ease: 'power4.in', overwrite: true })
       .to(ticket, { keyframes: { y: [0, 5, -1.5, 0], rotation: [0, -0.7, 0.35, 0] }, duration: 0.42, ease: 'power2.out' })
-      .to(ink, { opacity: 0.9, duration: 0.6, ease: 'power1.out' }, '<');
+      .to(ink, { opacity: 1, duration: 0.6, ease: 'power1.out' }, '<');
   };
   const stampOut = (index: number) => {
     const ink = inks[index];
@@ -227,6 +228,48 @@ function bindLedger(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
   for (const item of items) {
     once(ScrollTrigger, item, () => gsap.to(item, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out' }), 'top 90%');
   }
+}
+
+/** Value cards are dealt onto the table in a cascade; each card's proof plays once it is well in view. */
+function bindValues(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
+  const grid = root.querySelector<HTMLElement>('.hv2-values');
+  if (!grid) return undefined;
+  const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-hv2-value]'));
+  grid.classList.add('is-armed');
+  gsap.set(cards, { autoAlpha: 0, y: 56, rotation: (index: number) => (index % 2 ? 1.6 : -1.6), scale: 0.97 });
+
+  const batch = ScrollTrigger.batch(cards, {
+    start: 'top 88%',
+    once: true,
+    onEnter: (entered) =>
+      gsap.to(entered, {
+        autoAlpha: 1,
+        y: 0,
+        rotation: 0,
+        scale: 1,
+        duration: 0.95,
+        ease: 'expo.out',
+        stagger: 0.09,
+        overwrite: true,
+      }),
+  });
+  const proofs = cards.map((card) =>
+    ScrollTrigger.create({ trigger: card, start: 'top 72%', once: true, onEnter: () => card.classList.add('is-on') }),
+  );
+  proofs.forEach((trigger, index) => {
+    if (trigger.scroll() >= trigger.start) {
+      cards[index].classList.add('is-on');
+      gsap.set(cards[index], { autoAlpha: 1, y: 0, rotation: 0, scale: 1 });
+    }
+  });
+
+  return () => {
+    batch.forEach((trigger) => trigger.kill());
+    proofs.forEach((trigger) => trigger.kill());
+    grid.classList.remove('is-armed');
+    cards.forEach((card) => card.classList.remove('is-on'));
+    gsap.set(cards, { clearProps: 'all' });
+  };
 }
 
 /** The price rolls in like a meter, the card catches the light, and the receipt prints every line as included. */
@@ -375,7 +418,8 @@ function bindStepsPinned(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: D
     });
   };
 
-  gsap.set(items, { autoAlpha: 0.35, scale: 0.94 });
+  // The first card is already on stage; the rest wait dimmed until the journey reaches them.
+  gsap.set(items.slice(1), { autoAlpha: 0.45, scale: 0.95 });
   const timeline = gsap.timeline({
     scrollTrigger: {
       trigger: pin,
@@ -389,9 +433,9 @@ function bindStepsPinned(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: D
     },
   });
   timeline.to(track, { x: () => -distance(), ease: 'none', duration: 1 }, 0);
-  items.forEach((item, index) => {
-    const at = items.length > 1 ? index / (items.length - 1) : 0;
-    timeline.to(item, { autoAlpha: 1, scale: 1, duration: 0.18, ease: 'power2.out' }, Math.max(0, at - 0.16));
+  items.slice(1).forEach((item, index) => {
+    const at = (index + 1) / Math.max(1, items.length - 1);
+    timeline.to(item, { autoAlpha: 1, scale: 1, duration: 0.16, ease: 'power2.out' }, Math.max(0, at - 0.18));
   });
   light(0);
 
@@ -452,44 +496,79 @@ function bindStepsStacked(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: 
   };
 }
 
-/** Chapter rail: fills with page progress and marks the chapter on screen. */
+/**
+ * Chapter rail. One reading line sits 40% down the viewport: the chapter whose box contains it is
+ * current, and the fill reaches a dot at the exact moment its chapter starts, so line and dots never
+ * disagree. The current chapter's name shows briefly whenever it changes.
+ */
 function bindRail(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
   const rail = root.querySelector<HTMLElement>('[data-hv2-rail]');
   if (!rail) return undefined;
   const fill = rail.querySelector<HTMLElement>('[data-hv2-rail-progress]');
   const links = Array.from(rail.querySelectorAll<HTMLAnchorElement>('[data-hv2-rail-link]'));
-  const setActive = (href: string) => {
-    links.forEach((link) => {
-      if (link.getAttribute('href') === href) link.setAttribute('aria-current', 'true');
-      else link.removeAttribute('aria-current');
-    });
+  const items = links
+    .map((link) => ({ link, target: root.querySelector<HTMLElement>(link.getAttribute('href') ?? '') }))
+    .filter((item): item is { link: HTMLAnchorElement; target: HTMLElement } => item.target !== null);
+  if (items.length === 0) return undefined;
+
+  let tops: number[] = [];
+  let end = 0;
+  const measure = () => {
+    tops = items.map(({ target }) => target.getBoundingClientRect().top + window.scrollY);
+    const lastTarget = items[items.length - 1].target;
+    end = lastTarget.getBoundingClientRect().bottom + window.scrollY;
   };
-  const triggers = links.flatMap((link) => {
-    const target = root.querySelector<HTMLElement>(link.getAttribute('href') ?? '');
-    if (!target) return [];
-    return [
-      ScrollTrigger.create({
-        trigger: target,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => {
-          if (self.isActive) setActive(link.getAttribute('href') ?? '');
-        },
-      }),
-    ];
+
+  let current = -1;
+  let flashTimer = 0;
+  const setFill = fill ? gsap.quickTo(fill, 'scaleY', { duration: 0.35, ease: 'power3.out' }) : null;
+
+  const update = () => {
+    const line = window.scrollY + window.innerHeight * 0.4;
+    let index = 0;
+    for (let i = 0; i < tops.length; i++) if (line >= tops[i]) index = i;
+    const next = index + 1 < tops.length ? tops[index + 1] : end;
+    const local = Math.min(1, Math.max(0, (line - tops[index]) / Math.max(1, next - tops[index])));
+    // The last dot is reached as the last chapter starts; its own span fills nothing further.
+    const steps = Math.max(1, items.length - 1);
+    const progress = index >= steps ? 1 : (index + local) / steps;
+    setFill?.(progress);
+
+    if (index !== current) {
+      current = index;
+      items.forEach(({ link }, i) => {
+        if (i === index) link.setAttribute('aria-current', 'true');
+        else link.removeAttribute('aria-current');
+        link.classList.toggle('is-passed', i < index);
+      });
+      rail.classList.add('is-flash');
+      window.clearTimeout(flashTimer);
+      flashTimer = window.setTimeout(() => rail.classList.remove('is-flash'), 1600);
+    }
+  };
+
+  measure();
+  const trigger = ScrollTrigger.create({
+    start: 0,
+    end: 'max',
+    onUpdate: update,
+    onRefresh: () => {
+      measure();
+      update();
+    },
   });
-  const progress = fill
-    ? ScrollTrigger.create({
-        start: 0,
-        end: 'max',
-        onUpdate: (self) => gsap.set(fill, { scaleY: self.progress }),
-      })
-    : null;
-  setActive('#hero');
+  update();
+  rail.classList.remove('is-flash');
+
   return () => {
-    triggers.forEach((trigger) => trigger.kill());
-    progress?.kill();
-    links.forEach((link) => link.removeAttribute('aria-current'));
+    trigger.kill();
+    window.clearTimeout(flashTimer);
+    rail.classList.remove('is-flash');
+    links.forEach((link) => {
+      link.removeAttribute('aria-current');
+      link.classList.remove('is-passed');
+    });
+    if (fill) gsap.set(fill, { clearProps: 'all' });
   };
 }
 
