@@ -1,19 +1,18 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getEffectiveBookingStatus, getManualBookingActionOptions } from '../../lib/booking/operationalStatus';
 import { getBookingPaymentChipState } from '../../lib/booking/paymentReporting';
 import { getBookingStatusTone, getStatusLabel } from './bookingStatus';
 import { SkeletonVerticalTimeline } from '../skeleton';
-import { ArrowRight, Sparkles, User, X } from '../lucide-react';
-import BookingStatusActionGlyph, { getStatusActionVisual } from './BookingStatusActionGlyph';
+import { ArrowRight, Check, ChevronDown, Scissors, User, X } from '../lucide-react';
 import ClientProfilePanel from './ClientProfilePanel';
 import { adminFetchJson, ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import { useAdminClock } from './adminClock';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 import { scrollContainerToRow } from '../../lib/admin/timelineNowScroll';
+import '../../styles/components/admin-timeline.css';
 
 type TimelineBarber = {
   id: string;
@@ -104,7 +103,19 @@ const MAX_VISIBLE_AVATARS = 3;
 
 // ─── Progress track constants ─────────────────────────────────────────────────
 const PROGRESS_AVATAR_SIZE = 28; // px — must match --admin-vtl-avatar-size
-const AVATAR_LANE_OFFSETS = [0, -8, 8] as const;
+
+function usePrefersReducedMotion(): boolean {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReduce(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+  return reduce;
+}
 
 // ─── Utility formatters ───────────────────────────────────────────────────────
 
@@ -154,52 +165,6 @@ function getCurrentLondonTimeLabel(nowMs: number): string {
 
 function formatEndTime(endAt: string): string {
   return formatInTimeZone(new Date(endAt), ADMIN_TIMEZONE, 'HH:mm');
-}
-
-function computeBookingProgress(
-  booking: TimelineBooking,
-  nowMs: number | null,
-  trackMaxX: number
-): {
-  initialX: number;
-  targetX: number;
-  delaySeconds: number;
-  durationSeconds: number;
-} {
-  if (!nowMs) {
-    return { initialX: 0, targetX: 0, delaySeconds: 0, durationSeconds: 0 };
-  }
-
-  const startMs = new Date(booking.startAt).getTime();
-  const endMs   = new Date(booking.endAt).getTime();
-  const durMs   = endMs - startMs;
-
-  if (durMs <= 0 || nowMs >= endMs)
-    return {
-      initialX: trackMaxX,
-      targetX: trackMaxX,
-      delaySeconds: 0,
-      durationSeconds: 0,
-    };
-
-  if (nowMs < startMs) {
-    return {
-      initialX: 0,
-      targetX: trackMaxX,
-      delaySeconds: (startMs - nowMs) / 1000,
-      durationSeconds: (endMs - startMs) / 1000,
-    };
-  }
-
-  const progress         = (nowMs - startMs) / durMs;
-  const initialX         = progress * trackMaxX;
-  const remainingSeconds = (endMs - nowMs) / 1000;
-  return {
-    initialX,
-    targetX: trackMaxX,
-    delaySeconds: 0,
-    durationSeconds: remainingSeconds,
-  };
 }
 
 // ─── Data model ──────────────────────────────────────────────────────────────
@@ -284,9 +249,7 @@ function buildSlotList(
   return slots;
 }
 
-// ─── Booking expansion card ───────────────────────────────────────────────────
-
-type SwipeState = 'closed' | 'left' | 'right';
+// ─── Booking ticket (inline expansion) ────────────────────────────────────────
 
 type ServiceOption = {
   id: string;
@@ -300,58 +263,54 @@ type ServiceOption = {
 
 const SERVICE_EDITABLE_STATUSES = new Set(['BOOKED', 'ARRIVED', 'IN_PROGRESS']);
 
-type BookingExpansionCardProps = {
-  booking: TimelineBooking;
-  barber: TimelineBarber;
-  toneClass: string;
-  onExpand: () => void;
-  onStatusChange?: (bookingId: string, newStatus: string) => void;
-  onClientProfile?: (booking: TimelineBooking) => void;
-  isClientProfileLoading?: boolean;
-  /** Preview embeds: enable mouse-drag + wheel swipe navigation. */
-  previewSwipe?: boolean;
-  /** Preview embeds: show the one-time animated swipe hint on this card. */
-  showSwipeHint?: boolean;
-  /** Can mutate this booking (own seat or shop manager). */
-  canMutateBooking?: boolean;
-  /** Can replace service (Owner/Manager with bookings.manage). */
-  canChangeService?: boolean;
-  /** Status menu scope: barber day-of only, or full shop actions. */
-  actionRoleScope?: 'barber' | 'shop';
-};
+type TimeState = 'idle' | 'future' | 'live' | 'past';
 
-const CLIENT_PANEL_W = 120;
-const ACTIONS_PANEL_W = 200;
-
-const SWIPE_THRESHOLD = 60;
-
-/** Prefer CSS `--client-panel-w` / `--actions-panel-w` so embeds (ISW) can compact panels. */
-function readSwipePanelWidths(el: HTMLElement | null): { client: number; actions: number } {
-  if (!el || typeof window === 'undefined') {
-    return { client: CLIENT_PANEL_W, actions: ACTIONS_PANEL_W };
-  }
-  const styles = window.getComputedStyle(el);
-  const parse = (name: string, fallback: number) => {
-    const raw = styles.getPropertyValue(name).trim();
-    const n = Number.parseFloat(raw);
-    return Number.isFinite(n) && n > 0 ? n : fallback;
-  };
-  return {
-    client: parse('--client-panel-w', CLIENT_PANEL_W),
-    actions: parse('--actions-panel-w', ACTIONS_PANEL_W),
-  };
+function getTimeState(booking: TimelineBooking, nowMs: number | null): TimeState {
+  if (nowMs === null) return 'idle';
+  const startMs = new Date(booking.startAt).getTime();
+  const endMs = new Date(booking.endAt).getTime();
+  if (nowMs >= endMs) return 'past';
+  if (nowMs >= startMs) return 'live';
+  return 'future';
 }
 
-// Step one panel at a time relative to the current state so the center ("Main")
-// card stays reachable from either side. Panel order (left→right of revealed
-// content): client panel ('left') · main ('closed') · actions ('right').
-function stepSwipe(current: SwipeState, delta: number): SwipeState {
-  const order: SwipeState[] = ['left', 'closed', 'right'];
-  const idx = order.indexOf(current);
-  if (delta >= SWIPE_THRESHOLD) return order[Math.max(0, idx - 1)];
-  if (delta <= -SWIPE_THRESHOLD) return order[Math.min(order.length - 1, idx + 1)];
-  return current;
+function getBookingProgress(booking: TimelineBooking, nowMs: number | null): number {
+  if (nowMs === null) return 0;
+  const startMs = new Date(booking.startAt).getTime();
+  const endMs = new Date(booking.endAt).getTime();
+  if (endMs <= startMs || nowMs >= endMs) return 1;
+  if (nowMs <= startMs) return 0;
+  return (nowMs - startMs) / (endMs - startMs);
 }
+
+function formatMinutesShort(totalMinutes: number): string {
+  const mins = Math.max(1, Math.round(totalMinutes));
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h} hr` : `${h} hr ${m} min`;
+}
+
+function getTimingLabel(booking: TimelineBooking, nowMs: number | null, cancelled: boolean): string | null {
+  if (nowMs === null || cancelled) return null;
+  const startMs = new Date(booking.startAt).getTime();
+  const endMs = new Date(booking.endAt).getTime();
+  if (nowMs >= endMs) return `Ended ${formatEndTime(booking.endAt)}`;
+  if (nowMs >= startMs) return `${formatMinutesShort((endMs - nowMs) / 60000)} left`;
+  const until = (startMs - nowMs) / 60000;
+  return until > 12 * 60 ? null : `Starts in ${formatMinutesShort(until)}`;
+}
+
+function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? fullName;
+}
+
+function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? fullName;
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+}
+
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
@@ -363,54 +322,53 @@ type StatusMenuItem = {
   reason: string;
 };
 
-const BookingExpansionCard = memo(function BookingExpansionCard({
+type PopoverPosition = { left: number; maxHeight: number; top?: number; bottom?: number };
+
+type BookingTicketProps = {
+  booking: TimelineBooking;
+  barber: TimelineBarber;
+  index: number;
+  nowMs: number | null;
+  onExpand: () => void;
+  onStatusChange?: (bookingId: string, newStatus: string) => void;
+  onClientProfile?: (booking: TimelineBooking) => void;
+  isClientProfileLoading?: boolean;
+  /** Preview embeds: actions show the demo lock instead of mutating. */
+  isPreview?: boolean;
+  /** Can mutate this booking (own seat or shop manager). */
+  canMutateBooking?: boolean;
+  /** Can replace service (Owner/Manager with bookings.manage). */
+  canChangeService?: boolean;
+  /** Status menu scope: barber day-of only, or full shop actions. */
+  actionRoleScope?: 'barber' | 'shop';
+};
+
+const BookingTicket = memo(function BookingTicket({
   booking,
   barber,
-  toneClass,
+  index,
+  nowMs,
   onExpand,
   onStatusChange,
   onClientProfile,
   isClientProfileLoading = false,
-  previewSwipe = false,
-  showSwipeHint = false,
+  isPreview = false,
   canMutateBooking = true,
   canChangeService = true,
   actionRoleScope = 'shop',
-}: BookingExpansionCardProps) {
+}: BookingTicketProps) {
   const clock = useAdminClock();
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
   const [barberImgError, setBarberImgError] = useState(false);
   const [clientImgError, setClientImgError] = useState(false);
-  const barberInitials = getInitials(barber.name);
-  const clientInitials = getInitials(booking.fullName);
   const hasClientAvatar = Boolean(booking.clientAvatarUrl?.trim()) && !clientImgError;
-  const clientTags = (booking.clientTags ?? [])
-    .map((tag) => tag.trim())
-    .filter(Boolean);
+  const clientTags = (booking.clientTags ?? []).map((tag) => tag.trim()).filter(Boolean);
 
-  // ── Swipe tri-state ───────────────────────────────────────────────────────────
-  const [swipeState, setSwipeState] = useState<SwipeState>('closed');
-  const swipeStateRef = useRef<SwipeState>('closed');
-  const trackRef = useRef<HTMLDivElement>(null);
-  const swipeRootRef = useRef<HTMLDivElement>(null);
-  const actionsPanelRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const swipeAxis = useRef<'undecided' | 'h' | 'v'>('undecided');
-  const isDragging = useRef(false);
-  const didDragRef = useRef(false);
-  const wheelCooldownRef = useRef(0);
-  const [hintVisible, setHintVisible] = useState(showSwipeHint);
-  const [desktopPopoverPos, setDesktopPopoverPos] = useState<{
-    top: number;
-    left: number;
-    maxHeight: number;
-  } | null>(null);
-
-  useEffect(() => {
-    swipeStateRef.current = swipeState;
-  }, [swipeState]);
+  const rootRef = useRef<HTMLElement>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   // ── Optimistic status ─────────────────────────────────────────────────────────
   const [localStatus, setLocalStatus] = useState(booking.status);
@@ -419,12 +377,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [actionError, setActionError] = useState('');
   const [serviceError, setServiceError] = useState('');
+  const [popoverPos, setPopoverPos] = useState<PopoverPosition | null>(null);
 
   // ── Service picker ────────────────────────────────────────────────────────────
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [serviceLoading, setServiceLoading] = useState(false);
   const [pendingService, setPendingService] = useState<ServiceOption | null>(null);
   const [serviceReplaceLoading, setServiceReplaceLoading] = useState(false);
+
+  const isMenuOpen = isStatusSheetOpen || isServiceSheetOpen;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -447,82 +408,91 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     setLocalStatus(booking.status);
   }, [booking.status]);
 
-  // Sync CSS class when swipeState changes — clear inline transform
   useEffect(() => {
-    if (trackRef.current) {
-      trackRef.current.style.transform = '';
-    }
-    if (swipeState !== 'right') {
-      setIsStatusSheetOpen(false);
-      setIsServiceSheetOpen(false);
-      setPendingService(null);
-    }
-  }, [swipeState]);
-
-  useEffect(() => {
-    if (!isMobileView) return undefined;
-    if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
+    if (!isMobileView || !isMenuOpen) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen]);
+  }, [isMobileView, isMenuOpen]);
 
-  const updateDesktopPopoverPosition = useCallback(() => {
-    const panel = actionsPanelRef.current;
-    if (!panel) return;
-    const rect = panel.getBoundingClientRect();
-    const maxHeight = Math.min(window.innerHeight * 0.52, 22 * 16);
-    const width = Math.min(19 * 16, window.innerWidth * 0.72);
-    const gap = 8;
+  const updatePopoverPosition = useCallback(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
     const margin = 8;
-    let left = rect.left - width - gap;
-    if (left < margin) {
-      left = Math.min(rect.right + gap, window.innerWidth - width - margin);
+    const gap = 6;
+    const width = Math.min(19 * 16, window.innerWidth - margin * 2);
+    const preferred = Math.min(window.innerHeight * 0.52, 22 * 16);
+    const spaceBelow = window.innerHeight - rect.bottom - gap - margin;
+    const spaceAbove = rect.top - gap - margin;
+    const left = Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin));
+    if (spaceBelow >= Math.min(preferred, 220) || spaceBelow >= spaceAbove) {
+      setPopoverPos({ left, top: rect.bottom + gap, maxHeight: Math.max(160, Math.min(preferred, spaceBelow)) });
+    } else {
+      setPopoverPos({
+        left,
+        bottom: window.innerHeight - rect.top + gap,
+        maxHeight: Math.max(160, Math.min(preferred, spaceAbove)),
+      });
     }
-    left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
-    const half = maxHeight / 2;
-    let top = rect.top + rect.height / 2;
-    top = Math.max(half + margin, Math.min(top, window.innerHeight - half - margin));
-    setDesktopPopoverPos({ top, left, maxHeight });
   }, []);
 
   useEffect(() => {
-    if (isMobileView) {
-      setDesktopPopoverPos(null);
+    if (isMobileView || !isMenuOpen) {
+      setPopoverPos(null);
       return undefined;
     }
-    if (!(isStatusSheetOpen || isServiceSheetOpen)) {
-      setDesktopPopoverPos(null);
-      return undefined;
-    }
-    updateDesktopPopoverPosition();
-    const scrollRoot = swipeRootRef.current?.closest('.admin-vtl-scroll');
-    const onReposition = () => updateDesktopPopoverPosition();
+    updatePopoverPosition();
+    const scrollRoot = rootRef.current?.closest('.admin-vtl-scroll');
+    const onReposition = () => updatePopoverPosition();
     scrollRoot?.addEventListener('scroll', onReposition, { passive: true });
     window.addEventListener('resize', onReposition);
     return () => {
       scrollRoot?.removeEventListener('scroll', onReposition);
       window.removeEventListener('resize', onReposition);
     };
-  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen, updateDesktopPopoverPosition]);
+  }, [isMobileView, isMenuOpen, updatePopoverPosition]);
+
+  // Move focus into the menu when it opens; hand it back to the trigger when it closes.
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const id = window.requestAnimationFrame(() => {
+      const host = isMobileView ? sheetRef.current : popoverRef.current;
+      const target =
+        host?.querySelector<HTMLElement>('.admin-vtl-bottom-sheet-content button:not([disabled])') ??
+        host?.querySelector<HTMLElement>('button:not([disabled])');
+      target?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [isMenuOpen, isMobileView, popoverPos === null]);
+
+  const closeActionSheets = useCallback(() => {
+    const host = isMobileView ? sheetRef.current : popoverRef.current;
+    const hadFocus = Boolean(host && host.contains(document.activeElement));
+    setIsStatusSheetOpen(false);
+    setIsServiceSheetOpen(false);
+    setPendingService(null);
+    setServiceError('');
+    if (hadFocus) anchorRef.current?.focus({ preventScroll: true });
+  }, [isMobileView]);
 
   useEffect(() => {
-    if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
+    if (!isMenuOpen) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      event.stopPropagation();
       if (pendingService) {
         setPendingService(null);
         setServiceError('');
         return;
       }
-      setIsStatusSheetOpen(false);
-      setIsServiceSheetOpen(false);
+      closeActionSheets();
     };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isStatusSheetOpen, isServiceSheetOpen, pendingService]);
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [isMenuOpen, pendingService, closeActionSheets]);
 
   // ── Status mutation ───────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
@@ -538,14 +508,13 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           errorMessage: 'Could not update booking status.',
         });
         onStatusChange?.(booking.id, newStatus);
-        setIsStatusSheetOpen(false);
+        closeActionSheets();
       } catch (error) {
         setLocalStatus(prev);
         setActionError(error instanceof Error ? error.message : 'Could not update booking status.');
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [booking.id, localStatus, onStatusChange],
+    [booking.id, localStatus, onStatusChange, closeActionSheets],
   );
 
   // ── Service picker helpers ────────────────────────────────────────────────────
@@ -584,16 +553,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           body: JSON.stringify({ serviceId }),
           errorMessage: 'Could not update booking service.',
         });
-        setPendingService(null);
-        setIsServiceSheetOpen(false);
         onStatusChange?.(booking.id, localStatus);
+        closeActionSheets();
       } catch (error) {
         setServiceError(error instanceof Error ? error.message : 'Could not update booking service.');
       } finally {
         setServiceReplaceLoading(false);
       }
     },
-    [booking.id, localStatus, onStatusChange],
+    [booking.id, localStatus, onStatusChange, closeActionSheets],
   );
 
   const confirmServiceReplace = useCallback(() => {
@@ -605,220 +573,27 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (svc: ServiceOption) => {
       setServiceError('');
       if (isSameBookingService(svc)) {
-        setPendingService(null);
-        setIsServiceSheetOpen(false);
+        closeActionSheets();
         return;
       }
       setPendingService(svc);
     },
-    [isSameBookingService],
+    [isSameBookingService, closeActionSheets],
   );
-
-  // ── Touch / swipe handlers ────────────────────────────────────────────────────
-  const handleQuickActionClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
-  const applyTrackTransform = useCallback((offsetX: number) => {
-    if (trackRef.current) {
-      trackRef.current.style.transform = `translateX(${offsetX}px)`;
-    }
-  }, []);
-
-  const panelWidths = useCallback(
-    () => readSwipePanelWidths(swipeRootRef.current),
-    [],
-  );
-
-  const snapForState = useCallback(
-    (state: SwipeState) => {
-      const { client, actions } = panelWidths();
-      if (state === 'left') return 0;
-      if (state === 'right') return -(client + actions);
-      return -client;
-    },
-    [panelWidths],
-  );
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    swipeAxis.current = 'undecided';
-    isDragging.current = true;
-    didDragRef.current = false;
-    trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
-  }, []);
-
-  // Native non-passive touchmove so preventDefault works for horizontal swipes.
-  // React's onTouchMove is often passive and cannot block vertical scroll steal.
-  useEffect(() => {
-    const root = swipeRootRef.current;
-    if (!root) return undefined;
-
-    const AXIS_LOCK_PX = 8;
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (!isDragging.current) return;
-      const touch = e.touches[0];
-      if (!touch) return;
-
-      const dx = touch.clientX - touchStartX.current;
-      const dy = touch.clientY - touchStartY.current;
-
-      if (swipeAxis.current === 'undecided') {
-        if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
-        swipeAxis.current = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-        if (swipeAxis.current === 'v') {
-          trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
-          return;
-        }
-      }
-
-      if (swipeAxis.current === 'v') return;
-
-      e.preventDefault();
-      if (Math.abs(dx) > 6) didDragRef.current = true;
-      const { client, actions } = panelWidths();
-      const base = snapForState(swipeStateRef.current);
-      const clamped = Math.min(0, Math.max(-(client + actions), base + dx));
-      applyTrackTransform(clamped);
-    };
-
-    root.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => root.removeEventListener('touchmove', onTouchMove);
-  }, [applyTrackTransform, panelWidths, snapForState]);
-
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
-
-      const axis = swipeAxis.current;
-      swipeAxis.current = 'undecided';
-
-      // Vertical scroll or undecided tap — leave swipe state alone.
-      if (axis !== 'h') {
-        applyTrackTransform(snapForState(swipeState));
-        return;
-      }
-
-      const delta = e.changedTouches[0].clientX - touchStartX.current;
-      const next = stepSwipe(swipeState, delta);
-      if (next === swipeState) {
-        applyTrackTransform(snapForState(swipeState));
-      } else {
-        setSwipeState(next);
-      }
-    },
-    [swipeState, applyTrackTransform, snapForState],
-  );
-
-  // ── Mouse / wheel swipe (preview embeds only) ─────────────────────────────────
-
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (!previewSwipe || e.pointerType === 'touch') return;
-      // Don't capture pointer on controls — otherwise setPointerCapture on the
-      // swipe root suppresses the button's click (desktop/tablet lock overlay).
-      const interactive = (e.target as Element | null)?.closest?.(
-        'button, a, input, select, textarea, [role="button"]',
-      );
-      if (interactive) return;
-      touchStartX.current = e.clientX;
-      isDragging.current = true;
-      didDragRef.current = false;
-      trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
-      try {
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      } catch {
-        /* no-op */
-      }
-    },
-    [previewSwipe],
-  );
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!previewSwipe || !isDragging.current || e.pointerType === 'touch') return;
-      const delta = e.clientX - touchStartX.current;
-      if (Math.abs(delta) > 6) didDragRef.current = true;
-      const { client, actions } = panelWidths();
-      const clamped = Math.min(
-        0,
-        Math.max(-(client + actions), snapForState(swipeState) + delta),
-      );
-      applyTrackTransform(clamped);
-    },
-    [previewSwipe, swipeState, applyTrackTransform, panelWidths, snapForState],
-  );
-
-  const finishPointerDrag = useCallback(
-    (clientX: number) => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      const delta = clientX - touchStartX.current;
-      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
-      const next = stepSwipe(swipeState, delta);
-      if (next === swipeState) applyTrackTransform(snapForState(swipeState));
-      else setSwipeState(next);
-    },
-    [swipeState, applyTrackTransform, snapForState],
-  );
-
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (!previewSwipe || e.pointerType === 'touch') return;
-      finishPointerDrag(e.clientX);
-    },
-    [previewSwipe, finishPointerDrag],
-  );
-
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (!previewSwipe) return;
-      const horizontal =
-        Math.abs(e.deltaX) > Math.abs(e.deltaY)
-          ? e.deltaX
-          : e.shiftKey
-            ? e.deltaY
-            : 0;
-      if (Math.abs(horizontal) < 16) return;
-      const now = Date.now();
-      if (now < wheelCooldownRef.current) return;
-      wheelCooldownRef.current = now + 380;
-      const order: SwipeState[] = ['left', 'closed', 'right'];
-      const idx = order.indexOf(swipeState);
-      const nextIdx = horizontal > 0 ? Math.min(order.length - 1, idx + 1) : Math.max(0, idx - 1);
-      if (nextIdx !== idx) setSwipeState(order[nextIdx]);
-    },
-    [previewSwipe, swipeState],
-  );
-
-  // Dismiss the swipe hint on first interaction, and auto-clear after its fade.
-  useEffect(() => {
-    if (!showSwipeHint) return undefined;
-    if (swipeState !== 'closed') {
-      setHintVisible(false);
-      return undefined;
-    }
-    const id = window.setTimeout(() => setHintVisible(false), 3200);
-    return () => window.clearTimeout(id);
-  }, [showSwipeHint, swipeState]);
 
   // ── Derived status flags ──────────────────────────────────────────────────────
+  const clockNowMs = clock.nowMs();
   const effectiveStatus = getEffectiveBookingStatus({
     status: localStatus,
     startAt: booking.startAt,
     endAt: booking.endAt,
-    nowMs: clock.nowMs(),
+    nowMs: clockNowMs,
   });
-  const isCancelled = effectiveStatus.startsWith('CANCELLED');
+  const statusLabel = getStatusLabel(effectiveStatus, booking.rescheduledAt);
+  const isCancelled = effectiveStatus.startsWith('CANCELLED') || effectiveStatus === 'NO_SHOW';
   const isCompleted = effectiveStatus === 'COMPLETED';
   const showServiceChange =
-    canChangeService &&
-    SERVICE_EDITABLE_STATUSES.has(localStatus) &&
-    effectiveStatus !== 'COMPLETED';
+    canChangeService && SERVICE_EDITABLE_STATUSES.has(localStatus) && effectiveStatus !== 'COMPLETED';
   const assignedBarberId = booking.barberId ?? barber.id;
   const eligibleServices = services.filter(
     (svc) =>
@@ -835,11 +610,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     : null;
   const statusMenuItems: StatusMenuItem[] = canMutateBooking
     ? (getManualBookingActionOptions(
-        {
-          startAt: booking.startAt,
-          endAt: booking.endAt,
-          nowMs: clock.nowMs(),
-        },
+        { startAt: booking.startAt, endAt: booking.endAt, nowMs: clockNowMs },
         actionRoleScope,
       ) as StatusMenuItem[])
     : [];
@@ -847,24 +618,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     status: effectiveStatus,
     rescheduledAt: booking.rescheduledAt ?? null,
   });
-  const statusActionVisual = getStatusActionVisual(
-    effectiveStatus,
-    booking.rescheduledAt ?? null,
-  );
-
-  const closeActionSheets = useCallback(() => {
-    setIsStatusSheetOpen(false);
-    setIsServiceSheetOpen(false);
-    setPendingService(null);
-    setServiceError('');
-  }, []);
+  const timeState = getTimeState(booking, nowMs);
+  const timingLabel = getTimingLabel(booking, nowMs, isCancelled);
 
   const openStatusActions = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent<HTMLElement>) => {
       e.stopPropagation();
       if (!canMutateBooking) return;
-      if (previewSwipe) {
+      if (isPreview) {
         window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
+        return;
+      }
+      anchorRef.current = e.currentTarget;
+      if (isStatusSheetOpen) {
+        closeActionSheets();
         return;
       }
       setActionError('');
@@ -872,19 +639,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       setIsServiceSheetOpen(false);
       setIsStatusSheetOpen(true);
     },
-    [previewSwipe, canMutateBooking],
+    [isPreview, canMutateBooking, isStatusSheetOpen, closeActionSheets],
   );
 
-  const setPanelState = useCallback((next: SwipeState) => {
-    setSwipeState(next);
-  }, []);
-
   const openServiceActions = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent<HTMLElement>) => {
       e.stopPropagation();
       if (!showServiceChange) return;
-      if (previewSwipe) {
+      if (isPreview) {
         window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
+        return;
+      }
+      anchorRef.current = e.currentTarget;
+      if (isServiceSheetOpen) {
+        closeActionSheets();
         return;
       }
       setServiceError('');
@@ -893,11 +661,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       setIsServiceSheetOpen(true);
       void openServicePicker();
     },
-    [openServicePicker, previewSwipe, showServiceChange],
+    [openServicePicker, isPreview, showServiceChange, isServiceSheetOpen, closeActionSheets],
   );
 
   const statusActionsContent = (
-    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content">
+    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content tl-menu">
       {actionError ? <p className="admin-vtl-message-chooser-error" role="alert">{actionError}</p> : null}
       {statusMenuItems.map((item) => {
         const isReschedule = item.value === 'RESCHEDULE';
@@ -905,19 +673,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           ? 'rescheduled'
           : getBookingStatusTone({ status: item.value, rescheduledAt: booking.rescheduledAt ?? null });
         const isUnavailableFromState =
-          (item.value === 'CANCELLED_BY_SHOP' || item.value === 'RESCHEDULE')
-          && (isCancelled || isCompleted);
+          (item.value === 'CANCELLED_BY_SHOP' || item.value === 'RESCHEDULE') && (isCancelled || isCompleted);
         const enabled = item.enabled && !isUnavailableFromState;
         const reason = isUnavailableFromState
-          ? `Unavailable: booking is ${getStatusLabel(effectiveStatus, booking.rescheduledAt).toLowerCase()}.`
+          ? `Unavailable: booking is ${statusLabel.toLowerCase()}.`
           : item.reason;
         const label = isReschedule ? item.label : getStatusLabel(item.value, booking.rescheduledAt);
+        const isCurrent = !isReschedule && item.value === effectiveStatus;
         return (
           <button
             key={item.value}
             type="button"
-            className={`admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--${tone}${enabled ? '' : ' admin-vtl-bottom-sheet-pill--disabled'}`}
+            className={`tl-menu-item tl-menu-item--${tone}${isCurrent ? ' tl-menu-item--current' : ''}`}
             disabled={!enabled}
+            aria-current={isCurrent ? 'true' : undefined}
             onClick={() => {
               if (!enabled) return;
               if (isReschedule) {
@@ -930,8 +699,12 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               }
             }}
           >
-            <span className="admin-vtl-bottom-sheet-pill-label">{label}</span>
-            <span className="admin-vtl-bottom-sheet-pill-reason">{reason}</span>
+            <span className="tl-menu-dot" aria-hidden="true" />
+            <span className="tl-menu-text">
+              <span className="tl-menu-label">{label}</span>
+              <span className="tl-menu-reason">{reason}</span>
+            </span>
+            {isCurrent ? <Check className="tl-menu-check" width={14} height={14} aria-hidden /> : null}
           </button>
         );
       })}
@@ -939,40 +712,43 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   );
 
   const serviceActionsContent = (
-    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content">
+    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content tl-menu">
       {pendingService ? (
-        <div className="admin-vtl-service-confirm">
-          <p className="admin-vtl-service-confirm-title">Change service?</p>
-          <p className="admin-vtl-service-confirm-copy">
-            Change <strong>{booking.fullName}</strong> from the current service to the one below.
+        <div className="tl-confirm">
+          <p className="tl-confirm-title">Change service?</p>
+          <p className="tl-confirm-copy">
+            <strong>{booking.service.name}</strong>
+            <ArrowRight className="tl-confirm-arrow" width={13} height={13} aria-hidden />
+            <strong>{pendingService.name}</strong>
           </p>
-          <div className="admin-vtl-service-confirm-services">
-            <span>
-              <strong>{booking.service.name}</strong>
-              {' → '}
-              <strong>{pendingService.name}</strong>
-            </span>
-          </div>
-          <p className="admin-vtl-service-confirm-price">New price: {formatPence(pendingService.pricePence)}</p>
-          {pendingServiceEndLabel ? (
-            <p className="admin-vtl-service-confirm-price">New end time: {pendingServiceEndLabel}</p>
-          ) : null}
+          <dl className="tl-confirm-facts">
+            <div>
+              <dt>New price</dt>
+              <dd>{formatPence(pendingService.pricePence)}</dd>
+            </div>
+            {pendingServiceEndLabel ? (
+              <div>
+                <dt>New end time</dt>
+                <dd>{pendingServiceEndLabel}</dd>
+              </div>
+            ) : null}
+          </dl>
           {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
-          <div className="admin-vtl-service-confirm-actions">
+          <div className="tl-confirm-actions">
             <button
               type="button"
-              className="btn btn--ghost"
+              className="tl-btn"
               disabled={serviceReplaceLoading}
               onClick={() => {
                 setPendingService(null);
                 setServiceError('');
               }}
             >
-              Cancel
+              Back
             </button>
             <button
               type="button"
-              className="btn btn--primary"
+              className="tl-btn tl-btn--primary"
               disabled={serviceReplaceLoading}
               onClick={confirmServiceReplace}
             >
@@ -981,25 +757,32 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           </div>
         </div>
       ) : serviceLoading ? (
-        <p className="admin-vtl-ap-service-loading">Loading…</p>
+        <p className="tl-menu-note">Loading services…</p>
       ) : serviceError && eligibleServices.length === 0 ? (
         <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p>
       ) : !serviceError && eligibleServices.length === 0 ? (
-        <p className="admin-vtl-ap-service-loading">No services available for this barber.</p>
+        <p className="tl-menu-note">No services available for this barber.</p>
       ) : (
         <>
           {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
-          {eligibleServices.map((svc) => (
-            <button
-              key={svc.id}
-              type="button"
-              className="admin-vtl-ap-service-option"
-              onClick={() => handleServiceOptionSelect(svc)}
-            >
-              <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
-              <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
-            </button>
-          ))}
+          {eligibleServices.map((svc) => {
+            const isCurrent = isSameBookingService(svc);
+            return (
+              <button
+                key={svc.id}
+                type="button"
+                className={`tl-menu-item tl-menu-item--service${isCurrent ? ' tl-menu-item--current' : ''}`}
+                aria-current={isCurrent ? 'true' : undefined}
+                onClick={() => handleServiceOptionSelect(svc)}
+              >
+                <span className="tl-menu-text">
+                  <span className="tl-menu-label">{svc.name}</span>
+                  <span className="tl-menu-reason">{formatMinutesShort(svc.durationMinutes)}</span>
+                </span>
+                <span className="tl-menu-price">{formatPence(svc.pricePence)}</span>
+              </button>
+            );
+          })}
         </>
       )}
     </div>
@@ -1020,44 +803,36 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     paymentStatus: booking.paymentStatus ?? null,
   });
   const isPaid = paymentChipState === 'paid';
-
-  // ── Track class ───────────────────────────────────────────────────────────────
-  const trackClass = [
-    'admin-vtl-swipe-track',
-    swipeState === 'left' ? 'admin-vtl-swipe-track--open' : '',
-    swipeState === 'right' ? 'admin-vtl-swipe-track--right' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const menuTitle = isStatusSheetOpen ? 'Update status' : 'Change service';
 
   const bottomSheetPortal =
-    isMobileView && (isStatusSheetOpen || isServiceSheetOpen)
+    isMobileView && isMenuOpen
       ? createPortal(
           <div
-            className="admin-vtl-bottom-sheet-backdrop"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="admin-vtl-bottom-sheet-title"
+            className="admin-vtl-bottom-sheet-backdrop tl-sheet-backdrop"
             onClick={(e) => {
               e.stopPropagation();
               closeActionSheets();
             }}
           >
-            <div className="admin-vtl-bottom-sheet" onClick={(e) => e.stopPropagation()}>
-              <div className="admin-vtl-bottom-sheet-header">
-                <p id="admin-vtl-bottom-sheet-title" className="admin-vtl-bottom-sheet-title">
-                  {isStatusSheetOpen ? 'Status' : 'Service'}
-                </p>
-                <button
-                  type="button"
-                  className="admin-vtl-bottom-sheet-close"
-                  onClick={closeActionSheets}
-                  aria-label="Close bottom sheet"
-                >
-                  <X className="admin-vtl-bottom-sheet-close-icon" aria-hidden />
+            <div
+              ref={sheetRef}
+              className="admin-vtl-bottom-sheet tl-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`tl-sheet-title-${booking.id}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="tl-sheet-grip" aria-hidden="true" />
+              <div className="tl-menu-header">
+                <div>
+                  <p id={`tl-sheet-title-${booking.id}`} className="tl-menu-title">{menuTitle}</p>
+                  <p className="tl-menu-sub">{`${booking.fullName} · ${timeRange}`}</p>
+                </div>
+                <button type="button" className="tl-icon-btn" onClick={closeActionSheets} aria-label="Close">
+                  <X width={16} height={16} aria-hidden />
                 </button>
               </div>
-
               {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
             </div>
           </div>,
@@ -1066,7 +841,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       : null;
 
   const desktopActionPopover =
-    !isMobileView && (isStatusSheetOpen || isServiceSheetOpen) && desktopPopoverPos
+    !isMobileView && isMenuOpen && popoverPos
       ? createPortal(
           <>
             <div
@@ -1078,30 +853,25 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               }}
             />
             <div
-              className="admin-vtl-action-popover admin-vtl-action-popover--portal"
+              ref={popoverRef}
+              className="admin-vtl-action-popover admin-vtl-action-popover--portal tl-popover"
               role="dialog"
-              aria-labelledby={`admin-vtl-action-popover-title-${booking.id}`}
+              aria-labelledby={`tl-popover-title-${booking.id}`}
               style={{
-                top: desktopPopoverPos.top,
-                left: desktopPopoverPos.left,
-                maxHeight: desktopPopoverPos.maxHeight,
+                top: popoverPos.top ?? 'auto',
+                bottom: popoverPos.bottom ?? 'auto',
+                left: popoverPos.left,
+                maxHeight: popoverPos.maxHeight,
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="admin-vtl-action-popover-header">
-                <p
-                  id={`admin-vtl-action-popover-title-${booking.id}`}
-                  className="admin-vtl-action-popover-title"
-                >
-                  {isStatusSheetOpen ? 'Status' : 'Service'}
-                </p>
-                <button
-                  type="button"
-                  className="admin-vtl-action-popover-close"
-                  onClick={closeActionSheets}
-                  aria-label="Close actions menu"
-                >
-                  <X className="admin-vtl-action-popover-close-icon" aria-hidden />
+              <div className="tl-menu-header">
+                <div>
+                  <p id={`tl-popover-title-${booking.id}`} className="tl-menu-title">{menuTitle}</p>
+                  <p className="tl-menu-sub">{`${booking.fullName} · ${timeRange}`}</p>
+                </div>
+                <button type="button" className="tl-icon-btn" onClick={closeActionSheets} aria-label="Close">
+                  <X width={16} height={16} aria-hidden />
                 </button>
               </div>
               {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
@@ -1111,364 +881,227 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         )
       : null;
 
-  return (
-    <div className="admin-vtl-swipe-shell" data-booking-id={booking.id} tabIndex={-1}>
-      <div className="admin-vtl-panel-segmented" role="group" aria-label="Reveal booking panels">
-        <button
-          type="button"
-          className={`admin-vtl-panel-segmented-btn${swipeState === 'left' ? ' is-active' : ''}`}
-          onClick={() => setPanelState('left')}
-          aria-pressed={swipeState === 'left'}
-        >
-          Left
-        </button>
-        <button
-          type="button"
-          className={`admin-vtl-panel-segmented-btn${swipeState === 'closed' ? ' is-active' : ''}`}
-          onClick={() => setPanelState('closed')}
-          aria-pressed={swipeState === 'closed'}
-        >
-          Main
-        </button>
-        <button
-          type="button"
-          className={`admin-vtl-panel-segmented-btn${swipeState === 'right' ? ' is-active' : ''}`}
-          onClick={() => setPanelState('right')}
-          aria-pressed={swipeState === 'right'}
-        >
-          Right
-        </button>
-      </div>
+  const clientProfileDisabled = isClientProfileLoading || !onClientProfile;
 
-      <div
-        ref={swipeRootRef}
-        className="admin-vtl-swipe-root"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onPointerDown={previewSwipe ? handlePointerDown : undefined}
-        onPointerMove={previewSwipe ? handlePointerMove : undefined}
-        onPointerUp={previewSwipe ? handlePointerUp : undefined}
-        onPointerCancel={previewSwipe ? handlePointerUp : undefined}
-        onWheel={previewSwipe ? handleWheel : undefined}
-      >
-        <div ref={trackRef} className={trackClass}>
-        {/* ── Left: client panel ── */}
-        <div className="admin-vtl-client-panel" aria-hidden={swipeState !== 'left'}>
-          <button
-            type="button"
-            className="admin-vtl-client-panel-avatar admin-vtl-client-panel-avatar--btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClientProfile?.(booking);
-            }}
-            disabled={isClientProfileLoading || !onClientProfile}
-            tabIndex={swipeState === 'left' ? 0 : -1}
-            aria-label={`View profile for ${booking.fullName}`}
-            aria-busy={isClientProfileLoading}
-            title="View client profile"
+  return (
+    <article
+      ref={rootRef}
+      className={`tl-ticket tl-ticket--${localTone} tl-ticket--${timeState}`}
+      data-booking-id={booking.id}
+      tabIndex={-1}
+      style={{ '--tl-i': index } as React.CSSProperties}
+      aria-label={`${booking.fullName}, ${booking.service.name}, ${timeRange}, ${statusLabel}`}
+    >
+      <div className="tl-ticket-head">
+        <div className="tl-ticket-avatars" aria-hidden="true">
+          <span className="tl-ava tl-ava--barber admin-vtl-expansion-avatar--barber">
+            {barber.avatarUrl && !barberImgError ? (
+              <img
+                src={barber.avatarUrl}
+                alt=""
+                className="admin-vtl-expansion-avatar-img"
+                loading="lazy"
+                width={40}
+                height={40}
+                onError={() => setBarberImgError(true)}
+              />
+            ) : (
+              <span className="tl-ava-initials">{getInitials(barber.name)}</span>
+            )}
+          </span>
+          <span
+            className={`tl-ava tl-ava--client ${hasClientAvatar ? 'admin-vtl-expansion-avatar--client' : 'admin-vtl-expansion-avatar--client-placeholder'}`}
           >
             {hasClientAvatar ? (
               <img
                 src={booking.clientAvatarUrl ?? undefined}
-                alt={booking.fullName}
-                className="admin-vtl-client-panel-avatar-img"
+                alt=""
+                className="admin-vtl-expansion-avatar-img"
                 loading="lazy"
+                width={24}
+                height={24}
                 onError={() => setClientImgError(true)}
               />
             ) : (
-              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+              <span className="tl-ava-initials">{getInitials(booking.fullName)}</span>
             )}
-            <span className="admin-vtl-client-panel-avatar-badge" aria-hidden="true">
-              <User className="admin-vtl-client-panel-avatar-badge-icon" aria-hidden />
-            </span>
-          </button>
-          <p className="admin-vtl-client-panel-name">{booking.fullName.split(' ')[0]}</p>
+          </span>
         </div>
 
-        {/* ── Center: main card ── */}
-        <div
-          className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (didDragRef.current) {
-              didDragRef.current = false;
-              return;
-            }
-            closeActionSheets();
-            if (swipeState !== 'closed') setSwipeState('closed');
-          }}
-        >
-          <div className="admin-vtl-expansion-layout">
-            <div className="admin-vtl-expansion-avatars" aria-hidden="true">
-              <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--barber">
-                {barber.avatarUrl && !barberImgError ? (
-                  <img
-                    src={barber.avatarUrl}
-                    alt={barber.name}
-                    className="admin-vtl-expansion-avatar-img"
-                    loading="lazy"
-                    onError={() => setBarberImgError(true)}
-                  />
-                ) : (
-                  <span className="admin-vtl-expansion-avatar-initials">{barberInitials}</span>
-                )}
-              </div>
-              <div
-                className={
-                  hasClientAvatar
-                    ? 'admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client'
-                    : 'admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder'
-                }
-              >
-                {hasClientAvatar ? (
-                  <img
-                    src={booking.clientAvatarUrl ?? undefined}
-                    alt={booking.fullName}
-                    className="admin-vtl-expansion-avatar-img"
-                    loading="lazy"
-                    onError={() => setClientImgError(true)}
-                  />
-                ) : (
-                  <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
-                )}
-              </div>
-            </div>
-            <div className="admin-vtl-expansion-main">
-              <p className="admin-vtl-expansion-time">{`${timeRange} ~ ${duration}`}</p>
-              <p className="admin-vtl-expansion-service">{booking.service.name}</p>
-              <p className="admin-vtl-expansion-client">{booking.fullName}</p>
-            </div>
-            <div className="admin-vtl-expansion-status-wrap">
-              <span
-                className={`admin-vtl-expansion-status-pill admin-vtl-expansion-status-pill--${localTone}`}
-                aria-label={`Status ${getStatusLabel(effectiveStatus, booking.rescheduledAt)}`}
-              >
-                {getStatusLabel(effectiveStatus, booking.rescheduledAt)}
-              </span>
-            </div>
-            <div className="admin-vtl-expansion-payments">
-              <p className="admin-vtl-expansion-payment-amount">{displayAmount ?? '—'}</p>
-              <p className="admin-vtl-expansion-payment-meta">{paymentMethod}</p>
-              <span
-                className={`admin-vtl-expansion-payment-chip admin-vtl-expansion-payment-chip--${isPaid ? 'paid' : 'unpaid'}`}
-              >
-                {isPaid ? 'Paid' : 'Unpaid'}
-              </span>
-            </div>
-          </div>
-          {clientTags.length > 0 ? (
-            <div className="admin-vtl-expansion-footer">
-              <div className="admin-vtl-expansion-client-tags" aria-label="Client tags">
-                {clientTags.map((tag, index) => (
-                  <span key={`${booking.id}-${tag}-${index}`} className="admin-vtl-expansion-client-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
+        <div className="tl-ticket-id">
+          <p className="tl-ticket-client">{booking.fullName}</p>
+          <p className="tl-ticket-service">{booking.service.name}</p>
         </div>
 
-        {/* ── Right: booking actions panel ── */}
-        <div
-          ref={actionsPanelRef}
-          className="admin-vtl-actions-panel"
-          aria-hidden={swipeState !== 'right'}
-        >
-          {canMutateBooking ? (
-            <button
-              type="button"
-              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status-primary admin-vtl-ap-circle-btn--tone-${statusActionVisual.tone}${isStatusSheetOpen ? ' is-active' : ''}`}
-              onClick={openStatusActions}
-              tabIndex={swipeState === 'right' ? 0 : -1}
-              aria-label={`Change status for ${booking.fullName} (currently ${statusActionVisual.label})`}
-              aria-expanded={isStatusSheetOpen}
-              title="Tap to update status"
-            >
-              <BookingStatusActionGlyph
-                status={effectiveStatus}
-                rescheduledAt={booking.rescheduledAt ?? null}
-                startAt={booking.startAt}
-                endAt={booking.endAt}
-                active={isStatusSheetOpen}
-                live={swipeState === 'right'}
-              />
-              <span className="admin-vtl-ap-circle-label">{statusActionVisual.label}</span>
-              {!isStatusSheetOpen && !previewSwipe ? (
-                <span className="admin-vtl-ap-circle-hint">Tap to update</span>
-              ) : null}
-            </button>
-          ) : (
-            <p className="admin-vtl-ap-readonly muted">View only</p>
-          )}
-          {showServiceChange ? (
-            <button
-              type="button"
-              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service${isServiceSheetOpen ? ' is-active' : ''}`}
-              onClick={openServiceActions}
-              tabIndex={swipeState === 'right' ? 0 : -1}
-              aria-label={`Change service for ${booking.fullName}`}
-              aria-expanded={isServiceSheetOpen}
-            >
-              <span className="admin-vtl-ap-circle-icon-wrap">
-                <Sparkles className="admin-vtl-ap-circle-icon" aria-hidden />
-              </span>
-              <span className="admin-vtl-ap-circle-label">Service</span>
-            </button>
-          ) : null}
-        </div>
-
-          {bottomSheetPortal}
-          {desktopActionPopover}
-        </div>
-
-        <div className="admin-vtl-swipe-nav">
-          {hintVisible && (
-            <div className="admin-vtl-swipe-hint" role="status">
-              <span className="admin-vtl-swipe-hint-arrows" aria-hidden="true">
-                ‹ ›
-              </span>
-              Swipe
-            </div>
-          )}
-          <div className="admin-vtl-swipe-dots" data-active={swipeState} aria-hidden="true">
-            <span className="admin-vtl-swipe-dot" />
-            <span className="admin-vtl-swipe-dot" />
-            <span className="admin-vtl-swipe-dot" />
-          </div>
+        <div className="tl-ticket-amount">
+          <span className="tl-ticket-price">{displayAmount ?? '—'}</span>
+          <span className={`tl-ticket-pay tl-ticket-pay--${isPaid ? 'paid' : 'unpaid'}`}>
+            {isPaid ? 'Paid' : 'Unpaid'}
+            <span className="tl-ticket-pay-method">{` · ${paymentMethod}`}</span>
+          </span>
         </div>
       </div>
-    </div>
+
+      <p className="tl-ticket-meta">
+        <span className="tl-ticket-time">{timeRange}</span>
+        <span className="tl-sep" aria-hidden="true" />
+        <span>{duration}</span>
+        <span className="tl-sep" aria-hidden="true" />
+        <span>{`with ${firstName(barber.name)}`}</span>
+        {timingLabel ? (
+          <span className={`tl-ticket-timing tl-ticket-timing--${timeState}`}>{timingLabel}</span>
+        ) : null}
+      </p>
+
+      {clientTags.length > 0 ? (
+        <ul className="tl-ticket-tags" aria-label="Client tags">
+          {clientTags.map((tag, tagIndex) => (
+            <li key={`${booking.id}-${tag}-${tagIndex}`} className="tl-ticket-tag">
+              {tag}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <div className="tl-ticket-actions">
+        {canMutateBooking ? (
+          <button
+            type="button"
+            className={`tl-btn tl-btn--status tl-btn--tone-${localTone}${isStatusSheetOpen ? ' is-open' : ''}`}
+            onClick={openStatusActions}
+            aria-haspopup="dialog"
+            aria-expanded={isStatusSheetOpen}
+            aria-label={`Status: ${statusLabel}. Update status for ${booking.fullName}`}
+          >
+            <span className="tl-status-dot" aria-hidden="true" />
+            <span className="tl-btn-label">{statusLabel}</span>
+            <ChevronDown className="tl-btn-chevron" width={14} height={14} aria-hidden />
+          </button>
+        ) : (
+          <span className={`tl-status-static tl-btn--tone-${localTone}`}>
+            <span className="tl-status-dot" aria-hidden="true" />
+            {statusLabel}
+          </span>
+        )}
+        <button
+          type="button"
+          className="tl-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClientProfile?.(booking);
+          }}
+          disabled={clientProfileDisabled}
+          aria-busy={isClientProfileLoading || undefined}
+          aria-label={`Open client profile for ${booking.fullName}`}
+        >
+          <User className="tl-btn-icon" width={15} height={15} aria-hidden />
+          <span className="tl-btn-label">{isClientProfileLoading ? 'Opening…' : 'Client profile'}</span>
+        </button>
+        {showServiceChange ? (
+          <button
+            type="button"
+            className={`tl-btn${isServiceSheetOpen ? ' is-open' : ''}`}
+            onClick={openServiceActions}
+            aria-haspopup="dialog"
+            aria-expanded={isServiceSheetOpen}
+            aria-label={`Change service for ${booking.fullName}`}
+          >
+            <Scissors className="tl-btn-icon" width={15} height={15} aria-hidden />
+            <span className="tl-btn-label">Change service</span>
+          </button>
+        ) : null}
+        {!canMutateBooking ? <span className="tl-ticket-readonly">View only</span> : null}
+      </div>
+
+      {bottomSheetPortal}
+      {desktopActionPopover}
+    </article>
   );
 });
 
-// ─── Avatar pin (progress-track version) ─────────────────────────────────────
+// ─── Progress stripe ─────────────────────────────────────────────────────────
+// Position is a CSS custom property (--p, 0–1). The stripe re-renders on the
+// 15 s clock tick and a linear transform transition bridges the gap, so the
+// avatar glides on the compositor with no per-frame JavaScript.
 
-type BarberAvatarPinProps = {
+type ProgressPinProps = {
   barber: TimelineBarber;
   booking: TimelineBooking;
-  onAvatarClick: (booking: TimelineBooking) => void;
-  isSearchActive: boolean;
-  toneClass: string;
+  nowMs: number | null;
+  index: number;
   isActive: boolean;
-  initialX: number;
-  targetX: number;
-  delaySeconds: number;
-  durationSeconds: number;
-  baseZIndex: number;
-  laneOffsetY: number;
+  isSearchActive: boolean;
+  onAvatarClick: (booking: TimelineBooking) => void;
 };
 
-const BarberAvatarPin = memo(function BarberAvatarPin({
+const ProgressPin = memo(function ProgressPin({
   barber,
   booking,
-  onAvatarClick,
-  isSearchActive,
-  toneClass,
+  nowMs,
+  index,
   isActive,
-  initialX,
-  targetX,
-  delaySeconds,
-  durationSeconds,
-  baseZIndex,
-  laneOffsetY,
-}: BarberAvatarPinProps) {
+  isSearchActive,
+  onAvatarClick,
+}: ProgressPinProps) {
   const [imgError, setImgError] = useState(false);
-  const initials = getInitials(barber.name);
-  const prefersReducedMotion = useReducedMotion();
-  const { frozen: clockFrozen } = useAdminClock();
-  // A frozen clock has no "later" to animate towards: pins stay at their position at now.
-  const reduceMotion = prefersReducedMotion || clockFrozen;
-
-  // Initialise the MotionValue imperatively so the avatar starts at the correct
-  // progress point regardless of any parent AnimatePresence initial={false}.
-  const x = useMotionValue(initialX);
-  const RESYNC_EPSILON_PX = 6;
 
   useEffect(() => {
     setImgError(false);
   }, [barber.avatarUrl]);
 
-  useEffect(() => {
-    const currentX = x.get();
-    if (!Number.isFinite(currentX) || Math.abs(currentX - initialX) > RESYNC_EPSILON_PX) {
-      x.set(initialX);
-    }
-  }, [initialX, x]);
-
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onAvatarClick(booking);
-    },
-    [onAvatarClick, booking]
-  );
-
+  const tone = getBookingStatusTone(booking);
+  const timeState = getTimeState(booking, nowMs);
+  const progress = getBookingProgress(booking, nowMs);
+  const style = {
+    '--p': progress.toFixed(4),
+    '--stack': index,
+    zIndex: isActive ? MAX_VISIBLE_AVATARS + 1 : MAX_VISIBLE_AVATARS - index,
+  } as React.CSSProperties;
   const label = `${barber.name} — ${booking.service.name} — ${booking.fullName}`;
 
-  // Linear progress animation; re-renders every 15 s (nowMinute tick) update
-  // duration/delay so Framer Motion continues from the current visual position
-  // without a jump. With reduceMotion, position snaps immediately.
-  const xTransition = reduceMotion || durationSeconds <= 0
-    ? { duration: 0 }
-    : { delay: delaySeconds, duration: durationSeconds, ease: 'linear' as const };
-
-  // For reduced motion users, keep the avatar at the correct position *at now*,
-  // rather than jumping to targetX.
-  const animateX = reduceMotion ? initialX : targetX;
-
   return (
-    <motion.button
-      type="button"
-      className={[
-        'admin-vtl-avatar',
-        `admin-vtl-avatar--${toneClass}`,
-        isSearchActive ? 'admin-vtl-avatar--search' : '',
-        isActive ? 'admin-vtl-avatar--active' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      style={{
-        position: 'absolute',
-        top: '50%',
-        marginTop: `-${PROGRESS_AVATAR_SIZE / 2}px`,
-        zIndex: isActive ? MAX_VISIBLE_AVATARS + 1 : baseZIndex,
-        x,
-        y: laneOffsetY,
-      }}
-      animate={{ x: animateX, scale: isActive ? 1.08 : 1 }}
-      transition={{
-        x: xTransition,
-        scale: { duration: 0.12, ease: [0.4, 0, 0.2, 1] },
-      }}
-      whileHover={{ scale: isActive ? 1.1 : 1.07 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={handleClick}
-      aria-expanded={isActive}
-      aria-label={label}
-      title={label}
-    >
-      {barber.avatarUrl && !imgError ? (
-        <img
-          src={barber.avatarUrl}
-          alt={barber.name}
-          className="admin-vtl-avatar-img"
-          // Square slot sized by CSS (object-fit: cover); attributes reserve the box before load.
-          width={PROGRESS_AVATAR_SIZE}
-          height={PROGRESS_AVATAR_SIZE}
-          loading="lazy"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <span className="admin-vtl-avatar-initials" aria-hidden="true">
-          {initials}
-        </span>
-      )}
-    </motion.button>
+    <>
+      <span className={`tl-fill tl-fill--${tone} tl-fill--${timeState}`} style={style} aria-hidden="true" />
+      <span className="tl-pin-frame" style={style}>
+        <button
+          type="button"
+          className={[
+            'tl-pin',
+            `tl-pin--${tone}`,
+            `tl-pin--${timeState}`,
+            isSearchActive ? 'tl-pin--search' : '',
+            isActive ? 'tl-pin--active' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAvatarClick(booking);
+          }}
+          aria-expanded={isActive}
+          aria-label={label}
+          title={label}
+        >
+          {barber.avatarUrl && !imgError ? (
+            <img
+              src={barber.avatarUrl}
+              alt=""
+              className="admin-vtl-avatar-img"
+              width={PROGRESS_AVATAR_SIZE}
+              height={PROGRESS_AVATAR_SIZE}
+              loading="lazy"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <span className="tl-pin-initials" aria-hidden="true">
+              {getInitials(barber.name)}
+            </span>
+          )}
+        </button>
+      </span>
+    </>
   );
 });
-
-// ─── Progress track (replaces cluster + slot-line for booking slots) ──────────
 
 type ProgressTrackProps = {
   items: BookingAtSlot[];
@@ -1485,83 +1118,33 @@ const ProgressTrack = memo(function ProgressTrack({
   isSearchActive,
   onAvatarClick,
 }: ProgressTrackProps) {
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const [trackWidth, setTrackWidth] = useState(0);
-  const visible  = items.slice(0, MAX_VISIBLE_AVATARS);
+  const visible = items.slice(0, MAX_VISIBLE_AVATARS);
   const overflow = items.length - MAX_VISIBLE_AVATARS;
-  const trackMaxX = Math.max(trackWidth - PROGRESS_AVATAR_SIZE, 0);
-  const latestVisibleEndTime = useMemo(() => {
-    if (visible.length === 0) return '';
-    return visible.reduce((latest, item) => {
-      return new Date(item.booking.endAt).getTime() > new Date(latest.endAt).getTime()
-        ? item.booking
-        : latest;
-    }, visible[0].booking).endAt;
-  }, [visible]);
-
-  useEffect(() => {
-    const element = trackRef.current;
-    if (!element) return;
-
-    const updateWidth = () => {
-      setTrackWidth((prev) => {
-        const next = Math.round(element.getBoundingClientRect().width);
-        return prev === next ? prev : next;
-      });
-    };
-
-    updateWidth();
-
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => updateWidth());
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <>
-      <div className="admin-vtl-progress-lane">
-        {overflow > 0 && (
-          <span
-            className="admin-vtl-avatar-overflow"
-            aria-label={`${overflow} more booking${overflow === 1 ? '' : 's'}`}
-          >
-            +{overflow}
-          </span>
-        )}
-        <div ref={trackRef} className="admin-vtl-progress-track">
-          <div className="admin-vtl-slot-line" aria-hidden="true" />
-          {visible.map(({ booking, barber }, index) => {
-            const tone = getBookingStatusTone(booking);
-            const { initialX, targetX, delaySeconds, durationSeconds } = computeBookingProgress(
-              booking,
-              nowMs,
-              trackMaxX
-            );
-            return (
-              <BarberAvatarPin
-                key={booking.id}
-                barber={barber}
-                booking={booking}
-                toneClass={tone}
-                isActive={booking.id === activeBookingId}
-                isSearchActive={isSearchActive}
-                onAvatarClick={onAvatarClick}
-                initialX={initialX}
-                targetX={targetX}
-                delaySeconds={delaySeconds}
-                durationSeconds={durationSeconds}
-                baseZIndex={MAX_VISIBLE_AVATARS - index}
-                laneOffsetY={AVATAR_LANE_OFFSETS[index] ?? 0}
-              />
-            );
-          })}
-        </div>
-      </div>
-      <time className="admin-vtl-slot-end-time" dateTime={latestVisibleEndTime || undefined}>
-        {latestVisibleEndTime ? formatEndTime(latestVisibleEndTime) : ''}
-      </time>
-    </>
+    <div
+      className="tl-track"
+      data-count={visible.length}
+      style={{ '--stack-n': visible.length } as React.CSSProperties}
+    >
+      <span className="tl-rail" aria-hidden="true" />
+      {visible.map(({ booking, barber }, index) => (
+        <ProgressPin
+          key={booking.id}
+          barber={barber}
+          booking={booking}
+          nowMs={nowMs}
+          index={index}
+          isActive={booking.id === activeBookingId}
+          isSearchActive={isSearchActive}
+          onAvatarClick={onAvatarClick}
+        />
+      ))}
+      {overflow > 0 ? (
+        <span className="tl-overflow" aria-label={`${overflow} more booking${overflow === 1 ? '' : 's'}`}>
+          +{overflow}
+        </span>
+      ) : null}
+    </div>
   );
 });
 
@@ -1571,17 +1154,16 @@ type NowRowProps = { timeLabel: string };
 
 const NowRow = memo(function NowRow({ timeLabel }: NowRowProps) {
   return (
-    <div className="admin-vtl-now-row" aria-hidden="true">
-      <span className="admin-vtl-now-time" data-vtl-time={timeLabel}>{timeLabel}</span>
-      <div className="admin-vtl-now-track">
-        <span className="admin-vtl-now-dot" />
-        <div className="admin-vtl-now-line" />
-      </div>
+    <div className="admin-vtl-now-row tl-now" aria-hidden="true">
+      <span className="tl-now-time">{timeLabel}</span>
+      <span className="tl-now-line">
+        <span className="tl-now-dot" />
+      </span>
     </div>
   );
 });
 
-// ─── Slot row (with inline expansion) ────────────────────────────────────────
+// ─── Slot row (stripe + inline tickets) ──────────────────────────────────────
 
 type SlotRowProps = {
   slotKey: string;
@@ -1599,6 +1181,17 @@ type SlotRowProps = {
   sessionBarberId?: string | null;
   canManageBookings?: boolean;
 };
+
+function getSlotState(slot: SlotModel, nowMs: number | null): TimeState | 'empty' {
+  if (slot.bookings.length === 0) return 'empty';
+  const states = slot.bookings
+    .filter(({ booking }) => getBookingStatusTone(booking) !== 'cancelled')
+    .map(({ booking }) => getTimeState(booking, nowMs));
+  if (states.includes('live')) return 'live';
+  if (states.length > 0 && states.every((state) => state === 'past')) return 'past';
+  if (states.length === 0) return 'past';
+  return states.includes('future') ? 'future' : 'idle';
+}
 
 const SlotRow = memo(function SlotRow({
   slotKey,
@@ -1618,7 +1211,9 @@ const SlotRow = memo(function SlotRow({
 }: SlotRowProps) {
   const hasBookings = slot.bookings.length > 0;
   const hasBlocks = slot.timeBlocks.length > 0;
+  const isHour = slot.timeLabel.endsWith(':00');
   const expansionId = `admin-vtl-expansion-${slotKey.replace(/[^a-z0-9_-]/gi, '-')}`;
+  const slotState = getSlotState(slot, nowMs);
 
   const handleSlotToggle = useCallback(
     (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -1626,120 +1221,133 @@ const SlotRow = memo(function SlotRow({
       if (!hasBookings) return;
       onSlotToggle(slotKey);
     },
-    [hasBookings, onSlotToggle, slotKey]
+    [hasBookings, onSlotToggle, slotKey],
   );
 
   const handleSlotKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!hasBookings) return;
+      if (!hasBookings || e.target !== e.currentTarget) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         handleSlotToggle(e);
       }
     },
-    [handleSlotToggle, hasBookings]
+    [handleSlotToggle, hasBookings],
   );
 
   const handleSlotAvatarClick = useCallback(
     (booking: TimelineBooking) => {
       onAvatarClick(slotKey, booking);
     },
-    [onAvatarClick, slotKey]
+    [onAvatarClick, slotKey],
   );
 
+  const latestEnd = useMemo(() => {
+    if (!hasBookings) return '';
+    return slot.bookings.reduce(
+      (latest, { booking }) =>
+        new Date(booking.endAt).getTime() > new Date(latest).getTime() ? booking.endAt : latest,
+      slot.bookings[0].booking.endAt,
+    );
+  }, [hasBookings, slot.bookings]);
+
+  const first = hasBookings ? slot.bookings[0] : null;
+  const laneTitle = first
+    ? slot.bookings.length === 1
+      ? first.booking.service.name
+      : `${slot.bookings.length} bookings`
+    : '';
+  const laneSub = first
+    ? slot.bookings.length === 1
+      ? `${shortName(first.booking.fullName)} · ${firstName(first.barber.name)}`
+      : slot.bookings.map(({ booking }) => firstName(booking.fullName)).join(', ')
+    : '';
+
+  const groupLabel = `${slot.timeLabel}${hasBookings ? ` — ${slot.bookings.length} booking${slot.bookings.length === 1 ? '' : 's'}` : ''}${hasBlocks ? ` — ${slot.timeBlocks.length} block${slot.timeBlocks.length === 1 ? '' : 's'}` : ''}`;
+
   return (
-    <motion.div
-      layout="position"
-      className="admin-vtl-slot-group"
+    <div
+      className={`admin-vtl-slot-group tl-slot tl-slot--${slotState}${isHour ? ' tl-slot--hour' : ''}${hasBlocks && !hasBookings ? ' tl-slot--blocked' : ''}`}
       data-vtl-slot={slotKey}
       data-expanded={isExpanded ? 'true' : undefined}
-      aria-label={`${slot.timeLabel}${hasBookings ? ` — ${slot.bookings.length} booking${slot.bookings.length === 1 ? '' : 's'}` : ''}${hasBlocks ? ` — ${slot.timeBlocks.length} block${slot.timeBlocks.length === 1 ? '' : 's'}` : ''}`}
+      aria-label={groupLabel}
       role="group"
     >
       <div
-        className={`admin-vtl-slot${hasBookings ? ' admin-vtl-slot--interactive' : ''}`}
+        className={`tl-row${hasBookings ? ' admin-vtl-slot--interactive tl-row--booked' : ''}`}
         role={hasBookings ? 'button' : undefined}
         tabIndex={hasBookings ? 0 : undefined}
         aria-expanded={hasBookings ? isExpanded : undefined}
-        aria-controls={hasBookings ? expansionId : undefined}
+        aria-controls={hasBookings && isExpanded ? expansionId : undefined}
         onClick={handleSlotToggle}
         onKeyDown={handleSlotKeyDown}
       >
-        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel} data-vtl-time={slot.timeLabel}>
+        <time className="tl-time" dateTime={slot.timeLabel}>
           {slot.timeLabel}
         </time>
-        <div className="admin-vtl-slot-body">
+        <div className="tl-lane">
           {hasBookings ? (
-            <ProgressTrack
-              items={slot.bookings}
-              nowMs={nowMs}
-              activeBookingId={activeBookingId}
-              isSearchActive={isSearchActive}
-              onAvatarClick={handleSlotAvatarClick}
-            />
-          ) : (
             <>
-              {hasBlocks && (
-                <div className="admin-vtl-blocks">
-                  {slot.timeBlocks.map((block) => (
-                    <span key={block.id} className="admin-vtl-block-chip" title={block.title}>
-                      {block.title}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div
-                className={`admin-vtl-slot-line${
-                  hasBlocks
-                    ? ' admin-vtl-slot-line--block'
-                    : ' admin-vtl-slot-line--empty'
-                }`}
-                aria-hidden="true"
+              <p className="tl-lane-meta">
+                <span className="tl-lane-title">{laneTitle}</span>
+                <span className="tl-lane-sub">{laneSub}</span>
+              </p>
+              <ProgressTrack
+                items={slot.bookings}
+                nowMs={nowMs}
+                activeBookingId={activeBookingId}
+                isSearchActive={isSearchActive}
+                onAvatarClick={handleSlotAvatarClick}
               />
             </>
+          ) : hasBlocks ? (
+            <div className="tl-blocks">
+              {slot.timeBlocks.map((block) => (
+                <span key={block.id} className="tl-block-chip" title={block.title}>
+                  {block.title}
+                </span>
+              ))}
+              <span className="tl-hair tl-hair--block" aria-hidden="true" />
+            </div>
+          ) : (
+            <span className="tl-hair" aria-hidden="true" />
           )}
         </div>
+        {hasBookings ? (
+          <>
+            <time className="tl-end" dateTime={latestEnd || undefined}>
+              {latestEnd ? formatEndTime(latestEnd) : ''}
+            </time>
+            <ChevronDown className="tl-chevron" width={16} height={16} aria-hidden />
+          </>
+        ) : null}
       </div>
 
-      <AnimatePresence initial={false}>
-        {isExpanded && hasBookings && (
-          <motion.div
-            key={slotKey}
-            id={expansionId}
-            className="admin-vtl-expansion"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            style={{ overflow: 'hidden' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-vtl-expansion-list">
-              {slot.bookings.map(({ booking, barber }, bookingIdx) => {
-                const canMutateBooking =
-                  canManageBookings || Boolean(sessionBarberId && booking.barberId === sessionBarberId);
-                return (
-                <BookingExpansionCard
-                  key={booking.id}
-                  booking={booking}
-                  barber={barber}
-                  toneClass={getBookingStatusTone(booking)}
-                  onExpand={() => onExpand(booking)}
-                  onClientProfile={onClientProfile}
-                  isClientProfileLoading={clientProfileLoadingBookingId === booking.id}
-                  previewSwipe={previewSwipe}
-                  showSwipeHint={previewSwipe && bookingIdx === 0}
-                  canMutateBooking={canMutateBooking}
-                  canChangeService={canManageBookings && canMutateBooking}
-                  actionRoleScope={canManageBookings ? 'shop' : 'barber'}
-                />
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {isExpanded && hasBookings ? (
+        <div id={expansionId} className="tl-expansion" onClick={(e) => e.stopPropagation()}>
+          {slot.bookings.map(({ booking, barber }, bookingIdx) => {
+            const canMutateBooking =
+              canManageBookings || Boolean(sessionBarberId && booking.barberId === sessionBarberId);
+            return (
+              <BookingTicket
+                key={booking.id}
+                booking={booking}
+                barber={barber}
+                index={bookingIdx}
+                nowMs={nowMs}
+                onExpand={() => onExpand(booking)}
+                onClientProfile={onClientProfile}
+                isClientProfileLoading={clientProfileLoadingBookingId === booking.id}
+                isPreview={previewSwipe}
+                canMutateBooking={canMutateBooking}
+                canChangeService={canManageBookings && canMutateBooking}
+                actionRoleScope={canManageBookings ? 'shop' : 'barber'}
+              />
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 });
 
@@ -1774,9 +1382,9 @@ function TodayTimeline({
   const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
   const containedNowScrollRef = useRef<(() => void) | null>(null);
   const handledFocusBookingIdRef = useRef<string | null>(null);
-  const reduceMotion = useReducedMotion();
-  const reduceMotionRef = useRef(reduceMotion === true);
-  reduceMotionRef.current = reduceMotion === true;
+  const reduceMotion = usePrefersReducedMotion();
+  const reduceMotionRef = useRef(reduceMotion);
+  reduceMotionRef.current = reduceMotion;
   const onInitialNowScrollRef = useRef(onInitialNowScroll);
   onInitialNowScrollRef.current = onInitialNowScroll;
 
@@ -1966,60 +1574,6 @@ function TodayTimeline({
     hasScrolledToNow.current = false;
   }, [selectedDate]);
 
-  // ── Odometer effect: scale/fade time labels by distance from viewport center ──
-  useEffect(() => {
-    const container = activeScrollRef.current;
-    if (!container) return undefined;
-
-    const nodes = () =>
-      container.querySelectorAll<HTMLElement>('[data-vtl-time]');
-
-    if (reduceMotion) {
-      nodes().forEach((el) => {
-        el.style.transform = '';
-        el.style.opacity = '';
-      });
-      return undefined;
-    }
-
-    const SIGMA = 96;
-    const SCALE_MAX = 1.42;
-    const SCALE_MIN = 0.86;
-    const OPACITY_MIN = 0.5;
-
-    let rafId: number | null = null;
-
-    const update = () => {
-      rafId = null;
-      const rect = container.getBoundingClientRect();
-      const centerY = rect.top + rect.height / 2;
-      nodes().forEach((el) => {
-        const r = el.getBoundingClientRect();
-        const d = r.top + r.height / 2 - centerY;
-        const t = Math.exp(-(d * d) / (2 * SIGMA * SIGMA));
-        const scale = SCALE_MIN + (SCALE_MAX - SCALE_MIN) * t;
-        const opacity = OPACITY_MIN + (1 - OPACITY_MIN) * t;
-        el.style.transform = `scale(${scale.toFixed(3)})`;
-        el.style.opacity = opacity.toFixed(3);
-      });
-    };
-
-    const schedule = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-
-    schedule();
-    window.addEventListener('scroll', schedule, true);
-    window.addEventListener('resize', schedule);
-
-    return () => {
-      if (rafId !== null) window.cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', schedule, true);
-      window.removeEventListener('resize', schedule);
-    };
-  }, [activeScrollRef, reduceMotion, items, expandedSlotKey]);
-
   // Close expansion when clicking the empty scroll area
   const handleScrollClick = useCallback(() => {
     setExpandedSlotKey(null);
@@ -2034,7 +1588,11 @@ function TodayTimeline({
   const nextDayA11y = nextDayShortLabel ? `Next day — ${nextDayShortLabel}` : 'Next day';
 
   return (
-    <section className="admin-vtl" aria-label={`Timeline for ${selectedDate}`}>
+    <section
+      className="admin-vtl tl"
+      aria-label={`Timeline for ${selectedDate}`}
+      data-tl-motion={reduceMotion || clock.frozen ? undefined : 'on'}
+    >
       {floatingTopRight ? (
         <div className="admin-vtl-floating-slot">{floatingTopRight}</div>
       ) : null}

@@ -1,9 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { formatInTimeZone } from 'date-fns-tz';
 import EmptyState from '../EmptyState';
 import { Calendar } from '../lucide-react';
 import ClientListAvatar from './ClientListAvatar';
-
-const HISTORY_MOBILE_MQ = '(max-width: 47.99rem)';
+import AdminDataTable, {
+  AdminTableIdentity,
+  AdminTableStatus,
+  type AdminDataTableColumn,
+  type AdminTableStatusTone,
+} from './AdminDataTable';
 
 /** Mirrors dashboard `Booking` rows from the admin API (structural match for handlers). */
 export type ScheduleListBooking = {
@@ -131,6 +136,8 @@ export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps &
     heading: string;
     historyFilters?: React.ReactNode;
     historyToolbar?: React.ReactNode;
+    /** Rendered under the last row (e.g. Load more). */
+    historyFooter?: React.ReactNode;
     formatDateTime: (startAt: string) => string;
     /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
     getHistoryStatusLine: (booking: ScheduleListBooking) => string;
@@ -170,24 +177,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
     return [...bookings].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   }, [bookings, history]);
 
-  const [isHistoryMobile, setIsHistoryMobile] = useState(() =>
-    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia(HISTORY_MOBILE_MQ).matches
-      : false
-  );
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!history || typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mq = window.matchMedia(HISTORY_MOBILE_MQ);
-    const sync = () => {
-      setIsHistoryMobile(mq.matches);
-      if (!mq.matches) setExpandedBookingId(null);
-    };
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, [history]);
 
   const rootClass = history ? 'admin-bookings-schedule admin-bookings-schedule--history' : 'admin-bookings-schedule';
 
@@ -198,17 +188,6 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
     setExpandedBookingId((current) => (current === bookingId ? null : bookingId));
   };
 
-  const historyHeadRow = (
-    <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
-      <span>Client</span>
-      <span className="admin-bookings-schedule__history-head-service">Service</span>
-      <span className="admin-bookings-schedule__history-head-datetime">Date &amp; Time</span>
-      <span className="admin-bookings-schedule__history-head-time">Time</span>
-      <span className="admin-bookings-schedule__history-head-barber">Barber</span>
-      <span>Status</span>
-    </div>
-  );
-
   const historyFiltersNode =
     history && props.historyFilters ? (
       <div className="admin-bookings-schedule__history-filters">
@@ -216,244 +195,235 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
       </div>
     ) : null;
 
-  const historyToolbarNode =
-    history && props.historyToolbar ? (
-      <div className="admin-bookings-schedule__toolbar admin-clients-search-row">
-        {props.historyToolbar}
-      </div>
-    ) : null;
-
   if (history) {
+    const statusTone = (status: string): AdminTableStatusTone => {
+      const variant = historyChipVariant(status);
+      if (status === 'NO_SHOW') return 'warn';
+      if (variant === 'done') return 'ok';
+      if (variant === 'cancelled') return 'danger';
+      if (variant === 'rescheduled') return 'violet';
+      return 'neutral';
+    };
+
+    const columns: AdminDataTableColumn<ScheduleListBooking>[] = [
+      {
+        id: 'avatar',
+        header: '',
+        srHeader: 'Photo',
+        width: '2.25rem',
+        mobile: 'lead',
+        cell: (booking) => (
+          <ClientListAvatar
+            clientId={booking.clientId}
+            fullName={booking.fullName}
+            avatarUrl={booking.clientAvatarUrl}
+            className="adt-avatar admin-bookings-schedule__history-avatar"
+            onAvatarChange={props.onClientAvatarChange}
+            onClick={(event) => {
+              event.stopPropagation();
+              void onOpenClient(booking);
+            }}
+          />
+        ),
+      },
+      {
+        id: 'client',
+        header: 'Client',
+        width: 'minmax(11rem, 1.6fr)',
+        mobile: 'primary',
+        cell: (booking) => (
+          <AdminTableIdentity
+            title={highlightMatch(booking.fullName)}
+            subtitle={(booking.email ?? '').trim() ? highlightMatch((booking.email ?? '').trim()) : undefined}
+          />
+        ),
+      },
+      {
+        id: 'service',
+        header: 'Service',
+        width: 'minmax(9rem, 1.4fr)',
+        mobile: 'hidden',
+        cell: (booking) => (
+          <span className="adt-identity">
+            <span className="adt-truncate" style={{ color: 'var(--kui-text)' }}>
+              {highlightMatch(booking.service?.name ?? '—')}
+            </span>
+            <span className="adt-identity-sub">{formatDurationLine(bookingDurationMinutes(booking))}</span>
+          </span>
+        ),
+      },
+      {
+        id: 'when',
+        header: 'Date & time',
+        width: 'minmax(8.5rem, 1fr)',
+        mobile: 'hidden',
+        cell: (booking) => (
+          <span className="adt-identity">
+            <span className="adt-truncate" style={{ color: 'var(--kui-text)' }}>
+              {formatInTimeZone(new Date(booking.startAt), 'Europe/London', 'EEE d MMM yyyy')}
+            </span>
+            <span className="adt-identity-sub">{formatStartTime(booking.startAt)}</span>
+          </span>
+        ),
+      },
+      {
+        id: 'barber',
+        header: 'Barber',
+        width: 'minmax(5.5rem, 0.7fr)',
+        mobile: 'hidden',
+        cell: (booking) => <span className="adt-truncate">{barberFirstName(booking.barber?.name)}</span>,
+      },
+      {
+        id: 'summary',
+        header: '',
+        width: '0px',
+        only: 'narrow',
+        mobile: 'meta',
+        cell: (booking) => (
+          <span className="adt-truncate">
+            {formatStartTime(booking.startAt)} · {highlightMatch(booking.service?.name ?? '—')} · {barberFirstName(booking.barber?.name)}
+          </span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        width: 'minmax(8.5rem, auto)',
+        align: 'end',
+        mobile: 'end',
+        cell: (booking) => {
+          const chipLabel = props.getHistoryStatusLine(booking);
+          return (
+            <span className="adt-stack-end">
+              <AdminTableStatus
+                as="button"
+                tone={statusTone(booking.status)}
+                className="admin-bookings-schedule__history-chip--button"
+                aria-haspopup="dialog"
+                aria-expanded={props.statusEditorBookingId === booking.id}
+                aria-label={`Update status for ${booking.fullName}. Current status: ${chipLabel}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  props.onEditHistoryStatus(booking);
+                }}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
+                {chipLabel}
+              </AdminTableStatus>
+              {booking.depositRefund ? (
+                <span
+                  className={`admin-bookings-schedule__refund-badge admin-bookings-schedule__refund-badge--${booking.depositRefund.status.toLowerCase()}`}
+                >
+                  {depositRefundBadgeLabel(booking.depositRefund)}
+                </span>
+              ) : null}
+            </span>
+          );
+        },
+      },
+    ];
+
     return (
       <section className={rootClass} aria-label={heading}>
-        <div className="admin-bookings-schedule__history-table-wrap">
-          {historyFiltersNode}
-          {historyToolbarNode}
-
-          {bookingsInitialLoading ? (
-            <>
-              {historyHeadRow}
-              <div className="admin-bookings-schedule__history-loading" aria-busy="true" aria-live="polite">
-                {Array.from({ length: 6 }, (_, i) => (
-                  <div key={i} className="admin-bookings-schedule__history-skeleton-row" aria-hidden="true">
-                    <div className="admin-bookings-schedule__history-skeleton-client">
-                      <span className="admin-bookings-schedule__history-skeleton-avatar" />
-                      <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--name" />
-                    </div>
-                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-service" />
-                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-time" />
-                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--sm admin-bookings-schedule__history-skeleton-barber" />
-                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--chip" />
+        {historyFiltersNode}
+        <AdminDataTable<ScheduleListBooking>
+          label={heading}
+          className="admin-bookings-schedule__history-table-wrap"
+          rows={displayBookings}
+          columns={columns}
+          getRowId={(booking) => booking.id}
+          loading={bookingsInitialLoading}
+          toolbar={props.historyToolbar ?? undefined}
+          footer={props.historyFooter}
+          onRowClick={(booking) => toggleHistoryExpand(booking.id)}
+          rowActionLabel={(booking) =>
+            `${expandedBookingId === booking.id ? 'Hide' : 'Show'} booking details for ${booking.fullName}`
+          }
+          isRowExpanded={(booking) => expandedBookingId === booking.id}
+          rowAttributes={(booking) => ({ 'data-booking-id': booking.id })}
+          rowClassName={(booking) => (updatedBookingIds.includes(booking.id) ? 'adt-hit' : undefined)}
+          isRowMuted={(booking) => booking.status.startsWith('CANCELLED') || booking.status === 'EXPIRED'}
+          renderExpanded={(booking) => {
+            const serviceName = booking.service?.name ?? '—';
+            const durationLabel = formatDurationLine(bookingDurationMinutes(booking));
+            const canRetry = Boolean(props.canRetryDepositRefund?.(booking) && props.onRetryDepositRefund);
+            return (
+              <div className="admin-bookings-schedule__history-details">
+                <dl className="adt-detail-grid">
+                  <div>
+                    <dt>Service</dt>
+                    <dd>
+                      {serviceName}
+                      {durationLabel !== '—' ? ` · ${durationLabel}` : ''}
+                    </dd>
                   </div>
-                ))}
-              </div>
-            </>
-          ) : displayBookings.length === 0 ? (
-            <div className="admin-bookings-schedule__history-empty">
-              <EmptyState
-                icon={Calendar}
-                title={
-                  props.historyDateFiltered ? 'No bookings in this period' : 'No booking history'
-                }
-                description={
-                  props.historyDateFiltered
-                    ? 'No appointments were found for the selected date range.'
-                    : 'Past appointments will appear here once bookings are completed or cancelled.'
-                }
-                variant={props.historyDateFiltered ? 'filtered' : undefined}
-                action={
-                  props.historyDateFiltered && props.onClearHistoryDateRange ? (
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={props.onClearHistoryDateRange}>
-                      Clear date range
+                  <div>
+                    <dt>Date &amp; time</dt>
+                    <dd>{props.formatDateTime(booking.startAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Barber</dt>
+                    <dd>{booking.barber?.name ?? '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>Status</dt>
+                    <dd>{props.getHistoryStatusLine(booking)}</dd>
+                  </div>
+                  {booking.depositRefund ? (
+                    <div>
+                      <dt>Deposit</dt>
+                      <dd>{depositRefundBadgeLabel(booking.depositRefund)}</dd>
+                    </div>
+                  ) : null}
+                  {booking.notes ? (
+                    <div>
+                      <dt>Notes</dt>
+                      <dd>{booking.notes}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+                <div className="adt-detail-actions">
+                  <button type="button" className="adt-action" onClick={() => void onOpenClient(booking)}>
+                    Client profile
+                  </button>
+                  <button type="button" className="adt-action" onClick={() => props.onEditHistoryStatus(booking)}>
+                    Update status
+                  </button>
+                  {canRetry ? (
+                    <button
+                      type="button"
+                      className="adt-action"
+                      onClick={() => void props.onRetryDepositRefund?.(booking)}
+                      disabled={props.refundRetryLoadingBookingId === booking.id}
+                    >
+                      {props.refundRetryLoadingBookingId === booking.id ? 'Retrying refund…' : 'Retry refund'}
                     </button>
-                  ) : undefined
-                }
-              />
-            </div>
-          ) : (
-            <>
-              {historyHeadRow}
-              <ul className="admin-bookings-schedule__history-list" role="list" aria-live="polite">
-                {displayBookings.map((booking) => {
-                  const isUpdated = updatedBookingIds.includes(booking.id);
-                  const isExpanded = expandedBookingId === booking.id;
-                  const chipVariant = historyChipVariant(booking.status);
-                  const chipLabel = props.getHistoryStatusLine(booking);
-                  const serviceName = booking.service?.name ?? '—';
-                  const durationLabel = formatDurationLine(bookingDurationMinutes(booking));
-                  const emailTrimmed = (booking.email ?? '').trim();
-                  const dateTimeStr = props.formatDateTime(booking.startAt);
-                  const timeOnlyStr = formatStartTime(booking.startAt);
-                  const barberShort = barberFirstName(booking.barber?.name);
-                  const subtitle = `${serviceName} · ${barberShort}`;
-
-                  const itemClass = [
-                    isUpdated ? 'admin-bookings-schedule__history-item--updated' : '',
-                    isExpanded ? 'admin-bookings-schedule__history-item--expanded' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ') || undefined;
-
-                  const handleRowActivate = () => {
-                    if (isHistoryMobile) {
-                      toggleHistoryExpand(booking.id);
-                      return;
-                    }
-                    void onOpenClient(booking);
-                  };
-
-                  return (
-                    <li key={booking.id} className={itemClass}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        className={
-                          isExpanded
-                            ? 'admin-bookings-schedule__history-row admin-bookings-schedule__history-row--expanded'
-                            : 'admin-bookings-schedule__history-row'
-                        }
-                        onClick={handleRowActivate}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            handleRowActivate();
-                          }
-                        }}
-                        data-booking-id={booking.id}
-                        aria-expanded={isHistoryMobile ? isExpanded : undefined}
-                        aria-label={
-                          isHistoryMobile
-                            ? `${isExpanded ? 'Collapse' : 'Expand'} booking for ${booking.fullName}`
-                            : `View booking for ${booking.fullName}`
-                        }
-                      >
-                        <div className="admin-bookings-schedule__history-client">
-                          <ClientListAvatar
-                            clientId={booking.clientId}
-                            fullName={booking.fullName}
-                            avatarUrl={booking.clientAvatarUrl}
-                            className="admin-bookings-schedule__history-avatar"
-                            onAvatarChange={props.onClientAvatarChange}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void onOpenClient(booking);
-                            }}
-                          />
-
-                          <div className="admin-bookings-schedule__history-identity">
-                            <span className="admin-bookings-schedule__history-name">
-                              {highlightMatch(booking.fullName)}
-                            </span>
-                            {isHistoryMobile ? (
-                              <span className="admin-bookings-schedule__history-subtitle">
-                                {highlightMatch(subtitle)}
-                              </span>
-                            ) : (
-                              <span className="admin-bookings-schedule__history-email">
-                                {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <span className="admin-bookings-schedule__history-service">
-                          {highlightMatch(serviceName)}
-                          <span className="admin-bookings-schedule__history-service-duration">
-                            {` · ${durationLabel}`}
-                          </span>
-                        </span>
-
-                        <span className="admin-bookings-schedule__history-time">
-                          {isHistoryMobile ? (
-                            <span className="admin-bookings-schedule__history-time-only">{timeOnlyStr}</span>
-                          ) : (
-                            <span className="admin-bookings-schedule__history-time-full">{dateTimeStr}</span>
-                          )}
-                        </span>
-
-                        <span className="admin-bookings-schedule__history-barber">
-                          {barberShort}
-                        </span>
-
-                        <button
-                          type="button"
-                          className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--button admin-bookings-schedule__history-chip--${chipVariant}`}
-                          aria-haspopup="dialog"
-                          aria-expanded={props.statusEditorBookingId === booking.id}
-                          aria-label={`Update status for ${booking.fullName}. Current status: ${chipLabel}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            event.preventDefault();
-                            props.onEditHistoryStatus(booking);
-                          }}
-                          onKeyDown={(event) => event.stopPropagation()}
-                        >
-                          <span>{chipLabel}</span>
-                          <span className="admin-bookings-schedule__history-chip-chevron" aria-hidden="true">▾</span>
-                        </button>
-                      </div>
-
-                      <div
-                        className={
-                          isExpanded
-                            ? 'admin-bookings-schedule__history-expand-wrap admin-bookings-schedule__history-expand-wrap--open'
-                            : 'admin-bookings-schedule__history-expand-wrap'
-                        }
-                        aria-hidden={!isExpanded}
-                        inert={!isExpanded ? true : undefined}
-                      >
-                        <div className="admin-bookings-schedule__history-details">
-                          <div className="admin-bookings-schedule__history-meta-grid">
-                            <p>
-                              <strong>Service:</strong> {serviceName}
-                              {durationLabel !== '—' ? ` · ${durationLabel}` : ''}
-                            </p>
-                            <p>
-                              <strong>Date &amp; time:</strong> {dateTimeStr}
-                            </p>
-                            <p className="admin-bookings-schedule__history-meta-status">
-                              <strong>Status:</strong>{' '}
-                              <span className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--${chipVariant}`}>
-                                {chipLabel}
-                              </span>
-                            </p>
-                            {booking.depositRefund ? (
-                              <p>
-                                <strong>Deposit:</strong>{' '}
-                                <span
-                                  className={`admin-bookings-schedule__refund-badge admin-bookings-schedule__refund-badge--${booking.depositRefund.status.toLowerCase()}`}
-                                >
-                                  {depositRefundBadgeLabel(booking.depositRefund)}
-                                </span>
-                              </p>
-                            ) : null}
-                          </div>
-                          {props.canRetryDepositRefund?.(booking) && props.onRetryDepositRefund ? (
-                            <div className="admin-bookings-schedule__actions">
-                              <button
-                                type="button"
-                                className="admin-bookings-schedule__cancel"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  void props.onRetryDepositRefund?.(booking);
-                                }}
-                                disabled={props.refundRetryLoadingBookingId === booking.id}
-                              >
-                                {props.refundRetryLoadingBookingId === booking.id
-                                  ? 'Retrying refund…'
-                                  : 'Retry refund'}
-                              </button>
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </div>
+                  ) : null}
+                </div>
+              </div>
+            );
+          }}
+          empty={
+            <EmptyState
+              icon={Calendar}
+              title={props.historyDateFiltered ? 'No bookings in this period' : 'No booking history'}
+              description={
+                props.historyDateFiltered
+                  ? 'No appointments were found for the selected date range.'
+                  : 'Past appointments will appear here once bookings are completed or cancelled.'
+              }
+              variant={props.historyDateFiltered ? 'filtered' : undefined}
+              action={
+                props.historyDateFiltered && props.onClearHistoryDateRange ? (
+                  <button type="button" className="adt-action" onClick={props.onClearHistoryDateRange}>
+                    Clear date range
+                  </button>
+                ) : undefined
+              }
+            />
+          }
+        />
       </section>
     );
   }

@@ -29,6 +29,14 @@ import BlacklineDemoSaleCard from './BlacklineDemoSaleCard';
 import ProductWizard from './product-wizard/ProductWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
+import AdminDataTable, {
+  AdminTableFilters,
+  AdminTableIdentity,
+  AdminTableSortSelect,
+  AdminTableSwitchPill,
+  AdminTableToolbar,
+  type AdminDataTableColumn,
+} from './AdminDataTable';
 import { normalizeProductFlags } from '@/lib/products/normalizeProductFlags';
 import {
   EMPTY_PRODUCT_FORM,
@@ -348,24 +356,17 @@ type ProductStatusPillProps = {
   onClick: () => void;
 };
 
-function ProductStatusPill({ on, tone, onLabel, offLabel, disabled, ariaLabel, onClick }: ProductStatusPillProps) {
+function ProductStatusPill({ on, onLabel, offLabel, disabled, ariaLabel, onClick }: ProductStatusPillProps) {
   return (
-    <button
-      type="button"
-      className={[
-        'admin-product-row__status-pill',
-        `admin-product-row__status-pill--${tone}`,
-        on ? 'is-on' : ''
-      ].filter(Boolean).join(' ')}
-      role="switch"
-      aria-checked={on}
-      aria-label={ariaLabel}
+    <AdminTableSwitchPill
+      on={on}
+      onLabel={onLabel}
+      offLabel={offLabel}
+      ariaLabel={ariaLabel}
       disabled={disabled}
       onClick={onClick}
-    >
-      <span className="admin-product-row__status-dot" aria-hidden="true" />
-      <span>{on ? onLabel : offLabel}</span>
-    </button>
+      className="admin-product-row__status-pill"
+    />
   );
 }
 
@@ -378,6 +379,10 @@ type BulkActionBarProps = {
 };
 
 function BulkActionBar({ count, loading, onActivate, onDeactivate, onClear }: BulkActionBarProps) {
+  // Portals need document.body: render nothing on the server and on the hydration pass.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   return createPortal(
     <div
       className={`admin-bulk-bar${count > 0 ? ' admin-bulk-bar--visible' : ''}`}
@@ -1551,6 +1556,165 @@ export default function ShopAdminPanel({
   const salesSegmentedValue = salesPreset === 'custom' ? ('' as Exclude<SalesRangePreset, 'custom'>) : salesPreset;
 
 
+  const productUpdatedLabel = (product: Product) =>
+    new Date(product.updatedAt).toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Europe/London',
+    });
+
+  const allFilteredSelected = filteredProducts.length > 0 && bulkSelectedCount === filteredProducts.length;
+
+  const productStatusPill = (product: Product) => (
+    <ProductStatusPill
+      on={product.active}
+      tone="active"
+      onLabel="Live"
+      offLabel="Hidden"
+      disabled={Boolean(productSavingById[product.id])}
+      ariaLabel={`${product.name}: ${product.active ? 'Live' : 'Hidden'}`}
+      onClick={() => void patchProductFlags(product.id, { active: !product.active })}
+    />
+  );
+
+  const productColumns: AdminDataTableColumn<Product>[] = [
+    {
+      id: 'thumb',
+      header: (
+        <label className="adt-check" title={allFilteredSelected ? 'Deselect all' : 'Select all'}>
+          <input
+            type="checkbox"
+            className="admin-products-select-all"
+            checked={allFilteredSelected}
+            ref={(node) => {
+              if (node) node.indeterminate = bulkSelectedCount > 0 && !allFilteredSelected;
+            }}
+            onChange={() => {
+              if (allFilteredSelected) bulkClearAll();
+              else bulkSelectAll(filteredProducts.map((p) => p.id));
+            }}
+            aria-label={allFilteredSelected ? 'Deselect all products' : `Select all ${filteredProducts.length} products`}
+          />
+        </label>
+      ),
+      width: '2.75rem',
+      mobile: 'lead',
+      cell: (product) => {
+        const selected = bulkIsSelected(product.id);
+        return (
+          <span className={`adt-thumb adt-thumb--selectable${selected ? ' is-selected' : ''}`}>
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt="" loading="lazy" decoding="async" draggable={false} />
+            ) : (
+              <Package aria-hidden="true" />
+            )}
+            <label className="adt-thumb-check" title={selected ? `Deselect ${product.name}` : `Select ${product.name}`}>
+              <input
+                type="checkbox"
+                className="admin-product-row__checkbox"
+                checked={selected}
+                onChange={() => bulkToggle(product.id)}
+                aria-label={selected ? `Deselect ${product.name}` : `Select ${product.name}`}
+              />
+            </label>
+          </span>
+        );
+      },
+    },
+    {
+      id: 'name',
+      header: 'Product',
+      width: 'minmax(11rem, 2fr)',
+      sortable: true,
+      mobile: 'primary',
+      cell: (product) => {
+        const statusLine = productSavingById[product.id] ? 'Saving…' : productStatusById[product.id] || '';
+        const categoryLabel =
+          PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling';
+        return <AdminTableIdentity title={product.name} subtitle={statusLine || categoryLabel} />;
+      },
+    },
+    {
+      id: 'updated',
+      header: 'Updated',
+      width: '6.5rem',
+      sortable: true,
+      mobile: 'hidden',
+      cell: (product) => <span className="adt-muted">{productUpdatedLabel(product)}</span>,
+    },
+    {
+      id: 'price',
+      header: 'Price',
+      width: '5.5rem',
+      align: 'end',
+      sortable: true,
+      mobile: 'hidden',
+      cell: (product) => <span className="adt-num">{formatPrice(product.pricePence)}</span>,
+    },
+    {
+      id: 'status',
+      header: 'Shop',
+      width: '6.5rem',
+      mobile: 'hidden',
+      cell: productStatusPill,
+    },
+    {
+      id: 'mobileMeta',
+      header: '',
+      width: '0px',
+      only: 'narrow',
+      mobile: 'meta',
+      cell: (product) => (
+        <span className="adt-inline">
+          <span className="adt-num">{formatPrice(product.pricePence)}</span>
+          {productStatusPill(product)}
+        </span>
+      ),
+    },
+    {
+      id: 'controls',
+      header: '',
+      srHeader: 'Actions',
+      width: '5rem',
+      align: 'end',
+      mobile: 'end',
+      cell: (product) => (
+        <span className="adt-inline">
+          <button
+            type="button"
+            className={`adt-icon-btn admin-product-row__featured-btn${product.featured ? ' is-on' : ''}`}
+            role="switch"
+            aria-checked={product.featured}
+            aria-label={`${product.name}: ${product.featured ? 'Featured' : 'Not featured'}`}
+            disabled={Boolean(productSavingById[product.id])}
+            onClick={() => void patchProductFlags(product.id, { featured: !product.featured })}
+            title={product.featured ? 'Featured — click to unfeature' : 'Feature in your shop'}
+          >
+            <Star strokeWidth={product.featured ? 0 : 2} style={product.featured ? { fill: 'currentColor' } : undefined} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="adt-icon-btn admin-product-row__edit-btn"
+            aria-label={
+              isPublicAdminDemoMode()
+                ? 'Product settings — sample data is read-only'
+                : `Edit ${product.name}`
+            }
+            title={
+              isPublicAdminDemoMode()
+                ? 'Product settings — sample data is read-only'
+                : `Edit ${product.name}`
+            }
+            onClick={() => startEdit(product)}
+          >
+            <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
+          </button>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <ShopPanelErrorBoundary>
       <section
@@ -1588,119 +1752,7 @@ export default function ShopAdminPanel({
       ) : null}
 
       {activeTab === 'products' && (
-        <div className="admin-reports admin-products-panel">
-          <div className="admin-products-toolbar-sticky">
-            <div className="admin-products-toolbar">
-
-              {/* Row 1 — Search */}
-              <AdminPremiumSearchBar
-                className="admin-products-toolbar-search"
-                inputRef={productSearchInputRef}
-                value={productSearch}
-                onChange={setProductSearch}
-                onClear={handleProductSearchClear}
-                onKeyDown={(e) => e.key === 'Escape' && handleProductSearchClear()}
-                placeholder="Search products…"
-                aria-label="Search products"
-                showKbdHint
-                searchShortcutHint="/"
-              />
-
-              {/* Row 2 — Controls */}
-              <div className="admin-products-toolbar-controls">
-
-                {/* Filter tabs */}
-                <div className="admin-filter-scroll-wrap">
-                  <div ref={productFiltersScrollRef} className="admin-products-filters" role="group" aria-label="Product filters">
-                    {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
-                      <button
-                        key={filter}
-                        type="button"
-                        className={`admin-products-filter-tab${productFilter === filter ? ' admin-products-filter-tab--active' : ''}`}
-                        onClick={() => setProductFilter(filter)}
-                        aria-pressed={productFilter === filter}
-                      >
-                        {filter === 'all' ? 'All' : filter === 'active' ? 'Live' : filter === 'inactive' ? 'Hidden' : 'Featured'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort + Meta — right cluster */}
-                <div className="admin-products-toolbar-right">
-                  <div
-                    ref={productSortRef}
-                    className={`admin-products-sort-wrap${productSortOpen ? ' admin-products-sort-wrap--open' : ''}`}
-                  >
-                    <button
-                      type="button"
-                      className="admin-products-sort-trigger"
-                      aria-label="Sort products"
-                      aria-haspopup="listbox"
-                      aria-expanded={productSortOpen}
-                      onClick={() => setProductSortOpen((open) => !open)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                          event.preventDefault();
-                          setProductSortOpen(true);
-                        }
-                      }}
-                    >
-                      <span>{PRODUCT_SORT_OPTIONS.find((option) => option.value === productSortMode)?.label}</span>
-                      <ChevronDown className="admin-products-sort-chevron" width={12} height={12} aria-hidden="true" />
-                    </button>
-
-                    {productSortOpen ? (
-                      <div className="admin-products-sort-menu" role="listbox" aria-label="Sort products">
-                        {PRODUCT_SORT_OPTIONS.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`admin-products-sort-option${productSortMode === option.value ? ' admin-products-sort-option--active' : ''}`}
-                            role="option"
-                            aria-selected={productSortMode === option.value}
-                            onClick={() => {
-                              setProductSortMode(option.value);
-                              setProductSortOpen(false);
-                            }}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="admin-products-meta">
-                    <span className="admin-products-count">{filteredProducts.length} products · {featuredCount} featured</span>
-                    {filteredProducts.length > 0 && (
-                      <button
-                        type="button"
-                        className="admin-products-select-all"
-                        onClick={() => {
-                          const allIds = filteredProducts.map((p) => p.id);
-                          if (bulkSelectedCount === filteredProducts.length) {
-                            bulkClearAll();
-                          } else {
-                            bulkSelectAll(allIds);
-                          }
-                        }}
-                        aria-pressed={bulkSelectedCount === filteredProducts.length && filteredProducts.length > 0}
-                      >
-                        {bulkSelectedCount > 0 && bulkSelectedCount === filteredProducts.length
-                          ? 'Deselect all'
-                          : bulkSelectedCount > 0
-                            ? `Select all (${filteredProducts.length})`
-                            : 'Select all'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
+        <div className="admin-products-panel">
           <AdminWizardSheetLayer
             open={formOpen}
             onDismiss={resetForm}
@@ -1719,169 +1771,112 @@ export default function ShopAdminPanel({
             />
           </AdminWizardSheetLayer>
 
-          <div className="admin-products-scroll" role="region" aria-label="Products list">
-            {error ? (
-              <div className="admin-inline-error" role="alert">
-                <p>{error}</p>
-                {!loading ? (
-                  <button type="button" className="btn btn--secondary" onClick={() => { void fetchProducts(); }}>
-                    Retry products
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
-            {success ? <p className="admin-inline-success">{success}</p> : null}
-
-            <div className="admin-product-list">
-              {productsInitiallyLoading ? (
-                <div className="admin-product-list" aria-label="Loading products" aria-busy="true">
-                  <SkeletonBookingChoices count={4} variant="service" />
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                baseProducts.length === 0 ? (
-                  !retailFlagsLoaded ? (
-                    <div className="admin-product-list" aria-label="Loading products" aria-busy="true">
-                      <SkeletonBookingChoices count={2} variant="service" />
-                    </div>
-                  ) : retailPromptDismissed ? (
-                    <EmptyState
-                      icon={Package}
-                      title="No products yet"
-                      description={
-                        retailOn
-                          ? 'Add products you sell in the shop.'
-                          : 'Add products you sell in the shop. Retail stays off until you switch it on.'
-                      }
-                      action={<AdminAddButton label="Add your first product" onClick={startCreate} />}
-                    />
-                  ) : (
-                    <RetailOnboardingWelcome
-                      layout="panel"
-                      onYes={() => {
-                        window.location.assign('/admin/retail-onboarding?step=1');
-                      }}
-                    />
-                  )
-                ) : (
-                  <EmptyState
-                    icon={Search}
-                    title="No products match"
-                    description="Try adjusting your search or filter to find what you're looking for."
-                    variant="filtered"
-                  />
-                )
-              ) : showcasedProducts.map((product) => {
-                const isSavingCard = Boolean(productSavingById[product.id]);
-                const isCardSelected = bulkIsSelected(product.id);
-
-                const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling';
-                const updatedLabel = new Date(product.updatedAt).toLocaleString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                });
-                const productStatusLine = isSavingCard ? 'Saving…' : (productStatusById[product.id] || '');
-
-                return (
-                  <article
-                    key={product.id}
-                    className={[
-                      'admin-product-row',
-                      isCardSelected ? 'admin-product-row--selected' : '',
-                      product.active ? '' : 'admin-product-row--inactive',
-                      product.featured ? 'admin-product-row--featured' : '',
-                      bulkSelectedCount > 0 ? 'admin-product-row--bulk-mode' : ''
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                    aria-selected={isCardSelected}
-                  >
-                    <div className="admin-product-row__thumb">
-                      <label
-                        className="admin-product-row__checkbox-wrap"
-                        title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="admin-product-row__checkbox"
-                          checked={isCardSelected}
-                          onChange={() => bulkToggle(product.id)}
-                          aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
-                        />
-                      </label>
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt="" loading="lazy" draggable={false} />
-                      ) : (
-                        <Package className="admin-product-row__thumb-icon" aria-hidden="true" />
-                      )}
-                    </div>
-
-                    <div className="admin-product-row__identity">
-                      <p className="admin-product-row__name">{product.name}</p>
-                      <p className="admin-product-row__meta">
-                        <span>{categoryLabel}</span>
-                        <span className="admin-product-row__meta-sep" aria-hidden="true"> · </span>
-                        <span title={`Updated ${updatedLabel}`}>{updatedLabel}</span>
-                      </p>
-                    </div>
-
-                    <div className="admin-product-row__price-status">
-                      <p className="admin-product-row__price">{formatPrice(product.pricePence)}</p>
-                      <ProductStatusPill
-                        on={product.active}
-                        tone="active"
-                        onLabel="Live"
-                        offLabel="Hidden"
-                        disabled={isSavingCard}
-                        ariaLabel={`${product.name}: ${product.active ? 'Live' : 'Hidden'}`}
-                        onClick={() => void patchProductFlags(product.id, { active: !product.active })}
-                      />
-                    </div>
-
-                    <div className="admin-product-row__featured-col">
-                      <button
-                        type="button"
-                        className={`admin-product-row__featured-btn${product.featured ? ' is-on' : ''}`}
-                        role="switch"
-                        aria-checked={product.featured}
-                        aria-label={`${product.name}: ${product.featured ? 'Featured' : 'Not featured'}`}
-                        disabled={isSavingCard}
-                        onClick={() => void patchProductFlags(product.id, { featured: !product.featured })}
-                        title={product.featured ? 'Featured' : 'Not featured'}
-                      >
-                        <Star width={14} height={14} strokeWidth={product.featured ? 0 : 2} style={product.featured ? { fill: 'currentColor' } : undefined} aria-hidden="true" />
-                      </button>
-                    </div>
-
-                    <div className="admin-product-row__controls">
-                      <button
-                        type="button"
-                        className="admin-product-row__edit-btn"
-                        aria-label={
-                          isPublicAdminDemoMode()
-                            ? 'Product settings — sample data is read-only'
-                            : `Edit ${product.name}`
-                        }
-                        title={
-                          isPublicAdminDemoMode()
-                            ? 'Product settings — sample data is read-only'
-                            : `Edit ${product.name}`
-                        }
-                        onClick={() => startEdit(product)}
-                      >
-                        <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
-                      </button>
-                    </div>
-
-                    {productStatusLine ? (
-                      <p className="admin-product-row__saving-line" aria-live="polite">{productStatusLine}</p>
-                    ) : null}
-                  </article>
-                );
-              })}
+          {error ? (
+            <div className="admin-inline-error" role="alert">
+              <p>{error}</p>
+              {!loading ? (
+                <button type="button" className="btn btn--secondary" onClick={() => { void fetchProducts(); }}>
+                  Retry products
+                </button>
+              ) : null}
             </div>
+          ) : null}
+          {success ? <p className="admin-inline-success">{success}</p> : null}
 
-          </div>
+          {!productsInitiallyLoading && baseProducts.length === 0 ? (
+            !retailFlagsLoaded ? (
+              <div aria-label="Loading products" aria-busy="true">
+                <SkeletonBookingChoices count={2} variant="service" />
+              </div>
+            ) : retailPromptDismissed ? (
+              <EmptyState
+                icon={Package}
+                title="No products yet"
+                description={
+                  retailOn
+                    ? 'Add products you sell in the shop.'
+                    : 'Add products you sell in the shop. Retail stays off until you switch it on.'
+                }
+                action={<AdminAddButton label="Add your first product" onClick={startCreate} />}
+              />
+            ) : (
+              <RetailOnboardingWelcome
+                layout="panel"
+                onYes={() => {
+                  window.location.assign('/admin/retail-onboarding?step=1');
+                }}
+              />
+            )
+          ) : (
+            <AdminDataTable<Product>
+              label="Products"
+              rows={showcasedProducts}
+              columns={productColumns}
+              getRowId={(product) => product.id}
+              loading={productsInitiallyLoading}
+              skeletonRows={5}
+              sort={{
+                id: productSortMode === 'newest' ? 'updated' : productSortMode,
+                dir: productSortMode === 'name' ? 'asc' : 'desc',
+              }}
+              onSortChange={(id) => setProductSortMode(id === 'updated' ? 'newest' : (id as ProductSortMode))}
+              onRowClick={(product) => startEdit(product)}
+              rowActionLabel={(product) => `Edit ${product.name}`}
+              rowAttributes={(product) => ({ 'data-product-id': product.id })}
+              isRowSelected={(product) => bulkIsSelected(product.id)}
+              isRowMuted={(product) => !product.active}
+              rowClassName={() => `admin-product-row${bulkSelectedCount > 0 ? ' admin-product-row--bulk-mode' : ''}`}
+              className={bulkSelectedCount > 0 ? 'adt--bulk' : undefined}
+              empty={
+                <EmptyState
+                  icon={Search}
+                  title="No products match"
+                  description="Try adjusting your search or filter to find what you're looking for."
+                  variant="filtered"
+                />
+              }
+              toolbar={
+                <AdminTableToolbar
+                  search={
+                    <AdminPremiumSearchBar
+                      className="admin-products-toolbar-search"
+                      inputRef={productSearchInputRef}
+                      value={productSearch}
+                      onChange={setProductSearch}
+                      onClear={handleProductSearchClear}
+                      onKeyDown={(e) => e.key === 'Escape' && handleProductSearchClear()}
+                      placeholder="Search products…"
+                      aria-label="Search products"
+                      showKbdHint
+                      searchShortcutHint="/"
+                    />
+                  }
+                  filters={
+                    <AdminTableFilters<ProductFilter>
+                      label="Product filters"
+                      value={productFilter}
+                      onChange={setProductFilter}
+                      options={[
+                        { value: 'all', label: 'All' },
+                        { value: 'active', label: 'Live' },
+                        { value: 'inactive', label: 'Hidden' },
+                        { value: 'featured', label: 'Featured' },
+                      ]}
+                    />
+                  }
+                  count={`${filteredProducts.length} products · ${featuredCount} featured`}
+                  end={
+                    <AdminTableSortSelect<ProductSortMode>
+                      label="Sort products"
+                      value={productSortMode}
+                      onChange={setProductSortMode}
+                      options={PRODUCT_SORT_OPTIONS}
+                    />
+                  }
+                />
+              }
+            />
+          )}
 
           <BulkActionBar
             count={bulkSelectedCount}
@@ -1973,7 +1968,6 @@ export default function ShopAdminPanel({
             ordersUnauthorized={ordersUnauthorized}
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
             searchSlot={
-              <div className="admin-orders-search-row admin-clients-search-row">
                 <AdminPremiumSearchBar
                   value={ordersSearchQuery}
                   onChange={setOrdersSearchQuery}
@@ -1996,7 +1990,6 @@ export default function ShopAdminPanel({
                   showKbdHint={!ordersLoading}
                   searchShortcutHint="/"
                 />
-              </div>
             }
           />
 

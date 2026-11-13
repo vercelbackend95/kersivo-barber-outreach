@@ -1,10 +1,18 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 import ClientListAvatar from './ClientListAvatar';
 import ClientProfilePanel from './ClientProfilePanel';
 import ClientCoreProfilePanel from './ClientCoreProfilePanel';
+import AdminDataTable, {
+  AdminTableIdentity,
+  AdminTableToolbar,
+  type AdminDataTableColumn,
+  type AdminDataTableSort,
+} from './AdminDataTable';
+import EmptyState from '../EmptyState';
+import { Search, User } from '../lucide-react';
 
 type ClientListRow = {
   id: string;
@@ -57,6 +65,7 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
   const [isSearching, setIsSearching] = useState(false);
   const [openClientId, setOpenClientId] = useState<string | null>(null);
   const [listVersion, setListVersion] = useState(0);
+  const [sort, setSort] = useState<AdminDataTableSort>({ id: 'client', dir: 'asc' });
 
   const debounceRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -147,7 +156,173 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
     return () => { cancelled = true; };
   }, [debouncedSearch, listVersion]);
 
-  const showcasedClients = showcaseMode ? clients.slice(0, 8) : clients;
+  const sortedClients = useMemo(() => {
+    const list = [...clients];
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    const name = (c: ClientListRow) => (c.fullName || c.email || c.phone || '').toLowerCase();
+    const time = (iso: string | null | undefined) => (iso ? new Date(iso).getTime() : 0);
+    list.sort((a, b) => {
+      switch (sort.id) {
+        case 'reliability':
+          return ((a.reliabilityScore ?? 0) - (b.reliabilityScore ?? 0)) * dir;
+        case 'lastVisit':
+          return (time(a.lastVisitAt) - time(b.lastVisitAt)) * dir;
+        case 'nextBooking':
+          return (time(a.nextBookingAt) - time(b.nextBookingAt)) * dir;
+        case 'spent':
+          return ((a.totalSpentPence ?? 0) - (b.totalSpentPence ?? 0)) * dir;
+        default:
+          return name(a).localeCompare(name(b)) * dir;
+      }
+    });
+    return list;
+  }, [clients, sort]);
+
+  const showcasedClients = showcaseMode ? sortedClients.slice(0, 8) : sortedClients;
+
+  const handleSortChange = useCallback((id: string) => {
+    setSort((current) =>
+      current.id === id
+        ? { id, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+        : { id, dir: id === 'client' ? 'asc' : 'desc' },
+    );
+  }, []);
+
+  const displayNameFor = (client: ClientListRow) => client.fullName || client.phone || client.email || 'Client';
+
+  const avatarColumn: AdminDataTableColumn<ClientListRow> = {
+    id: 'avatar',
+    header: '',
+    srHeader: 'Photo',
+    width: '2.25rem',
+    mobile: 'lead',
+    cell: (client) => (
+      <ClientListAvatar
+        clientId={client.id}
+        fullName={displayNameFor(client)}
+        avatarUrl={clientsMode === 'advanced' ? client.avatarUrl : null}
+        className="adt-avatar admin-clients-avatar"
+        onClick={() => setOpenClientId(client.id)}
+      />
+    ),
+  };
+
+  const identityColumn: AdminDataTableColumn<ClientListRow> = {
+    id: 'client',
+    header: 'Client',
+    width: 'minmax(12rem, 2.2fr)',
+    sortable: true,
+    mobile: 'primary',
+    cell: (client) => (
+      <AdminTableIdentity title={displayNameFor(client)} subtitle={client.email ?? client.phone ?? undefined} />
+    ),
+  };
+
+  const columns: AdminDataTableColumn<ClientListRow>[] =
+    clientsMode === 'core'
+      ? [
+          avatarColumn,
+          identityColumn,
+          {
+            id: 'phone',
+            header: 'Phone',
+            width: 'minmax(8rem, 1fr)',
+            mobile: 'hidden',
+            cell: (client) => <span className="adt-truncate">{client.phone || '—'}</span>,
+          },
+          {
+            id: 'lastVisit',
+            header: 'Last visit',
+            width: 'minmax(7rem, 0.9fr)',
+            sortable: true,
+            mobile: 'meta',
+            cell: (client) => <span>Last visit {formatDate(client.lastVisitAt)}</span>,
+          },
+          {
+            id: 'nextBooking',
+            header: 'Next booking',
+            width: 'minmax(7rem, 0.9fr)',
+            sortable: true,
+            mobile: 'hidden',
+            cell: (client) => <span>{formatDate(client.nextBookingAt ?? null)}</span>,
+          },
+          {
+            id: 'crm',
+            header: 'Advanced CRM',
+            width: 'minmax(8rem, 0.9fr)',
+            align: 'end',
+            mobile: 'hidden',
+            cell: () => <span className="adt-badge adt-badge--brand">Full KERSIVO</span>,
+          },
+        ]
+      : [
+          avatarColumn,
+          identityColumn,
+          {
+            id: 'tags',
+            header: 'Tags',
+            width: 'minmax(8rem, 1.2fr)',
+            mobile: 'hidden',
+            cell: (client) => {
+              const tags = client.tags ?? [];
+              const visibleTags = tags.slice(0, MAX_VISIBLE_TAGS);
+              const hiddenTagCount = tags.length - visibleTags.length;
+              return tags.length === 0 ? (
+                <span className="adt-muted">—</span>
+              ) : (
+                <span className="adt-tags">
+                  {visibleTags.map((tag) => (
+                    <span key={tag} className="adt-tag">{tag}</span>
+                  ))}
+                  {hiddenTagCount > 0 ? <span className="adt-tag">+{hiddenTagCount}</span> : null}
+                </span>
+              );
+            },
+          },
+          {
+            id: 'reliability',
+            header: 'Reliability',
+            width: 'minmax(7rem, 1fr)',
+            sortable: true,
+            mobile: 'hidden',
+            cell: (client) => {
+              const score = Math.max(0, Math.min(100, client.reliabilityScore ?? 0));
+              return (
+                <span className={`adt-meter adt-meter--${reliabilityTone(score)}`} title={`${score} / 100`}>
+                  <span className="adt-meter-track">
+                    <span className="adt-meter-fill" style={{ transform: `scaleX(${score / 100})` }} />
+                  </span>
+                  <span className="adt-meter-value">{score}</span>
+                </span>
+              );
+            },
+          },
+          {
+            id: 'lastVisit',
+            header: 'Last visit',
+            width: 'minmax(6.5rem, 0.8fr)',
+            sortable: true,
+            mobile: 'meta',
+            cell: (client) => <span>{formatDate(client.lastVisitAt)}</span>,
+          },
+          ...(showTotalSpent
+            ? [
+                {
+                  id: 'spent',
+                  header: 'Total spent',
+                  width: 'minmax(6rem, 0.7fr)',
+                  align: 'end' as const,
+                  sortable: true,
+                  mobile: 'end' as const,
+                  cell: (client: ClientListRow) => (
+                    <span className="adt-num">
+                      {typeof client.totalSpentPence === 'number' ? formatPence(client.totalSpentPence) : '—'}
+                    </span>
+                  ),
+                },
+              ]
+            : []),
+        ];
 
   return (
     <section className="surface booking-shell admin-clients-section" aria-label="Clients">
@@ -163,161 +338,58 @@ export default function ClientsAdminPanel({ showcaseMode = false }: { showcaseMo
 
       <AdminDesktopDashHeroSlot />
 
-      <div
-        className={`admin-clients-table-wrap${clientsMode === 'advanced' && !showTotalSpent ? ' admin-clients-table-wrap--no-spent' : ''}`}
-      >
-        <div className="admin-clients-search-row">
-          <AdminPremiumSearchBar
-            inputRef={inputRef}
-            value={search}
-            onChange={handleSearchChange}
-            onClear={handleClear}
-            onKeyDown={(e) => e.key === 'Escape' && handleClear()}
-            placeholder="Search by name, email or phone…"
-            aria-label="Search clients"
-            isLoading={isSearching}
-            showKbdHint
-            searchShortcutHint="/"
+      <AdminDataTable<ClientListRow>
+        label="Clients"
+        className="admin-clients-table-wrap"
+        rows={showcasedClients}
+        columns={columns}
+        getRowId={(client) => client.id}
+        loading={loading}
+        error={error}
+        sort={sort}
+        onSortChange={handleSortChange}
+        onRowClick={(client) => setOpenClientId(client.id)}
+        rowActionLabel={(client) => `View profile for ${displayNameFor(client)}`}
+        rowAttributes={(client) => ({ 'data-client-id': client.id })}
+        empty={
+          <EmptyState
+            icon={debouncedSearch ? Search : User}
+            title={debouncedSearch ? 'No clients match your search' : 'No clients yet'}
+            description={
+              debouncedSearch
+                ? 'Try a name, email address or phone number.'
+                : 'Clients appear here automatically after their first booking.'
+            }
+            variant={debouncedSearch ? 'filtered' : undefined}
+            action={
+              debouncedSearch ? (
+                <button type="button" className="adt-action" onClick={handleClear}>
+                  Clear search
+                </button>
+              ) : undefined
+            }
           />
-        </div>
-
-        {/* Column header */}
-        <div className="admin-clients-header-row" aria-hidden="true">
-          <span />
-          <span>Client</span>
-          {clientsMode === 'core' ? (
-            <>
-              <span>Phone</span>
-              <span>Last visit</span>
-              <span>Next booking</span>
-              <span>Advanced CRM</span>
-            </>
-          ) : (
-            <>
-              <span>Tags</span>
-              <span>Reliability</span>
-              <span>Last visit</span>
-              {showTotalSpent ? <span>Total spent</span> : null}
-            </>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="admin-clients-loading" aria-busy="true">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="admin-clients-skeleton-row" aria-hidden="true">
-                <span className="admin-clients-skeleton-avatar" />
-                <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--name" />
-                <span className="admin-clients-skeleton-cell" />
-                <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--bar" />
-                <span className="admin-clients-skeleton-cell" />
-                {clientsMode === 'core' || showTotalSpent ? <span className="admin-clients-skeleton-cell" /> : null}
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <p className="admin-clients-error">{error}</p>
-        ) : clients.length === 0 ? (
-          <p className="admin-clients-empty">
-            {debouncedSearch ? 'No clients match your search.' : 'No clients yet.'}
-          </p>
-        ) : (
-          <ul className="admin-clients-list" role="list">
-            {showcasedClients.map((client) => {
-              const reliabilityScore = client.reliabilityScore ?? 0;
-              const tone = reliabilityTone(reliabilityScore);
-              const tags = client.tags ?? [];
-              const visibleTags = tags.slice(0, MAX_VISIBLE_TAGS);
-              const hiddenTagCount = tags.length - visibleTags.length;
-              const displayName = client.fullName || client.phone || client.email || 'Client';
-
-              return (
-                <li key={client.id}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className="admin-clients-row"
-                    onClick={() => setOpenClientId(client.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        setOpenClientId(client.id);
-                      }
-                    }}
-                    aria-label={`View profile for ${displayName}`}
-                  >
-                    <ClientListAvatar
-                      clientId={client.id}
-                      fullName={client.fullName || client.phone || client.email || 'Client'}
-                      avatarUrl={clientsMode === 'advanced' ? client.avatarUrl : null}
-                      className="admin-clients-avatar"
-                      onClick={() => setOpenClientId(client.id)}
-                    />
-
-                    {/* Name + email */}
-                    <div className="admin-clients-identity">
-                      <span className="admin-clients-name">{displayName}</span>
-                      {client.email ? (
-                        <span className="admin-clients-email">{client.email}</span>
-                      ) : null}
-                    </div>
-
-                    {clientsMode === 'core' ? (
-                      <>
-                        <span className="admin-clients-last-visit">{client.phone || '—'}</span>
-                        <span className="admin-clients-last-visit">{formatDate(client.lastVisitAt)}</span>
-                        <span className="admin-clients-last-visit">{formatDate(client.nextBookingAt ?? null)}</span>
-                        <span className="admin-clients-spent">Full KERSIVO 🔒</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="admin-clients-tags">
-                          {visibleTags.map((tag) => (
-                            <span key={tag} className="admin-clients-tag-chip">{tag}</span>
-                          ))}
-                          {hiddenTagCount > 0 && (
-                            <span className="admin-clients-tags-overflow">+{hiddenTagCount}</span>
-                          )}
-                          {tags.length === 0 && (
-                            <span className="admin-clients-tags-none">—</span>
-                          )}
-                        </div>
-
-                        <div className="admin-clients-reliability">
-                          <div
-                            className={`admin-clients-reliability-track admin-clients-reliability-track--${tone}`}
-                            title={`${reliabilityScore} / 100`}
-                          >
-                            <div
-                              className="admin-clients-reliability-fill"
-                              style={{ width: `${reliabilityScore}%` }}
-                            />
-                          </div>
-                          <span className="admin-clients-reliability-label">
-                            {reliabilityScore}
-                          </span>
-                        </div>
-
-                        <span className="admin-clients-last-visit">
-                          {formatDate(client.lastVisitAt)}
-                        </span>
-
-                        {showTotalSpent ? (
-                          <span className="admin-clients-spent">
-                            {typeof client.totalSpentPence === 'number'
-                              ? formatPence(client.totalSpentPence)
-                              : '—'}
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+        }
+        toolbar={
+          <AdminTableToolbar
+            search={
+              <AdminPremiumSearchBar
+                inputRef={inputRef}
+                value={search}
+                onChange={handleSearchChange}
+                onClear={handleClear}
+                onKeyDown={(e) => e.key === 'Escape' && handleClear()}
+                placeholder="Search by name, email or phone…"
+                aria-label="Search clients"
+                isLoading={isSearching}
+                showKbdHint
+                searchShortcutHint="/"
+              />
+            }
+            count={!loading && !error ? `${clients.length} client${clients.length === 1 ? '' : 's'}` : undefined}
+          />
+        }
+      />
 
       {openClientId && clientsMode === 'core' ? (
         <ClientCoreProfilePanel

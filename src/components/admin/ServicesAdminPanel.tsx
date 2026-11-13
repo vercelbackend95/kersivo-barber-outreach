@@ -13,6 +13,14 @@ import { stripAdminAddQueryFromUrl } from '@/lib/admin/addQuery';
 import ServiceWizard from './service-wizard/ServiceWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
+import AdminDataTable, {
+  AdminTableFilters,
+  AdminTableIdentity,
+  AdminTableSortSelect,
+  AdminTableSwitchPill,
+  AdminTableToolbar,
+  type AdminDataTableColumn,
+} from './AdminDataTable';
 
 type ServiceBarberRow = {
   id: string;
@@ -83,22 +91,15 @@ type ServiceStatusPillProps = {
 
 function ServiceStatusPill({ on, disabled, ariaLabel, onClick }: ServiceStatusPillProps) {
   return (
-    <button
-      type="button"
-      className={[
-        'admin-product-row__status-pill',
-        'admin-product-row__status-pill--active',
-        on ? 'is-on' : ''
-      ].filter(Boolean).join(' ')}
-      role="switch"
-      aria-checked={on}
-      aria-label={ariaLabel}
+    <AdminTableSwitchPill
+      on={on}
+      onLabel="Active"
+      offLabel="Inactive"
+      ariaLabel={ariaLabel}
       disabled={disabled}
       onClick={onClick}
-    >
-      <span className="admin-product-row__status-dot" aria-hidden="true" />
-      <span>{on ? 'Active' : 'Inactive'}</span>
-    </button>
+      className="admin-product-row__status-pill"
+    />
   );
 }
 
@@ -421,6 +422,167 @@ export default function ServicesAdminPanel({
 
   const editingService = editingId ? services.find((s) => s.id === editingId) ?? null : null;
 
+  const serviceUpdatedLabel = (service: ServiceRow) =>
+    service.updatedAt || service.createdAt
+      ? new Date(service.updatedAt ?? service.createdAt ?? '').toLocaleString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Europe/London',
+        })
+      : '—';
+
+  const serviceFeaturedButton = (service: ServiceRow) => {
+    const featured = service.featured ?? false;
+    return (
+      <button
+        type="button"
+        className={`adt-icon-btn admin-product-row__featured-btn${featured ? ' is-on' : ''}`}
+        role="switch"
+        aria-checked={featured}
+        aria-label={`${service.name}: ${featured ? 'Featured' : 'Not featured'}`}
+        disabled={Boolean(serviceSavingById[service.id])}
+        onClick={() => void toggleFeatured(service)}
+        title={featured ? 'Featured — click to unfeature' : 'Feature on your booking page'}
+      >
+        <Star strokeWidth={featured ? 0 : 2} style={featured ? { fill: 'currentColor' } : undefined} aria-hidden="true" />
+      </button>
+    );
+  };
+
+  const serviceStatusPill = (service: ServiceRow) => (
+    <ServiceStatusPill
+      on={service.isActive}
+      disabled={Boolean(serviceSavingById[service.id])}
+      ariaLabel={`${service.name}: ${service.isActive ? 'Active' : 'Inactive'}`}
+      onClick={() => void toggleActive(service)}
+    />
+  );
+
+  const serviceColumns: AdminDataTableColumn<ServiceRow>[] = [
+    {
+      id: 'thumb',
+      header: '',
+      srHeader: 'Image',
+      width: '2.75rem',
+      mobile: 'lead',
+      cell: (service) => (
+        <span className="adt-thumb">
+          {service.imageUrl ? (
+            <img src={service.imageUrl} alt="" loading="lazy" decoding="async" draggable={false} />
+          ) : (
+            <Scissors aria-hidden="true" />
+          )}
+        </span>
+      ),
+    },
+    {
+      id: 'name',
+      header: 'Service',
+      width: 'minmax(11rem, 1.5fr)',
+      sortable: true,
+      mobile: 'primary',
+      cell: (service) => {
+        const statusLine = serviceSavingById[service.id] ? 'Saving…' : serviceStatusById[service.id] || '';
+        return (
+          <AdminTableIdentity
+            title={service.name}
+            subtitle={statusLine || formatCategoryLabel(service.category)}
+          />
+        );
+      },
+    },
+    {
+      id: 'duration',
+      header: 'Duration',
+      width: '5.5rem',
+      mobile: 'hidden',
+      cell: (service) => <span className="adt-num">{service.durationMinutes} min</span>,
+    },
+    {
+      id: 'description',
+      header: 'Description',
+      width: 'minmax(8rem, 2fr)',
+      mobile: 'hidden',
+      cell: (service) =>
+        service.description ? (
+          <span className="adt-truncate" title={service.description}>
+            {service.description}
+          </span>
+        ) : (
+          <span className="adt-muted">—</span>
+        ),
+    },
+    {
+      id: 'updated',
+      header: 'Updated',
+      width: '6.5rem',
+      sortable: true,
+      mobile: 'hidden',
+      cell: (service) => <span className="adt-muted">{serviceUpdatedLabel(service)}</span>,
+    },
+    {
+      id: 'price',
+      header: 'Price',
+      width: '5.5rem',
+      align: 'end',
+      sortable: true,
+      mobile: 'hidden',
+      cell: (service) => <span className="adt-num">{formatPrice(service.pricePence)}</span>,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      width: '7rem',
+      mobile: 'hidden',
+      cell: serviceStatusPill,
+    },
+    {
+      id: 'mobileMeta',
+      header: '',
+      width: '0px',
+      only: 'narrow',
+      mobile: 'meta',
+      cell: (service) => (
+        <span className="adt-inline">
+          <span className="adt-num">{formatPrice(service.pricePence)}</span>
+          <span>· {service.durationMinutes} min</span>
+          {serviceStatusPill(service)}
+        </span>
+      ),
+    },
+    {
+      id: 'controls',
+      header: '',
+      srHeader: 'Actions',
+      width: '5rem',
+      align: 'end',
+      mobile: 'end',
+      cell: (service) => (
+        <span className="adt-inline">
+          {serviceFeaturedButton(service)}
+          <button
+            type="button"
+            className="adt-icon-btn admin-product-row__edit-btn"
+            aria-label={
+              isPublicAdminDemoMode()
+                ? 'Service settings — sample data is read-only'
+                : `Edit ${service.name}`
+            }
+            title={
+              isPublicAdminDemoMode()
+                ? 'Service settings — sample data is read-only'
+                : `Edit ${service.name}`
+            }
+            onClick={() => startEdit(service)}
+          >
+            <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
+          </button>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <section className="surface booking-shell admin-services-shell admin-has-mobile-fab">
       <AdminSectionHeader
@@ -445,226 +607,70 @@ export default function ServicesAdminPanel({
       ) : null}
 
       {services.length > 0 || loading ? (
-        <div className="admin-reports admin-services-panel">
-          <div className="admin-products-toolbar-sticky">
-            <div className="admin-products-toolbar">
-              <AdminPremiumSearchBar
-                className="admin-products-toolbar-search"
-                inputRef={serviceSearchInputRef}
-                value={serviceSearch}
-                onChange={setServiceSearch}
-                onClear={handleServiceSearchClear}
-                onKeyDown={(e) => e.key === 'Escape' && handleServiceSearchClear()}
-                placeholder="Search services…"
-                aria-label="Search services"
-                showKbdHint
-                searchShortcutHint="/"
-              />
-
-              <div className="admin-products-toolbar-controls">
-                <div className="admin-filter-scroll-wrap">
-                  <div className="admin-products-filters" role="group" aria-label="Service filters">
-                    {(['all', 'active', 'inactive', 'featured'] as ServiceFilter[]).map((filter) => (
-                      <button
-                        key={filter}
-                        type="button"
-                        className={`admin-products-filter-tab${serviceFilter === filter ? ' admin-products-filter-tab--active' : ''}`}
-                        onClick={() => setServiceFilter(filter)}
-                        aria-pressed={serviceFilter === filter}
-                      >
-                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="admin-products-toolbar-right">
-                  <div
-                    ref={serviceSortRef}
-                    className={`admin-products-sort-wrap${serviceSortOpen ? ' admin-products-sort-wrap--open' : ''}`}
-                  >
-                    <button
-                      type="button"
-                      className="admin-products-sort-trigger"
-                      aria-label="Sort services"
-                      aria-haspopup="listbox"
-                      aria-expanded={serviceSortOpen}
-                      onClick={() => setServiceSortOpen((open) => !open)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                          event.preventDefault();
-                          setServiceSortOpen(true);
-                        }
-                      }}
-                    >
-                      <span>{SERVICE_SORT_OPTIONS.find((option) => option.value === serviceSortMode)?.label}</span>
-                      <ChevronDown className="admin-products-sort-chevron" width={12} height={12} aria-hidden="true" />
-                    </button>
-
-                    {serviceSortOpen ? (
-                      <div className="admin-products-sort-menu" role="listbox" aria-label="Sort services">
-                        {SERVICE_SORT_OPTIONS.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`admin-products-sort-option${serviceSortMode === option.value ? ' admin-products-sort-option--active' : ''}`}
-                            role="option"
-                            aria-selected={serviceSortMode === option.value}
-                            onClick={() => {
-                              setServiceSortMode(option.value);
-                              setServiceSortOpen(false);
-                            }}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="admin-products-meta">
-                    <span className="admin-products-count">
-                      {filteredServices.length} services · {featuredCount} featured
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="admin-products-scroll" role="region" aria-label="Services list">
-            <div className="admin-product-list">
-              {servicesInitiallyLoading ? (
-                <div aria-label="Loading services" aria-busy="true">
-                  <SkeletonBookingChoices count={4} variant="service" />
-                </div>
-              ) : filteredServices.length === 0 ? (
-                <EmptyState
-                  icon={Search}
-                  title="No services match"
-                  description="Try adjusting your search or filter to find what you're looking for."
-                  variant="filtered"
+        <AdminDataTable<ServiceRow>
+          label="Services"
+          className="admin-services-panel"
+          rows={showcasedServices}
+          columns={serviceColumns}
+          getRowId={(service) => service.id}
+          loading={servicesInitiallyLoading}
+          skeletonRows={5}
+          sort={{ id: serviceSortMode === 'newest' ? 'updated' : serviceSortMode, dir: serviceSortMode === 'name' ? 'asc' : 'desc' }}
+          onSortChange={(id) => setServiceSortMode(id === 'updated' ? 'newest' : (id as ServiceSortMode))}
+          onRowClick={(service) => startEdit(service)}
+          rowActionLabel={(service) => `Edit ${service.name}`}
+          rowAttributes={(service) => ({ 'data-service-id': service.id })}
+          isRowMuted={(service) => !service.isActive}
+          rowClassName={() => 'admin-product-row admin-product-row--service'}
+          empty={
+            <EmptyState
+              icon={Search}
+              title="No services match"
+              description="Try adjusting your search or filter to find what you're looking for."
+              variant="filtered"
+            />
+          }
+          toolbar={
+            <AdminTableToolbar
+              search={
+                <AdminPremiumSearchBar
+                  className="admin-products-toolbar-search"
+                  inputRef={serviceSearchInputRef}
+                  value={serviceSearch}
+                  onChange={setServiceSearch}
+                  onClear={handleServiceSearchClear}
+                  onKeyDown={(e) => e.key === 'Escape' && handleServiceSearchClear()}
+                  placeholder="Search services…"
+                  aria-label="Search services"
+                  showKbdHint
+                  searchShortcutHint="/"
                 />
-              ) : (
-                showcasedServices.map((service) => {
-                  const isSavingRow = Boolean(serviceSavingById[service.id]);
-                  const categoryLabel = formatCategoryLabel(service.category);
-                  const hasTimestamp = Boolean(service.updatedAt || service.createdAt);
-                  const updatedLabel = hasTimestamp
-                    ? new Date(service.updatedAt ?? service.createdAt ?? '').toLocaleString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                      })
-                    : '—';
-                  const showMetaRow = isBlacklineDemo
-                    ? hasTimestamp
-                    : true;
-                  const serviceStatusLine = isSavingRow ? 'Saving…' : (serviceStatusById[service.id] || '');
-
-                  return (
-                    <article
-                      key={service.id}
-                      className={[
-                        'admin-product-row',
-                        'admin-product-row--service',
-                        service.isActive ? '' : 'admin-product-row--inactive',
-                        (service.featured ?? false) ? 'admin-product-row--featured' : ''
-                      ].filter(Boolean).join(' ')}
-                    >
-                      <div className="admin-product-row__thumb">
-                        {service.imageUrl ? (
-                          <img src={service.imageUrl} alt="" loading="lazy" draggable={false} />
-                        ) : (
-                          <Scissors className="admin-product-row__thumb-icon" aria-hidden="true" />
-                        )}
-                      </div>
-
-                      <div className="admin-product-row__identity">
-                        <p className="admin-product-row__name">{service.name}</p>
-                        {showMetaRow ? (
-                          <p className="admin-product-row__meta">
-                            <span>{categoryLabel}</span>
-                            <span className="admin-product-row__meta-sep" aria-hidden="true"> · </span>
-                            <span title={`Updated ${updatedLabel}`}>{updatedLabel}</span>
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="admin-service-row__duration-col">
-                        <span className="admin-service-row__duration">{service.durationMinutes} min</span>
-                      </div>
-                      <div className="admin-service-row__description-col">
-                        {service.description ? (
-                          <span className="admin-service-row__description" title={service.description}>
-                            {service.description}
-                          </span>
-                        ) : (
-                          <span className="admin-service-row__description admin-service-row__description--empty" aria-hidden="true">—</span>
-                        )}
-                      </div>
-
-                      <div className="admin-product-row__price-status">
-                        <p className="admin-product-row__price">{formatPrice(service.pricePence)}</p>
-                        <ServiceStatusPill
-                          on={service.isActive}
-                          disabled={isSavingRow}
-                          ariaLabel={`${service.name}: ${service.isActive ? 'Active' : 'Inactive'}`}
-                          onClick={() => void toggleActive(service)}
-                        />
-                      </div>
-
-                      <div className="admin-product-row__featured-col">
-                        <button
-                          type="button"
-                          className={`admin-product-row__featured-btn${(service.featured ?? false) ? ' is-on' : ''}`}
-                          role="switch"
-                          aria-checked={service.featured ?? false}
-                          aria-label={`${service.name}: ${(service.featured ?? false) ? 'Featured' : 'Not featured'}`}
-                          disabled={isSavingRow}
-                          onClick={() => void toggleFeatured(service)}
-                          title={(service.featured ?? false) ? 'Featured' : 'Not featured'}
-                        >
-                          <Star
-                            width={14}
-                            height={14}
-                            strokeWidth={(service.featured ?? false) ? 0 : 2}
-                            style={(service.featured ?? false) ? { fill: 'currentColor' } : undefined}
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </div>
-
-                      <div className="admin-product-row__controls">
-                        <button
-                          type="button"
-                          className="admin-product-row__edit-btn"
-                          aria-label={
-                            isPublicAdminDemoMode()
-                              ? 'Service settings — sample data is read-only'
-                              : `Edit ${service.name}`
-                          }
-                          title={
-                            isPublicAdminDemoMode()
-                              ? 'Service settings — sample data is read-only'
-                              : `Edit ${service.name}`
-                          }
-                          onClick={() => startEdit(service)}
-                        >
-                          <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
-                        </button>
-                      </div>
-
-                      {serviceStatusLine ? (
-                        <p className="admin-product-row__saving-line" aria-live="polite">{serviceStatusLine}</p>
-                      ) : null}
-                    </article>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
+              }
+              filters={
+                <AdminTableFilters<ServiceFilter>
+                  label="Service filters"
+                  value={serviceFilter}
+                  onChange={setServiceFilter}
+                  options={[
+                    { value: 'all', label: 'All' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'featured', label: 'Featured' },
+                  ]}
+                />
+              }
+              count={`${filteredServices.length} services · ${featuredCount} featured`}
+              end={
+                <AdminTableSortSelect<ServiceSortMode>
+                  label="Sort services"
+                  value={serviceSortMode}
+                  onChange={setServiceSortMode}
+                  options={SERVICE_SORT_OPTIONS}
+                />
+              }
+            />
+          }
+        />
       ) : null}
 
       <AdminMobileFab label="Add service" onClick={openCreateServiceSheet} context="services" />
