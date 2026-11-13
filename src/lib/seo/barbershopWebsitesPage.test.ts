@@ -10,6 +10,7 @@ import {
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
+  BARBERSHOP_WEBSITES_V1_H1,
 } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
 import { DEMO_SERVICES } from '@/lib/demo/services';
@@ -18,7 +19,9 @@ import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-const page = read('../../pages/barbershop-websites/index.astro');
+// The v1 hero components now render on the kept previous version; the live page is covered in barbershopWebsitesRedesign.test.ts.
+const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
+const livePage = read('../../pages/barbershop-websites/index.astro');
 const componentDir = '../../components/barbershop-websites/';
 const hero = read(`${componentDir}BarbershopWebsitesHero.astro`);
 const components = [
@@ -29,19 +32,22 @@ const components = [
   read(`${componentDir}HeroBenefits.astro`),
 ];
 
-describe('/barbershop-websites pillar hero', () => {
+describe('/barbershop-websites previous (v1) hero', () => {
   it('uses the approved metadata and canonical URL', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_PATH).toBe('/barbershop-websites');
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-websites');
-    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website with Online Booking UK | KERSIVO');
+    expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website UK: What to Include & How Clients Book | KERSIVO');
     expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION).toContain('£39/month');
+    expect(livePage).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
+    // The kept previous version canonicalises to the live page and stays out of the index.
     expect(page).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
+    expect(page).toMatch(/^\s+noindex$/m);
   });
 
   it('publishes the canonical pillar for search and includes it in the sitemap', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
-    expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
-    expect(page).toContain('robotsFollow');
+    expect(livePage).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
+    expect(livePage).toContain('robotsFollow');
     expect(resolveRobotsContent({ noindex: !BARBERSHOP_WEBSITES_PAGE_INDEXABLE, robotsFollow: true })).toBeUndefined();
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
     expect(locs).toContain('https://kersivo.co.uk/barbershop-websites');
@@ -50,8 +56,8 @@ describe('/barbershop-websites pillar hero', () => {
   it('renders exactly one H1 built from the approved headline', () => {
     const h1Count = [page, ...components].join('\n').match(/<h1\b/g) ?? [];
     expect(h1Count).toHaveLength(1);
-    expect(hero).toContain('BARBERSHOP_WEBSITES_PAGE_H1');
-    expect(BARBERSHOP_WEBSITES_PAGE_H1).toBe('Barbershop Websites with Online Booking');
+    expect(hero).toContain('BARBERSHOP_WEBSITES_V1_H1 as BARBERSHOP_WEBSITES_PAGE_H1');
+    expect(BARBERSHOP_WEBSITES_V1_H1).toBe('Barbershop Websites with Online Booking');
   });
 
   it('only draws the accent full stop inside the final headline line when the H1 ends with one', () => {

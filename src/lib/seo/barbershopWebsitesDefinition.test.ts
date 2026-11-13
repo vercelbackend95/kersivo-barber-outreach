@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const page = readFileSync(join(here, '../../pages/barbershop-websites/index.astro'), 'utf8');
+const page = readFileSync(join(here, '../../pages/design-preview/barbershop-websites-v1.astro'), 'utf8');
 const section = readFileSync(join(here, '../../components/barbershop-websites/WhatIsBarbershopWebsite.astro'), 'utf8');
 const styles = readFileSync(join(here, '../../styles/components/barbershop-websites-definition.css'), 'utf8');
 

@@ -1,0 +1,60 @@
+---
+/**
+ * What a professional online presence looks like, as a self-check. Native checkboxes; the tally and
+ * verdict update in the browser and nothing is stored or sent.
+ */
+type Check = { id: string; title: string; hint: string; kersivo: boolean };
+
+const checks: Check[] = [
+  { id: 'domain', title: 'Your shop has its own domain', hint: 'yourshop.co.uk rather than a page on someone else’s site.', kersivo: true },
+  { id: 'prices', title: 'Services and prices are on your website', hint: 'Clients can see what a cut costs before they message you.', kersivo: true },
+  { id: 'book', title: 'Clients can book online in under a minute', hint: 'On a phone, from any page, without calling or sending a DM.', kersivo: true },
+  { id: 'reminders', title: 'Every booking gets a confirmation and reminder', hint: 'Sent automatically, without you texting each client.', kersivo: true },
+  { id: 'google', title: 'Your Google Business Profile links to your website', hint: 'The Website and Book buttons on Google lead to your own pages.', kersivo: false },
+  { id: 'instagram', title: 'Your Instagram bio links to your booking page', hint: 'One tap from your work to an open slot.', kersivo: false },
+  { id: 'consistent', title: 'Name, address and hours match everywhere', hint: 'Your website, Google, Instagram and shopfront say the same thing.', kersivo: false },
+  { id: 'photos', title: 'Photos show your real shop and work', hint: 'Recent, your own, and taken in good light.', kersivo: false },
+];
+---
+
+<section class="bw-section bw-presence" aria-labelledby="bw-presence-title" data-bw-presence>
+  <div class="bw-shell">
+    <div class="bw-presence__grid">
+      <div class="bw-head">
+        <h2 id="bw-presence-title" class="bw-h2">What a professional online presence looks like</h2>
+        <p class="bw-lead">
+          Your website sits at the centre, and everything else points to it. Tick what is already
+          true for your shop to see where the gaps are.
+        </p>
+
+        <div class="bw-score" data-bw-score aria-live="polite">
+          <p class="bw-score__count"><span data-bw-score-count>0</span><span class="bw-score__of"> of {checks.length}</span></p>
+          <span class="bw-score__bar" aria-hidden="true">
+            {checks.map(() => <i></i>)}
+          </span>
+          <p class="bw-score__verdict" data-bw-score-verdict>Tick the ones that are true today.</p>
+          <p class="bw-score__kersivo" data-bw-score-kersivo hidden>
+            Full KERSIVO covers the first four for you: your domain, a website with your services and
+            prices, online booking and automatic confirmations and reminders.
+          </p>
+        </div>
+      </div>
+
+      <fieldset class="bw-checks">
+        <legend class="bw-visually-hidden">Online presence checklist</legend>
+        {checks.map((check) => (
+          <label class="bw-check" data-kersivo={check.kersivo ? 'true' : 'false'}>
+            <input type="checkbox" name="presence" value={check.id} />
+            <span class="bw-check__box" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" pathLength="1" /></svg>
+            </span>
+            <span class="bw-check__text">
+              <span class="bw-check__title">{check.title}</span>
+              <span class="bw-check__hint">{check.hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+    </div>
+  </div>
+</section>

@@ -11,7 +11,7 @@ import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-const page = read('../../pages/barbershop-websites/index.astro');
+const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
 const section = read('../../components/barbershop-websites/BrandToBooking.astro');
 const hero = read('../../components/barbershop-websites/BarbershopWebsitesHero.astro');
 const bookingCard = read('../../components/barbershop-websites/BookingPreview.astro');

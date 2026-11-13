@@ -1,0 +1,59 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { getBarbershopWebsitesFaqs } from '@/lib/seo/barbershopWebsitesPage';
+
+const freePreview = isFreePreviewFlowEnabled();
+const faqs = getBarbershopWebsitesFaqs(freePreview);
+const placement = 'barbershop_websites_final_full_cta';
+---
+
+<section class="bw-section bw-faq" aria-labelledby="bw-faq-title">
+  <div class="bw-shell bw-faq__grid">
+    <div class="bw-head">
+      <h2 id="bw-faq-title" class="bw-h2">Barbershop website questions</h2>
+      <p class="bw-lead">Straight answers on websites, booking, domains, cost and setup.</p>
+    </div>
+    <div class="bw-faq__list">
+      {faqs.map((faq) => (
+        <details class="bw-faq__item" id={`bw-faq-${faq.id}`}>
+          <summary>
+            <h3 class="bw-faq__q">{faq.question}</h3>
+            <span class="bw-faq__icon" aria-hidden="true"></span>
+          </summary>
+          <div class="bw-faq__a">
+            {faq.answer.map((paragraph) => <p>{paragraph}</p>)}
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="bw-final" aria-labelledby="bw-final-title" data-bw-final>
+  <div class="bw-shell bw-final__inner">
+    <p class="bw-final__domain" aria-hidden="true"><span data-bw-final-domain>yourshop.co.uk</span></p>
+    <h2 id="bw-final-title" class="bw-final__title">Put your shop’s name in the address bar</h2>
+    <p class="bw-lead bw-final__lead">
+      Your barbershop website, online booking and the tools behind it, set up by KERSIVO for
+      £{SAAS_MONTHLY_GBP}/month per location. You approve it before it goes live.
+    </p>
+    <div class="bw-final__actions">
+      {freePreview ? (
+        <FullPlanCta part="primary" primaryClass="bw-btn bw-btn--primary" placement={placement} />
+      ) : (
+        <a href="/admin/launch" class="btn btn--primary btn--lg bw-btn bw-btn--primary" data-track="saas_subscribe_click" data-track-placement={placement}>
+          Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+        </a>
+      )}
+      <a href={DEMO_HOME_HREF} class="btn btn--outline btn--lg bw-btn bw-btn--ghost" data-track="view_live_demo_click" data-track-placement="barbershop_websites_final_demo">
+        Explore the working demo
+      </a>
+    </div>
+    {freePreview && <FullPlanCta part="subscribe" class="bw-final__subscribe" placement={placement} />}
+    <p class="bw-final__fine">No setup fee. No VAT added. 0% KERSIVO commission. {STRIPE_FEES_NOTE}</p>
+  </div>
+</section>

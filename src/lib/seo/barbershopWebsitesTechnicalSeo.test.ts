@@ -75,7 +75,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
   });
 
   it('keeps global footer outside main and does not add a second primary landmark', () => {
-    const open = page.indexOf('<main class="bsw-page">');
+    const open = page.indexOf('<main class="bw">');
     const close = page.indexOf('</main>');
     const footer = page.indexOf('<Footer50');
     expect(open).toBeGreaterThan(-1);

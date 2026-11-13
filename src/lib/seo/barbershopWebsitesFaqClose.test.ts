@@ -23,7 +23,7 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-const page = read('../../pages/barbershop-websites/index.astro');
+const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
 const section = read('../../components/barbershop-websites/FaqAndClose.astro');
 const terms = read('../../pages/terms.astro');
 const postFullPlan = read('../../pages/api/setup/post-full-plan.ts');
@@ -54,7 +54,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
 
   it('publishes the pillar without adding extra FAQ structured data', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
-    expect(page).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
+    expect(read('../../pages/barbershop-websites/index.astro')).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     expect(section).not.toMatch(/application\/ld\+json|schema\.org|FAQPage|itemscope|itemprop/);
     expect(section).not.toMatch(/client:|<script|<iframe/);
   });

@@ -1,0 +1,92 @@
+---
+/**
+ * Why a shop needs its own website: where clients come from, and what changes between a
+ * booking-app profile and the shop's own site. Qualitative only; features vary by provider.
+ */
+type Row = { label: string; profile: string; own: string };
+
+const rows: Row[] = [
+  {
+    label: 'The address',
+    profile: 'A page on the platform’s domain, under its name.',
+    own: 'Your shop’s name in the address bar, on your own domain.',
+  },
+  {
+    label: 'Around your shop',
+    profile: 'Whatever the platform chooses to show, which can include other shops.',
+    own: 'Only your shop: your work, your barbers, your prices.',
+  },
+  {
+    label: 'The look',
+    profile: 'The platform’s layout with your details dropped in.',
+    own: 'Your logo, colours and real photos of your shop.',
+  },
+  {
+    label: 'Where you send clients',
+    profile: 'To someone else’s page.',
+    own: 'To yours, from Google, Instagram, your shopfront and every message.',
+  },
+];
+
+const sources = ['Google search', 'Google Maps', 'Instagram bio', 'A link you send', 'QR code at the till'];
+---
+
+<section class="bw-section bw-why" aria-labelledby="bw-why-title">
+  <div class="bw-shell">
+    <div class="bw-why__grid">
+      <div class="bw-head">
+        <h2 id="bw-why-title" class="bw-h2">Why your barbershop needs its own website</h2>
+        <p class="bw-lead">
+          Clients look you up in more places than ever. A website on your own domain is the one
+          address every one of those places can point to, and the one page where only your shop
+          is on show.
+        </p>
+      </div>
+
+      <figure class="bw-sources" aria-labelledby="bw-sources-caption">
+        <ul class="bw-sources__list" role="list">
+          {sources.map((source, index) => (
+            <li class="bw-sources__item" style={`--i:${index}`}>{source}</li>
+          ))}
+        </ul>
+        <svg class="bw-sources__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          {sources.map((_, index) => {
+            const y = 10 + index * 20;
+            return <path d={`M0 ${y} C 45 ${y}, 55 50, 100 50`} pathLength="1" />;
+          })}
+        </svg>
+        <div class="bw-sources__target">
+          <span class="bw-sources__domain">yourshop.co.uk</span>
+          <span class="bw-sources__sub">Services, barbers, prices, Book now</span>
+        </div>
+        <figcaption id="bw-sources-caption" class="bw-note">
+          Every place clients find you can point to one address.
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="bw-compare" data-bw-compare>
+      <div class="bw-compare__switch" role="radiogroup" aria-label="Compare a booking-app profile with your own website">
+        <button type="button" role="radio" aria-checked="false" data-bw-view="profile">Booking-app profile</button>
+        <button type="button" role="radio" aria-checked="true" data-bw-view="own">Your own website</button>
+        <span class="bw-compare__thumb" aria-hidden="true"></span>
+      </div>
+
+      <dl class="bw-compare__rows" data-view="own">
+        {rows.map((row) => (
+          <div class="bw-compare__row">
+            <dt>{row.label}</dt>
+            <dd>
+              <span class="bw-compare__value bw-compare__value--profile">{row.profile}</span>
+              <span class="bw-compare__value bw-compare__value--own">{row.own}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p class="bw-note">
+        Features vary between providers, and the two can work together: you can keep a profile and
+        point clients to your own website.
+      </p>
+    </div>
+  </div>
+</section>

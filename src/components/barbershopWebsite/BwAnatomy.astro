@@ -1,0 +1,103 @@
+---
+/**
+ * What a barbershop website should include. Each essential is a button that highlights the matching
+ * region of the sticky example site; on desktop the active item also follows scroll. Without JS
+ * the list reads as a plain ordered checklist.
+ */
+import BwSite from '@/components/barbershopWebsite/BwSite.astro';
+import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+
+type Essential = { part: string; title: string; copy: string };
+
+const essentials: Essential[] = [
+  {
+    part: 'domain',
+    title: 'Your own domain',
+    copy: 'An address with your shop’s name in it, easy to say out loud and put on a card. It is what clients type, share and remember.',
+  },
+  {
+    part: 'brand',
+    title: 'Your name and brand',
+    copy: 'Your logo and colours at the top of every page, so the site is recognisably the same shop as your sign and your Instagram.',
+  },
+  {
+    part: 'book',
+    title: 'A Book now button on every page',
+    copy: 'Clients should never have to hunt for it. One clear button, always in the same place, on a phone and on a laptop.',
+  },
+  {
+    part: 'photos',
+    title: 'Real photos of your shop and work',
+    copy: 'Your chairs, your barbers, your cuts. Clients choosing a new barber want to see the actual shop, not stock images.',
+  },
+  {
+    part: 'services',
+    title: 'Services with prices',
+    copy: 'What you offer, what it costs and roughly how long it takes, so clients can decide before they start booking.',
+  },
+  {
+    part: 'team',
+    title: 'Your barbers',
+    copy: 'Who is cutting and what each barber is known for. Regulars book their barber; new clients pick one they like the look of.',
+  },
+  {
+    part: 'hours',
+    title: 'Opening hours and location',
+    copy: 'Hours, address and directions that match your Google listing, plus how walk-ins work if you take them.',
+  },
+  {
+    part: 'phone',
+    title: 'Built for a phone first',
+    copy: 'Many clients will open your site on their phone, often on the move. Everything above should be easy to read and tap there.',
+  },
+];
+---
+
+<section class="bw-section bw-anatomy" aria-labelledby="bw-anatomy-title" data-bw-anatomy>
+  <div class="bw-shell">
+    <div class="bw-head bw-head--wide">
+      <h2 id="bw-anatomy-title" class="bw-h2">What a barbershop website should include</h2>
+      <p class="bw-lead">
+        A good barbershop website answers a new client’s questions in seconds: who you are, what you
+        do, what it costs, who is cutting, where you are and how to book. These are the eight parts
+        that do it. Select one to see where it sits.
+      </p>
+    </div>
+
+    <div class="bw-anatomy__layout">
+      <div class="bw-anatomy__stage">
+        <div class="bw-anatomy__sticky">
+          <BwSite
+            class="bw-site--anatomy"
+            label="Example barbershop website for the fictional CUTSTATE Barbers, used to point out each essential part."
+          />
+          <p class="bw-anatomy__now" aria-live="polite" data-bw-anatomy-now>Your own domain</p>
+        </div>
+      </div>
+
+      <ol class="bw-anatomy__list" role="list">
+        {essentials.map((item, index) => (
+          <li class="bw-anatomy__item" data-bw-step={item.part}>
+            <button
+              type="button"
+              class="bw-anatomy__trigger"
+              aria-pressed={index === 0 ? 'true' : 'false'}
+              data-bw-part-trigger={item.part}
+            >
+              <span class="bw-anatomy__tick" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </span>
+              <span class="bw-anatomy__title">{item.title}</span>
+            </button>
+            <p class="bw-anatomy__copy">{item.copy}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <p class="bw-aside">
+      Want ideas for how it should look? Branding, layout and photography are covered in our
+      <a href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}>barbershop website design guide</a>.
+    </p>
+  </div>
+</section>
