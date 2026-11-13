@@ -1,0 +1,52 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+---
+
+<section class="cb-section cb-audience" aria-labelledby="cb-audience-title">
+  <div class="alt-hub__container">
+    <header class="cb-section__head">
+      <p class="ks-eyebrow">Who KERSIVO is for</p>
+      <h2 id="cb-audience-title" class="cb-section__title">Built for independent UK barbershops that want their own front door</h2>
+      <p class="cb-section__lead">
+        KERSIVO is not the right answer for every shop. Here is who it fits, and who is better served by a marketplace app.
+      </p>
+    </header>
+
+    <div class="cb-audience__grid">
+      <article class="ks-glass-card ks-glass-card--accent cb-audience__card cb-audience__card--fit">
+        <h3 class="cb-audience__title">
+          <span class="cb-audience__mark cb-audience__mark--yes" aria-hidden="true">
+            <svg viewBox="0 0 16 16" focusable="false"><path d="M4 8.4 6.7 11 12 5.2" /></svg>
+          </span>
+          Choose Full KERSIVO if
+        </h3>
+        <ul class="cb-audience__list">
+          <li><strong>You run one or more independent shops</strong> and want one price per location, from a solo chair to a team of more than 4 barbers (fair use applies).</li>
+          <li><strong>Your regulars already know you</strong> through Google, Instagram or word of mouth, and you want them booking on your site, not a marketplace.</li>
+          <li><strong>You want your own branded website and domain</strong> included in the £{SAAS_MONTHLY_GBP}/month, not sold as an add-on.</li>
+          <li><strong>You don’t want to pay commission on bookings.</strong> 0% KERSIVO commission; {STRIPE_FEES_NOTE.charAt(0).toLowerCase() + STRIPE_FEES_NOTE.slice(1)}</li>
+          <li><strong>You’re switching from another system</strong> and want migration help included.</li>
+        </ul>
+      </article>
+
+      <article class="ks-glass-card ks-glass-card--plain cb-audience__card">
+        <h3 class="cb-audience__title">
+          <span class="cb-audience__mark" aria-hidden="true">
+            <svg viewBox="0 0 16 16" focusable="false"><path d="M8 3.5v5M8 11.5v.05" /></svg>
+          </span>
+          A marketplace may suit you better if
+        </h3>
+        <ul class="cb-audience__list">
+          <li><strong>You’re brand new and need discovery</strong> from people browsing an app for any barber nearby.</li>
+          <li><strong>You rarely get repeat clients</strong>, so being listed next to other shops matters more than your own brand.</li>
+          <li><strong>You’re happy to pay a fee per new client</strong> in exchange for that visibility.</li>
+        </ul>
+        <p class="cb-audience__aside">
+          Many shops run both: a marketplace listing for discovery and their own booking site for regulars.
+          <a class="cb-link" href="/starter">KERSIVO Starter</a> is £0/month for a hosted booking page and up to 4 barbers.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>

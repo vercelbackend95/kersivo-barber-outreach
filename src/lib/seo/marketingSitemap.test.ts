@@ -94,7 +94,7 @@ describe('marketing sitemap', () => {
       expect(byLoc[`https://kersivo.co.uk${path}`]).toBe('2026-10-28'); // last commit touching the page source
     }
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-27');
-    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-10-28');
+    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-13');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');

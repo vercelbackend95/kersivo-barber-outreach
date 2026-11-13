@@ -21,7 +21,7 @@ const repoSrc = join(dirname(fileURLToPath(import.meta.url)), '../..');
 describe('Alternatives Hub discovery and search intent', () => {
   it('uses UK barber-booking comparison wording without third-party awards or rankings', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
-    expect(ALTERNATIVES_HUB_TITLE).toMatch(/barber booking software UK.*compared/i);
+    expect(ALTERNATIVES_HUB_TITLE).toMatch(/^Best barber software UK.*compared/i);
     expect(ALTERNATIVES_HUB_DESCRIPTION).toMatch(/UK barbershops/i);
     expect(ALTERNATIVES_HUB_DESCRIPTION).toMatch(/Booksy.*Fresha.*Nearcut/);
     expect(ALTERNATIVES_HUB_TITLE).not.toMatch(/#1|award|rated/i);
@@ -39,7 +39,9 @@ describe('Alternatives Hub discovery and search intent', () => {
     const included = readFileSync(join(repoSrc, 'components/homeV2/HomeV2Included.astro'), 'utf8');
     const homepage = readFileSync(join(repoSrc, 'pages/index.astro'), 'utf8');
     expect(homepage).toContain('<HomeV2Included />');
-    expect(included).toContain('<a href="/compare">Compare UK barber booking software</a>');
+    expect(included).toContain('<a href="/compare">best barber software in the UK compared</a>');
+    const price = readFileSync(join(repoSrc, 'components/homeV2/HomeV2Price.astro'), 'utf8');
+    expect(price).toMatch(/<a href="\/compare"[^>]*>Fresha, Setora and 8 more: see all 11 UK booking systems compared/);
   });
 
   it('describes one properly identified editorial hub and all comparison destinations in schema', () => {

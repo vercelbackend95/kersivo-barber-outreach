@@ -3,6 +3,10 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import HubHero from '@/components/alternativesHub/HubHero.astro';
+import HubAudience from '@/components/alternativesHub/HubAudience.astro';
+import HubNewClientFees from '@/components/alternativesHub/HubNewClientFees.astro';
+import HubDuel from '@/components/alternativesHub/HubDuel.astro';
+import HubControlMap from '@/components/alternativesHub/HubControlMap.astro';
 import HubComparison from '@/components/alternativesHub/HubComparison.astro';
 import HubMethodology from '@/components/alternativesHub/HubMethodology.astro';
 import HubGuide from '@/components/alternativesHub/HubGuide.astro';
@@ -26,6 +30,8 @@ import {
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/alternatives-hub.css';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/compare-best.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -38,6 +44,10 @@ const currentYear = new Date().getFullYear();
 >
   <main class="alt-hub landing-overflow-guard">
     <HubHero />
+    <HubAudience />
+    <HubNewClientFees />
+    <HubDuel />
+    <HubControlMap />
     <HubComparison />
     <HubMethodology />
     <HubGuide />
@@ -69,9 +79,14 @@ const currentYear = new Date().getFullYear();
 
 <script>
   import { initAlternativesHub } from '@/lib/compare/initAlternativesHub';
+  import { initBestCompare } from '@/lib/compare/initBestCompare';
 
   initAlternativesHub(document);
-  document.addEventListener('astro:page-load', () => initAlternativesHub(document));
+  initBestCompare(document);
+  document.addEventListener('astro:page-load', () => {
+    initAlternativesHub(document);
+    initBestCompare(document);
+  });
 </script>
 
 <style is:global>

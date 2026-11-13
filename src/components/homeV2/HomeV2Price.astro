@@ -148,6 +148,9 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
         <p id="hv2-compare-source" class="hv2-compare__source">
           Booksy lists {money(BOOKSY_BASE_PRICE_GBP)}/month plus {money(BOOKSY_ADDITIONAL_USER_GBP)} for each additional user, before VAT. Prices checked {BOOKSY_FACTS_CHECKED_DATE} on <a href={BOOKSY_SOURCE_PRICING}>Booksy's UK pricing page</a>. Card processing fees apply on both. <a href="/barber-software-cost-calculator">Compare the full cost</a>
         </p>
+        <p class="hv2-compare__hub">
+          <a href="/compare" data-track="compare_hub_click" data-track-placement="home_pricing">Fresha, Setora and 8 more: see all 11 UK booking systems compared <span aria-hidden="true">→</span></a>
+        </p>
         <script
           type="application/json"
           data-hv2-compare-data

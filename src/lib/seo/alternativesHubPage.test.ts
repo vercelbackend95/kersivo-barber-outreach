@@ -34,6 +34,12 @@ const guide = read('../../components/alternativesHub/HubGuide.astro');
 const sources = read('../../components/alternativesHub/HubSources.astro');
 const methodology = read('../../components/alternativesHub/HubMethodology.astro');
 const css = read('../../styles/components/alternatives-hub.css');
+const bestCss = read('../../styles/components/compare-best.css');
+const meter = read('../../components/alternativesHub/HubCostMeter.astro');
+const audience = read('../../components/alternativesHub/HubAudience.astro');
+const fees = read('../../components/alternativesHub/HubNewClientFees.astro');
+const duel = read('../../components/alternativesHub/HubDuel.astro');
+const control = read('../../components/alternativesHub/HubControlMap.astro');
 const siteUrl = 'https://kersivo.co.uk';
 const pageUrl = `${siteUrl}/compare`;
 
@@ -55,10 +61,10 @@ describe('Alternatives hub: metadata and indexability', () => {
   it('uses /compare as the canonical with unique title, description and H1', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
     expect(resolveCanonicalUrl(ALTERNATIVES_HUB_PAGE_PATH)).toBe(pageUrl);
-    expect(ALTERNATIVES_HUB_TITLE).toBe('Best Barber Booking Software UK: 11 Systems Compared');
+    expect(ALTERNATIVES_HUB_TITLE).toBe('Best Barber Software UK 2026: Prices & Fees Compared');
     expect(ALTERNATIVES_HUB_TITLE.length).toBeLessThanOrEqual(60);
     expect(ALTERNATIVES_HUB_DESCRIPTION.length).toBeLessThanOrEqual(155);
-    expect(ALTERNATIVES_HUB_H1).toBe('Find the right barber booking system');
+    expect(ALTERNATIVES_HUB_H1).toBe('Best barber software UK: cost, fees and control compared');
   });
 
   it('wires LandingLayout with canonical metadata and all JSON-LD blocks, without noindex', () => {
@@ -74,7 +80,7 @@ describe('Alternatives hub: metadata and indexability', () => {
   });
 
   it('renders exactly one H1 with the red accent and a visible last-updated date', () => {
-    const all = [page, hero, comparison, platformCard, kersivoCard, guide, sources, methodology].join('\n');
+    const all = [page, hero, meter, audience, fees, duel, control, comparison, platformCard, kersivoCard, guide, sources, methodology].join('\n');
     expect(all.match(/<h1\b/g)).toHaveLength(1);
     expect(hero).toContain('alt-hub-hero__accent');
     expect(hero).toContain('datetime={ALTERNATIVES_HUB_LAST_UPDATED_ISO}');
@@ -145,6 +151,40 @@ describe('Alternatives hub: server-rendered content and links', () => {
     const link = read('../../components/alternativesHub/CompareHubLink.astro');
     expect(link).toContain('href={ALTERNATIVES_HUB_PAGE_PATH}');
     expect(link).toContain('Compare all barber booking systems');
+  });
+});
+
+describe('Alternatives hub: specific comparisons', () => {
+  it('renders the number-led sections in order, before the filterable grid', () => {
+    const order = ['<HubHero />', '<HubAudience />', '<HubNewClientFees />', '<HubDuel />', '<HubControlMap />', '<HubComparison />'];
+    const positions = order.map((tag) => page.indexOf(tag));
+    expect(positions.every((p) => p >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    expect(hero).toContain('<HubCostMeter />');
+    expect(page).toContain('initBestCompare(document)');
+  });
+
+  it('server-renders every head-to-head panel with crawlable links and tab semantics', () => {
+    expect(duel).toContain('role="tablist"');
+    expect(duel).toContain('role="tabpanel"');
+    expect(duel).toContain('competitors.map(');
+    expect(duel).toContain('href={p.href}');
+    expect(duel).toContain('<noscript>');
+    expect(control).toContain('HUB_PLATFORMS.map(');
+  });
+
+  it('keeps Full KERSIVO primary and Starter secondary in the audience block', () => {
+    expect(audience).toContain('Choose Full KERSIVO if');
+    expect(audience).toContain('href="/starter"');
+    expect(audience).toContain('STRIPE_FEES_NOTE');
+    expect(audience).not.toMatch(/#1|best in|award/i);
+  });
+
+  it('labels its sliders and respects reduced motion', () => {
+    expect(meter).toContain('<label for="cb-meter-range"');
+    expect(fees).toContain('<label for="cb-fees-range"');
+    expect(bestCss).toContain('prefers-reduced-motion: reduce');
+    expect(bestCss).toContain(':focus-visible');
   });
 });
 

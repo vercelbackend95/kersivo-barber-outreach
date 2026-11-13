@@ -1551,6 +1551,20 @@
   line-height: 1.55;
 }
 
+.hv2 .hv2-compare__hub {
+  margin: 0.9rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.hv2 .hv2-compare__hub a {
+  display: inline-block;
+  padding: 0.6rem 0;
+}
+
 .hv2 .hv2-price__starter {
   margin: 2rem 0 0;
   max-width: 46rem;

@@ -1,0 +1,77 @@
+---
+import {
+  NEW_CLIENT_FEE_NOTE,
+  NEW_CLIENT_FEE_ROWS,
+  NEW_CLIENT_PRICE_DEFAULT,
+  NEW_CLIENT_PRICE_MAX,
+  NEW_CLIENT_PRICE_MIN,
+  formatMoney,
+  newClientFee,
+} from '@/lib/compare/bestSoftwareData';
+
+const price = NEW_CLIENT_PRICE_DEFAULT;
+const fees = NEW_CLIENT_FEE_ROWS.map((row) => newClientFee(row, price));
+const fill = ((price - NEW_CLIENT_PRICE_MIN) / (NEW_CLIENT_PRICE_MAX - NEW_CLIENT_PRICE_MIN)) * 100;
+---
+
+<section id="new-client-fees" class="cb-section cb-fees" aria-labelledby="cb-fees-title" data-cb-fees>
+  <div class="alt-hub__container cb-fees__grid">
+    <header class="cb-section__head cb-fees__head">
+      <p class="ks-eyebrow">Commission</p>
+      <h2 id="cb-fees-title" class="cb-section__title">What a new marketplace client costs you</h2>
+      <p class="cb-section__lead">
+        Most platforms don’t charge on every booking. The fees bite on new clients a marketplace introduces. Set the
+        price of a first visit and see each platform’s published one-time fee.
+      </p>
+
+      <div class="cb-fees__control">
+        <label for="cb-fees-range" class="cb-meter__label">First appointment price</label>
+        <p class="cb-fees__price" aria-hidden="true"><span data-cb-fees-price>{formatMoney(price)}</span></p>
+        <input
+          id="cb-fees-range"
+          class="cb-range"
+          type="range"
+          min={NEW_CLIENT_PRICE_MIN}
+          max={NEW_CLIENT_PRICE_MAX}
+          step="1"
+          value={price}
+          style={`--fill: ${fill}%`}
+          aria-valuetext={`£${price}`}
+          data-cb-fees-range
+        />
+        <div class="cb-fees__scale" aria-hidden="true">
+          <span>£{NEW_CLIENT_PRICE_MIN}</span><span>£{NEW_CLIENT_PRICE_MAX}</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="ks-glass-card ks-glass-card--accent cb-fees__card">
+      <ul class="cb-fees__rows" aria-live="polite">
+        {
+          NEW_CLIENT_FEE_ROWS.map((row, i) => (
+            <li
+              class={`cb-fees__row${row.isFirstParty ? ' cb-fees__row--ours' : ''}`}
+              data-cb-fee-row
+              data-percent={row.percent}
+              data-minimum={row.minimumGbp}
+            >
+              <div class="cb-fees__who">
+                <a href={row.href} class="cb-meter__link" data-track="compare_hub_fees_click" data-track-placement={row.id}>
+                  {row.name}
+                </a>
+                <span class="cb-fees__rate">
+                  {row.percent === 0
+                    ? '0% commission'
+                    : `${row.percent}%${row.minimumGbp ? `, min £${row.minimumGbp}` : ''}`}
+                </span>
+              </div>
+              <p class="cb-fees__when">{row.when}</p>
+              <span class="cb-fees__amount" data-cb-fee-value>{formatMoney(fees[i])}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="cb-meter__note">{NEW_CLIENT_FEE_NOTE}</p>
+    </div>
+  </div>
+</section>

@@ -1,5 +1,6 @@
 ---
 import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
+import HubCostMeter from '@/components/alternativesHub/HubCostMeter.astro';
 import {
   ALTERNATIVES_HUB_DIRECT_ANSWER,
   ALTERNATIVES_HUB_H1_ACCENT,
@@ -9,33 +10,37 @@ import {
 } from '@/lib/seo/alternativesHubSeo';
 ---
 
-<section class="alt-hub-hero" aria-labelledby="alt-hub-title">
-  <div class="alt-hub__container alt-hub-hero__inner">
-    <div class="alt-hub-hero__copy">
-      <nav class="alt-hub-hero__breadcrumb" aria-label="Breadcrumb">
+<section class="alt-hub-hero cb-hero" aria-labelledby="alt-hub-title" data-enter>
+  <div class="cb-hero__grid-lines" aria-hidden="true"></div>
+  <div class="alt-hub__container cb-hero__inner">
+    <div class="cb-hero__copy">
+      <nav class="alt-hub-hero__breadcrumb cb-enter" style="--i: 0" aria-label="Breadcrumb">
         <ol>
           <li><a href="/">Home</a></li>
           <li aria-current="page">Compare booking systems</li>
         </ol>
       </nav>
-      <p class="alt-hub-hero__eyebrow">Alternatives Hub</p>
-      <h1 id="alt-hub-title" class="alt-hub-hero__title">
-        {ALTERNATIVES_HUB_H1_LEAD} <span class="alt-hub-hero__accent">{ALTERNATIVES_HUB_H1_ACCENT}</span>
+      <p class="ks-eyebrow cb-enter" style="--i: 1">11 UK systems · prices from official pages</p>
+      <h1 id="alt-hub-title" class="cb-hero__title">
+        <span class="cb-hero__line cb-enter" style="--i: 2">{ALTERNATIVES_HUB_H1_LEAD}</span>
+        <span class="cb-hero__line alt-hub-hero__accent cb-enter" style="--i: 3">{ALTERNATIVES_HUB_H1_ACCENT}</span>
       </h1>
-      <p class="alt-hub-hero__lead alt-hub-hero__answer">{ALTERNATIVES_HUB_DIRECT_ANSWER}</p>
-      <p class="alt-hub-hero__sub">
-        Compare 11 booking systems for UK barbershops, including KERSIVO, Booksy, Fresha, Nearcut and more — then filter by what matters to your business.
-      </p>
-      <ComparisonHeroActions placement="compare_hub" />
-      <p class="alt-hub-hero__meta">
+      <p class="cb-hero__answer alt-hub-hero__answer cb-enter" style="--i: 4">{ALTERNATIVES_HUB_DIRECT_ANSWER}</p>
+      <ul class="cb-hero__jump cb-enter" style="--i: 5" aria-label="Jump to a comparison">
+        <li><a class="cb-hero__jump-link" href="#cost-by-team-size">Cost by team size</a></li>
+        <li><a class="cb-hero__jump-link" href="#new-client-fees">New-client fees</a></li>
+        <li><a class="cb-hero__jump-link" href="#head-to-head">KERSIVO vs each system</a></li>
+        <li><a class="cb-hero__jump-link" href="#who-owns-your-clients">Website and data</a></li>
+      </ul>
+      <div class="cb-enter" style="--i: 6">
+        <ComparisonHeroActions placement="compare_hub" />
+      </div>
+      <p class="alt-hub-hero__meta cb-enter" style="--i: 7">
         Published by KERSIVO · Last updated <time datetime={ALTERNATIVES_HUB_LAST_UPDATED_ISO}>{ALTERNATIVES_HUB_LAST_UPDATED_LABEL}</time>
       </p>
     </div>
-    <div class="alt-hub-hero__statement" aria-hidden="true">
-      <span>Same tools.</span>
-      <span>More control.</span>
-      <span>A better business.</span>
-      <span class="alt-hub-hero__rule"></span>
+    <div class="cb-hero__visual cb-enter cb-enter--card" style="--i: 3">
+      <HubCostMeter />
     </div>
   </div>
 </section>
