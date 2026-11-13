@@ -1,26 +1,34 @@
 ---
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
+const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
+
+// Each pillar carries a small looping widget (`tick`) that shows the point instead of saying it.
 const pillars = [
   {
+    tick: 'domain',
     title: 'Your website. Your identity.',
     body: 'Give your services, barbers and bookings one branded home on your own domain, instead of a marketplace profile next to other shops.',
     link: { href: '/insights/do-barbers-need-a-website-uk', label: 'Do barbers need a website?' },
   },
   {
+    tick: 'booking',
     title: 'Bookings that lead to your shop.',
     body: 'Clients choose a service, barber and time in the browser — no app download — and you can add walk-ins and phone bookings to the same diary.',
     link: { href: '/barbershop-online-booking', label: 'How online booking works for barbershops' },
   },
   {
+    tick: 'diary',
     title: 'More control behind the chair.',
     body: 'Keep barbers, services, working hours and daily activity in one Full KERSIVO dashboard, built around how your shop runs.',
   },
   {
+    tick: 'client',
     title: 'Build direct client relationships.',
     body: 'Keep client contact details and booking history in your own shop system, so clients deal with your barbershop rather than a marketplace.',
   },
   {
+    tick: 'pay',
     title: 'Payments on your terms.',
     body: `Choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment upfront to help reduce no-shows.`,
     link: {
@@ -29,6 +37,7 @@ const pillars = [
     },
   },
   {
+    tick: 'zero',
     title: 'No KERSIVO cut of your bookings.',
     body: `£${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission on bookings and retail, Stripe fees apply. Add your booking link to your Google Business Profile with guided setup.`,
     link: { href: '/insights/google-business-profile-booking-link-barbershop', label: 'Adding a Google booking link' },
@@ -36,7 +45,7 @@ const pillars = [
 ] as const;
 ---
 
-<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04">
+<section id="why-kersivo-is-different" class="hv2-section hv2-included" aria-labelledby="hv2-included-title" data-hv2-chapter="04" data-hv2-ledger>
   <div class="hv2-shell">
     <header class="hv2-head hv2-included__head">
       <p class="hv2-eyebrow">Built for independent barbershops</p>
@@ -46,9 +55,29 @@ const pillars = [
 
     <ol class="hv2-ledger" role="list">
       {pillars.map((pillar, index) => (
-        <li class="hv2-ledger__item" data-hv2-reveal>
+        <li class="hv2-ledger__item" data-hv2-reveal data-hv2-tick-host>
           <span class="hv2-ledger__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
           <h3 class="hv2-ledger__title">{pillar.title}</h3>
+          <span class={`hv2-tick hv2-tick--${pillar.tick}`} aria-hidden="true">
+            {pillar.tick === 'domain' && (
+              <span class="hv2-tick__url"><i class="hv2-tick__lock"></i><span class="hv2-tick__swap"><s>marketplace.example/cutstate</s><b>cutstatebarbers.co.uk</b></span></span>
+            )}
+            {pillar.tick === 'booking' && (
+              <span class="hv2-tick__steps"><span class="hv2-tick__track"><i class="hv2-tick__bar"></i><span>Service</span><span>Barber</span><span>Time</span></span><b>Booked</b></span>
+            )}
+            {pillar.tick === 'diary' && (
+              <span class="hv2-tick__diary"><i class="is-online">Online</i><i class="is-walkin">Walk-in</i><i class="is-phone">Phone</i><small>One diary</small></span>
+            )}
+            {pillar.tick === 'client' && (
+              <span class="hv2-tick__client"><img src="/images/home-v2/noah-reid.webp" alt="" width="96" height="96" loading="lazy" decoding="async" /><span>Contact</span><span>History</span><span>Your shop</span></span>
+            )}
+            {pillar.tick === 'pay' && (
+              <span class="hv2-tick__seg"><i></i><span>Pay at shop</span><span>{deposit} deposit</span><span>Full upfront</span></span>
+            )}
+            {pillar.tick === 'zero' && (
+              <span class="hv2-tick__zero"><span class="hv2-tick__zero-label"><span>Bookings</span><span>Retail</span></span><b>0%</b><small>KERSIVO commission</small></span>
+            )}
+          </span>
           <p class="hv2-ledger__body">
             {pillar.body}
             {'link' in pillar ? (

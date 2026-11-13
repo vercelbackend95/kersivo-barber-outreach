@@ -354,19 +354,22 @@
 }
 
 .hv2-stamp__ink {
+  --ink: #b3122a;
   display: grid;
   justify-items: center;
-  padding: 0.35rem 0.75rem 0.4rem;
-  border: 3px double var(--stamp);
+  gap: 0.1rem;
+  padding: 0.3rem 0.7rem 0.35rem;
+  border: 3.5px double var(--ink);
   border-radius: 0.45rem;
-  color: var(--stamp);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  color: var(--ink);
   filter: url(#hv2-ink);
   text-transform: uppercase;
 }
 
 .hv2-stamp b {
   font-family: var(--font-heading);
-  font-size: 1.55rem;
+  font-size: 1.75rem;
   font-weight: 400;
   line-height: 0.95;
   letter-spacing: 0.05em;
@@ -375,8 +378,8 @@
 
 .hv2-stamp small {
   padding-top: 0.15rem;
-  border-top: 1px solid currentColor;
-  font-size: 0.56rem;
+  border-top: 1.5px solid currentColor;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.16em;
   white-space: nowrap;
@@ -400,7 +403,7 @@
 
 .hv2-stamp--4 .hv2-stamp__ink {
   border-width: 4px;
-  background: color-mix(in srgb, var(--stamp) 6%, transparent);
+  background: color-mix(in srgb, var(--ink) 11%, transparent);
 }
 
 .hv2-booking__steps {
@@ -646,19 +649,48 @@
 }
 
 .hv2-ledger__item {
+  position: relative;
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
   column-gap: 1rem;
+  align-content: start;
+  max-width: none;
   padding: clamp(1.4rem, 2.4vw, 2rem) 0;
   border-bottom: 1px solid var(--hv2-line);
 }
 
+/* A red hairline draws across the top edge once the item is on screen. */
+.hv2-ledger__item::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 4.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 900ms var(--hv2-ease) 150ms;
+}
+
+.hv2-ledger__item.is-on::before,
+.hv2-ledger:not(.is-armed) .hv2-ledger__item::before {
+  transform: none;
+}
+
 .hv2-ledger__index {
-  grid-row: span 2;
+  grid-row: span 3;
   color: var(--hv2-quiet);
   font-size: 0.85rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   padding-top: 0.3rem;
+  transition: color 400ms ease;
+}
+
+.hv2-ledger__item.is-on .hv2-ledger__index {
+  color: #ff8c95;
 }
 
 .hv2 .hv2-ledger__title {
@@ -667,13 +699,15 @@
   font-size: clamp(1.15rem, 1.6vw, 1.4rem);
   font-weight: 650;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .hv2 .hv2-ledger__body {
-  margin: 0.45rem 0 0;
+  margin: 0.55rem 0 0;
   max-width: 34rem;
   color: var(--hv2-muted);
   line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .hv2 .hv2-included__compare {
@@ -685,6 +719,551 @@
   .hv2-ledger {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: clamp(3rem, 6vw, 6rem);
+  }
+}
+
+/* ---------- Ledger widgets: one small looping proof per item, about the size of a segmented control ---------- */
+.hv2-tick {
+  display: flex;
+  margin-top: 0.75rem;
+  max-width: 100%;
+}
+
+.hv2-tick > span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 2.1rem;
+  max-width: min(100%, 19rem);
+  padding: 0.25rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: #121214;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/* 01 Domain: the marketplace path gives way to the shop's own domain. */
+.hv2-tick__url {
+  gap: 0.5rem;
+  padding-inline: 0.75rem 0.9rem !important;
+}
+
+.hv2-tick__lock {
+  flex: none;
+  width: 0.5rem;
+  height: 0.42rem;
+  margin-top: 0.18rem;
+  border-radius: 2px;
+  background: #2fd27a;
+  box-shadow:
+    0 -3px 0 -1px #121214,
+    0 -4px 0 0 #2fd27a;
+}
+
+.hv2-tick__swap {
+  display: grid;
+  height: 1.1rem;
+  overflow: hidden;
+}
+
+.hv2-tick__swap s,
+.hv2-tick__swap b {
+  grid-area: 1 / 1;
+  line-height: 1.1rem;
+}
+
+.hv2-tick__swap s {
+  color: var(--hv2-quiet);
+  font-weight: 500;
+  text-decoration-color: var(--color-brand);
+  opacity: 0;
+}
+
+.hv2-tick__swap b {
+  color: var(--hv2-ink);
+  font-weight: 650;
+}
+
+/* 02 Booking: service, barber and time fill in, then the booking confirms. */
+.hv2-tick__steps {
+  gap: 0.2rem;
+}
+
+.hv2-tick__track {
+  position: relative;
+  display: inline-flex;
+  height: 100%;
+}
+
+.hv2-tick__track span,
+.hv2-tick__steps b {
+  position: relative;
+  z-index: 1;
+  padding: 0 0.65rem;
+  color: #fff;
+  line-height: 1.6rem;
+}
+
+.hv2-tick__steps b {
+  border-radius: 999px;
+  background: #f3f2ee;
+  color: #111;
+}
+
+.hv2-tick__bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-brand) 85%, #000);
+  transform-origin: left;
+}
+
+/* 03 Diary: online, walk-in and phone bookings drop into one strip. */
+.hv2-tick__diary {
+  gap: 0.25rem;
+  padding-right: 0.8rem !important;
+}
+
+.hv2-tick__diary i {
+  padding: 0 0.55rem;
+  border-left: 2px solid;
+  border-radius: 0.35rem;
+  font-style: normal;
+  line-height: 1.5rem;
+}
+
+.hv2-tick__diary small {
+  margin-left: 0.35rem;
+  color: var(--hv2-quiet);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hv2-tick__diary .is-online {
+  border-color: var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 22%, #141416);
+  color: #ffb3b9;
+}
+
+.hv2-tick__diary .is-walkin {
+  border-color: #e7c37a;
+  background: rgba(231, 195, 122, 0.12);
+  color: #f1d9a6;
+}
+
+.hv2-tick__diary .is-phone {
+  border-color: #8fb6ff;
+  background: rgba(143, 182, 255, 0.12);
+  color: #c4d7ff;
+}
+
+/* 04 Client: the record ticks off contact, history and who keeps it. */
+.hv2-tick__client {
+  gap: 0.3rem;
+  padding-right: 0.5rem !important;
+}
+
+.hv2-tick__client img {
+  width: 1.55rem;
+  height: 1.55rem;
+  margin-right: 0.15rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.hv2-tick__client span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.55rem 0 0.35rem;
+  border-radius: 999px;
+  background: rgba(47, 210, 122, 0.1);
+  color: #bdf0d3;
+  line-height: 1.5rem;
+}
+
+.hv2-tick__client span::before {
+  content: '';
+  width: 0.28rem;
+  height: 0.5rem;
+  margin: 0 0.15rem 0.12rem 0.2rem;
+  border: solid #2fd27a;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+/* 05 Payments: a segmented control steps through the three options. */
+.hv2-tick__seg {
+  display: inline-grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 19rem);
+}
+
+.hv2-tick__seg span {
+  position: relative;
+  z-index: 1;
+  padding: 0 0.35rem;
+  color: var(--hv2-muted);
+  line-height: 1.6rem;
+  text-align: center;
+}
+
+.hv2-tick__seg span:nth-of-type(2) {
+  color: #fff;
+}
+
+.hv2-tick__seg i {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  width: calc((100% - 0.5rem) / 3);
+  border-radius: 999px;
+  background: var(--color-brand);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-brand) 80%, transparent);
+  transform: translateX(100%);
+}
+
+/* 06 Commission: 0% holds while the label turns from bookings to retail. */
+.hv2-tick__zero {
+  gap: 0.55rem;
+  padding-inline: 0.3rem 0.85rem !important;
+}
+
+.hv2-tick__zero-label {
+  display: grid;
+  height: 1.6rem;
+  overflow: hidden;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  background: #1c1c1f;
+}
+
+.hv2-tick__zero-label span {
+  grid-area: 1 / 1;
+  color: #e6e6e8;
+  line-height: 1.6rem;
+}
+
+.hv2-tick__zero-label span + span {
+  opacity: 0;
+}
+
+.hv2-tick__zero b {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.hv2-tick__zero small {
+  color: var(--hv2-muted);
+  font-size: 0.66rem;
+}
+
+@media (max-width: 30rem) {
+  .hv2-tick__diary small {
+    display: none;
+  }
+}
+
+/* Loops run only while their item is on screen, and never with reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .hv2-ledger.is-armed .hv2-tick * {
+    animation-play-state: paused;
+  }
+
+  .hv2-ledger.is-armed .hv2-ledger__item.is-on .hv2-tick * {
+    animation-play-state: running;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__swap s {
+    animation: hv2-tick-url-old 7s var(--hv2-ease) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__swap b {
+    animation: hv2-tick-url-new 7s var(--hv2-ease) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__bar {
+    animation: hv2-tick-bar 6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__steps b {
+    animation: hv2-tick-booked 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__diary i {
+    animation: hv2-tick-drop 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__diary i:nth-of-type(2) {
+    animation-delay: 0.25s;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__diary i:nth-of-type(3) {
+    animation-delay: 0.5s;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__client span {
+    animation: hv2-tick-pop 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__client span:nth-of-type(2) {
+    animation-delay: 0.3s;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__client span:nth-of-type(3) {
+    animation-delay: 0.6s;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__seg i {
+    animation: hv2-pay 6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__seg span:nth-of-type(1) {
+    animation: hv2-pay-label-1 6s steps(1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__seg span:nth-of-type(2) {
+    animation: hv2-pay-label-2 6s steps(1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__seg span:nth-of-type(3) {
+    animation: hv2-pay-label-3 6s steps(1) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__zero-label span:first-child {
+    animation: hv2-tick-label-out 5s var(--hv2-ease) infinite;
+  }
+
+  .hv2-ledger.is-armed .hv2-tick__zero-label span + span {
+    animation: hv2-tick-label-in 5s var(--hv2-ease) infinite;
+  }
+}
+
+@keyframes hv2-tick-url-old {
+  0%,
+  38% {
+    opacity: 1;
+    transform: none;
+  }
+
+  46%,
+  92% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hv2-tick-url-new {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  46%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes hv2-tick-bar {
+  0% {
+    transform: scaleX(0.02);
+  }
+
+  18% {
+    transform: scaleX(0.33);
+  }
+
+  36% {
+    transform: scaleX(0.66);
+  }
+
+  54%,
+  90% {
+    transform: scaleX(1);
+  }
+
+  100% {
+    transform: scaleX(0.02);
+  }
+}
+
+@keyframes hv2-tick-booked {
+  0%,
+  56% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+
+  62%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes hv2-tick-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-35%) scale(0.85);
+  }
+
+  8%,
+  88% {
+    opacity: 1;
+    transform: none;
+  }
+
+  96%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes hv2-tick-pop {
+  0%,
+  10% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+
+  20%,
+  86% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0.2;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes hv2-tick-label-out {
+  0%,
+  42% {
+    opacity: 1;
+    transform: none;
+  }
+
+  50%,
+  92% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hv2-tick-label-in {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  50%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes hv2-pay {
+  0%,
+  28% {
+    transform: translateX(0%);
+  }
+
+  33%,
+  61% {
+    transform: translateX(100%);
+  }
+
+  66%,
+  94% {
+    transform: translateX(200%);
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes hv2-pay-label-1 {
+  0% {
+    color: #fff;
+  }
+
+  30% {
+    color: var(--hv2-muted);
+  }
+
+  97% {
+    color: #fff;
+  }
+}
+
+@keyframes hv2-pay-label-2 {
+  0% {
+    color: var(--hv2-muted);
+  }
+
+  31% {
+    color: #fff;
+  }
+
+  63% {
+    color: var(--hv2-muted);
+  }
+}
+
+@keyframes hv2-pay-label-3 {
+  0% {
+    color: var(--hv2-muted);
+  }
+
+  64% {
+    color: #fff;
+  }
+
+  96% {
+    color: var(--hv2-muted);
   }
 }
 
@@ -1078,9 +1657,9 @@
   position: relative;
   display: grid;
   align-content: start;
-  gap: 0.55rem;
+  gap: 0.7rem;
   height: 100%;
-  padding: clamp(1.25rem, 2.4vw, 1.9rem);
+  padding: clamp(1.25rem, 2.2vw, 1.75rem);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
@@ -1109,29 +1688,67 @@
   left: 1.5rem;
   height: 1px;
   background: linear-gradient(90deg, var(--color-brand), transparent);
+  opacity: 0.35;
+  transform: scaleX(0.4);
+  transform-origin: left;
+  transition:
+    opacity 500ms ease,
+    transform 900ms var(--hv2-ease);
 }
 
-.hv2-steps__big {
+.hv2-steps__item.is-lit .hv2-steps__card::before {
+  opacity: 1;
+  transform: none;
+}
+
+.hv2-steps__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.hv2 .hv2-steps__num {
+  color: rgba(255, 255, 255, 0.38);
+  font-family: var(--font-body);
+  font-size: clamp(2rem, 2.6vw, 2.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  transition: color 400ms ease;
+}
+
+.hv2-steps__item.is-lit .hv2-steps__num {
+  color: var(--hv2-ink);
+}
+
+.hv2-steps__rule {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  overflow: hidden;
+  background: var(--hv2-line);
+}
+
+.hv2-steps__rule::after {
+  content: '';
   position: absolute;
-  right: 1.1rem;
-  bottom: 0.4rem;
-  color: transparent;
-  font-family: var(--font-heading);
-  font-size: clamp(4.5rem, 8vw, 7.5rem);
-  line-height: 0.9;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.12);
-  transition: -webkit-text-stroke-color 400ms ease;
-  pointer-events: none;
+  inset: 0;
+  background: linear-gradient(90deg, var(--color-brand), color-mix(in srgb, var(--color-brand) 10%, transparent));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 900ms var(--hv2-ease) 120ms;
 }
 
-.hv2-steps__item.is-lit .hv2-steps__big {
-  -webkit-text-stroke-color: color-mix(in srgb, var(--color-brand) 70%, transparent);
+.hv2-steps__item.is-lit .hv2-steps__rule::after {
+  transform: scaleX(1);
 }
 
 .hv2 .hv2-steps__owner {
-  justify-self: start;
-  margin: 0.5rem 0 0;
-  padding: 0.15rem 0.55rem;
+  flex: none;
+  margin: 0;
+  padding: 0.2rem 0.6rem;
   border: 1px solid var(--hv2-line);
   border-radius: 999px;
   color: var(--hv2-muted);
@@ -1393,55 +2010,76 @@
   font-size: 0.75rem;
 }
 
-.hv2-vis__rings {
+.hv2-vis__signal {
   position: absolute;
   top: 50%;
-  right: 2.2rem;
-  width: 0.8rem;
-  height: 0.8rem;
+  right: clamp(1.5rem, 14%, 3.25rem);
+  display: grid;
+  place-items: center;
+  width: 4.75rem;
+  height: 4.75rem;
+  transform: translateY(-50%);
+}
+
+/* One faint guide ring; the ripples stay quiet and slow, like a status light, not an alarm. */
+.hv2-vis__signal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(47, 210, 122, 0.1);
+  border-radius: 50%;
+}
+
+.hv2-vis__signal b {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #2fd27a;
+  box-shadow: 0 0 8px rgba(47, 210, 122, 0.45);
+}
+
+.hv2-vis__rings {
+  position: absolute;
+  inset: 0;
 }
 
 .hv2-vis__rings i {
   position: absolute;
   inset: 0;
-  border: 1.5px solid #2fd27a;
+  border: 1px solid rgba(47, 210, 122, 0.55);
   border-radius: 50%;
-  opacity: 0.6;
-}
-
-.hv2-vis__rings i:nth-child(2) {
-  transform: scale(3);
-  opacity: 0.25;
+  opacity: 0;
+  transform: scale(0.15);
 }
 
 .hv2-vis__rings i:nth-child(3) {
-  transform: scale(5.5);
-  opacity: 0.1;
+  display: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hv2-steps__item.is-lit .hv2-vis__rings i {
-    animation: hv2-ring 2.8s var(--hv2-ease) infinite;
+    animation: hv2-ring 4.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
 
   .hv2-steps__item.is-lit .hv2-vis__rings i:nth-child(2) {
-    animation-delay: 0.45s;
-  }
-
-  .hv2-steps__item.is-lit .hv2-vis__rings i:nth-child(3) {
-    animation-delay: 0.9s;
+    animation-delay: 2.4s;
   }
 }
 
 @keyframes hv2-ring {
-  from {
-    opacity: 0.7;
-    transform: scale(1);
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
   }
 
-  to {
+  15% {
+    opacity: 0.45;
+  }
+
+  100% {
     opacity: 0;
-    transform: scale(6);
+    transform: scale(1);
   }
 }
 
@@ -2172,11 +2810,17 @@
   }
 
   .hv2-stamp b {
-    font-size: 1.15rem;
+    font-size: 1.4rem;
   }
 
   .hv2-stamp small {
-    font-size: 0.46rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+  }
+
+  .hv2-stamp__ink {
+    padding: 0.2rem 0.55rem 0.25rem;
+    border-width: 3px;
   }
 
   .hv2-booking__steps {
@@ -2190,21 +2834,9 @@
   }
 }
 
-@media (max-width: 63.99rem) {
-  .hv2-steps__big {
-    position: static;
-    order: -1;
-    margin-bottom: -0.2rem;
-    font-size: 3rem;
-  }
-}
-
-@media (min-width: 64rem) {
-  .hv2-steps__big {
-    font-size: clamp(3.5rem, 5vw, 5rem);
-  }
-
-  .hv2 .hv2-steps__body {
-    padding-right: 4.25rem;
+@media (max-width: 30rem) {
+  .hv2-vis__signal {
+    width: 4rem;
+    height: 4rem;
   }
 }

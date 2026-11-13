@@ -33,6 +33,7 @@ export function initHomeV2Motion(root: Document, wipe: WipeController | null): (
       cleanups.push(bindTicket(gsap, ScrollTrigger, root));
       bindHeadings(gsap, ScrollTrigger, root);
       bindLedger(gsap, ScrollTrigger, root);
+      cleanups.push(bindLedgerTicks(root));
       cleanups.push(bindPrice(gsap, ScrollTrigger, root));
       cleanups.push(bindRail(gsap, ScrollTrigger, root));
       cleanups.push(bindFinal(gsap, ScrollTrigger, root));
@@ -158,7 +159,7 @@ function bindTicket(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
       .timeline()
       .fromTo(ink, { autoAlpha: 0, scale: 2.6, y: -24 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.24, ease: 'power4.in', overwrite: true })
       .to(ticket, { keyframes: { y: [0, 5, -1.5, 0], rotation: [0, -0.7, 0.35, 0] }, duration: 0.42, ease: 'power2.out' })
-      .to(ink, { opacity: 0.9, duration: 0.6, ease: 'power1.out' }, '<');
+      .to(ink, { opacity: 1, duration: 0.6, ease: 'power1.out' }, '<');
   };
   const stampOut = (index: number) => {
     const ink = inks[index];
@@ -227,6 +228,29 @@ function bindLedger(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docume
   for (const item of items) {
     once(ScrollTrigger, item, () => gsap.to(item, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out' }), 'top 90%');
   }
+}
+
+/**
+ * Ledger widgets loop only while their item is on screen. Each item also lights its index and
+ * draws its hairline the first time it arrives.
+ */
+function bindLedgerTicks(root: Document) {
+  const ledger = root.querySelector<HTMLElement>('.hv2-ledger');
+  if (!ledger) return undefined;
+  const items = Array.from(ledger.querySelectorAll<HTMLElement>('[data-hv2-tick-host]'));
+  ledger.classList.add('is-armed');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) (entry.target as HTMLElement).classList.toggle('is-on', entry.isIntersecting);
+    },
+    { rootMargin: '-12% 0px -12% 0px' },
+  );
+  items.forEach((item) => observer.observe(item));
+  return () => {
+    observer.disconnect();
+    ledger.classList.remove('is-armed');
+    items.forEach((item) => item.classList.remove('is-on'));
+  };
 }
 
 /** The price rolls in like a meter, the card catches the light, and the receipt prints every line as included. */
@@ -375,7 +399,8 @@ function bindStepsPinned(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: D
     });
   };
 
-  gsap.set(items, { autoAlpha: 0.35, scale: 0.94 });
+  // The first card is already on stage; the rest wait dimmed until the journey reaches them.
+  gsap.set(items.slice(1), { autoAlpha: 0.45, scale: 0.95 });
   const timeline = gsap.timeline({
     scrollTrigger: {
       trigger: pin,
@@ -389,9 +414,9 @@ function bindStepsPinned(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: D
     },
   });
   timeline.to(track, { x: () => -distance(), ease: 'none', duration: 1 }, 0);
-  items.forEach((item, index) => {
-    const at = items.length > 1 ? index / (items.length - 1) : 0;
-    timeline.to(item, { autoAlpha: 1, scale: 1, duration: 0.18, ease: 'power2.out' }, Math.max(0, at - 0.16));
+  items.slice(1).forEach((item, index) => {
+    const at = (index + 1) / Math.max(1, items.length - 1);
+    timeline.to(item, { autoAlpha: 1, scale: 1, duration: 0.16, ease: 'power2.out' }, Math.max(0, at - 0.18));
   });
   light(0);
 
@@ -452,44 +477,125 @@ function bindStepsStacked(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: 
   };
 }
 
-/** Chapter rail: fills with page progress and marks the chapter on screen. */
+/**
+ * Chapter rail. One reading line sits 40% down the viewport: the chapter whose box contains it is
+ * current, and the fill reaches a dot at the exact moment its chapter starts, so line and dots never
+ * disagree. The current chapter's name shows briefly whenever it changes.
+ */
 function bindRail(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
   const rail = root.querySelector<HTMLElement>('[data-hv2-rail]');
   if (!rail) return undefined;
   const fill = rail.querySelector<HTMLElement>('[data-hv2-rail-progress]');
   const links = Array.from(rail.querySelectorAll<HTMLAnchorElement>('[data-hv2-rail-link]'));
-  const setActive = (href: string) => {
-    links.forEach((link) => {
-      if (link.getAttribute('href') === href) link.setAttribute('aria-current', 'true');
-      else link.removeAttribute('aria-current');
-    });
+  const items = links
+    .map((link) => ({ link, target: root.querySelector<HTMLElement>(link.getAttribute('href') ?? '') }))
+    .filter((item): item is { link: HTMLAnchorElement; target: HTMLElement } => item.target !== null);
+  if (items.length === 0) return undefined;
+
+  // Section tops in page coordinates. Re-measured after every ScrollTrigger refresh (pins add
+  // spacing) and whenever the page height changes (demo widgets hydrate, FAQ items open).
+  let tops: number[] = [];
+  let end = 0;
+  const measure = () => {
+    tops = items.map(({ target }) => target.getBoundingClientRect().top + window.scrollY);
+    end = items[items.length - 1].target.getBoundingClientRect().bottom + window.scrollY;
   };
-  const triggers = links.flatMap((link) => {
-    const target = root.querySelector<HTMLElement>(link.getAttribute('href') ?? '');
-    if (!target) return [];
-    return [
-      ScrollTrigger.create({
-        trigger: target,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => {
-          if (self.isActive) setActive(link.getAttribute('href') ?? '');
-        },
-      }),
-    ];
-  });
-  const progress = fill
-    ? ScrollTrigger.create({
-        start: 0,
-        end: 'max',
-        onUpdate: (self) => gsap.set(fill, { scaleY: self.progress }),
+
+  let current = -1;
+  let flashTimer = 0;
+  // While a rail jump is scrolling, the rail shows the destination instead of every chapter it passes.
+  let lockedTo = -1;
+  let lockTimer = 0;
+  const setFill = fill ? gsap.quickTo(fill, 'scaleY', { duration: 0.35, ease: 'power3.out' }) : null;
+
+  const setCurrent = (index: number) => {
+    if (index === current) return;
+    current = index;
+    items.forEach(({ link }, i) => {
+      if (i === index) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+      link.classList.toggle('is-passed', i < index);
+    });
+    rail.classList.add('is-flash');
+    window.clearTimeout(flashTimer);
+    flashTimer = window.setTimeout(() => rail.classList.remove('is-flash'), 1600);
+  };
+
+  const update = () => {
+    const line = window.scrollY + window.innerHeight * 0.4;
+    let index = 0;
+    for (let i = 0; i < tops.length; i++) if (line >= tops[i] - 1) index = i;
+    const next = index + 1 < tops.length ? tops[index + 1] : end;
+    const local = Math.min(1, Math.max(0, (line - tops[index]) / Math.max(1, next - tops[index])));
+    // The fill touches a dot at the exact moment its chapter starts.
+    const steps = Math.max(1, items.length - 1);
+    setFill?.(index >= steps ? 1 : (index + local) / steps);
+    setCurrent(lockedTo >= 0 ? lockedTo : index);
+  };
+
+  const release = () => {
+    lockedTo = -1;
+    window.clearTimeout(lockTimer);
+    window.removeEventListener('scrollend', release);
+    update();
+  };
+
+  const onClick = (event: MouseEvent) => {
+    const index = items.findIndex(({ link }) => link === event.currentTarget);
+    if (index < 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    measure();
+    const nav = parseFloat(getComputedStyle(items[index].target).scrollMarginTop) || 0;
+    const top = Math.max(0, tops[index] - nav);
+    const smooth = window.matchMedia(MOTION_OK).matches;
+    lockedTo = index;
+    setCurrent(index);
+    window.clearTimeout(lockTimer);
+    window.addEventListener('scrollend', release, { once: true });
+    lockTimer = window.setTimeout(release, 2500);
+    window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+    history.replaceState(history.state, '', items[index].link.getAttribute('href') ?? '');
+    const target = items[index].target;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: true });
+  };
+
+  links.forEach((link) => link.addEventListener('click', onClick));
+  const onRefresh = () => {
+    measure();
+    update();
+  };
+  ScrollTrigger.addEventListener('refresh', onRefresh);
+  const main = root.querySelector<HTMLElement>('.hv2');
+  let resizeTimer = 0;
+  const observer = main
+    ? new ResizeObserver(() => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(onRefresh, 120);
       })
     : null;
-  setActive('#hero');
+  if (main && observer) observer.observe(main);
+
+  measure();
+  const trigger = ScrollTrigger.create({ start: 0, end: 'max', onUpdate: update });
+  update();
+  rail.classList.remove('is-flash');
+
   return () => {
-    triggers.forEach((trigger) => trigger.kill());
-    progress?.kill();
-    links.forEach((link) => link.removeAttribute('aria-current'));
+    trigger.kill();
+    observer?.disconnect();
+    ScrollTrigger.removeEventListener('refresh', onRefresh);
+    window.removeEventListener('scrollend', release);
+    window.clearTimeout(flashTimer);
+    window.clearTimeout(lockTimer);
+    window.clearTimeout(resizeTimer);
+    links.forEach((link) => {
+      link.removeEventListener('click', onClick);
+      link.removeAttribute('aria-current');
+      link.classList.remove('is-passed');
+    });
+    rail.classList.remove('is-flash');
+    if (fill) gsap.set(fill, { clearProps: 'all' });
   };
 }
 
