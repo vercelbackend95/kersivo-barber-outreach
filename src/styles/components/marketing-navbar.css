@@ -101,7 +101,7 @@ html.mnav-locked body::before {
   left: 1.25rem;
   right: 55%;
   height: 1px;
-  background: linear-gradient(90deg, var(--color-brand, #d72638), transparent);
+  background: linear-gradient(90deg, var(--color-brand), transparent);
   pointer-events: none;
 }
 
@@ -733,7 +733,7 @@ html.mnav-locked body::before {
     height: 4px;
     border-radius: 50%;
     background: var(--color-brand, var(--accent));
-    box-shadow: 0 0 8px color-mix(in srgb, var(--color-brand, #d72638) 70%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-brand) 70%, transparent);
     transform: translateX(-50%);
   }
 
