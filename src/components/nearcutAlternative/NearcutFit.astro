@@ -1,23 +1,38 @@
 ---
-import ModelComparison from '@/components/editorial/ModelComparison.astro';
-import { NEARCUT_FIT_CLOSING, NEARCUT_FIT_PATHS } from '@/lib/seo/nearcutAlternativeContent';
+import { NEARCUT_FIT, NEARCUT_FIT_CLOSING } from '@/lib/seo/nearcutAlternativeContent';
 ---
 
-<section id="which-model" class="fresha-alt__section" aria-labelledby="fresha-alt-fit-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">TWO MODELS</p>
-      <h2 id="fresha-alt-fit-title" class="fresha-alt__h2">Which model fits your barbershop?</h2>
+<section id="which-model" class="nc-section nc-fit" aria-labelledby="nearcut-alt-fit-title">
+  <div class="nc-wrap">
+    <header class="nc-head">
+      <p class="nc-eyebrow">An honest fit check</p>
+      <h2 id="nearcut-alt-fit-title" class="nc-h2">Which one fits your shop?</h2>
     </header>
-
-    <ModelComparison idPrefix="fresha-alt-fit" models={NEARCUT_FIT_PATHS} conclusion={NEARCUT_FIT_CLOSING}>
-      Also comparing other software? <a href="/booksy-alternative">Booksy comparison <span aria-hidden="true">→</span></a> <span> · </span> <a href="/fresha-alternative">Fresha comparison <span aria-hidden="true">→</span></a> <span> · </span><a href="/square-appointments-alternative">Square Appointments alternative <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/squire-alternative">Compare KERSIVO and SQUIRE <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/phorest-alternative">Phorest alternative <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/vagaro-alternative">Vagaro alternative <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/treatwell-alternative">Treatwell alternative <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/setora-alternative">Setora comparison <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/timely-alternative">Timely alternative UK <span aria-hidden="true">→</span></a>
-    </ModelComparison>
+    <div class="nc-fit__grid">
+      <div class="nc-card nc-fit__col">
+        <h3 class="nc-h3">{NEARCUT_FIT.nearcut.heading}</h3>
+        <ul class="nc-dots">{NEARCUT_FIT.nearcut.points.map((point) => <li>{point}</li>)}</ul>
+      </div>
+      <div class="nc-card nc-fit__col nc-fit__col--ks">
+        <h3 class="nc-h3">{NEARCUT_FIT.kersivo.heading}</h3>
+        <ul class="nc-ticks">{NEARCUT_FIT.kersivo.points.map((point) => <li>{point}</li>)}</ul>
+        <a class="nc-text-link" href="/pricing#plan" data-track="view_pricing_click" data-track-placement="nearcut_fit">See Full KERSIVO pricing <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <p class="nc-body nc-fit__closing">{NEARCUT_FIT_CLOSING}</p>
+    <nav class="nc-fit__others" aria-label="Other comparisons">
+      <span class="nc-small">Also comparing other software?</span>
+      <ul>
+        <li><a href="/booksy-alternative">Booksy comparison <span aria-hidden="true">→</span></a></li>
+        <li><a href="/fresha-alternative">Fresha comparison <span aria-hidden="true">→</span></a></li>
+        <li><a href="/square-appointments-alternative">Square Appointments alternative <span aria-hidden="true">→</span></a></li>
+        <li><a href="/squire-alternative">Compare KERSIVO and SQUIRE <span aria-hidden="true">→</span></a></li>
+        <li><a href="/phorest-alternative">Phorest alternative <span aria-hidden="true">→</span></a></li>
+        <li><a href="/vagaro-alternative">Vagaro alternative <span aria-hidden="true">→</span></a></li>
+        <li><a href="/treatwell-alternative">Treatwell alternative <span aria-hidden="true">→</span></a></li>
+        <li><a href="/setora-alternative">Setora comparison <span aria-hidden="true">→</span></a></li>
+        <li><a href="/timely-alternative">Timely alternative UK <span aria-hidden="true">→</span></a></li>
+      </ul>
+    </nav>
   </div>
 </section>

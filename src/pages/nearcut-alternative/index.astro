@@ -4,16 +4,17 @@ import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import NearcutHero from '@/components/nearcutAlternative/NearcutHero.astro';
+import NearcutAnswer from '@/components/nearcutAlternative/NearcutAnswer.astro';
+import NearcutWebsite from '@/components/nearcutAlternative/NearcutWebsite.astro';
+import NearcutOutcomes from '@/components/nearcutAlternative/NearcutOutcomes.astro';
+import NearcutCosts from '@/components/nearcutAlternative/NearcutCosts.astro';
 import NearcutCompare from '@/components/nearcutAlternative/NearcutCompare.astro';
 import NearcutProof from '@/components/nearcutAlternative/NearcutProof.astro';
-import NearcutPricing from '@/components/nearcutAlternative/NearcutPricing.astro';
-import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
-import NearcutQuickAnswer from '@/components/nearcutAlternative/NearcutQuickAnswer.astro';
-import NearcutWhy from '@/components/nearcutAlternative/NearcutWhy.astro';
-import NearcutCosts from '@/components/nearcutAlternative/NearcutCosts.astro';
 import NearcutFit from '@/components/nearcutAlternative/NearcutFit.astro';
 import NearcutSwitching from '@/components/nearcutAlternative/NearcutSwitching.astro';
+import NearcutPricing from '@/components/nearcutAlternative/NearcutPricing.astro';
 import NearcutSources from '@/components/nearcutAlternative/NearcutSources.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   NEARCUT_ALTERNATIVE_DESCRIPTION,
@@ -31,6 +32,7 @@ import {
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/nearcut-alternative.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -41,10 +43,12 @@ const currentYear = new Date().getFullYear();
   canonicalPath={NEARCUT_ALTERNATIVE_PAGE_PATH}
   jsonLd={[buildNearcutAlternativeWebPageJsonLd(), buildNearcutAlternativeBreadcrumbJsonLd(), buildNearcutAlternativeFaqJsonLd()]}
 >
-  <main class="fresha-alt landing-overflow-guard">
+  <link slot="head" rel="preload" as="image" href="/images/nearcut/site-hero.webp" fetchpriority="high" />
+  <main class="fresha-alt nc landing-overflow-guard">
     <NearcutHero />
-    <NearcutQuickAnswer />
-    <NearcutWhy />
+    <NearcutAnswer />
+    <NearcutWebsite />
+    <NearcutOutcomes />
     <NearcutCosts />
     <NearcutCompare />
     <NearcutProof />
@@ -87,6 +91,21 @@ const currentYear = new Date().getFullYear();
     />
   </main>
 </LandingLayout>
+
+<script>
+  import { initNearcutPage } from '@/lib/landing/nearcutPage';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main.nc');
+    if (!root || root.dataset.ncBound === 'true') return;
+    root.dataset.ncBound = 'true';
+    const cleanup = initNearcutPage(document);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
 
 <script>
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';

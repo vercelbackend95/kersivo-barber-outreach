@@ -1,6 +1,7 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
+import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
 
 const gbp = (n: number) => Number.isInteger(n) ? `£${n}` : `£${n.toFixed(2)}`;
 const FULL = gbp(SAAS_MONTHLY_GBP);
@@ -9,8 +10,8 @@ const BOOKING_CHARGE_EXAMPLE = gbp(requireIllustrativeNearcutFact('freeForYouCus
 export const NEARCUT_ALTERNATIVE_PAGE_PATH = '/nearcut-alternative';
 export const NEARCUT_ALTERNATIVE_TITLE = 'Nearcut Alternative UK | Pricing & Booking Fees | KERSIVO';
 export const NEARCUT_ALTERNATIVE_DESCRIPTION = 'Compare Nearcut vs KERSIVO in the UK: Free for You booking charges, Subscription pricing, websites, deposits and how to switch your barbershop.';
-export const NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-28';
-export const NEARCUT_ALTERNATIVE_LAST_UPDATED_LABEL = '28 October 2026';
+export const NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';
+export const NEARCUT_ALTERNATIVE_LAST_UPDATED_LABEL = '14 November 2026';
 export const NEARCUT_ALTERNATIVE_FAQ_ITEMS = [
 {question:'Is KERSIVO an alternative to Nearcut for UK barbers?',answer:`Yes. Both platforms offer online booking for barbershops. KERSIVO Starter offers a hosted booking page at £0/month for up to four active bookable barbers, while Full KERSIVO costs ${FULL}/month per location and includes a branded website and your own domain.`},
 {question:'Is Nearcut free for barbershops?',answer:'Nearcut has a Free for You plan at £0/month to the barbershop, where the client pays a separate booking charge when booking online. Nearcut also offers a quote-based Subscription plan without that customer booking charge.'},
@@ -22,6 +23,7 @@ export const NEARCUT_ALTERNATIVE_FAQ_ITEMS = [
 {question:'Does Nearcut offer a free trial or charge setup fees?',answer:'Nearcut states that Subscription has a 30-day free trial and no setup fee for its website or booking system. After the trial, shops can continue monthly, cancel or switch plans. Confirm any optional Business Booster charges separately.'},
 {question:'Are Nearcut online payments and deposits free?',answer:'Nearcut’s Free for You pricing page advertises optional online payments and deposits with zero transaction fees. Its separate Help Centre article publishes standard online payment processing rates that vary by transaction volume. Ask Nearcut which rates and conditions apply to your exact plan and payment setup; these are separate from its client booking charge.'},
 {question:'Does KERSIVO charge per barber?',answer:`KERSIVO Starter is £0/month for up to four bookable barbers at one location. Full KERSIVO is ${FULL}/month per location with no per-barber subscription charge, subject to reasonable fair use.`},
+{question:'Is a KERSIVO website just a template?',answer:FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM},
 {question:'Can I transfer my clients from Nearcut to KERSIVO?',answer:'KERSIVO can help review and migrate usable data available from a previous system, including compatible CSV exports. We have not verified a universal Nearcut client export format, so confirm what can be exported before promising migration of any specific records.'},
 {question:'Can I keep Nearcut live while setting up KERSIVO?',answer:'Yes. Keep Nearcut running during preparation. For Full KERSIVO, review your private site preview and approve the launch before public booking links or applicable domain routing are switched.'},
 {question:'Does KERSIVO have a marketplace?',answer:'No. KERSIVO is designed for direct bookings. Nearcut also explicitly positions itself away from commission-led marketplaces; the main differences are payment model, scope and included features rather than marketplace listings.'},

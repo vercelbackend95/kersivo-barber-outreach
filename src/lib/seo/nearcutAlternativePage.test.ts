@@ -31,13 +31,25 @@ describe('Nearcut Alternative marketing page',()=>{
   expect((schema.mainEntity as unknown[]).length).toBe(NEARCUT_ALTERNATIVE_FAQ_ITEMS.length);
   expect(page).toContain('faqs={NEARCUT_ALTERNATIVE_FAQ_ITEMS}');
  });
- it('reuses the mature visual page flow without additional h1 elements',()=>{
-  const order=['<NearcutHero','<NearcutQuickAnswer','<NearcutWhy','<NearcutCosts','<NearcutCompare','<NearcutProof','<NearcutFit','<NearcutSwitching','<NearcutPricing','<Faq4','<ComparisonFinalCta','<NearcutSources'].map(x=>page.indexOf(x));
+ it('leads with the website story, then costs, comparison and switching, with one h1',()=>{
+  const order=['<NearcutHero','<NearcutAnswer','<NearcutWebsite','<NearcutOutcomes','<NearcutCosts','<NearcutCompare','<NearcutProof','<NearcutFit','<NearcutSwitching','<NearcutPricing','<Faq4','<ComparisonFinalCta','<NearcutSources'].map(x=>page.indexOf(x));
   expect(order.every(x=>x>=0)).toBe(true);
   expect(order).toEqual([...order].sort((a,b)=>a-b));
   const hero=read('../../components/nearcutAlternative/NearcutHero.astro');
   expect((hero.match(/<h1\b/g)||[]).length).toBe(1);
   expect(hero).not.toContain('marketplace discovery');
+  expect(hero).toContain('Nearcut alternative');
+  expect(hero).toContain('type="range"');
+  expect(hero).toContain('aria-label={NEARCUT_HERO_SLIDER_LABEL}');
+ });
+ it('shows a KERSIVO website part by part and offers the free preview',()=>{
+  const site=read('../../components/nearcutAlternative/NearcutWebsite.astro');
+  const mock=read('../../components/nearcutAlternative/NearcutSiteMock.astro');
+  expect(site).toContain('aria-pressed');
+  expect(site).toContain('<NearcutPrimaryCta');
+  for(const part of ['domain','work','team','prices','book','shop'])expect(mock).toContain('data-nc-part="'+part+'"');
+  expect(mock).toContain('aria-hidden="true"');
+  expect(read('../../components/nearcutAlternative/NearcutPrimaryCta.astro')).toContain('FREE_PREVIEW_CTA_LABEL');
  });
  it('does not misrepresent the Nearcut plan or invent subscription quotes',()=>{
   const facts=read('nearcutFacts.ts');
@@ -99,5 +111,7 @@ describe('Nearcut Alternative marketing page',()=>{
   expect(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp).toBe(1.5);
   expect(faqs).toContain('Nearcut Free for You');
   expect(faqs).toContain('30-day free trial');
+  expect(costs).toContain('data-nc-estimator');
+  expect(costs).toContain('NEARCUT_ESTIMATOR_NOTE');
  });
 });

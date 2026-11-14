@@ -1,0 +1,54 @@
+---
+import NearcutSiteMock from './NearcutSiteMock.astro';
+import NearcutPrimaryCta from './NearcutPrimaryCta.astro';
+import {
+  NEARCUT_SITE_LEAD,
+  NEARCUT_SITE_NOTE,
+  NEARCUT_SITE_PARTS,
+  NEARCUT_SITE_TITLE,
+} from '@/lib/seo/nearcutAlternativeContent';
+---
+
+<section id="your-website" class="nc-section nc-anatomy" aria-labelledby="nearcut-alt-site-title" data-nc-anatomy>
+  <div class="nc-wrap">
+    <header class="nc-head nc-head--split">
+      <div class="nc-head__main">
+        <p class="nc-eyebrow">What your clients see</p>
+        <h2 id="nearcut-alt-site-title" class="nc-h2">{NEARCUT_SITE_TITLE}</h2>
+      </div>
+      <p class="nc-lead">{NEARCUT_SITE_LEAD}</p>
+    </header>
+
+    <div class="nc-anatomy__grid">
+      <div class="nc-anatomy__stage">
+        <div class="nc-anatomy__frame" data-nc-anatomy-frame data-active="domain">
+          <NearcutSiteMock />
+        </div>
+      </div>
+
+      <div class="nc-anatomy__side">
+        <div class="nc-anatomy__list" role="group" aria-label="Parts of a KERSIVO website">
+          {NEARCUT_SITE_PARTS.map((part, index) => (
+            <button
+              type="button"
+              class="nc-anatomy__item"
+              data-nc-part-btn={part.id}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+            >
+              <span class="nc-anatomy__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <span class="nc-anatomy__text">
+                <strong>{part.title}</strong>
+                <span>{part.body}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <div class="nc-anatomy__cta">
+          <NearcutPrimaryCta placement="nearcut_website" />
+          <a class="nc-text-link" href="/demo" data-track="view_live_demo_click" data-track-placement="nearcut_website">Open the demo shop <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="nc-small">{NEARCUT_SITE_NOTE}</p>
+      </div>
+    </div>
+  </div>
+</section>
