@@ -9,14 +9,19 @@ const [base = 'http://localhost:4352', out = 'shots', label = 'after'] = args;
 mkdirSync(out, { recursive: true });
 let browser;
 try { browser = await chromium.launch({ channel: 'chrome' }); } catch { browser = await chromium.launch(); }
+const context = await browser.newContext();
+if (process.env.AUTH_URL) { const p0 = await context.newPage(); await p0.goto(process.env.AUTH_URL); await p0.close(); }
 const report = [];
 for (const width of [375, 768, 1024, 1440]) {
-  const page = await browser.newPage({ viewport: { width, height: width < 768 ? 812 : 900 } });
+  const page = await context.newPage();
+  await page.setViewportSize({ width, height: width < 768 ? 812 : 900 });
   const errors = [];
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${base}/nearcut-alternative`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(3600);
+  const reject = page.getByRole('button', { name: 'Reject optional' });
+  if (await reject.isVisible().catch(() => false)) await reject.click();
   await page.screenshot({ path: `${out}/${label}-${width}-hero.png` });
   const height = await page.evaluate(() => document.body.scrollHeight);
   for (let y = 0; y < height; y += 500) { await page.evaluate((v) => window.scrollTo(0, v), y); await page.waitForTimeout(50); }
@@ -43,7 +48,8 @@ for (const width of [375, 768, 1024, 1440]) {
     const posEnd = await page.evaluate(() => document.querySelector('[data-nc-compare]').style.getPropertyValue('--pos'));
     // Anatomy: click "book".
     const btn = page.locator('[data-nc-part-btn="book"]');
-    await btn.scrollIntoViewIfNeeded();
+    await btn.evaluate((el) => el.scrollIntoView({ block: 'end' }));
+    await page.waitForTimeout(300);
     await btn.click();
     await page.waitForTimeout(900);
     await page.screenshot({ path: `${out}/${label}-${width}-anatomy.png` });
