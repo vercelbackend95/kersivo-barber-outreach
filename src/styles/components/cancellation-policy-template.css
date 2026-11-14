@@ -1235,6 +1235,27 @@
   line-height: 1.6;
 }
 
+/* "How to use it": numbered steps instead of dash markers. */
+.cpt-list--steps {
+  counter-reset: cpt-step;
+}
+
+.cpt-list--steps li {
+  counter-increment: cpt-step;
+  padding-left: 1.6rem;
+}
+
+.cpt-list--steps li::before {
+  content: counter(cpt-step) '.';
+  top: 0;
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 /* --------------------------------- Related -------------------------------- */
 
 .cpt-related {

@@ -46,6 +46,15 @@
       "licenceReviewed": true
     }
   ],
+  "callouts": [
+    {
+      "anchor": "Your own provider may price these differently. None of this is a reason to stop taking deposits",
+      "kicker": "FREE TOOL",
+      "label": "No-show cost calculator",
+      "text": "See whether a deposit pays for itself, card fees included → No-Show Cost Calculator",
+      "href": "/barbershop-no-show-calculator"
+    }
+  ],
   "publicationApproval": {
     "approvedBy": "owner",
     "approvedOn": "2026-10-17",

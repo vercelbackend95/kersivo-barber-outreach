@@ -23,8 +23,8 @@ export const NO_SHOW_CALCULATOR_BREADCRUMBS: readonly BreadcrumbTrailItem[] = [
 ];
 
 /** Visible "Last updated", WebPage dateModified and sitemap lastmod. */
-export const NO_SHOW_CALCULATOR_LAST_UPDATED_ISO = '2026-10-29';
-export const NO_SHOW_CALCULATOR_LAST_UPDATED_LABEL = '29 October 2026';
+export const NO_SHOW_CALCULATOR_LAST_UPDATED_ISO = '2026-11-14';
+export const NO_SHOW_CALCULATOR_LAST_UPDATED_LABEL = '14 November 2026';
 
 export const NO_SHOW_CALCULATOR_OG_IMAGE_PATH = '/images/tools/no-show-calculator-og.png';
 export const NO_SHOW_CALCULATOR_OG_IMAGE_ALT =
@@ -41,10 +41,24 @@ export const NO_SHOW_SECONDARY_CTA = {
   href: CANCELLATION_POLICY_PAGE_PATH,
 } as const;
 
+/**
+ * Hero copy. `lead` is the direct answer under the H1 (40–60 words) for "barber no-show cost calculator";
+ * it restates the method and FAQ below, with no figures of its own.
+ */
 export const NO_SHOW_HERO = {
   eyebrow: 'Free tool for UK barbershops',
-  lead: 'Enter your own numbers to see what missed appointments really cost you each year, and whether a deposit would recover more than it costs.',
+  lead: 'A no-show usually costs a barbershop less than the full price of the cut: you save the products and the card fee, and some slots are refilled. This free barber no-show cost calculator works out your yearly loss from your own prices and no-show estimates, and whether a deposit would pay for itself.',
   examplesNote: 'Example numbers — replace them with your own.',
+} as const;
+
+/** "How to use it" steps; each one describes what the calculator already does. */
+export const NO_SHOW_HOW_TO_USE = {
+  heading: 'How to use it',
+  steps: [
+    'Replace the example numbers with your own: average price, bookings and no-shows per week, products and card fees.',
+    'Set how your no-shows split between busy and quiet times, and how often each kind of slot is refilled.',
+    'Try a deposit to see whether it would pay for itself, then copy, print or share the result.',
+  ],
 } as const;
 
 export const NO_SHOW_RESULTS_DISCLAIMER =

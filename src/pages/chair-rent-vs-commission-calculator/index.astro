@@ -16,6 +16,7 @@ import {
 import { CHAIR_RENT_FAQ_ITEMS } from '@/lib/seo/chairRentCalculatorFaq';
 import { buildChairRentCalculatorJsonLd } from '@/lib/seo/chairRentCalculatorJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import '@/styles/components/barber-cost-calculator.css';
 import '@/styles/components/barber-cost-calculator-tool.css';
 import '@/styles/components/chair-rent-calculator.css';
@@ -31,7 +32,7 @@ const currentYear = new Date().getFullYear();
   ogImageWidth={1200}
   ogImageHeight={630}
   ogImageAlt={CHAIR_RENT_CALCULATOR_OG_IMAGE_ALT}
-  jsonLd={buildChairRentCalculatorJsonLd()}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildChairRentCalculatorJsonLd()]}
 >
   <main class="cost-calc crc landing-overflow-guard">
     <ChairRentHero />

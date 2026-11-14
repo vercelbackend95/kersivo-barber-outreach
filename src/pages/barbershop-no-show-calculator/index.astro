@@ -21,6 +21,7 @@ import {
   NO_SHOW_FAQ_ITEMS,
   NO_SHOW_HERO,
   NO_SHOW_HOW_IT_WORKS,
+  NO_SHOW_HOW_TO_USE,
   NO_SHOW_LAW_PARAGRAPHS,
   NO_SHOW_NOT_INCLUDED,
   NO_SHOW_RELATED_LINKS,
@@ -28,6 +29,7 @@ import {
   buildNoShowCalculatorJsonLd,
 } from '@/lib/seo/noShowCalculatorPage';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import '@/styles/components/barber-cost-calculator.css';
 import '@/styles/components/barber-cost-calculator-tool.css';
 import '@/styles/components/no-show-calculator.css';
@@ -43,7 +45,7 @@ const currentYear = new Date().getFullYear();
   ogImageWidth={1200}
   ogImageHeight={630}
   ogImageAlt={NO_SHOW_CALCULATOR_OG_IMAGE_ALT}
-  jsonLd={buildNoShowCalculatorJsonLd()}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildNoShowCalculatorJsonLd()]}
 >
   <main class="cost-calc ns-page landing-overflow-guard">
     <section class="cost-calc-hero ns-hero" aria-labelledby="ns-title">
@@ -81,8 +83,13 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <section class="cost-calc__section ns-prose" aria-labelledby="ns-how-title">
+    <section class="cost-calc__section ns-prose" aria-labelledby="ns-use-title">
       <div class="container">
+        <h2 id="ns-use-title" class="cost-calc__h2">{NO_SHOW_HOW_TO_USE.heading}</h2>
+        <ol class="ns-list" aria-labelledby="ns-use-title">
+          {NO_SHOW_HOW_TO_USE.steps.map((step) => <li>{step}</li>)}
+        </ol>
+
         <h2 id="ns-how-title" class="cost-calc__h2">How this calculator works</h2>
         {NO_SHOW_HOW_IT_WORKS.map((p) => <p class="cost-calc__lead">{p}</p>)}
         <p class="cost-calc__lead"><a href={NO_SHOW_ARTICLE_PATH}>Read the full method and worked example</a></p>

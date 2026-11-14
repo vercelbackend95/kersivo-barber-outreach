@@ -1,6 +1,7 @@
 ---
 import {
   CHAIR_RENT_CTA,
+  HOW_TO_USE_SECTION,
   METHOD_SECTION,
   RATES_FOOTNOTE,
   RELATED_LINKS,
@@ -12,6 +13,17 @@ import { UK_RATE_SOURCES } from '@/data/uk-rates-2026-27';
 
 const rateSourceLinks = [...new Set(Object.values(UK_RATE_SOURCES).map((entry) => entry.source))];
 ---
+
+<section id="how-to-use" class="cost-calc__section crc-how-to-use" aria-labelledby="crc-use-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <h2 id="crc-use-title" class="cost-calc__h2">{HOW_TO_USE_SECTION.heading}</h2>
+    </header>
+    <ol class="cost-calc__list cost-calc__list--steps">
+      {HOW_TO_USE_SECTION.steps.map((step) => <li>{step}</li>)}
+    </ol>
+  </div>
+</section>
 
 <section id="employment-status" class="cost-calc__section crc-status" aria-labelledby="crc-status-title">
   <div class="container">

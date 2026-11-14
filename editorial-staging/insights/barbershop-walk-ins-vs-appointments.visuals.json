@@ -68,6 +68,15 @@
       ]
     }
   ],
+  "callouts": [
+    {
+      "anchor": "Appointment-only shops have a hidden cost of their own: the empty slot.",
+      "kicker": "FREE TOOL",
+      "label": "No-show cost calculator",
+      "text": "Work out what no-shows cost your shop → No-Show Cost Calculator",
+      "href": "/barbershop-no-show-calculator"
+    }
+  ],
   "editorialVersion": "ARTICLE DRAFT v2 — 16 October 2026 (audit batch 3 corrections); unchanged article copy, structural H1 adaptation only.",
   "editorialVisualDirection": "One copyright-licensed Manchester barbershop interior photo and one genuine London street-level barbershop photo; verified UK location, authors, URLs and usage rights recorded per image. Original KERSIVO mathematical wait-time chart and three operating-model cards. Photos are unrelated to results or customers and imply no endorsement.",
   "publicationApproval": {

@@ -31,7 +31,9 @@ This explains the tension between the two camps. Walk-in shops do well when they
 
 When a walk-in client sees four people waiting and leaves, what the shop loses depends on what happens next. If they come back later that day or week, it may lose nothing. If they go elsewhere, it loses that cut's **contribution**, meaning the price minus product, card fees and any per-cut pay such as commission, rather than the whole price; a fixed wage is paid either way. If that person would have become a regular, it may also lose future visits. The cost doesn't appear anywhere in the accounts. The till records the people who stayed, not the ones who left.
 
-Appointment-only shops have a hidden cost of their own: the empty slot. A booking made for 10:00 that doesn't show up is lost capacity you can't recover. (Policies on deposits and no-shows are a separate subject.) Ten minutes left between a short cut and the next booking is lost too, unless something can fill it.
+Appointment-only shops have a hidden cost of their own: the empty slot. A booking made for 10:00 that doesn't show up is lost capacity you can't recover. ([Policies on deposits and no-shows](/barbershop-cancellation-policy-template) are a separate subject.) Ten minutes left between a short cut and the next booking is lost too, unless something can fill it.
+
+<aside class="insights-tool-callout" aria-label="No-show cost calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/barbershop-no-show-calculator">Work out what no-shows cost your shop → No-Show Cost Calculator</a></p></aside>
 
 So the real question isn't "walk-ins or appointments?" It's: **which hidden loss is bigger in my shop: people who leave the queue, or gaps in the diary?**
 
