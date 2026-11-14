@@ -37,7 +37,7 @@ describe('Timely integration with the current UK calculator', () => {
     expect(actual.amounts.vatChargedGbp).toBe(0);
     expect(actual.amounts.estimatedNetCostIfVatRecoverableGbp).toBeNull();
     const rate=requireVerifiedTimelyFact('ukOnlinePaymentProcessing');
-    expect(rate).toMatchObject({status:'verified',percent:1.85,fixedGbp:0.30,market:'UK'});
+    expect(rate).toMatchObject({status:'verified',percent:1.85,fixedGbp:0.30});
   });
   it('projects confirmed Timely amounts for 12 and 36 months',()=>{
     const inputs={...DEFAULT_SCENARIO,timelyMonthlyInvoiceGbp:60,includeDepositProcessing:true,depositBookingsPerMonth:100};

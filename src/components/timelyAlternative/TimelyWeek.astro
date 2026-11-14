@@ -1,0 +1,39 @@
+---
+import { TIMELY_WEEK, TIMELY_WEEK_LEAD, TIMELY_WEEK_TITLE } from '@/lib/seo/timelyAlternativeContent';
+---
+
+<section id="your-week" class="ta-section ta-week-section" aria-labelledby="timely-week-title">
+  <div class="ta-wrap ta-week-section__grid">
+    <div class="ta-week-section__aside">
+      <header class="ta-head" data-ta-reveal>
+        <p class="ta-eyebrow">What you get</p>
+        <h2 id="timely-week-title" class="ta-h2">{TIMELY_WEEK_TITLE}</h2>
+        <p class="ta-lead">{TIMELY_WEEK_LEAD}</p>
+      </header>
+      <figure class="ta-week-section__photo" data-ta-reveal>
+        <img
+          src="/images/switch/barber-at-work-960.webp"
+          alt="A barber finishing a client’s cut"
+          width="960"
+          height="640"
+          loading="lazy"
+          decoding="async"
+        />
+      </figure>
+    </div>
+
+    <div class="ta-week" data-ta-week>
+      <span class="ta-week__track" aria-hidden="true"><span class="ta-week__progress"></span></span>
+      <ol class="ta-week__list">
+      {TIMELY_WEEK.map((entry) => (
+        <li class="ta-week__day" data-ta-day data-active="false">
+          <span class="ta-week__node" aria-hidden="true"></span>
+          <p class="ta-week__when"><span>{entry.day}</span> <time>{entry.time}</time></p>
+          <h3 class="ta-week__title">{entry.title}</h3>
+          <p class="ta-body">{entry.body}</p>
+        </li>
+      ))}
+      </ol>
+    </div>
+  </div>
+</section>

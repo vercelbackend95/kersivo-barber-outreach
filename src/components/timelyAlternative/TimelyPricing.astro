@@ -1,0 +1,34 @@
+---
+import { RateCard1Offer } from '@/components/rateCard1';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import '@/styles/rateCard1.css';
+
+const freePreview = isFreePreviewFlowEnabled();
+const layout = getRateCard1LandingLayout(freePreview);
+---
+
+<section id="pricing" class="ta-section ta-pricing scroll-mt-24" aria-labelledby="timely-pricing-title">
+  <div class="ta-wrap">
+    <header class="ta-head ta-head--center" data-ta-reveal>
+      <p class="ta-eyebrow">KERSIVO pricing</p>
+      <h2 id="timely-pricing-title" class="ta-h2">One price a month. No tiers to climb.</h2>
+      <p class="ta-lead">
+        <strong>Full KERSIVO</strong> is £{SAAS_MONTHLY_GBP}/month per physical location: your barbershop website
+        and your own domain, booking with deposits or Pay at shop, Advanced Clients, Reports, Retail pickup and SMS
+        reminders within a monthly allowance. <strong>KERSIVO Starter</strong> is £0/month for up to 4 bookable
+        barbers, with every public booking backed by a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment.
+        0% KERSIVO commission on both. Stripe fees apply.
+      </p>
+    </header>
+
+    <div class="rate-card1--landing ta-pricing__offer" data-ta-reveal>
+      <RateCard1Offer freePreview={freePreview} />
+      <div class="rate-card1__landing-conditions">
+        <p>{layout.conditionsLine1}</p>
+        <p>{layout.conditionsLine2}</p>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,36 @@
+---
+import { TIMELY_TABLE_ROWS, TIMELY_TABLE_TITLE } from '@/lib/seo/timelyAlternativeContent';
+import { TIMELY_FACTS_CHECKED_DATE, TIMELY_FACTS_CHECKED_ISO } from '@/lib/seo/timelyFacts';
+---
+
+<section id="comparison" class="ta-section ta-table-section" aria-labelledby="timely-table-title">
+  <div class="ta-wrap">
+    <header class="ta-head" data-ta-reveal>
+      <p class="ta-eyebrow">Head to head</p>
+      <h2 id="timely-table-title" class="ta-h2">{TIMELY_TABLE_TITLE}</h2>
+      <p class="ta-meta">Timely details checked <time datetime={TIMELY_FACTS_CHECKED_ISO}>{TIMELY_FACTS_CHECKED_DATE}</time> on its Great Britain pricing page.</p>
+    </header>
+
+    <div class="ta-table-wrap" data-ta-reveal>
+      <table class="ta-table">
+        <caption class="sr-only">Timely and KERSIVO compared for a UK barbershop</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="sr-only">Topic</span></th>
+            <th scope="col">Timely (UK)</th>
+            <th scope="col" class="ta-table__kersivo-head">KERSIVO</th>
+          </tr>
+        </thead>
+        <tbody>
+          {TIMELY_TABLE_ROWS.map((row) => (
+            <tr>
+              <th scope="row">{row.label}</th>
+              <td data-label="Timely">{row.timely}</td>
+              <td data-label="KERSIVO" class="ta-table__kersivo">{row.kersivo}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
