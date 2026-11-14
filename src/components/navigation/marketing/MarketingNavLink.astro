@@ -6,9 +6,11 @@ import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 interface Props {
   item: MarketingNavItem;
   featured?: boolean;
+  /** Short name only, no icon tile or description (dense comparison grid). */
+  compact?: boolean;
 }
 
-const { item, featured = false } = Astro.props;
+const { item, featured = false, compact = false } = Astro.props;
 const pathname = Astro.url.pathname;
 const match = marketingNavItemMatch(item);
 const current = isMarketingNavItemCurrent(item, pathname);
@@ -16,25 +18,47 @@ const target = new URL(item.href, Astro.url);
 // Full reload only when leaving this family (demo, admin): the target has a different layout and head.
 const leavesFamily =
   !item.external && target.origin === Astro.url.origin && getRouteFamily(target.pathname) !== getRouteFamily(pathname);
+const shortName = item.shortLabel ?? item.label;
 ---
 
-<a
-  href={item.href}
-  class:list={['mnav-link', { 'mnav-link--featured': featured, 'mnav-link--quiet': item.emphasis === 'quiet' }]}
-  aria-current={current ? 'page' : undefined}
-  data-mnav-match={match ?? undefined}
-  data-mnav-match-prefix={item.matchPrefix}
-  data-astro-reload={leavesFamily ? '' : undefined}
-  target={item.external ? '_blank' : undefined}
-  rel={item.external ? 'noopener' : undefined}
->
-  <span class="mnav-link__icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <path d={MARKETING_NAV_ICONS[item.icon]} />
-    </svg>
-  </span>
-  <span class="mnav-link__text">
-    <span class="mnav-link__label">{item.label}</span>
-    <span class="mnav-link__description">{item.description}</span>
-  </span>
-</a>
+{
+  compact ? (
+    <a
+      href={item.href}
+      class="mnav-link mnav-link--compact"
+      aria-current={current ? 'page' : undefined}
+      data-mnav-match={match ?? undefined}
+      data-mnav-match-prefix={item.matchPrefix}
+      data-astro-reload={leavesFamily ? '' : undefined}
+      aria-label={item.label}
+      title={item.description}
+    >
+      <span class="mnav-link__vs" aria-hidden="true">vs</span>
+      <span class="mnav-link__label">{shortName}</span>
+      <svg class="mnav-link__go" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d={MARKETING_NAV_ICONS.arrow} />
+      </svg>
+    </a>
+  ) : (
+    <a
+      href={item.href}
+      class:list={['mnav-link', { 'mnav-link--featured': featured, 'mnav-link--quiet': item.emphasis === 'quiet' }]}
+      aria-current={current ? 'page' : undefined}
+      data-mnav-match={match ?? undefined}
+      data-mnav-match-prefix={item.matchPrefix}
+      data-astro-reload={leavesFamily ? '' : undefined}
+      target={item.external ? '_blank' : undefined}
+      rel={item.external ? 'noopener' : undefined}
+    >
+      <span class="mnav-link__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d={MARKETING_NAV_ICONS[item.icon]} />
+        </svg>
+      </span>
+      <span class="mnav-link__text">
+        <span class="mnav-link__label">{item.label}</span>
+        <span class="mnav-link__description">{item.description}</span>
+      </span>
+    </a>
+  )
+}

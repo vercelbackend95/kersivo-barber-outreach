@@ -1,0 +1,82 @@
+---
+import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
+import { buildMarketingNavFinderEntries, type ResolvedMarketingNavGroup } from '@/lib/nav/marketingNavigation';
+import { getRouteFamily } from '@/lib/navigation/routeFamilies';
+
+interface Props {
+  groups: ResolvedMarketingNavGroup[];
+}
+
+const { groups } = Astro.props;
+const entries = buildMarketingNavFinderEntries(groups);
+const family = getRouteFamily(Astro.url.pathname);
+const leavesFamily = (href: string) => getRouteFamily(new URL(href, Astro.url).pathname) !== family;
+---
+
+<dialog class="mnav-finder" aria-label="Search KERSIVO" data-mnav-finder>
+  {/* Results ship in a template and mount on first open, so the list never duplicates links in the live DOM. */}
+  <template data-mnav-finder-content>
+    <div class="mnav-finder__surface">
+      <div class="mnav-finder__field">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d={MARKETING_NAV_ICONS.search} />
+        </svg>
+        <input
+          class="mnav-finder__input"
+          type="search"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="mnav-finder-results"
+          aria-autocomplete="list"
+          aria-label="Search pages and tools"
+          placeholder="Search pages and tools"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="go"
+          data-mnav-finder-input
+        />
+        <button type="button" class="mnav-finder__close" data-mnav-finder-close>
+          <span class="mnav-finder__kbd" aria-hidden="true">Esc</span>
+          <svg class="mnav-finder__x" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+          <span class="mnav-sr">Close search</span>
+        </button>
+      </div>
+      <ul id="mnav-finder-results" class="mnav-finder__results" role="listbox" aria-label="Results" data-mnav-finder-list>
+        {entries.map((entry) => (
+          <li role="none" data-terms={entry.terms} data-title={entry.title}>
+            <a
+              id={`mnav-find-${entry.id}`}
+              role="option"
+              aria-selected="false"
+              class="mnav-finder__result"
+              href={entry.href}
+              tabindex="-1"
+              data-astro-reload={leavesFamily(entry.href) ? '' : undefined}
+            >
+              <span class="mnav-finder__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d={MARKETING_NAV_ICONS[entry.icon]} />
+                </svg>
+              </span>
+              <span class="mnav-finder__text">
+                <span class="mnav-finder__label">{entry.label}</span>
+                <span class="mnav-finder__description">{entry.description}</span>
+              </span>
+              <span class="mnav-finder__context">{entry.context}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="mnav-finder__empty" data-mnav-finder-empty hidden>
+        Nothing matches yet. Try “deposit”, “Booksy” or “pricing”.
+      </p>
+      <p class="mnav-sr" role="status" aria-live="polite" data-mnav-finder-status></p>
+      <p class="mnav-finder__hint" aria-hidden="true">
+        <span><span class="mnav-finder__kbd">↑</span><span class="mnav-finder__kbd">↓</span> move</span>
+        <span><span class="mnav-finder__kbd">Enter</span> open</span>
+      </p>
+    </div>
+  </template>
+</dialog>

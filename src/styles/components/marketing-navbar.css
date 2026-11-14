@@ -1,13 +1,21 @@
 /* ================================================================
-   KERSIVO marketing navigation — mobile first, desktop mega panels from 64rem
+   KERSIVO marketing navigation — mobile first, desktop mega panels from 64rem.
+   Surfaces reuse the premium card tokens (.starter-glance-card): near-black vertical gradient,
+   hairline border, inset top highlight, deep soft shadow, red-to-transparent top edge.
    ================================================================ */
 
 .mnav {
   --mnav-h: var(--nav-sticky-offset);
-  --mnav-bg: #0b0d10;
-  --mnav-surface: #111419;
-  --mnav-line: color-mix(in srgb, var(--border) 78%, transparent);
+  --mnav-bg: #0a0a0b;
+  --mnav-surface: #0d0d0e;
+  --mnav-card: linear-gradient(180deg, #0d0d0e, #080809);
+  --mnav-line: rgba(255, 255, 255, 0.08);
+  --mnav-line-strong: rgba(255, 255, 255, 0.14);
+  --mnav-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --mnav-fill: rgba(255, 255, 255, 0.04);
+  --mnav-fill-strong: rgba(255, 255, 255, 0.07);
   --mnav-radius: 0.75rem;
+  --mnav-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -46,13 +54,35 @@ html.mnav-locked body::before {
   height: var(--mnav-flow-h, 0px);
 }
 
+.mnav-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mnav-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-brand);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-brand) 70%, transparent);
+  vertical-align: 0.1em;
+}
+
+.mnav a:focus-visible,
+.mnav button:focus-visible,
+.mnav input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 /* ------------------------------ Bar ------------------------------ */
 
-/*
- * A floating glass bar in the premium KERSIVO card language: near-black vertical gradient, hairline
- * border, inset top highlight, deep soft shadow and a red-to-transparent line on the top edge. The
- * header keeps its height (--mnav-h); the bar floats inside it with a small gutter.
- */
 .mnav {
   --mnav-gutter: 0.45rem;
   --mnav-pill-radius: 16px;
@@ -73,17 +103,16 @@ html.mnav-locked body::before {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
   width: min(100% - 1rem, 80rem);
   height: calc(var(--mnav-h) - var(--mnav-gutter));
   margin-inline: auto;
-  padding: 0 0.35rem 0 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 0.3rem 0 0.4rem;
+  border: 1px solid var(--mnav-line);
   border-radius: var(--mnav-pill-radius);
   background: linear-gradient(180deg, rgba(13, 13, 14, 0.78), rgba(8, 8, 9, 0.78));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--mnav-highlight),
     0 18px 40px -24px rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -93,12 +122,12 @@ html.mnav-locked body::before {
     box-shadow 240ms ease;
 }
 
-/* The red edge: brightest at the brand, fading out before the middle of the bar. */
+/* The red edge: brightest at the brand mark, fading out before the middle of the bar. */
 .mnav__inner::before {
   content: '';
   position: absolute;
   top: -1px;
-  left: 1.25rem;
+  left: 1rem;
   right: 55%;
   height: 1px;
   background: linear-gradient(90deg, var(--color-brand), transparent);
@@ -110,42 +139,40 @@ html.mnav-locked body::before {
   border-color: rgba(255, 255, 255, 0.1);
   background: linear-gradient(180deg, rgba(13, 13, 14, 0.92), rgba(8, 8, 9, 0.92));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--mnav-highlight),
     0 24px 60px -28px rgba(0, 0, 0, 0.95),
     0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .mnav[data-mnav-hub-open] .mnav__inner {
-  background: linear-gradient(180deg, #0d0d0e, #080809);
+  background: var(--mnav-card);
 }
 
+/* Brand: the mark alone, on a 44px target. */
 .mnav__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
-  min-height: 44px;
-  border-radius: var(--radius-8);
-  color: var(--fg);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.mnav__brand:hover {
+  background: var(--mnav-fill);
 }
 
 .mnav__logo {
   display: block;
   width: auto;
-  height: 1.9rem;
-}
-
-.mnav__wordmark {
-  font-family: var(--font-body);
-  font-size: 1.15rem;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.16em;
+  max-width: none;
+  height: 1.95rem;
 }
 
 .mnav__inner > .mnav__desktop,
-.mnav__inner > .mnav__actions {
+.mnav__inner > .mnav__tools {
   display: none;
 }
 
@@ -156,49 +183,32 @@ html.mnav-locked body::before {
   padding-inline: 0.7rem;
 }
 
-.mnav a:focus-visible,
-.mnav button:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
 /* ------------------------------ Menu button ------------------------------ */
 
 .mnav__menu {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--mnav-line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--mnav-fill);
   color: var(--fg);
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 
 .mnav__menu:hover {
-  border-color: color-mix(in srgb, var(--fg) 24%, transparent);
-  background: color-mix(in srgb, var(--fg) 7%, transparent);
-}
-
-.mnav__menu-label {
-  min-width: 3.1rem;
-  text-align: left;
+  border-color: var(--mnav-line-strong);
+  background: var(--mnav-fill-strong);
 }
 
 .mnav__menu-icon {
   position: relative;
   width: 1.1rem;
-  height: 0.7rem;
+  height: 0.8rem;
 }
 
 .mnav__menu-icon > span {
@@ -208,25 +218,36 @@ html.mnav-locked body::before {
   height: 1.5px;
   border-radius: 1px;
   background: currentColor;
-  transition: transform 220ms ease, top 220ms ease;
+  transition:
+    transform 260ms var(--mnav-ease),
+    opacity 160ms ease,
+    width 260ms var(--mnav-ease);
 }
 
-.mnav__menu-icon > span:first-child {
+.mnav__menu-icon > span:nth-child(1) {
   top: 0;
 }
 
-.mnav__menu-icon > span:last-child {
+.mnav__menu-icon > span:nth-child(2) {
+  top: calc(50% - 0.75px);
+  width: 62%;
+}
+
+.mnav__menu-icon > span:nth-child(3) {
   top: calc(100% - 1.5px);
 }
 
-.mnav__menu[aria-expanded='true'] .mnav__menu-icon > span:first-child {
-  top: calc(50% - 0.75px);
-  transform: rotate(45deg);
+.mnav__menu[aria-expanded='true'] .mnav__menu-icon > span:nth-child(1) {
+  transform: translateY(calc(0.4rem - 0.75px)) rotate(45deg);
 }
 
-.mnav__menu[aria-expanded='true'] .mnav__menu-icon > span:last-child {
-  top: calc(50% - 0.75px);
-  transform: rotate(-45deg);
+.mnav__menu[aria-expanded='true'] .mnav__menu-icon > span:nth-child(2) {
+  width: 0;
+  opacity: 0;
+}
+
+.mnav__menu[aria-expanded='true'] .mnav__menu-icon > span:nth-child(3) {
+  transform: translateY(calc(-0.4rem + 0.75px)) rotate(-45deg);
 }
 
 /* ------------------------------ Buttons ------------------------------ */
@@ -245,7 +266,7 @@ html.mnav-locked body::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 1.05rem;
   border: 1px solid transparent;
   border-radius: 0.65rem;
@@ -255,7 +276,7 @@ html.mnav-locked body::before {
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
@@ -308,7 +329,7 @@ html.mnav-locked body::before {
 }
 
 .mnav-link:hover {
-  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  background: var(--mnav-fill);
   color: var(--fg);
   text-decoration: none;
 }
@@ -320,14 +341,15 @@ html.mnav-locked body::before {
   height: 2.25rem;
   border: 1px solid var(--mnav-line);
   border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--fg) 3%, transparent);
+  background: var(--mnav-card);
+  box-shadow: var(--mnav-highlight);
   color: var(--muted);
   transition: color 140ms ease, border-color 140ms ease;
 }
 
 .mnav-link:hover .mnav-link__icon,
 .mnav-link:focus-visible .mnav-link__icon {
-  border-color: color-mix(in srgb, var(--fg) 22%, transparent);
+  border-color: var(--mnav-line-strong);
   color: var(--fg);
 }
 
@@ -359,7 +381,7 @@ html.mnav-locked body::before {
   color: var(--accent-text);
 }
 
-.mnav-link[aria-current='page'] .mnav-link__label::after {
+.mnav-link[aria-current='page']:not(.mnav-link--compact) .mnav-link__label::after {
   content: 'Current';
   padding: 0.1rem 0.45rem;
   border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
@@ -388,12 +410,70 @@ html.mnav-locked body::before {
 }
 
 .mnav-link--featured {
+  position: relative;
   border: 1px solid var(--mnav-line);
-  background: color-mix(in srgb, var(--fg) 3%, var(--mnav-surface));
+  background: var(--mnav-card);
+  box-shadow: var(--mnav-highlight);
 }
 
 .mnav-link--featured:hover {
-  border-color: color-mix(in srgb, var(--fg) 18%, transparent);
+  border-color: var(--mnav-line-strong);
+  background: var(--mnav-card);
+}
+
+/* Compact comparison row: "vs Booksy →" */
+.mnav-link--compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--mnav-line);
+  border-radius: 12px;
+  background: var(--mnav-card);
+  box-shadow: var(--mnav-highlight);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.mnav-link--compact:hover {
+  border-color: var(--mnav-line-strong);
+  background: var(--mnav-card);
+}
+
+.mnav-link__vs {
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mnav-link--compact .mnav-link__label {
+  min-width: 0;
+  font-size: 0.92rem;
+}
+
+.mnav-link__go {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--muted);
+  opacity: 0.55;
+  transition: transform 180ms var(--mnav-ease), opacity 160ms ease, color 160ms ease;
+}
+
+.mnav-link--compact:hover .mnav-link__go,
+.mnav-link--compact:focus-visible .mnav-link__go {
+  opacity: 1;
+  color: var(--fg);
+  transform: translateX(2px);
+}
+
+.mnav-link--compact[aria-current='page'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.mnav-link--compact[aria-current='page'] .mnav-link__vs {
+  color: var(--accent-text);
 }
 
 /* ------------------------------ Mobile hub ------------------------------ */
@@ -418,79 +498,205 @@ html.mnav-locked body::before {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 1.1rem max(1rem, env(safe-area-inset-right)) 1.5rem max(1rem, env(safe-area-inset-left));
+  padding: 0.9rem max(1rem, env(safe-area-inset-right)) 1.5rem max(1rem, env(safe-area-inset-left));
 }
 
-.mnav-hub__context {
-  margin: 0 0 0.5rem;
-  color: color-mix(in srgb, var(--muted) 80%, transparent);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+/* Entrance: search, tiles and tabs rise in order, then settle. */
+.mnav-hub:not([hidden]) .mnav-stagger {
+  animation: mnav-rise 340ms var(--mnav-ease) both;
+  animation-delay: calc(var(--i, 0) * 32ms);
 }
 
-.mnav-hub__list {
-  margin: 0;
+.mnav-hub__search {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 0.95rem;
+  border: 1px solid var(--mnav-line);
+  border-radius: 14px;
+  background: var(--mnav-fill);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: text;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.mnav-hub__search:hover {
+  border-color: var(--mnav-line-strong);
+  background: var(--mnav-fill-strong);
+}
+
+.mnav-hub__quick {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
   padding: 0;
   list-style: none;
 }
 
-.mnav-hub__group {
-  border-bottom: 1px solid var(--mnav-line);
+.mnav-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0.1rem;
+  align-content: start;
+  height: 100%;
+  padding: 0.75rem 0.8rem 0.8rem;
+  overflow: hidden;
+  border: 1px solid var(--mnav-line);
+  border-radius: 16px;
+  background: var(--mnav-card);
+  box-shadow:
+    var(--mnav-highlight),
+    0 18px 40px -30px rgba(0, 0, 0, 0.9);
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms var(--mnav-ease);
 }
 
-.mnav-hub__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  min-height: 3.75rem;
-  padding: 0 0.25rem;
-  border: 0;
-  background: none;
+.mnav-tile:hover {
+  border-color: var(--mnav-line-strong);
   color: var(--fg);
-  font: inherit;
-  font-size: 1.3rem;
+  text-decoration: none;
+}
+
+.mnav-tile:active {
+  transform: scale(0.98);
+}
+
+.mnav-tile[aria-current='page'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* The red top edge, on the tile for the page being shown. */
+.mnav-tile[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0.75rem;
+  right: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+}
+
+.mnav-tile__icon {
+  display: grid;
+  margin-bottom: 0.55rem;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--mnav-line);
+  border-radius: 10px;
+  background: var(--mnav-fill);
+  color: var(--accent-text);
+}
+
+.mnav-tile__label {
+  font-size: 0.92rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  text-align: left;
-  text-decoration: none;
+  line-height: 1.25;
+}
+
+.mnav-tile__meta {
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.mnav-hub__nav {
+  display: block;
+}
+
+/* Tabs: a segmented control with a sliding thumb, pinned while the list scrolls. */
+.mnav-hub__tabs {
+  position: sticky;
+  top: -0.9rem;
+  z-index: 2;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 1.1rem -0.25rem 0;
+  padding: 0.9rem 0.25rem 0.5rem;
+  background: linear-gradient(180deg, var(--mnav-bg) 82%, transparent);
+}
+
+.mnav-hub__tabs::before {
+  content: '';
+  position: absolute;
+  inset: 0.9rem 0.25rem 0.5rem;
+  border: 1px solid var(--mnav-line);
+  border-radius: 13px;
+  background: var(--mnav-fill);
+  pointer-events: none;
+}
+
+.mnav-hub__tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 44px;
+  margin: 3px;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
+  transition: color 160ms ease;
 }
 
-.mnav-hub__row:hover {
+.mnav-hub__tab:hover,
+.mnav-hub__tab[aria-selected='true'] {
   color: var(--fg);
-  text-decoration: none;
 }
 
-.mnav-hub__row[data-current] .mnav-hub__row-label,
-.mnav-hub__row[aria-current] .mnav-hub__row-label {
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.35em;
+.mnav-hub__tab[data-current]::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-brand);
 }
 
-.mnav-hub__chevron {
-  width: 0.6rem;
-  height: 0.6rem;
-  margin-right: 0.35rem;
-  border-right: 1.5px solid var(--muted);
-  border-bottom: 1.5px solid var(--muted);
-  transform: translateY(-0.15rem) rotate(45deg);
-  transition: transform 200ms ease;
+.mnav-hub__tab-thumb {
+  position: absolute;
+  top: calc(0.9rem + 4px);
+  bottom: calc(0.5rem + 4px);
+  left: 0;
+  width: var(--mnav-thumb-w, 0);
+  border: 1px solid var(--mnav-line-strong);
+  border-radius: 10px;
+  background: var(--mnav-card);
+  box-shadow: var(--mnav-highlight), 0 6px 16px -8px rgba(0, 0, 0, 0.9);
+  transform: translateX(var(--mnav-thumb-x, 0));
+  transition:
+    transform 280ms var(--mnav-ease),
+    width 280ms var(--mnav-ease);
+  pointer-events: none;
 }
 
-.mnav-hub__row[aria-expanded='true'] .mnav-hub__chevron {
-  transform: translateY(0.15rem) rotate(-135deg);
+.mnav-hub__tab-thumb[data-instant] {
+  transition: none;
 }
 
 .mnav-hub__section {
   display: grid;
   gap: 0.85rem;
-  padding: 0 0 1.25rem;
+  padding: 0.6rem 0 0.5rem;
+  animation: mnav-tab-in 220ms var(--mnav-ease) both;
 }
 
 .mnav-hub__section[hidden] {
@@ -500,12 +706,12 @@ html.mnav-locked body::before {
 .mnav-hub__lead {
   margin: 0 0.25rem;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
 .mnav-hub__section-label {
-  margin: 0 0.25rem 0.35rem;
+  margin: 0 0.25rem 0.4rem;
   color: color-mix(in srgb, var(--muted) 80%, transparent);
   font-size: 0.7rem;
   font-weight: 600;
@@ -521,8 +727,17 @@ html.mnav-locked body::before {
   list-style: none;
 }
 
-.mnav-hub__items .mnav-link {
+.mnav-hub__items .mnav-link:not(.mnav-link--compact) {
   padding-inline: 0.5rem;
+}
+
+.mnav-hub__items--featured .mnav-link {
+  padding-inline: 0.75rem;
+}
+
+.mnav-hub__items--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
 }
 
 .mnav-hub__action,
@@ -538,13 +753,24 @@ html.mnav-locked body::before {
 }
 
 .mnav-hub__action {
+  justify-self: start;
   margin-inline: 0.25rem;
+}
+
+.mnav-hub__action svg,
+.mnav-panel__action svg {
+  transition: transform 180ms var(--mnav-ease);
 }
 
 .mnav-hub__action:hover,
 .mnav-panel__action:hover {
   color: var(--accent-text);
   text-decoration: none;
+}
+
+.mnav-hub__action:hover svg,
+.mnav-panel__action:hover svg {
+  transform: translateX(3px);
 }
 
 .mnav-hub__actions {
@@ -555,69 +781,56 @@ html.mnav-locked body::before {
   padding: 0.85rem max(1rem, env(safe-area-inset-right)) calc(0.85rem + env(safe-area-inset-bottom))
     max(1rem, env(safe-area-inset-left));
   border-top: 1px solid var(--mnav-line);
-  background: color-mix(in srgb, var(--fg) 2%, var(--mnav-bg));
+  background: var(--mnav-card);
 }
 
 .mnav-hub__actions .mnav-btn[hidden] {
   display: none;
 }
 
-.mnav-btn {
-  min-height: 48px;
-  white-space: normal;
-}
-
-/* Phones: the menu button drops its visible label (it stays the button's accessible name). */
 @media (max-width: 30rem) {
-  .mnav__inner {
-    gap: 0.4rem;
-    padding-left: 0.7rem;
-  }
-
-  .mnav__brand {
-    gap: 0.55rem;
-  }
-
-  .mnav__logo {
-    height: 1.7rem;
-  }
-
-  .mnav__wordmark {
-    font-size: 1.02rem;
-    letter-spacing: 0.14em;
-  }
-
   .mnav__compact-cta.btn {
     min-height: 40px;
-    padding-inline: 0.8rem;
+    padding-inline: 0.85rem;
     border-radius: 11px;
     font-size: var(--text-sm);
-  }
-
-  .mnav__menu {
-    width: 44px;
-    padding: 0;
-  }
-
-  .mnav__menu-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 
 @media (max-width: 22rem) {
-  .mnav__wordmark {
+  .mnav-tile__meta {
     display: none;
+  }
+
+  .mnav-hub__tab {
+    font-size: 0.78rem;
   }
 }
 
 @media (min-width: 26rem) {
   .mnav-hub__actions {
     grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+/* Tablets: the hub content gets a comfortable measure instead of running edge to edge. */
+@media (min-width: 40rem) {
+  .mnav-hub__scroll > *,
+  .mnav-hub__nav > * {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .mnav-hub__nav > .mnav-hub__tabs {
+    margin-inline: auto;
+  }
+
+  .mnav-hub__quick {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mnav-hub__items--compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -628,14 +841,302 @@ html.mnav-locked body::before {
   }
 }
 
+@keyframes mnav-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes mnav-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* ------------------------------ Finder ------------------------------ */
+
+.mnav-finder {
+  width: min(100% - 1rem, 40rem);
+  max-width: none;
+  max-height: min(36rem, 100dvh - 1rem);
+  margin: 0.5rem auto auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+}
+
+.mnav-finder[open] {
+  display: flex;
+  animation: mnav-finder-in 200ms var(--mnav-ease);
+}
+
+.mnav-finder::backdrop {
+  background: rgba(4, 4, 5, 0.66);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mnav-finder__surface {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--mnav-line);
+  border-radius: 20px;
+  background: var(--mnav-card);
+  box-shadow:
+    var(--mnav-highlight),
+    0 40px 90px -30px rgba(0, 0, 0, 0.95);
+}
+
+.mnav-finder__surface::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  right: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+}
+
+.mnav-finder__field {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.6rem 0 1rem;
+  border-bottom: 1px solid var(--mnav-line);
+  color: var(--muted);
+}
+
+.mnav-finder__input {
+  flex: 1;
+  min-width: 0;
+  height: 3.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 1.05rem;
+  appearance: none;
+}
+
+.mnav-finder__input::placeholder {
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+.mnav-finder__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* The field itself shows focus through the caret; the visible ring sits on the surface edge instead. */
+.mnav .mnav-finder__input:focus-visible {
+  outline: none;
+}
+
+.mnav-finder__surface:has(.mnav-finder__input:focus-visible) {
+  border-color: var(--mnav-line-strong);
+}
+
+.mnav-finder__close {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mnav-finder__kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--mnav-line-strong);
+  border-radius: 6px;
+  background: var(--mnav-fill);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.mnav-finder__results {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  padding: 0.4rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.mnav-finder__results > li[hidden] {
+  display: none;
+}
+
+.mnav-finder__result {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 52px;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.mnav-finder__result:hover,
+.mnav-finder__result[aria-selected='true'] {
+  background: var(--mnav-fill-strong);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.mnav-finder__result[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  top: 0.7rem;
+  bottom: 0.7rem;
+  left: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-brand);
+}
+
+.mnav-finder__icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--mnav-line);
+  border-radius: 9px;
+  color: var(--muted);
+}
+
+.mnav-finder__result[aria-selected='true'] .mnav-finder__icon {
+  color: var(--accent-text);
+}
+
+.mnav-finder__text {
+  display: grid;
+  min-width: 0;
+}
+
+.mnav-finder__label {
+  font-size: 0.93rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.mnav-finder__description {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mnav-finder__context {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mnav-finder__empty {
+  margin: 0;
+  padding: 1.5rem 1rem 2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.mnav-finder__empty[hidden] {
+  display: none;
+}
+
+.mnav-finder__hint {
+  display: none;
+  flex-shrink: 0;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-top: 1px solid var(--mnav-line);
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+  font-size: 0.74rem;
+}
+
+.mnav-finder__hint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+@media (max-width: 30rem) {
+  .mnav-finder__context {
+    display: none;
+  }
+
+  .mnav-finder__result {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+}
+
+/* Keyboard hints only where a keyboard is likely; touch gets a plain close icon. */
+.mnav-finder__close .mnav-finder__kbd {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mnav-finder__hint {
+    display: flex;
+  }
+
+  .mnav-finder__close .mnav-finder__kbd {
+    display: inline-grid;
+  }
+
+  .mnav-finder__x {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .mnav-finder {
+    margin-top: 12vh;
+    max-height: min(34rem, 80vh);
+  }
+}
+
+@keyframes mnav-finder-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+}
+
 /* ------------------------------ Desktop ------------------------------ */
 
 @media (min-width: 64rem) {
   .mnav {
     --mnav-h: 4.25rem;
-  }
-
-  .mnav {
     --mnav-gutter: 0.6rem;
     --mnav-pill-radius: 18px;
   }
@@ -643,24 +1144,13 @@ html.mnav-locked body::before {
   .mnav__inner {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    gap: 1.25rem;
+    gap: 1rem;
     width: min(100% - 2.5rem, 80rem);
-    padding: 0 0.45rem 0 1.1rem;
+    padding: 0 0.45rem 0 0.5rem;
   }
 
-  .mnav__actions .mnav-btn {
-    min-height: 42px;
-    border-radius: 12px;
-  }
-
-  /* max-width: none keeps the global img reset from letting the grid squeeze the logo column. */
   .mnav__logo {
-    height: 2.1rem;
-    max-width: none;
-  }
-
-  .mnav__wordmark {
-    font-size: 1.3rem;
+    height: 2.15rem;
   }
 
   .mnav__menu,
@@ -674,18 +1164,93 @@ html.mnav-locked body::before {
     justify-self: center;
   }
 
-  .mnav__inner > .mnav__actions {
+  .mnav__inner > .mnav__tools {
     display: flex;
+    align-items: center;
+    gap: 0.5rem;
     justify-self: end;
+  }
+
+  .mnav__actions .mnav-btn {
+    min-height: 42px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .mnav__search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--mnav-line);
+    border-radius: 12px;
+    background: var(--mnav-fill);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .mnav__search:hover {
+    border-color: var(--mnav-line-strong);
+    background: var(--mnav-fill-strong);
+    color: var(--fg);
+  }
+
+  .mnav__search-kbd {
+    display: inline-grid;
+    place-items: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border: 1px solid var(--mnav-line-strong);
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
   }
 
   .mnav__list {
     display: flex;
     align-items: center;
-    gap: 0.15rem;
+    gap: 0.1rem;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  /*
+   * One highlight that slides between the hovered, focused or open controls. It is positioned against
+   * the bar (like the panels, which centre on it) and sits under the labels.
+   */
+  .mnav__indicator {
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    left: 0;
+    width: var(--mnav-ind-w, 0);
+    height: 2.6rem;
+    border: 1px solid var(--mnav-line);
+    border-radius: 11px;
+    background: var(--mnav-fill-strong);
+    box-shadow: var(--mnav-highlight);
+    opacity: 0;
+    transform: translate(var(--mnav-ind-x, 0), -50%);
+    transition:
+      transform 280ms var(--mnav-ease),
+      width 280ms var(--mnav-ease),
+      opacity 180ms ease;
+    pointer-events: none;
+  }
+
+  .mnav__indicator[data-visible] {
+    opacity: 1;
+  }
+
+  .mnav__indicator[data-instant] {
+    transition: opacity 180ms ease;
   }
 
   .mnav__trigger,
@@ -695,9 +1260,9 @@ html.mnav-locked body::before {
     align-items: center;
     gap: 0.4rem;
     min-height: 2.6rem;
-    padding: 0 0.85rem;
+    padding: 0 0.8rem;
     border: 0;
-    border-radius: 10px;
+    border-radius: 11px;
     background: none;
     color: color-mix(in srgb, var(--fg) 78%, var(--muted));
     font: inherit;
@@ -706,13 +1271,12 @@ html.mnav-locked body::before {
     text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
-    transition: color 140ms ease, background-color 140ms ease;
+    transition: color 140ms ease;
   }
 
   .mnav__trigger:hover,
   .mnav__link:hover,
   .mnav__trigger[aria-expanded='true'] {
-    background: color-mix(in srgb, var(--fg) 5%, transparent);
     color: var(--fg);
     text-decoration: none;
   }
@@ -744,7 +1308,7 @@ html.mnav-locked body::before {
     border-bottom: 1.5px solid currentColor;
     opacity: 0.7;
     transform: translateY(-0.1rem) rotate(45deg);
-    transition: transform 180ms ease;
+    transition: transform 220ms var(--mnav-ease);
   }
 
   .mnav__trigger[aria-expanded='true'] .mnav__chevron {
@@ -756,10 +1320,14 @@ html.mnav-locked body::before {
     position: absolute;
     top: 100%;
     left: 50%;
-    width: min(70rem, 100vw - 2.5rem);
+    width: min(64rem, 100vw - 2.5rem);
     padding-top: 0.6rem;
     transform: translateX(-50%);
-    animation: mnav-panel-in 160ms ease-out;
+    animation: mnav-panel-in 200ms var(--mnav-ease);
+  }
+
+  .mnav[data-mnav-switching] .mnav-panel {
+    animation: mnav-panel-swap 160ms ease-out;
   }
 
   .mnav-panel[hidden] {
@@ -767,36 +1335,49 @@ html.mnav-locked body::before {
   }
 
   .mnav-panel__surface {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(16rem, 0.9fr) minmax(0, 2fr);
+    grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 2fr);
     overflow: hidden;
     border: 1px solid var(--mnav-line);
-    border-radius: 1rem;
-    background: var(--mnav-surface);
-    box-shadow: 0 24px 60px rgb(0 0 0 / 0.45), 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset;
+    border-radius: 20px;
+    background: var(--mnav-card);
+    box-shadow:
+      var(--mnav-highlight),
+      0 40px 80px -30px rgba(0, 0, 0, 0.95);
+  }
+
+  .mnav-panel__surface::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 1.5rem;
+    right: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-brand), transparent);
   }
 
   .mnav-panel__intro {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
-    padding: 1.75rem 1.75rem 1.5rem;
+    padding: 1.6rem 1.6rem 1.4rem;
     border-right: 1px solid var(--mnav-line);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--fg) 3%, transparent), transparent 70%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 70%);
   }
 
   .mnav-panel__eyebrow {
     margin: 0;
-    color: var(--accent-text);
+    color: var(--muted);
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.14em;
   }
 
   .mnav-panel__heading {
     margin: 0;
     color: var(--fg);
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: -0.015em;
     line-height: 1.25;
@@ -805,7 +1386,7 @@ html.mnav-locked body::before {
   .mnav-panel__description {
     margin: 0;
     color: var(--muted);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     line-height: 1.55;
   }
 
@@ -817,7 +1398,7 @@ html.mnav-locked body::before {
   .mnav-panel__featured {
     display: grid;
     gap: 0.5rem;
-    margin: 0.75rem 0 0;
+    margin: 0.6rem 0 0.25rem;
     padding: 0;
     list-style: none;
   }
@@ -851,34 +1432,54 @@ html.mnav-locked body::before {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.25rem 1rem;
   }
+
+  .mnav-panel__surface[data-columns='1'] .mnav-panel__list--compact,
+  .mnav-panel__list--compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
 }
 
-/* Narrow desktop bars cannot fit the full CTA beside the links; the price stays in the mega panels and on /pricing. */
-@media (min-width: 64rem) and (max-width: 79.99rem) {
+/* Narrow desktop bars: drop the secondary action and the price suffix; both stay in the panels and on /pricing. */
+@media (min-width: 64rem) and (max-width: 84.99rem) {
+  .mnav__actions .mnav-btn__price,
+  .mnav__actions .mnav-btn--secondary,
+  .mnav__search-kbd {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) and (max-width: 71.99rem) {
   .mnav__inner {
-    gap: 1rem;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
   }
 
   .mnav__trigger,
   .mnav__link {
     padding-inline: 0.6rem;
   }
-
-  .mnav__actions .mnav-btn__price {
-    display: none;
-  }
 }
 
 @keyframes mnav-panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -0.35rem);
+    transform: translate(-50%, -6px) scale(0.99);
+  }
+}
+
+@keyframes mnav-panel-swap {
+  from {
+    opacity: 0.4;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mnav-hub,
-  .mnav-panel {
+  .mnav-panel,
+  .mnav-finder[open],
+  .mnav-hub__section,
+  .mnav-hub:not([hidden]) .mnav-stagger {
     animation: none;
   }
 

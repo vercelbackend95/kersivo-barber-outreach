@@ -14,11 +14,10 @@ const panel = (id: string, links: string) => `
     <div id="mnav-panel-${id}" data-mnav-panel hidden>${links}</div>
   </li>`;
 
-const accordion = (id: string, links: string) => `
-  <li>
-    <button type="button" aria-expanded="false" aria-controls="mnav-hub-${id}" data-mnav-accordion="${id}">${id}</button>
-    <div id="mnav-hub-${id}" hidden>${links}</div>
-  </li>`;
+const tab = (id: string, selected: boolean) =>
+  `<button type="button" role="tab" aria-selected="${selected}" aria-controls="mnav-hub-${id}" ${selected ? '' : 'tabindex="-1"'} data-mnav-tab="${id}">${id}</button>`;
+const tabPanel = (id: string, links: string, selected: boolean) =>
+  `<div id="mnav-hub-${id}" role="tabpanel" data-mnav-tabpanel="${id}" ${selected ? '' : 'hidden'}>${links}</div>`;
 
 const compareLinks = `
   <a href="/booksy-alternative" data-mnav-match="/booksy-alternative">Booksy</a>
@@ -42,12 +41,30 @@ function render() {
       </button>
       <div id="mnav-hub" data-mnav-hub hidden inert>
         <template data-mnav-hub-content>
-          <ul>
-            ${accordion('compare', compareLinks)}
-            ${accordion('resources', resourceLinks)}
-          </ul>
+          <button type="button" data-mnav-finder-open>Search</button>
+          <div role="tablist">
+            ${tab('compare', true)}
+            ${tab('resources', false)}
+            <span data-mnav-tab-thumb></span>
+          </div>
+          ${tabPanel('compare', compareLinks, true)}
+          ${tabPanel('resources', resourceLinks, false)}
         </template>
       </div>
+      <dialog data-mnav-finder>
+        <template data-mnav-finder-content>
+          <input data-mnav-finder-input />
+          <button type="button" data-mnav-finder-close>Close</button>
+          <ul role="listbox">
+            <li role="none" data-terms="compare all booking systems booksy fresha" data-title="compare all booking systems"><a id="f-hub" role="option" href="/compare">Compare all</a></li>
+            <li role="none" data-terms="booksy alternative compare" data-title="booksy alternative booksy"><a id="f-booksy" role="option" href="/booksy-alternative">Booksy</a></li>
+            <li role="none" data-terms="no-show calculator deposit" data-title="no-show calculator"><a id="f-noshow" role="option" href="/barbershop-no-show-calculator">No-show</a></li>
+          </ul>
+          <p data-mnav-finder-empty hidden>None</p>
+          <p data-mnav-finder-status></p>
+        </template>
+      </dialog>
+      <button type="button" id="desktop-search" data-mnav-finder-open>Search</button>
     </header>
     <main id="main"><button id="outside">Outside</button></main>
     <footer id="footer"></footer>`;
@@ -212,19 +229,19 @@ describe('mobile navigation hub', () => {
   it('keeps hub content out of the live DOM until the menu is first opened', () => {
     window.history.replaceState(null, '', '/booksy-alternative');
     cleanup = initMarketingNav(render());
-    expect(hub().querySelector('[data-mnav-accordion]')).toBeNull();
+    expect(hub().querySelector('[data-mnav-tab]')).toBeNull();
     expect(hub().querySelector('template[data-mnav-hub-content]')).not.toBeNull();
 
     menu().click();
     expect(hub().querySelector('template')).toBeNull();
-    expect(hub().querySelectorAll('[data-mnav-accordion]')).toHaveLength(2);
-    // Current-page state is applied to the freshly mounted links and their accordion.
+    expect(hub().querySelectorAll('[data-mnav-tab]')).toHaveLength(2);
+    // Current-page state is applied to the freshly mounted links and their tab.
     expect(hub().querySelector('a[href="/booksy-alternative"]')?.getAttribute('aria-current')).toBe('page');
-    expect($('[data-mnav-accordion="compare"]').hasAttribute('data-current')).toBe(true);
+    expect($('[data-mnav-tab="compare"]').hasAttribute('data-current')).toBe(true);
 
     press('Escape');
     menu().click();
-    expect(hub().querySelectorAll('[data-mnav-accordion]')).toHaveLength(2);
+    expect(hub().querySelectorAll('[data-mnav-tab]')).toHaveLength(2);
     window.history.replaceState(null, '', '/');
   });
 
@@ -242,7 +259,7 @@ describe('mobile navigation hub', () => {
     expect($('#main').hasAttribute('inert')).toBe(true);
     expect($('#footer').hasAttribute('inert')).toBe(true);
     expect(root.hasAttribute('inert')).toBe(false);
-    expect(document.activeElement).toBe($('[data-mnav-accordion="compare"]'));
+    expect(document.activeElement).toBe(hub().querySelector('[data-mnav-finder-open]'));
   });
 
   it('closes, restores scroll and inert state, and returns focus to the menu button', () => {
@@ -262,23 +279,37 @@ describe('mobile navigation hub', () => {
     expect(document.activeElement).toBe(menu());
   });
 
-  it('toggles accordions independently', () => {
+  it('switches tabs with one tab stop and arrow-key navigation', () => {
     cleanup = initMarketingNav(render());
     menu().click();
-    const compare = $<HTMLButtonElement>('[data-mnav-accordion="compare"]');
-    const resources = $<HTMLButtonElement>('[data-mnav-accordion="resources"]');
+    const compare = $<HTMLButtonElement>('[data-mnav-tab="compare"]');
+    const resources = $<HTMLButtonElement>('[data-mnav-tab="resources"]');
 
-    compare.click();
     resources.click();
-    expect(compare.getAttribute('aria-expanded')).toBe('true');
-    expect(resources.getAttribute('aria-expanded')).toBe('true');
-    expect($('#mnav-hub-compare').hidden).toBe(false);
+    expect(resources.getAttribute('aria-selected')).toBe('true');
+    expect(compare.getAttribute('aria-selected')).toBe('false');
+    expect(compare.getAttribute('tabindex')).toBe('-1');
+    expect(resources.hasAttribute('tabindex')).toBe(false);
     expect($('#mnav-hub-resources').hidden).toBe(false);
-
-    compare.click();
-    expect(compare.getAttribute('aria-expanded')).toBe('false');
     expect($('#mnav-hub-compare').hidden).toBe(true);
+
+    resources.focus();
+    press('ArrowRight');
+    expect(document.activeElement).toBe(compare);
+    expect($('#mnav-hub-compare').hidden).toBe(false);
+    press('End');
+    expect(document.activeElement).toBe(resources);
+    press('Home');
+    expect(document.activeElement).toBe(compare);
+  });
+
+  it('opens on the tab of the page being shown', () => {
+    window.history.replaceState(null, '', '/barber-software-cost-calculator');
+    cleanup = initMarketingNav(render());
+    menu().click();
+    expect($('[data-mnav-tab="resources"]').getAttribute('aria-selected')).toBe('true');
     expect($('#mnav-hub-resources').hidden).toBe(false);
+    expect($('#mnav-hub-compare').hidden).toBe(true);
   });
 
   it('reserves the header’s measured in-flow height while open and releases it on close', () => {
@@ -421,5 +452,101 @@ describe('lifecycle and current state', () => {
       'page',
     );
     expect(root.querySelector('a[data-mnav-section="pricing"]')?.hasAttribute('aria-current')).toBe(false);
+  });
+});
+
+describe('navigation finder', () => {
+  beforeAll(() => {
+    // jsdom has no modal dialog support; a minimal stand-in keeps open state and fires "close".
+    const proto = HTMLDialogElement.prototype as HTMLDialogElement & { showModal?: () => void };
+    if (typeof proto.showModal !== 'function') {
+      proto.showModal = function showModal(this: HTMLDialogElement) {
+        this.setAttribute('open', '');
+      };
+      proto.close = function close(this: HTMLDialogElement) {
+        if (!this.hasAttribute('open')) return;
+        this.removeAttribute('open');
+        this.dispatchEvent(new Event('close'));
+      };
+    }
+  });
+
+  const finder = () => $<HTMLDialogElement>('[data-mnav-finder]');
+  const input = () => $<HTMLInputElement>('[data-mnav-finder-input]');
+  const type = (value: string) => {
+    input().value = value;
+    input().dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  it('mounts lazily and opens from the search button with focus in the field', () => {
+    cleanup = initMarketingNav(render());
+    expect(finder().querySelector('[data-mnav-finder-input]')).toBeNull();
+    $('#desktop-search').click();
+    expect(finder().open).toBe(true);
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('filters by every typed word and marks the first match active', () => {
+    cleanup = initMarketingNav(render());
+    $('#desktop-search').click();
+    type('deposit');
+    const rows = [...finder().querySelectorAll<HTMLElement>('li')];
+    expect(rows.map((row) => row.hidden)).toEqual([true, true, false]);
+    expect(input().getAttribute('aria-activedescendant')).toBe('f-noshow');
+    expect($('[data-mnav-finder-status]').textContent).toBe('1 result');
+
+    type('nothing here');
+    expect($('[data-mnav-finder-empty]').hidden).toBe(false);
+    expect(input().hasAttribute('aria-activedescendant')).toBe(false);
+  });
+
+  it('ranks title matches above description-only matches', () => {
+    cleanup = initMarketingNav(render());
+    $('#desktop-search').click();
+    type('booksy');
+    // Both rows match; the hub only through its description, so the Booksy page leads.
+    expect(input().getAttribute('aria-activedescendant')).toBe('f-booksy');
+    expect($('#f-hub').parentElement!.style.order).toBe('1');
+    input().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(input().getAttribute('aria-activedescendant')).toBe('f-hub');
+  });
+
+  it('opens with "/" and Ctrl+K, but not while typing in a field', () => {
+    cleanup = initMarketingNav(render());
+    press('/');
+    expect(finder().open).toBe(true);
+    finder().close();
+
+    const field = document.createElement('input');
+    $('#main').append(field);
+    field.focus();
+    press('/');
+    expect(finder().open).toBe(false);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+    expect(finder().open).toBe(true);
+  });
+
+  it('closes the hub when opened from it and returns focus to the menu button on close', () => {
+    cleanup = initMarketingNav(render());
+    menu().click();
+    hub().querySelector<HTMLButtonElement>('[data-mnav-finder-open]')!.click();
+    expect(menu().getAttribute('aria-expanded')).toBe('false');
+    expect(finder().open).toBe(true);
+    $('[data-mnav-finder-close]').click();
+    expect(finder().open).toBe(false);
+    expect(document.activeElement).toBe(menu());
+  });
+
+  it('closes on astro:before-swap and still filters after the persisted header is re-initialised', () => {
+    const root = render();
+    initMarketingNav(root);
+    $('#desktop-search').click();
+    document.dispatchEvent(new Event('astro:before-swap'));
+    expect(finder().open).toBe(false);
+
+    cleanup = initMarketingNav(root);
+    $('#desktop-search').click();
+    type('deposit');
+    expect(input().getAttribute('aria-activedescendant')).toBe('f-noshow');
   });
 });

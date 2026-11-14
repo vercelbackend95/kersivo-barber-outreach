@@ -7,7 +7,9 @@ import {
   MARKETING_NAV_ITEMS,
   MARKETING_NAV_PRIMARY_ACTION,
   MARKETING_NAV_SECONDARY_ACTION,
+  buildMarketingNavFinderEntries,
   buildMarketingNavigation,
+  buildMarketingNavQuickLinks,
   buildMarketingNavTopLevelEntries,
   isMarketingNavGroupCurrent,
   isMarketingNavItemCurrent,
@@ -40,16 +42,19 @@ const allHrefs = [
   ...MARKETING_NAV_DIRECT_LINKS.map((link) => link.href),
   ...MARKETING_NAV_GROUPS.flatMap((group) => (group.featuredAction ? [group.featuredAction.href] : [])),
   MARKETING_NAV_SECONDARY_ACTION.href!,
+  ...buildMarketingNavQuickLinks().map((link) => link.href),
+  ...buildMarketingNavFinderEntries().map((entry) => entry.href),
 ];
 
 describe('marketing navigation config', () => {
   it('exposes the approved top-level IA in order', () => {
     const groups = buildMarketingNavigation();
-    expect(groups.map((group) => group.label)).toEqual(['Product', 'Compare', 'Resources']);
+    expect(groups.map((group) => group.label)).toEqual(['Product', 'Compare', 'Free tools', 'Resources']);
     expect(MARKETING_NAV_DIRECT_LINKS).toEqual([{ id: 'pricing', label: 'Pricing', href: '/pricing' }]);
     expect(buildMarketingNavTopLevelEntries().map((entry) => (entry.kind === 'group' ? entry.group.label : entry.link.label))).toEqual([
       'Product',
       'Compare',
+      'Free tools',
       'Resources',
       'Pricing',
     ]);
@@ -75,10 +80,10 @@ describe('marketing navigation config', () => {
       '/starter',
     ]);
     expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
+    // Admin & reports already links the admin demo; the demo section does not repeat it.
     expect(product.sections.find((section) => section.id === 'demo')?.items.map((item) => item.href)).toEqual([
       '/demo',
       '/demo/book',
-      '/demo/admin?section=bookings_dashboard',
     ]);
     expect(product).toMatchObject({
       eyebrow: 'KERSIVO',
@@ -88,31 +93,57 @@ describe('marketing navigation config', () => {
       featuredAction: { label: 'See KERSIVO in action', href: '/#live-demo' },
     });
     const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
-    expect(resources.sections.map((section) => section.id)).toEqual(['guides', 'tools', 'help']);
+    expect(resources.sections.map((section) => section.id)).toEqual(['guides', 'help']);
     expect(resources.sections.find((section) => section.id === 'help')?.items.map((item) => item.id)).toEqual([
       'resources-faq',
+      'resources-about',
       'resources-contact',
     ]);
   });
 
-  it('puts guides, tools and help in Resources and keeps compare tools out of it', () => {
+  it('puts guides and help in Resources and every calculator or template in Free tools', () => {
     const readyGuides = MARKETING_NAV_ITEMS.map((item) =>
       item.id === 'resources-online-booking' || item.id === 'resources-website-design' ? { ...item, visible: true } : item,
     );
-    const resources = buildMarketingNavigation(readyGuides).find((group) => group.id === 'resources')!;
+    const groups = buildMarketingNavigation(readyGuides);
+    const resources = groups.find((group) => group.id === 'resources')!;
     expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
       '/barbershop-website-design',
       '/barbershop-online-booking',
       '/insights',
     ]);
-    expect(resources.sections.find((section) => section.id === 'tools')?.items.map((item) => item.href)).toEqual([
+    const tools = groups.find((group) => group.id === 'tools')!;
+    expect(tools).toMatchObject({ label: 'Free tools', tabLabel: 'Tools' });
+    expect(tools.featured.map((item) => item.href)).toEqual(['/barber-software-cost-calculator']);
+    expect(tools.sections.find((section) => section.id === 'calculators')?.items.map((item) => item.href)).toEqual([
       '/barbershop-no-show-calculator',
       '/chair-rent-vs-commission-calculator',
+    ]);
+    expect(tools.sections.find((section) => section.id === 'templates')?.items.map((item) => item.href)).toEqual([
       '/barbershop-cancellation-policy-template',
     ]);
-    const flat = [...resources.featured, ...resources.sections.flatMap((section) => section.items)].map((item) => item.href);
-    expect(flat).not.toContain('/compare');
-    expect(flat).not.toContain('/barber-software-cost-calculator');
+    const resourceHrefs = [...resources.featured, ...resources.sections.flatMap((section) => section.items)].map((item) => item.href);
+    expect(resourceHrefs).not.toContain('/compare');
+    expect(resourceHrefs.some((href) => href.includes('calculator'))).toBe(false);
+  });
+
+  it('builds four mobile quick links and a finder entry for every destination', () => {
+    expect(buildMarketingNavQuickLinks().map((link) => link.href)).toEqual([
+      '/pricing',
+      '/demo',
+      '/compare',
+      '/barber-software-cost-calculator',
+    ]);
+    const finder = buildMarketingNavFinderEntries();
+    const hrefs = finder.map((entry) => entry.href);
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    for (const item of buildMarketingNavigation().flatMap((group) => [...group.featured, ...group.sections.flatMap((section) => section.items)])) {
+      expect(hrefs, item.id).toContain(item.href);
+    }
+    expect(hrefs).toEqual(expect.arrayContaining(['/', '/pricing', '/about']));
+    const noShow = finder.find((entry) => entry.href === '/barbershop-no-show-calculator')!;
+    expect(noShow.terms).toContain('deposit');
+    expect(noShow.terms).toBe(noShow.terms.toLowerCase());
   });
 
   it('links only to destinations that exist today', () => {
@@ -203,7 +234,7 @@ describe('marketing navigation config', () => {
   it('keeps the booking guide out of global navigation until its route and parent are released', () => {
     const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-online-booking');
     expect(guide).toMatchObject({
-      label: 'Online Booking for Barbershops',
+      label: 'Online booking for barbershops',
       href: '/barbershop-online-booking',
       group: 'resources',
       section: 'guides',
@@ -215,7 +246,7 @@ describe('marketing navigation config', () => {
   it('keeps the website-design guide hidden in global navigation until both cluster pages are released', () => {
     const guide = MARKETING_NAV_ITEMS.find((item) => item.id === 'resources-website-design');
     expect(guide).toMatchObject({
-      label: 'Barbershop Website Design',
+      label: 'Barbershop website design',
       href: '/barbershop-website-design',
       group: 'resources',
       section: 'guides',
@@ -232,13 +263,14 @@ describe('marketing navigation config', () => {
       (item) => item.href,
     );
     expect(compareHrefs).toEqual(
-      expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative', '/barber-software-cost-calculator']),
+      expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative']),
     );
-    expect(compare.featured.map((item) => item.id)).toEqual(['compare-cost-calculator', 'compare-hub']);
-    expect(compare.sections.flatMap((section) => section.items).map((item) => item.id)).not.toContain('compare-hub');
-    const tools = resources.sections.find((section) => section.id === 'tools');
-    expect(tools?.items.map((item) => item.href)).not.toContain('/barber-software-cost-calculator');
-    expect(tools?.items.map((item) => item.href)).not.toContain('/compare');
+    expect(compare.featured.map((item) => item.id)).toEqual(['compare-hub']);
+    expect(compare).toMatchObject({ layout: 'compact', featuredAction: { href: '/barber-software-cost-calculator' } });
+    const alternatives = compare.sections.flatMap((section) => section.items);
+    expect(alternatives.map((item) => item.id)).not.toContain('compare-hub');
+    // The compact grid shows short names, so every comparison needs one.
+    for (const item of alternatives) expect(item.shortLabel, item.id).toBeTruthy();
     const guides = resources.sections.find((section) => section.id === 'guides');
     const guideReady = BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE;
     expect(guides?.items.some((item) => item.href === '/barbershop-website-design') ?? false).toBe(guideReady);

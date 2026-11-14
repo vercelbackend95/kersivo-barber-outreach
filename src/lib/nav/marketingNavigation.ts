@@ -11,7 +11,7 @@ import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAG
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 
-export type MarketingNavGroupId = 'product' | 'compare' | 'resources';
+export type MarketingNavGroupId = 'product' | 'compare' | 'tools' | 'resources';
 
 export type MarketingNavItem = {
   id: string;
@@ -22,6 +22,10 @@ export type MarketingNavItem = {
   /** Section id within the group (see MarketingNavGroup.sections). */
   section: string;
   icon: MarketingNavIcon;
+  /** Short name for compact layouts, e.g. "Booksy" for the Booksy comparison. */
+  shortLabel?: string;
+  /** Extra words the navigation finder matches on (never rendered). */
+  keywords?: readonly string[];
   /** Rendered in the group's featured column instead of a section list. */
   featured?: boolean;
   /** Opens in a new tab (external destinations only). */
@@ -41,14 +45,18 @@ export type MarketingNavSection = { id: string; label: string | null };
 export type MarketingNavGroup = {
   id: MarketingNavGroupId;
   label: string;
+  /** Mobile tab label when the full label is too long for a four-tab bar. */
+  tabLabel?: string;
   eyebrow: string;
   heading: string;
   description?: string;
   featuredAction?: { label: string; href: string };
   /** Path prefixes that mark the group trigger current even when no child link matches. */
   currentPrefixes?: readonly string[];
-  /** Mobile accordion starts expanded. Desktop panels stay closed until opened. */
+  /** Mobile hub opens on this group's tab unless the current page belongs to another group. */
   defaultOpen?: boolean;
+  /** 'compact' lists items by short name in a dense grid (used for the long list of comparisons). */
+  layout?: 'compact';
   sections: readonly MarketingNavSection[];
 };
 
@@ -91,16 +99,30 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     label: 'Compare',
     eyebrow: 'COMPARE',
     heading: 'Compare your options before you switch.',
-    sections: [{ id: 'alternatives', label: 'Alternatives' }],
+    description: 'Fees, features and own-brand booking, side by side for UK barbershops.',
+    featuredAction: { label: 'Estimate your costs', href: '/barber-software-cost-calculator' },
+    layout: 'compact',
+    sections: [{ id: 'alternatives', label: 'KERSIVO vs' }],
+  },
+  {
+    id: 'tools',
+    label: 'Free tools',
+    tabLabel: 'Tools',
+    eyebrow: 'FREE TOOLS',
+    heading: 'Run the numbers on your shop.',
+    description: 'Free calculators and a policy template for UK barbershops.',
+    sections: [
+      { id: 'calculators', label: 'Calculators' },
+      { id: 'templates', label: 'Templates' },
+    ],
   },
   {
     id: 'resources',
     label: 'Resources',
     eyebrow: 'RESOURCES',
-    heading: 'Tools and answers for your barbershop.',
+    heading: 'Guides and answers for your barbershop.',
     sections: [
       { id: 'guides', label: 'Guides' },
-      { id: 'tools', label: 'Tools' },
       { id: 'help', label: 'Help' },
     ],
   },
@@ -155,6 +177,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'product',
     section: 'included',
     icon: 'pricing',
+    keywords: ['free', '£0'],
     emphasis: 'quiet',
   },
   {
@@ -177,16 +200,6 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     matchPrefix: '/demo/book',
   },
   {
-    id: 'product-admin-demo',
-    label: 'Admin demo',
-    description: 'Explore bookings, clients, reports and shop tools.',
-    href: '/demo/admin?section=bookings_dashboard',
-    group: 'product',
-    section: 'demo',
-    icon: 'admin',
-    matchPrefix: '/demo/admin',
-  },
-  {
     id: 'compare-booksy',
     label: 'Booksy Alternative',
     description: 'Compare Booksy and KERSIVO for an independent UK barbershop.',
@@ -194,6 +207,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Booksy',
   },
   {
     id: 'compare-fresha',
@@ -203,6 +217,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Fresha',
   },
   {
     id: 'compare-vagaro',
@@ -212,6 +227,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Vagaro',
   },
   {
     id: 'compare-treatwell',
@@ -221,6 +237,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Treatwell',
   },
   {
     id: 'compare-timely',
@@ -230,6 +247,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Timely',
   },
   {
     id: 'compare-nearcut',
@@ -239,6 +257,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Nearcut',
   },
   {
     id: 'compare-phorest',
@@ -248,6 +267,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Phorest',
   },
   {
     id: 'compare-square',
@@ -257,6 +277,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Square',
   },
   {
     id: 'compare-squire',
@@ -266,6 +287,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'SQUIRE',
   },
   {
     id: 'compare-setora',
@@ -275,30 +297,33 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    shortLabel: 'Setora',
   },
   {
     id: 'compare-cost-calculator',
-    label: 'Barber Software Cost Calculator',
+    label: 'Barber software cost calculator',
     description: 'Estimate Booksy, Fresha, Nearcut and KERSIVO costs using your shop numbers.',
     href: '/barber-software-cost-calculator',
-    group: 'compare',
-    section: 'alternatives',
+    group: 'tools',
+    section: 'calculators',
     icon: 'calculator',
+    keywords: ['price', 'fees', 'commission', 'savings'],
     featured: true,
   },
   {
     id: 'compare-hub',
-    label: 'Compare All Booking Systems',
+    label: 'Compare all booking systems',
     description: 'KERSIVO, Booksy, Fresha, Nearcut and more side by side for UK barbershops.',
     href: '/compare',
     group: 'compare',
     section: 'alternatives',
     icon: 'compare',
+    keywords: ['alternatives', 'versus', 'switch'],
     featured: true,
   },
   {
     id: 'resources-website-design',
-    label: 'Barbershop Website Design',
+    label: 'Barbershop website design',
     description: 'Practical tips for barbershop branding, photography and mobile website design.',
     href: BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
     group: 'resources',
@@ -308,7 +333,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
   {
     id: 'resources-online-booking',
-    label: 'Online Booking for Barbershops',
+    label: 'Online booking for barbershops',
     description: 'Booking steps, availability, deposits and the shop diary explained.',
     href: BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
     group: 'resources',
@@ -324,43 +349,57 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     group: 'resources',
     section: 'guides',
     icon: 'guide',
+    keywords: ['blog', 'articles', 'news'],
     matchPrefix: '/insights',
   },
   {
     id: 'resources-no-show-calculator',
-    label: 'No-Show Cost Calculator',
+    label: 'No-show cost calculator',
     description: 'See what missed appointments cost and whether a deposit pays.',
     href: '/barbershop-no-show-calculator',
-    group: 'resources',
-    section: 'tools',
+    group: 'tools',
+    section: 'calculators',
     icon: 'calculator',
+    keywords: ['deposit', 'missed appointments', 'cancellations'],
   },
   {
     id: 'resources-chair-rent-calculator',
-    label: 'Chair Rent vs Commission',
+    label: 'Chair rent vs commission',
     description: 'Compare employing a barber with renting out a chair.',
     href: '/chair-rent-vs-commission-calculator',
-    group: 'resources',
-    section: 'tools',
+    group: 'tools',
+    section: 'calculators',
     icon: 'calculator',
+    keywords: ['self-employed', 'staff', 'wages'],
   },
   {
     id: 'resources-cancellation-policy',
-    label: 'Cancellation Policy Template',
+    label: 'Cancellation policy template',
     description: 'Create a free deposit and no-show policy for your shop.',
     href: '/barbershop-cancellation-policy-template',
-    group: 'resources',
-    section: 'tools',
+    group: 'tools',
+    section: 'templates',
     icon: 'policy',
+    keywords: ['deposit', 'no-show', 'late'],
   },
   {
     id: 'resources-faq',
-    label: 'Frequently Asked Questions',
+    label: 'Frequently asked questions',
     description: 'Answers about pricing, setup, switching, domains and billing.',
     href: '/#faq',
     group: 'resources',
     section: 'help',
     icon: 'faq',
+    keywords: ['questions', 'setup', 'billing', 'domain'],
+  },
+  {
+    id: 'resources-about',
+    label: 'About KERSIVO',
+    description: 'Who KERSIVO is for and how it works.',
+    href: '/about',
+    group: 'resources',
+    section: 'help',
+    icon: 'info',
   },
   {
     id: 'resources-contact',
@@ -377,6 +416,99 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
 export const MARKETING_NAV_DIRECT_LINKS: readonly MarketingNavDirectLink[] = [
   { id: 'pricing', label: 'Pricing', href: '/pricing' },
 ];
+
+export type MarketingNavQuickLink = { id: string; label: string; meta: string; href: string; icon: MarketingNavIcon };
+
+/** The four shortcuts at the top of the mobile hub: the pages owners ask for first. */
+export function buildMarketingNavQuickLinks(
+  groups: readonly ResolvedMarketingNavGroup[] = buildMarketingNavigation(),
+): MarketingNavQuickLink[] {
+  const compare = groups.find((group) => group.id === 'compare');
+  const alternatives = compare ? compare.sections.flatMap((section) => section.items).length : 0;
+  return [
+    { id: 'quick-pricing', label: 'Pricing', meta: 'Plans and Starter', href: '/pricing', icon: 'pricing' },
+    { id: 'quick-demo', label: 'Live demo', meta: 'Try it as a client', href: '/demo', icon: 'system' },
+    {
+      id: 'quick-compare',
+      label: 'Compare',
+      meta: alternatives ? `${alternatives} alternatives` : 'Side by side',
+      href: '/compare',
+      icon: 'compare',
+    },
+    {
+      id: 'quick-cost',
+      label: 'Cost calculator',
+      meta: 'Your shop numbers',
+      href: '/barber-software-cost-calculator',
+      icon: 'calculator',
+    },
+  ];
+}
+
+export type MarketingNavFinderEntry = {
+  id: string;
+  label: string;
+  description: string;
+  href: string;
+  icon: MarketingNavIcon;
+  /** Group label shown beside the result. */
+  context: string;
+  /** Lower-case text the finder matches against. */
+  terms: string;
+  /** Lower-case name; results whose name matches rank first. */
+  title: string;
+};
+
+/** Every navigation destination, flattened for the search finder. One entry per href. */
+export function buildMarketingNavFinderEntries(
+  groups: readonly ResolvedMarketingNavGroup[] = buildMarketingNavigation(),
+): MarketingNavFinderEntry[] {
+  const entries: MarketingNavFinderEntry[] = [
+    {
+      id: 'finder-home',
+      label: 'Home',
+      description: 'Booking software and branded websites for UK barbershops.',
+      href: '/',
+      icon: 'overview',
+      context: 'KERSIVO',
+      terms: 'home kersivo homepage',
+      title: 'home',
+    },
+    {
+      id: 'finder-pricing',
+      label: 'Pricing',
+      description: 'Full KERSIVO and KERSIVO Starter.',
+      href: '/pricing',
+      icon: 'pricing',
+      context: 'KERSIVO',
+      terms: 'pricing price plans cost monthly full kersivo starter',
+      title: 'pricing',
+    },
+  ];
+  for (const group of groups) {
+    for (const item of [...group.featured, ...group.sections.flatMap((section) => section.items)]) {
+      entries.push({
+        id: item.id,
+        label: item.label,
+        description: item.description,
+        href: item.href,
+        icon: item.icon,
+        context: group.label,
+        terms: [item.label, item.shortLabel, item.description, group.label, ...(item.keywords ?? [])]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase(),
+        title: [item.label, item.shortLabel].filter(Boolean).join(' ').toLowerCase(),
+      });
+    }
+  }
+  const seen = new Set<string>();
+  return entries.filter((entry) => {
+    if (seen.has(entry.href)) return false;
+    seen.add(entry.href);
+    return true;
+  });
+}
 
 export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
 

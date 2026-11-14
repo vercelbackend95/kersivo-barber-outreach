@@ -145,7 +145,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(MARKETING_NAV_DIRECT_LINKS.find((entry) => entry.id === 'websites')).toBeUndefined();
     expect(buildMarketingNavTopLevelEntries().map((entry) =>
       entry.kind === 'group' ? entry.group.label : entry.link.label,
-    )).toEqual(['Product', 'Compare', 'Resources', 'Pricing']);
+    )).toEqual(['Product', 'Compare', 'Free tools', 'Resources', 'Pricing']);
     const resources = buildMarketingNavigation().find((group) => group.id === 'resources')!;
     expect(resources.sections.find((section) => section.id === 'guides')?.items.map((item) => item.href)).toEqual([
       '/barbershop-website-design',
