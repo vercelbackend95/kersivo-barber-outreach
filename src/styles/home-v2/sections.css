@@ -1326,9 +1326,8 @@
 .hv2-plan__terms {
   display: grid;
   gap: 0.5rem;
-  margin: 1.5rem 0 0;
-  padding: 1.25rem 0 0;
-  border-top: 1px solid var(--hv2-line);
+  margin: 1.25rem 0 0;
+  padding: 0;
   list-style: none;
 }
 
@@ -2655,45 +2654,26 @@ html:has(main.hv2) body {
   isolation: isolate;
 }
 
-.hv2-plan__glow {
+/* The fair-price beam: a level hairline with a brand-red pivot. It settles level as the price lands. */
+.hv2-plan__level {
+  position: relative;
+  display: block;
+  height: 1px;
+  margin: 1.5rem 0 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16) 12%, rgba(255, 255, 255, 0.16) 88%, transparent);
+  transform-origin: 50% 50%;
+}
+
+.hv2-plan__level::after {
+  content: '';
   position: absolute;
   top: 50%;
-  left: 4rem;
-  z-index: -1;
-  width: 16rem;
-  height: 10rem;
+  left: 50%;
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand) 34%, transparent), transparent);
-  filter: blur(18px);
-  opacity: 0.55;
+  background: var(--color-brand);
   transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.hv2-odo {
-  display: inline-flex;
-  align-items: flex-start;
-  height: 0.9em;
-  overflow: hidden;
-  line-height: 0.9;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%);
-}
-
-.hv2-odo__sym {
-  margin-right: 0.02em;
-}
-
-.hv2-odo__col {
-  display: flex;
-  flex-direction: column;
-  transform: translateY(calc(var(--d) * -0.9em));
-}
-
-.hv2-odo__col span {
-  display: block;
-  height: 0.9em;
-  text-align: center;
 }
 
 .hv2-plan__per em {
@@ -2705,15 +2685,6 @@ html:has(main.hv2) body {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.hv2-plan__sheen {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.07) 47%, rgba(255, 255, 255, 0.12) 50%, transparent 62%);
-  transform: translateX(-120%);
-  pointer-events: none;
 }
 
 .hv2-receipt {
@@ -2993,104 +2964,30 @@ html:has(main.hv2) body {
   }
 }
 
-/* ---------- Sand glyph slots ----------
-   Empty boxes the WebGL sand sculpts a chapter's key word into. CSS decides where they sit: in the
-   band above the heading on phones, in the free space beside it on wide screens. The text lives in
-   data-hv2-glyph; the font and alignment here are what the sand copies. */
-.hv2-head,
-.hv2-final .hv2-shell {
+/* ---------- Sand eyebrows ----------
+   Every section eyebrow is real text in a [data-hv2-glyph] slot. The WebGL sand copies this font,
+   size and tracking; while the sand holds a slot (.is-sand) the text fades out underneath it, and it
+   fades back when the sand moves on. Without the sand the eyebrow is simply text. */
+.hv2 .hv2-eyebrow--sand {
+  gap: 0.65rem;
+  letter-spacing: 0;
+}
+
+.hv2 .hv2-glyph {
   position: relative;
-}
-
-/* Phones and tablets: the word lands under the lead as its punchline, in space the head reserves. */
-.hv2-head {
-  --hv2-glyph-h: clamp(5.25rem, 28vw, 7.5rem);
-}
-
-.hv2-head:has(> .hv2-glyph) {
-  padding-bottom: calc(var(--hv2-glyph-h) + 0.75rem);
-}
-
-.hv2-glyph {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--hv2-glyph-h);
+  display: inline-block;
   font-family: var(--font-heading);
-  text-align: left;
-  pointer-events: none;
-}
-
-.hv2-final .hv2-glyph--band {
-  left: var(--hv2-pad);
-  right: var(--hv2-pad);
-  bottom: calc(100% + 0.6rem);
-  height: clamp(3.75rem, 17vw, 6rem);
-}
-
-@media (min-width: 80rem) {
-  .hv2-head:has(> .hv2-glyph) {
-    padding-bottom: 0;
-  }
-
-  .hv2-head > .hv2-glyph {
-    left: calc(100% + 3rem);
-    right: auto;
-    top: 50%;
-    bottom: auto;
-    width: calc(min(100vw, var(--hv2-max)) - 2 * var(--hv2-pad) - 46rem - 3rem);
-    max-width: 40rem;
-    height: clamp(10rem, 15vw, 15rem);
-    transform: translateY(-50%);
-    text-align: right;
-  }
-
-  /* Wide screens: the word fills the empty top-right of the closing card, above the terms. */
-  .hv2-final .hv2-glyph--band {
-    top: 3.25rem;
-    right: calc(var(--hv2-pad) + 4rem);
-    bottom: auto;
-    left: auto;
-    width: 34%;
-    height: 7.5rem;
-    text-align: right;
-  }
-}
-
-/* Without the sand (reduced motion, Save-Data, no WebGL) each slot shows its word as a quiet outline,
-   so the space the head reserves for it never reads as a gap. Sized to the slot with container units. */
-.hv2-glyph {
-  container-type: size;
-}
-
-.hv2-glyph::before {
-  content: attr(data-hv2-glyph);
-  display: none;
-  font-size: min(86cqh, calc(230cqw / var(--hv2-glyph-chars, 8)));
+  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 1.875rem);
+  font-weight: 400;
   line-height: 1;
+  letter-spacing: 0.06em;
   white-space: nowrap;
+  color: var(--hv2-sand);
+  transition: color 0.7s ease;
+}
+
+.hv2 .hv2-glyph.is-sand {
   color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--hv2-sand) 42%, transparent);
-}
-
-.hv2[data-hv2-sand='off'] .hv2-glyph::before {
-  display: block;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hv2-glyph::before {
-    display: block;
-  }
-}
-
-@media (min-width: 80rem) {
-  .hv2-head > .hv2-glyph::before {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-  }
 }
 
 /* ---------- Team-size seats and difference ---------- */
