@@ -551,12 +551,16 @@
 .fj-reason__kersivo {
   margin: 0;
   padding: 0.95rem 1.1rem;
-  border-left: 2px solid var(--fj-red);
-  border-radius: 0 0.6rem 0.6rem 0;
+  border: 1px solid color-mix(in srgb, var(--fj-red) 28%, transparent);
+  border-radius: 0.75rem;
   color: #e4e4e7;
   font-size: 0.95rem;
   line-height: 1.6;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--fj-red) 10%, transparent), transparent);
+  background: color-mix(in srgb, var(--fj-red) 6%, transparent);
+}
+
+.fj-reason__kersivo strong {
+  color: #fff;
 }
 
 .fj-reason__inline-visual {
