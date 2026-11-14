@@ -104,7 +104,7 @@ export const BARBER_COST_CALCULATOR_FAQ_ITEMS: BarberCostCalculatorFaqItem[] = [
   },
   {
     question: 'What does Timely cost per month in the UK?',
-    answer: 'Timely uses Build, Elevate and Innovate subscriptions based on staff. Current UK GBP monthly prices need a shop-specific invoice or quote. Enter your true monthly invoice INCLUDING any VAT in Advanced costs. The calculator shows Custom pricing instead of making up a fee.',
+    answer: 'Timely sells Run, Boost and Thrive plans billed weekly, with starting prices and a bill that adjusts with the number of bookings you take. Because Timely does not publish how far it rises, enter your real invoice as a monthly figure (weekly bill × 52 ÷ 12) INCLUDING any VAT in Advanced costs. The calculator shows Custom pricing instead of making up a fee.',
   },
   {
     question: 'How much does TimelyPay charge for online deposits?',

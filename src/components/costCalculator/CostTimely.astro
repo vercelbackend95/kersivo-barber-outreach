@@ -8,6 +8,14 @@ const international = requireVerifiedTimelyFact('ukInternationalOnlinePaymentPro
 if (!('percent' in payment && 'fixedGbp' in payment && 'percent' in international && 'fixedGbp' in international)) throw new Error('TimelyPay facts missing');
 const exampleDepositFeePence = transactionFeePence(gbpToPence(KERSIVO_BOOKING_DEPOSIT_GBP), payment.percent, gbpToPence(payment.fixedGbp));
 const pricing = getTimelySource('pricing');
+const weekly = (key: 'runFromWeekly' | 'boostFromWeekly' | 'thriveFromWeekly') => {
+  const fact = requireVerifiedTimelyFact(key);
+  if (!('amountGbp' in fact)) throw new Error(`Timely ${key} missing`);
+  return fact.amountGbp;
+};
+const run = weekly('runFromWeekly');
+const boost = weekly('boostFromWeekly');
+const thrive = weekly('thriveFromWeekly');
 const fees = getTimelySource('ukPayments');
 ---
 <section id="timely-cost" class="cost-calc__section" aria-labelledby="cost-calc-timely-title">
@@ -16,17 +24,17 @@ const fees = getTimelySource('ukPayments');
       <p class="cost-calc__eyebrow">Timely pricing</p>
       <h2 id="cost-calc-timely-title" class="cost-calc__h2">How much does Timely cost for UK barbershops?</h2>
       <p class="cost-calc__lead">
-        Timely offers Build, Elevate and Innovate plans with a per-bookable-staff subscription model.
-        A verifiable universal UK GBP subscription price is not available from the pricing information checked.
-        Enter your <strong>actual monthly Timely subscription invoice total (including any VAT)</strong> under Advanced costs,
+        Timely sells Run, Boost and Thrive plans billed weekly, with unlimited team members. Its UK prices start from
+        £{run}, £{boost} and £{thrive} a week, but the bill adjusts with the number of bookings you take, and Timely does not publish by how much.
+        Enter your <strong>actual Timely invoice as a monthly figure (weekly bill × 52 ÷ 12, including any VAT)</strong> under Advanced costs,
         or the result will correctly show Custom pricing rather than invent a cost.
       </p>
       <p class="cost-calc__checked">Checked <time datetime={TIMELY_FACTS_CHECKED_ISO}>{TIMELY_FACTS_CHECKED_DATE}</time> · <a href={pricing.url} target="_blank" rel="noopener noreferrer">{pricing.label}</a></p>
     </header>
     <div class="cost-calc-platform__detail">
       <dl class="cost-calc-facts">
-        <div class="cost-calc-facts__row"><dt>UK subscription price</dt><dd>Your real monthly invoice quote (incl. any VAT)</dd></div>
-        <div class="cost-calc-facts__row"><dt>Team pricing</dt><dd>Timely bills by active bookable staff; no verified GBP amount is assumed</dd></div>
+        <div class="cost-calc-facts__row"><dt>UK subscription price</dt><dd>Your real invoice as a monthly figure (incl. any VAT)</dd></div>
+        <div class="cost-calc-facts__row"><dt>How Timely bills</dt><dd>Weekly, from £{run}/week on Run; adjusts with bookings, so no amount is assumed</dd></div>
         <div class="cost-calc-facts__row"><dt>TimelyPay UK domestic online cards</dt><dd>{payment.percent}% + {Math.round(payment.fixedGbp * 100)}p per transaction (published standard rate)</dd></div>
         <div class="cost-calc-facts__row"><dt>Payment example</dt><dd>£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit: {exampleDepositFeePence}p fee for a domestic UK card</dd></div>
       </dl>

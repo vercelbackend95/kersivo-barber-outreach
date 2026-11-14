@@ -1,0 +1,69 @@
+---
+import {
+  TIMELY_MODEL_EXTRAS,
+  TIMELY_MODEL_KERSIVO,
+  TIMELY_MODEL_LEAD,
+  TIMELY_MODEL_TITLE,
+  TIMELY_TIERS,
+  gbp,
+} from '@/lib/seo/timelyAlternativeContent';
+import { getTimelySource } from '@/lib/seo/timelyFacts';
+
+const pricing = getTimelySource('pricing');
+const maxWeekly = Math.max(...TIMELY_TIERS.map((tier) => tier.weeklyGbp));
+---
+
+<section id="timely-pricing" class="ta-section ta-model" aria-labelledby="timely-model-title">
+  <div class="ta-wrap">
+    <header class="ta-head" data-ta-reveal>
+      <p class="ta-eyebrow">The operating model</p>
+      <h2 id="timely-model-title" class="ta-h2">{TIMELY_MODEL_TITLE}</h2>
+      <p class="ta-lead">{TIMELY_MODEL_LEAD}</p>
+      <p class="ta-meta"><a href={pricing.url} target="_blank" rel="noopener noreferrer">{pricing.label}</a></p>
+    </header>
+
+    <div class="ta-model__stage">
+      <ol class="ta-ladder" aria-label="Timely UK plans, lowest starting prices">
+        {TIMELY_TIERS.map((tier, index) => (
+          <li class="ta-ladder__step" data-ta-reveal style={`--d: ${index * 140}ms; --h: ${tier.weeklyGbp / maxWeekly}`}>
+            <div class="ta-ladder__bar" aria-hidden="true">
+              <span class="ta-ladder__rise"></span>
+            </div>
+            <div class="ta-ladder__body">
+              <p class="ta-ladder__name">
+                {tier.name}
+                {tier.tag && <span class="ta-ladder__tag">{tier.tag}</span>}
+              </p>
+              <p class="ta-ladder__price">from {gbp(tier.weeklyGbp)}<small>/week</small></p>
+              <p class="ta-ladder__month">about {gbp(tier.monthlyGbp)} a month, before bookings push it up</p>
+              <ul class="ta-ladder__unlocks">
+                {tier.unlocks.map((unlock) => <li>{unlock}</li>)}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <aside class="ta-floor ks-glass-card ks-glass-card--accent" data-ta-reveal style="--d: 420ms" aria-labelledby="timely-floor-title">
+        <p class="ks-eyebrow">The alternative</p>
+        <h3 id="timely-floor-title" class="ta-floor__title">{TIMELY_MODEL_KERSIVO.title}</h3>
+        <p class="ta-floor__price">{TIMELY_MODEL_KERSIVO.price}<small>{TIMELY_MODEL_KERSIVO.unit}</small></p>
+        <div class="ta-floor__line" aria-hidden="true"><span></span></div>
+        <ul class="ta-checklist">
+          {TIMELY_MODEL_KERSIVO.points.map((point) => <li>{point}</li>)}
+        </ul>
+        <a class="ta-text-link" href="/pricing#plan">See Full KERSIVO pricing <span aria-hidden="true">→</span></a>
+      </aside>
+    </div>
+
+    <dl class="ta-extras">
+      {TIMELY_MODEL_EXTRAS.map((extra, index) => (
+        <div class="ta-extras__item" data-ta-reveal style={`--d: ${index * 80}ms`}>
+          <dt>{extra.label}</dt>
+          <dd class="ta-extras__value">{extra.value}</dd>
+          <dd class="ta-extras__note">{extra.note}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>

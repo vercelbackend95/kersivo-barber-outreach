@@ -1,24 +1,22 @@
 /**
- * Timely commercial source of truth for UK comparisons and a FUTURE cost calculator.
- * Verified public list prices are currently displayed in USD for the USA.
- * Never silently convert those rates to GBP or represent them as UK prices.
- * Checked against first-party Timely pricing/help pages on 8 October 2026.
+ * Timely commercial source of truth for UK comparisons and the barber software cost calculator.
+ *
+ * Checked against Timely's public pricing page (Great Britain selected) and Help Centre on
+ * 14 November 2026. Timely now sells three UK plans (Run, Boost, Thrive) billed WEEKLY, with
+ * unlimited team members and a price that "adjusts based on bookings". Only the published
+ * "starting from" prices are known; how the weekly bill rises with booking volume is not
+ * published, so never extrapolate a busier shop's Timely bill from these figures.
  */
-export const TIMELY_FACTS_CHECKED_ISO = '2026-10-08';
-export const TIMELY_FACTS_CHECKED_DATE = '8 October 2026';
+export const TIMELY_FACTS_CHECKED_ISO = '2026-11-14';
+export const TIMELY_FACTS_CHECKED_DATE = '14 November 2026';
 
 export const TIMELY_SOURCES = [
   {
     id: 'pricing',
-    label: 'Timely official plans and pricing',
+    label: 'Timely official plans and pricing (Great Britain)',
     url: 'https://www.gettimely.com/pricing/',
-    supports: 'Build, Elevate and Innovate USD per-staff public prices (USA view); trial, included features and no new-client fees',
-  },
-  {
-    id: 'plans',
-    label: 'Timely Help Centre: plans',
-    url: 'https://help.gettimely.com/hc/en-gb/articles/360060949974-Timely-plans-find-the-perfect-plan-for-your-business',
-    supports: 'Build, Elevate and Innovate features, staff-seat subscription model; NZD example is not a UK quotation',
+    supports:
+      'Run, Boost and Thrive weekly “starting from” prices, booking-based billing, unlimited team members, plan features, add-ons, transaction fees, SMS rates and 14 days’ cancellation notice',
   },
   {
     id: 'ukPayments',
@@ -35,8 +33,8 @@ export const TIMELY_SOURCES = [
   {
     id: 'exports',
     label: 'Timely Help Centre: data exports',
-    url: 'https://help.gettimely.com/hc/en-gb/articles/20753162121239-How-to-receive-download-and-export-your-data-from-Timely',
-    supports: 'Requesting an export via support and documented categories of exportable records',
+    url: 'https://help.gettimely.com/hc/en-gb/articles/20753162121239-How-to-request-and-access-your-Timely-data-export',
+    supports: 'Export requested through Timely support, up to 48 hours; clients, appointments, services, client notes, products and product purchases',
   },
 ] as const;
 
@@ -47,79 +45,92 @@ export const getTimelySource = (id: TimelySourceId) => {
   return source;
 };
 
+type FactMeta = { sourceId: TimelySourceId; checkedIso: string; note: string };
+
 export type TimelyFact =
-  | { status: 'verified'; amount: number; currency: 'USD'; market: 'US'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
-  | { status: 'verified'; value: number | boolean; market: 'public-plans'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
-  | { status: 'verified'; percent: number; fixedGbp: number; market: 'UK'; unit: string; sourceId: TimelySourceId; checkedIso: string; note: string }
-  | { status: 'unresolved'; market: 'UK'; sourceId: TimelySourceId; checkedIso: string; note: string };
+  | ({ status: 'verified'; amountGbp: number; unit: string } & FactMeta)
+  | ({ status: 'verified'; value: number | boolean; unit: string } & FactMeta)
+  | ({ status: 'verified'; percent: number; fixedGbp: number; unit: string } & FactMeta)
+  | ({ status: 'unresolved' } & FactMeta);
 
 const checkedIso = TIMELY_FACTS_CHECKED_ISO;
 
-/** A URL showing USD for USA does not establish a GBP subscription or a UK tax/processing rate. */
 export const TIMELY_COMMERCIAL_FACTS = {
-  buildUsMonthlyPerStaff: {
-    status: 'verified', amount: 26, currency: 'USD', market: 'US',
-    unit: 'USD per bookable staff member per month, billed monthly',
+  runFromWeekly: {
+    status: 'verified', amountGbp: 4, unit: 'GBP per week, “starting from” price for the Run plan',
     sourceId: 'pricing', checkedIso,
-    note: 'USA selected on the public pricing view; not a UK GBP price.',
+    note: 'Lowest advertised price. Timely says the price adjusts based on bookings.',
   },
-  elevateUsMonthlyPerStaff: {
-    status: 'verified', amount: 39, currency: 'USD', market: 'US',
-    unit: 'USD per bookable staff member per month, billed monthly',
+  boostFromWeekly: {
+    status: 'verified', amountGbp: 7, unit: 'GBP per week, “starting from” price for the Boost plan',
     sourceId: 'pricing', checkedIso,
-    note: 'USA selected on the public pricing view; not a UK GBP price.',
+    note: 'Lowest advertised price. Timely labels Boost “Most popular”.',
   },
-  innovateUsMonthlyPerStaff: {
-    status: 'verified', amount: 47, currency: 'USD', market: 'US',
-    unit: 'USD per bookable staff member per month, billed monthly',
+  thriveFromWeekly: {
+    status: 'verified', amountGbp: 9, unit: 'GBP per week, “starting from” price for the Thrive plan',
     sourceId: 'pricing', checkedIso,
-    note: 'USA selected on the public pricing view; not a UK GBP price.',
+    note: 'Lowest advertised price. Timely says the price adjusts based on bookings.',
+  },
+  advancedTeamAddOnWeekly: {
+    status: 'verified', amountGbp: 8, unit: 'GBP per week for the Advanced team management add-on',
+    sourceId: 'pricing', checkedIso,
+    note: 'Adds staff targets, tiered pricing by experience, team performance and activity log.',
+  },
+  bookingBasedBilling: {
+    status: 'verified', value: true, unit: 'weekly bill calculated from the number of bookings taken',
+    sourceId: 'pricing', checkedIso,
+    note: 'Timely: the weekly bill is calculated from the number of bookings taken each week.',
+  },
+  unlimitedTeamMembers: {
+    status: 'verified', value: true, unit: 'unlimited team members on every plan',
+    sourceId: 'pricing', checkedIso,
+    note: 'Team size no longer sets the Timely subscription price.',
   },
   trialDays: {
-    status: 'verified', value: 14, market: 'public-plans',
-    unit: 'days for the publicly advertised free trial',
+    status: 'verified', value: 14, unit: 'days for the publicly advertised free trial',
     sourceId: 'pricing', checkedIso,
-    note: 'Timely advertises a 14-day trial; confirm local eligibility.',
+    note: 'No credit card required, according to Timely.',
   },
   noNewClientFees: {
-    status: 'verified', value: true, market: 'public-plans',
-    unit: 'Timely pricing page advertises no new-client fees',
+    status: 'verified', value: true, unit: 'Timely pricing page advertises no new-client fees',
     sourceId: 'pricing', checkedIso,
-    note: 'This does not mean card processing or subscription is free.',
+    note: 'This does not mean card processing or the subscription is free.',
   },
-  billingByStaff: {
-    status: 'verified', value: true, market: 'public-plans',
-    unit: 'public plan prices are quoted per staff member',
+  cancellationNoticeDays: {
+    status: 'verified', value: 14, unit: 'days’ notice to cancel; no contracts',
     sourceId: 'pricing', checkedIso,
-    note: 'Timely states its plan price grows with team size and part-time staff count as full-time.',
-  },
-  ukMonthlyPerStaffGbp: {
-    status: 'unresolved', market: 'UK', sourceId: 'pricing', checkedIso,
-    note: 'A reliable official GBP price for each UK Timely plan was not independently verified. Obtain a current UK quote.',
-  },
-  ukVatTreatment: {
-    status: 'unresolved', market: 'UK', sourceId: 'pricing', checkedIso,
-    note: 'UK VAT inclusion, VAT charge and invoice basis require verification for the individual quote.',
+    note: 'Timely FAQ: no contracts, cancel with 14 days’ notice.',
   },
   ukOnlinePaymentProcessing: {
-    status: 'verified', percent: 1.85, fixedGbp: 0.30, market: 'UK',
-    unit: 'domestic UK online card transaction',
+    status: 'verified', percent: 1.85, fixedGbp: 0.3, unit: 'domestic UK online card transaction (deposits, cancellation fees)',
     sourceId: 'ukPayments', checkedIso,
-    note: 'Published standard TimelyPay domestic UK online rate effective 5 August 2026; custom/legacy rates may differ. Fee VAT treatment is not established.',
+    note: 'Published standard TimelyPay rate from 5 August 2026; custom rates may differ.',
   },
   ukInternationalOnlinePaymentProcessing: {
-    status: 'verified', percent: 3, fixedGbp: 0.30, market: 'UK',
-    unit: 'international or American Express online card transaction',
+    status: 'verified', percent: 3, fixedGbp: 0.3, unit: 'international card online transaction',
     sourceId: 'ukPayments', checkedIso,
-    note: 'Published TimelyPay UK online rate effective 5 August 2026; actual card mix must be confirmed.',
+    note: 'Published TimelyPay UK online rate for international cards.',
   },
   ukInPersonPaymentProcessing: {
-    status: 'unresolved', market: 'UK', sourceId: 'ukPayments', checkedIso,
-    note: 'Current UK TimelyPay in-person rates and terminal costs require confirmation.',
+    status: 'verified', percent: 1.59, fixedGbp: 0.05, unit: 'in-salon payment by Tap to Pay or a Timely terminal',
+    sourceId: 'pricing', checkedIso,
+    note: 'Plus the cost of a terminal (not needed for Tap to Pay). Custom rates possible above 15 bookings a week.',
   },
-  ukAddOnsAndOverages: {
-    status: 'unresolved', market: 'UK', sourceId: 'pricing', checkedIso,
-    note: 'Check current UK overage SMS rates, paid features and add-on applicability.',
+  smsOverageRunPence: {
+    status: 'verified', value: 8, unit: 'pence per extra SMS on Run',
+    sourceId: 'pricing', checkedIso, note: 'Boost 5p, Thrive 4p per extra SMS.',
+  },
+  bookingVolumeScale: {
+    status: 'unresolved', sourceId: 'pricing', checkedIso,
+    note: 'Timely does not publish how far the weekly bill rises with booking volume. Use a real invoice.',
+  },
+  ukVatTreatment: {
+    status: 'unresolved', sourceId: 'pricing', checkedIso,
+    note: 'Whether the weekly prices include VAT is not stated on the pricing page.',
+  },
+  ownDomainWebsite: {
+    status: 'unresolved', sourceId: 'pricing', checkedIso,
+    note: 'Timely lists a branded, customisable mini-website; whether your own domain is included is not stated.',
   },
 } as const satisfies Record<string, TimelyFact>;
 
@@ -128,18 +139,22 @@ export const TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP = TIMELY_COMMERCIAL_FACTS.ukOnl
 
 export type TimelyCommercialFactKey = keyof typeof TIMELY_COMMERCIAL_FACTS;
 
-/** Guards a future calculator against treating a missing UK fact as a confirmed amount. */
+/** Guards copy and calculators against treating an unpublished UK fact as a confirmed amount. */
 export function requireVerifiedTimelyFact(key: TimelyCommercialFactKey): Extract<TimelyFact, { status: 'verified' }> {
   const fact: TimelyFact = TIMELY_COMMERCIAL_FACTS[key];
-  if (fact.status !== 'verified') throw new Error(`Timely fact "${key}" is unresolved; a current UK quote is required.`);
+  if (fact.status !== 'verified') throw new Error(`Timely fact "${key}" is unresolved; a current UK invoice is required.`);
   return fact;
 }
 
+/** Converts a weekly price to its average monthly equivalent (52 weeks / 12 months). */
+export function weeklyToMonthlyGbp(weeklyGbp: number): number {
+  return Math.round(((weeklyGbp * 52) / 12) * 100) / 100;
+}
+
 /**
- * Conservative future-calculator adapter: returns null without a real shop-specific UK quote.
- * Monthly quote is the shop's real MONTHLY INVOICE AMOUNT INCLUDING ANY VAT CHARGED,
- * not a US price converted to GBP. Its VAT component cannot be inferred without an invoice.
- * TimelyPay standard UK card processing can be estimated separately from the published UK rate.
+ * Calculator adapter: returns null without a real shop-specific UK invoice.
+ * The amount is the shop's MONTHLY equivalent INCLUDING ANY VAT CHARGED (Timely bills weekly;
+ * multiply a typical weekly invoice by 52 and divide by 12). A "from" price is never a quote.
  */
 export function resolveTimelyMonthlyShopQuoteGbp(quotedGbp: number | null | undefined): number | null {
   if (quotedGbp == null || quotedGbp === 0) return null; // 0 means no confirmed quote, never a free UK plan
@@ -150,14 +165,4 @@ export function resolveTimelyMonthlyShopQuoteGbp(quotedGbp: number | null | unde
 export const TIMELY_TRADEMARK_DISCLAIMER =
   'Timely is a trademark of its respective owner. KERSIVO is not affiliated with, endorsed by or sponsored by Timely.';
 export const TIMELY_COMPARISON_FOOTNOTE =
-  'Timely feature and plan information checked 8 October 2026. Public pricing view showed USD for the USA. UK GBP subscription prices and tax treatment require a current UK invoice; published standard TimelyPay domestic online processing is 1.85% + 30p from 5 August 2026.';
-
-export const TIMELY_COMPARE_SECTIONS = [
- {id:'bookings',title:'Online bookings',subtitle:'Appointment scheduling and the customer journey',timelyLead:'Timely combines 24/7 self-service booking with appointment and team diaries.',timelyPoints:['Online appointment calendar and client self-booking','Tools designed for salon, beauty and wellness operations','Booking links and integrations for existing websites'],kersivoLead:'Starter bookings and an own-domain Full booking experience.',kersivoPoints:['Starter: free hosted booking page for up to four barbers','Full: branded website and booking flow on your domain','Service, barber, availability and appointment management']},
- {id:'payments',title:'Payments and deposits',subtitle:'What the customer pays and when',timelyLead:'TimelyPay supports deposits and cancellation-related payments in supported markets.',timelyPoints:['Online payments and deposit options, depending on setup','Processing charges and payment rules should be verified for your market','No assumed universal per-booking commission or processing rate'],kersivoLead:'Stripe-powered booking payments without KERSIVO platform commission.',kersivoPoints:['Starter: £5 deposit toward the service or full prepayment','0% KERSIVO commission; Stripe fees apply','Full adds editable options including Pay at shop']},
- {id:'brand',title:'Brand and website',subtitle:'Who owns the customer-facing experience',timelyLead:'Timely offers social booking links and a mini website alongside website booking integrations.',timelyPoints:['Online booking tools linked to your business','Website booking integrations and branded booking options','Confirm included website scope and domain terms with Timely'],kersivoLead:'Full KERSIVO includes the branded site and your own domain.',kersivoPoints:['Full includes a branded barbershop website and your own domain','Starter offers a hosted KERSIVO booking page','Direct booking journey without a consumer marketplace']},
- {id:'retail',title:'Retail and stock',subtitle:'Products, orders and inventory requirements',timelyLead:'Timely advertises stock-level management as part of its salon workflow.',timelyPoints:['Salon retail and stock-related tools are part of the wider Timely offering','Check plan-specific inventory features and any costs','Useful for shops requiring broader inventory workflows'],kersivoLead:'Full KERSIVO focuses on online pickup sales, not full inventory management.',kersivoPoints:['Full includes an online retail pickup shop','Clients buy products online and collect in-store','No full inventory management or shipping feature is claimed']},
- {id:'clients',title:'Client tools and marketing',subtitle:'Records, return visits and communication',timelyLead:'Timely combines client records with plan-dependent campaigns and consultations.',timelyPoints:['Client records and salon-focused retention tools','Marketing and messaging availability varies by plan','Check specific loyalty and promotional requirements'],kersivoLead:'Starter client essentials or Full advanced CRM and SMS.',kersivoPoints:['Starter Clients Core and email reminders','Full Advanced Clients / CRM and SMS reminders','Full booking and retail data within the dashboard']},
- {id:'reports',title:'Reporting and teams',subtitle:'Operational visibility and staff',timelyLead:'Timely reporting and team tools include sales targets on qualifying higher plans.',timelyPoints:['Reporting, schedules and team-management capabilities','Subscription costs and eligibility may depend on selected setup','Check payroll, commissions and reporting needs carefully'],kersivoLead:'Full KERSIVO reports and per-location subscription pricing.',kersivoPoints:['Starter supports four active bookable barbers at one location','Full reports and larger teams under per-location pricing','£39/month Full per physical location, fair use applies']},
- ] as const;
-export type TimelyCompareSectionId = (typeof TIMELY_COMPARE_SECTIONS)[number]['id'];
+  'Timely plan and fee information checked 14 November 2026 on the Great Britain pricing page. Timely bills weekly; the published prices are “starting from” figures that adjust with booking volume. Your real weekly invoice is the only reliable Timely cost.';

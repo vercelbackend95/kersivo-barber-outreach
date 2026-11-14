@@ -1,0 +1,42 @@
+---
+import {
+  TIMELY_SWITCH_LEAD,
+  TIMELY_SWITCH_LIMITS,
+  TIMELY_SWITCH_STEPS,
+  TIMELY_SWITCH_TITLE,
+} from '@/lib/seo/timelyAlternativeContent';
+import { getTimelySource } from '@/lib/seo/timelyFacts';
+
+const exports = getTimelySource('exports');
+---
+
+<section id="switching" class="ta-section ta-switch" aria-labelledby="timely-switch-title">
+  <div class="ta-wrap">
+    <header class="ta-head" data-ta-reveal>
+      <p class="ta-eyebrow">The switch</p>
+      <h2 id="timely-switch-title" class="ta-h2">{TIMELY_SWITCH_TITLE}</h2>
+      <p class="ta-lead">{TIMELY_SWITCH_LEAD}</p>
+    </header>
+
+    <ol class="ta-steps">
+      {TIMELY_SWITCH_STEPS.map((step, index) => (
+        <li class="ta-steps__item" data-ta-reveal style={`--d: ${index * 110}ms`}>
+          <span class="ta-steps__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="ta-steps__title">{step.title}</h3>
+          <p class="ta-body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="ta-switch__foot" data-ta-reveal>
+      <div class="ta-switch__limits">
+        <p class="ta-switch__limits-title">Worth knowing before you switch</p>
+        <ul class="ta-bullets">
+          {TIMELY_SWITCH_LIMITS.map((limit) => <li>{limit}</li>)}
+        </ul>
+        <p class="ta-meta">Source: <a href={exports.url} target="_blank" rel="noopener noreferrer">{exports.label}</a></p>
+      </div>
+      <a class="ta-button ta-button--ghost" href="#contact">Ask about moving from Timely</a>
+    </div>
+  </div>
+</section>
