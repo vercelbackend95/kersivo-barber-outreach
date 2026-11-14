@@ -1,0 +1,16 @@
+---
+import type { InsightsOwnerNote } from '@/lib/insights/insightsLinking';
+
+interface Props {
+  note: InsightsOwnerNote;
+}
+
+const { note } = Astro.props;
+---
+
+<section class="insights-owner-note" aria-labelledby="insights-owner-note-heading">
+  <p class="insights-owner-note__kicker">If you own the shop…</p>
+  <h2 id="insights-owner-note-heading" class="insights-owner-note__heading">{note.heading}</h2>
+  <p class="insights-owner-note__body">{note.body}</p>
+  <p class="insights-owner-note__link"><a href={note.href}>{note.label} <span aria-hidden="true">→</span></a></p>
+</section>

@@ -14,4 +14,9 @@ const { next } = Astro.props;
     <a href={next.href}>{next.label}</a>
   </h2>
   <p class="insights-commercial-next__note">{next.note}</p>
+  {next.secondary && (
+    <p class="insights-commercial-next__secondary">
+      <a href={next.secondary.href}>{next.secondary.label} <span aria-hidden="true">→</span></a>
+    </p>
+  )}
 </aside>

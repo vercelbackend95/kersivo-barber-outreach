@@ -4,7 +4,9 @@ import { join } from 'node:path';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
 import {
   COMMERCIAL_LINK_LIMIT,
+  getInsightsAudience,
   getInsightsCommercialNext,
+  getInsightsOwnerNote,
   getInsightsRelatedLinks,
   isInsightsCommercialHref,
 } from './insightsLinking';
@@ -75,6 +77,8 @@ describe('Insights commercial link budget (Batch 5)', () => {
     ...bodyCommercialLinks(slug),
     ...getInsightsRelatedLinks(slug).filter((link) => link.kind !== 'article').map((link) => link.href),
     ...(getInsightsCommercialNext(slug) ? [getInsightsCommercialNext(slug)!.href] : []),
+    ...(getInsightsCommercialNext(slug)?.secondary ? [getInsightsCommercialNext(slug)!.secondary!.href] : []),
+    ...(getInsightsOwnerNote(slug) ? [getInsightsOwnerNote(slug)!.href].filter(isInsightsCommercialHref) : []),
   ];
 
   it('classifies every published article', () => {
@@ -109,6 +113,59 @@ describe('Insights commercial link budget (Batch 5)', () => {
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       const note = getInsightsCommercialNext(article.slug)?.note ?? '';
       if (/0% KERSIVO commission/.test(note)) expect(note, article.slug).toMatch(/Stripe[^.]*fees/);
+    }
+  });
+});
+
+describe('Owner-intent bridges', () => {
+  const OWNER_NOTE_SLUGS = [
+    'apprentice-barber-funding-costs-2026',
+    'barber-dermatitis-skin-care-hse',
+    'barbershop-business-rates-2026-england',
+    'barber-commission-pay-minimum-wage-uk',
+  ];
+  const sourceText = (slug: string) =>
+    readFileSync(join(process.cwd(), 'editorial-staging/insights', `${slug}.md`), 'utf8');
+
+  it('gives each off-buyer article that draws employed barbers an "If you own the shop" note', () => {
+    for (const slug of OWNER_NOTE_SLUGS) {
+      const note = getInsightsOwnerNote(slug);
+      expect(note, slug).toBeDefined();
+      expect(note!.href.startsWith('/insights/'), slug).toBe(true);
+      expect(INSIGHTS_PUBLISHED_ARTICLES.some((a) => a.path === note!.href), slug).toBe(true);
+      expect(isInsightsCommercialHref(note!.href), slug).toBe(false);
+    }
+  });
+
+  it('only quotes figures that the linked owner article already publishes', () => {
+    for (const slug of OWNER_NOTE_SLUGS) {
+      const note = getInsightsOwnerNote(slug)!;
+      const target = note.href.replace('/insights/', '');
+      const corpus = sourceText(target) + sourceText(slug);
+      for (const figure of note.body.match(/£[\d,]+|\d+%/g) ?? []) {
+        expect(corpus.includes(figure), `${slug}: ${figure}`).toBe(true);
+      }
+    }
+  });
+
+  it('points the owner-earnings article at booking costs by team size', () => {
+    const next = getInsightsCommercialNext('how-much-do-barbershop-owners-make-uk');
+    expect(next?.href).toBe('/compare#cost-by-team-size');
+    expect(next?.note).toMatch(/£39\/month per location/);
+    expect(next?.note).toMatch(/0% KERSIVO commission[^]*Stripe[^.]*fees/);
+    expect(getInsightsRelatedLinks('how-much-do-barbershop-owners-make-uk').filter((l) => l.kind !== 'article')).toEqual([]);
+  });
+
+  it('adds the free preview as a second step on the walk-ins end box', () => {
+    expect(isInsightsCommercialHref('/free-preview')).toBe(true);
+    expect(getInsightsCommercialNext('barbershop-walk-ins-vs-appointments')?.secondary?.href).toBe('/free-preview');
+  });
+
+  it('labels the audience only where the headline does not already name shop owners', () => {
+    expect(getInsightsAudience('barber-commission-pay-minimum-wage-uk')).toBe('For shop owners who employ barbers');
+    expect(getInsightsAudience('barber-dermatitis-skin-care-hse')).toBe('For barbershop owners and managers');
+    for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
+      if (/owner/i.test(article.headline)) expect(getInsightsAudience(article.slug), article.slug).toBeUndefined();
     }
   });
 });
