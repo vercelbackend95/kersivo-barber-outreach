@@ -838,6 +838,7 @@
 }
 
 .nc-site__hero-img {
+  order: -1;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1841,8 +1842,9 @@
   list-style: none;
 }
 
-.nc .nc-fit__others a {
+.nc .nc-fit__others a.nc-pill {
   background: none;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -1857,7 +1859,7 @@
   transition: border-color 220ms ease, color 220ms ease, transform 180ms var(--nc-ease);
 }
 
-.nc .nc-fit__others a:hover {
+.nc .nc-fit__others a.nc-pill:hover {
   border-color: var(--nc-line-strong);
   color: #fff;
   transform: translateY(-2px);
@@ -1975,7 +1977,7 @@
   }
 
   .nc-anatomy__frame {
-    height: min(26rem, 46svh);
+    height: min(22rem, 38svh);
   }
 }
 
