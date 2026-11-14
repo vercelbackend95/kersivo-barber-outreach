@@ -161,7 +161,7 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
 
     <p class="hv2-price__starter">
       Only need online bookings for up to 4 barbers? {offer.plans.starter} is {offer.price.starter}, with clients paying a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or in full online through your Stripe account.
-      <a href="/pricing#plan">Compare plans</a>
+      <a href="/pricing#plan" data-track="view_pricing_click" data-track-placement="rate_card">See full pricing and both plans</a>
     </p>
   </div>
 </section>

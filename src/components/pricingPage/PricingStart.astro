@@ -1,0 +1,31 @@
+---
+import { getPricingSteps } from '@/lib/seo/pricingPageContent';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const steps = getPricingSteps(Astro.props.freePreview);
+---
+
+<section id="start" class="pr-section pr-start" aria-labelledby="pricing-start-title">
+  <div class="pr-wrap">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">Getting started</p>
+      <h2 id="pricing-start-title" class="pr-h2">From sign-up to your first online booking</h2>
+      <p class="pr-lead">We set it up with you. Your current website can stay live while we build, where technically possible.</p>
+    </header>
+    <div class="pr-steps__wrap" data-pr-steps>
+    <span class="pr-steps__rail" aria-hidden="true"><i data-pr-rail></i></span>
+    <ol class="pr-steps">
+      {steps.map((step, index) => (
+        <li class="pr-step pr-reveal" style={`--d: ${index}`}>
+          <span class="pr-step__n" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="pr-h3">{step.title}</h3>
+          <p class="pr-body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+    </div>
+  </div>
+</section>

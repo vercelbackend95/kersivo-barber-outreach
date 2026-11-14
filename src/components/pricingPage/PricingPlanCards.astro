@@ -1,0 +1,159 @@
+---
+/**
+ * The two plans. Full KERSIVO is the wide, accented, primary card; Starter is the quieter
+ * secondary card with an outline CTA. All facts come from PRICING_PLAN_CARDS.
+ */
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { PRICING_BILLING_COLUMNS, PRICING_FACTS_STRIPE_NOTE, PRICING_PLAN_CARDS, PRICING_PLAN_LEAD } from '@/lib/pricing/pricingPlans';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const { freePreview } = Astro.props;
+const full = PRICING_PLAN_CARDS.full;
+const starter = PRICING_PLAN_CARDS.starter;
+const DEFAULT_BARBERS = 4;
+const perBarber = (SAAS_MONTHLY_GBP / DEFAULT_BARBERS).toFixed(2);
+---
+
+<section id="plan" class="pr-section pr-plans scroll-mt-24" aria-labelledby="pricing-plan-title">
+  <div class="pr-wrap">
+    <header class="pr-head pr-head--center pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">Two plans</p>
+      <h2 id="pricing-plan-title" class="pr-h2">Which plan fits your shop?</h2>
+      <p class="pr-lead">{PRICING_PLAN_LEAD}</p>
+    </header>
+
+    <div class="pr-plans__grid">
+      <article class="pr-card pr-plan pr-plan--full pr-reveal" aria-labelledby="pricing-full-title" data-pr-spot>
+        <span class="pr-plan__spot" aria-hidden="true"></span>
+        <div class="pr-plan__top">
+          <div class="pr-plan__id">
+            <p class="pr-eyebrow pr-eyebrow--dot" id="pricing-full-title">{full.name}</p>
+            <p class="pr-plan__badge">{full.badge}</p>
+          </div>
+
+          <p class="pr-plan__price">
+            <span class="pr-plan__amount">£{SAAS_MONTHLY_GBP}</span>
+            <span class="pr-plan__per">/month per location</span>
+          </p>
+          <p class="pr-plan__desc">{full.description}</p>
+
+          <dl class="pr-facts">
+            {[full.keyFacts.values[1], ...full.keyFacts.details].map((fact) => (
+              <div class="pr-facts__item">
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+            <div class="pr-facts__item pr-facts__item--wide">
+              <dt>{full.keyFacts.wide.label}</dt>
+              <dd>{full.keyFacts.wide.value}</dd>
+            </div>
+          </dl>
+          <p class="pr-small">{PRICING_FACTS_STRIPE_NOTE}</p>
+
+          <div class="pr-split" data-pr-split data-price={SAAS_MONTHLY_GBP}>
+            <p class="pr-split__label" id="pricing-split-label">Split across your team</p>
+            <div class="pr-split__row">
+              <div class="pr-split__stepper" role="group" aria-labelledby="pricing-split-label">
+                <button type="button" class="pr-split__btn" data-pr-split-step="-1" aria-label="One barber fewer">−</button>
+                <output class="pr-split__count" aria-live="polite"><span data-pr-split-count>{DEFAULT_BARBERS}</span> barbers</output>
+                <button type="button" class="pr-split__btn" data-pr-split-step="1" aria-label="One barber more">+</button>
+              </div>
+              <p class="pr-split__out">
+                <strong data-pr-split-out>£{perBarber}</strong>
+                <span>per barber a month</span>
+              </p>
+            </div>
+            <p class="pr-small">The bill stays £{SAAS_MONTHLY_GBP} for the location, subject to reasonable fair use.</p>
+          </div>
+
+          <div class="pr-plan__cta">
+            {freePreview ? (
+              <>
+                <FullPlanCta part="primary" placement={full.primaryCta.placement} primaryClass="pr-btn pr-btn--primary pr-btn--block" />
+                <FullPlanCta part="subscribe" placement={full.primaryCta.placement} />
+              </>
+            ) : (
+              <a href={full.primaryCta.href} class="btn btn--primary btn--lg pr-btn pr-btn--primary pr-btn--block" data-track={full.primaryCta.track} data-track-placement={full.primaryCta.placement}>
+                {full.primaryCta.label}
+              </a>
+            )}
+            {full.checkoutNote ? <p class="pr-small pr-plan__checkout">{full.checkoutNote}</p> : null}
+          </div>
+        </div>
+
+        <div class="pr-plan__body">
+          <h3 class="pr-plan__h3">What’s included</h3>
+          <ul class="pr-ticks pr-ticks--rich">
+            {full.features.map((item) => (
+              <li>
+                <strong>{item.title}</strong>
+                <span>{item.description}</span>
+              </li>
+            ))}
+          </ul>
+          {full.chips?.length ? (
+            <ul class="pr-chips" aria-label="Also included">
+              {full.chips.map((chip) => <li>{chip}</li>)}
+            </ul>
+          ) : null}
+          <h3 class="pr-plan__h3">{full.bestForTitle}</h3>
+          <ul class="pr-dots">
+            {full.bestFor.map((item) => <li>{item.replace(/^./, (c) => c.toUpperCase())}</li>)}
+          </ul>
+        </div>
+      </article>
+
+      <article class="pr-card pr-plan pr-plan--starter pr-reveal" aria-labelledby="pricing-starter-title">
+        <div class="pr-plan__id">
+          <p class="pr-eyebrow" id="pricing-starter-title">{starter.name}</p>
+        </div>
+        <p class="pr-plan__price pr-plan__price--quiet">
+          <span class="pr-plan__amount">£0</span>
+          <span class="pr-plan__per">/month</span>
+        </p>
+        <p class="pr-plan__desc">{starter.description}</p>
+        <dl class="pr-facts">
+          {[starter.keyFacts.values[1], ...starter.keyFacts.details].map((fact) => (
+            <div class="pr-facts__item">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+          <div class="pr-facts__item pr-facts__item--wide">
+            <dt>{starter.keyFacts.wide.label}</dt>
+            <dd>{starter.keyFacts.wide.value}</dd>
+          </div>
+        </dl>
+        <p class="pr-small">{PRICING_FACTS_STRIPE_NOTE}</p>
+        <div class="pr-plan__cta">
+          <a href={starter.primaryCta.href} class="btn btn--outline pr-btn pr-btn--outline pr-btn--block" data-track={starter.primaryCta.track} data-track-placement={starter.primaryCta.placement}>
+            {starter.primaryCta.label}
+          </a>
+          <a href={starter.secondaryCta.href} class="pr-text-link">{starter.secondaryCta.label}</a>
+        </div>
+        <h3 class="pr-plan__h3">What’s included</h3>
+        <ul class="pr-ticks pr-ticks--quiet">
+          {starter.features.map((item) => <li>{item.description}</li>)}
+        </ul>
+        <h3 class="pr-plan__h3">{starter.bestForTitle}</h3>
+        <ul class="pr-dots">
+          {starter.bestFor.map((item) => <li>{item.replace(/^./, (c) => c.toUpperCase())}</li>)}
+        </ul>
+      </article>
+    </div>
+
+    <ul class="pr-billing">
+      {PRICING_BILLING_COLUMNS.map((column) => (
+        <li class="pr-billing__item pr-reveal">
+          <h3 class="pr-billing__title">{column.title}</h3>
+          <p class="pr-body">{column.body}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

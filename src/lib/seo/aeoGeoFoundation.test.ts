@@ -151,9 +151,12 @@ describe('/about page', () => {
 
 describe('/pricing page', () => {
   const page = read('src/pages/pricing.astro');
-  const plans = read('src/components/pricing/PricingPlans.astro');
-  const planCard = read('src/components/pricing/PlanCard.astro');
-  const faqSource = read('src/components/pricing/PricingFaq.astro');
+  const hero = read('src/components/pricingPage/PricingHero.astro');
+  const plans = read('src/components/pricingPage/PricingPlanCards.astro');
+  const planCard = plans;
+  const faqSource = read('src/components/pricingPage/PricingFaqList.astro');
+  const links = read('src/components/pricingPage/PricingCompareLinks.astro');
+  const linkData = read('src/lib/seo/pricingPageContent.ts');
   const text = pricingRenderedText();
 
   it('has the approved title, H1, description and quick answer', () => {
@@ -166,7 +169,9 @@ describe('/pricing page', () => {
     expect(PRICING_QUICK_ANSWER).toContain('0% commission on both plans');
     expect(PRICING_QUICK_ANSWER).toContain('Stripe processing fees apply');
     expect(page).toContain('canonicalPath={PRICING_PAGE_PATH}');
-    expect(page.match(/<h1\b/g)).toHaveLength(1);
+    expect(page.match(/<h1\b/g)).toBeNull();
+    expect(hero.match(/<h1\b/g)).toHaveLength(1);
+    expect(hero).toContain('{PRICING_PAGE_H1}');
   });
 
   it('renders every approved commercial fact for both plans', () => {
@@ -211,8 +216,8 @@ describe('/pricing page', () => {
       label: 'Start KERSIVO Starter',
     });
     expect(PRICING_PLAN_CARDS.starter.secondaryCta.href).toBe('/starter');
-    expect(planCard).toContain('href={plan.primaryCta.href}');
-    expect(planCard).toContain('data-track={plan.primaryCta.track}');
+    expect(planCard).toContain('href={starter.primaryCta.href}');
+    expect(planCard).toContain('data-track={starter.primaryCta.track}');
     expect(text).not.toMatch(/\b1%|application fee|platform fee|Free Booking/i);
   });
 
@@ -223,12 +228,14 @@ describe('/pricing page', () => {
   });
 
   it('links to the demo, the checkout and the comparison pages without fake urgency', () => {
-    expect(page).toContain('see the demo');
-    expect(page).toContain('href="/demo"');
-    expect(page).toContain('<PricingPlans freePreview={freePreview} />');
-    expect(page).toContain('href="/admin/launch"');
-    expect(read('src/components/pricing/PricingFees.astro')).toContain('href="/booksy-alternative"');
-    expect(read('src/components/pricing/PricingFees.astro')).toContain('href="/fresha-alternative"');
+    expect(hero).toContain('see the demo');
+    expect(hero).toContain('href="/demo"');
+    expect(page).toContain('<PricingPlanCards freePreview={freePreview} />');
+    expect(hero).toContain('href="/admin/launch"');
+    expect(links).toContain('PRICING_COMPARE_LINKS');
+    for (const href of ['/compare', '/barber-software-cost-calculator', '/booksy-alternative', '/fresha-alternative', '/treatwell-alternative']) {
+      expect(linkData).toContain(`href: '${href}'`);
+    }
     expect(page).not.toMatch(/limited time|only \d+ (spots|places)|hurry|join \d+/i);
   });
 

@@ -1,0 +1,66 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { offer } from '@/content/offer';
+import { PRICING_FIT_QUESTIONS, PRICING_FIT_RESULT } from '@/lib/seo/pricingPageContent';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const { freePreview } = Astro.props;
+---
+
+<section id="fit" class="pr-section pr-fit" aria-labelledby="pricing-fit-title">
+  <div class="pr-wrap pr-fit__grid">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">Who it’s for</p>
+      <h2 id="pricing-fit-title" class="pr-h2">Built for the independent barbershop</h2>
+      <p class="pr-lead">
+        One shop, a team of barbers, regulars who want to book without ringing. KERSIVO is made for UK shop owners who want
+        clients booking under their own name. Tick what matters to you.
+      </p>
+    </header>
+
+    <div class="pr-fit__tool pr-reveal" data-pr-fit data-state="empty">
+      <fieldset class="pr-fit__questions">
+        <legend class="pr-fit__legend">I want my shop to have…</legend>
+        {PRICING_FIT_QUESTIONS.map((question) => (
+          <button type="button" class="pr-fit__q" aria-pressed="false" data-pr-fit-q={question.id}>
+            <span class="pr-fit__box" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3.5 8.4l3 2.9 6-6.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </span>
+            <span>{question.label.replace(/^you (want|have) /, '').replace(/^./, (c) => c.toUpperCase())}</span>
+          </button>
+        ))}
+      </fieldset>
+
+      <div class="pr-fit__result pr-card" aria-live="polite">
+        {(['empty', 'full', 'starter'] as const).map((state) => (
+          <div class="pr-fit__answer" data-pr-fit-answer={state} hidden={state !== 'empty'}>
+            <p class="pr-fit__plan">{PRICING_FIT_RESULT[state].plan}</p>
+            <p class="pr-fit__title">{PRICING_FIT_RESULT[state].title}</p>
+            <p class="pr-body">{PRICING_FIT_RESULT[state].body}</p>
+            {state === 'full' ? (
+              <div class="pr-fit__cta">
+                {freePreview ? (
+                  <FullPlanCta part="primary" placement="pricing_fit" primaryClass="pr-btn pr-btn--primary pr-btn--sm" />
+                ) : (
+                  <a href="/admin/launch" class="btn btn--primary pr-btn pr-btn--primary pr-btn--sm" data-track="saas_subscribe_click" data-track-placement="pricing_fit">
+                    {offer.cta.subscribeDirect}
+                  </a>
+                )}
+              </div>
+            ) : null}
+            {state === 'starter' ? (
+              <div class="pr-fit__cta">
+                <a href="/starter" class="pr-text-link" data-track="starter_plan_explore_click" data-track-placement="pricing_fit">
+                  What’s in KERSIVO Starter <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

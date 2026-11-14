@@ -555,6 +555,22 @@
   border-top: 1px solid var(--cc-hairline);
 }
 
+.calc-verdict__pricing {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+.calc-verdict__pricing:hover {
+  text-decoration-color: var(--color-brand);
+}
+
 .calc-verdict__actions .calc-share {
   align-items: flex-end;
 }

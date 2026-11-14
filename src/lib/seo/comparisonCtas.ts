@@ -9,6 +9,9 @@ export const COMPARISON_HERO_SECONDARY_LABEL = 'See it working';
 export const COMPARISON_HERO_SECONDARY_HREF = '/demo';
 
 export const COMPARISON_FINAL_CTA_HEADING = 'Move bookings onto your own website';
+export const COMPARISON_FINAL_CTA_PRICING_LABEL = 'See exactly what Full KERSIVO includes →';
+export const COMPARISON_FINAL_CTA_PRICING_HREF = '/pricing#plan';
+
 export const COMPARISON_FINAL_CTA_STARTER_LABEL =
   'Only need bookings for up to 4 barbers? Start on Starter (£0/month) →';
 
