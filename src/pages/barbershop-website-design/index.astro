@@ -1,24 +1,32 @@
 ---
+/**
+ * /barbershop-website-design — design-intent guide: layout, visual hierarchy, mobile UX, branding and
+ * photography, closing on Full KERSIVO. "Do I need a website / what should it include" intent belongs
+ * to /barbershop-websites; do not repeat that page here.
+ */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
-import WebsiteDesignHero from '@/components/barbershop-website-design/WebsiteDesignHero.astro';
-import WebsiteDesignBreakdown from '@/components/barbershop-website-design/WebsiteDesignBreakdown.astro';
-import WebsiteDesignBrand from '@/components/barbershop-website-design/WebsiteDesignBrand.astro';
-import WebsiteDesignMobile from '@/components/barbershop-website-design/WebsiteDesignMobile.astro';
-import WebsiteDesignPhotography from '@/components/barbershop-website-design/WebsiteDesignPhotography.astro';
-import WebsiteDesignProcess from '@/components/barbershop-website-design/WebsiteDesignProcess.astro';
-import WebsiteDesignFaqClose from '@/components/barbershop-website-design/WebsiteDesignFaqClose.astro';
+import WdHero from '@/components/websiteDesign/WdHero.astro';
+import WdGlance from '@/components/websiteDesign/WdGlance.astro';
+import WdMobile from '@/components/websiteDesign/WdMobile.astro';
+import WdBrand from '@/components/websiteDesign/WdBrand.astro';
+import WdPhoto from '@/components/websiteDesign/WdPhoto.astro';
+import WdAudit from '@/components/websiteDesign/WdAudit.astro';
+import WdOffer from '@/components/websiteDesign/WdOffer.astro';
+import WdFaqClose from '@/components/websiteDesign/WdFaqClose.astro';
 import {
   BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
+  buildBarbershopWebsiteDesignFaqJsonLd,
   buildBarbershopWebsiteDesignJsonLd,
 } from '@/lib/seo/barbershopWebsiteDesignPage';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/website-design.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -29,16 +37,18 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={buildBarbershopWebsiteDesignJsonLd()}
+  jsonLd={[buildBarbershopWebsiteDesignJsonLd(), buildBarbershopWebsiteDesignFaqJsonLd()]}
 >
-  <main class="bwd-page">
-    <WebsiteDesignHero />
-    <WebsiteDesignBreakdown />
-    <WebsiteDesignBrand />
-    <WebsiteDesignMobile />
-    <WebsiteDesignPhotography />
-    <WebsiteDesignProcess />
-    <WebsiteDesignFaqClose />
+  <link slot="head" rel="preload" as="image" href="/images/website-design/hero.webp" fetchpriority="high" />
+  <main class="wd">
+    <WdHero />
+    <WdGlance />
+    <WdMobile />
+    <WdBrand />
+    <WdPhoto />
+    <WdAudit />
+    <WdOffer />
+    <WdFaqClose />
   </main>
 
   <Footer50
@@ -50,3 +60,19 @@ const currentYear = new Date().getFullYear();
     social={getFooterSocialLinks()}
   />
 </LandingLayout>
+
+<script>
+  import { initWebsiteDesign } from '@/lib/websiteDesign/initWebsiteDesign';
+
+  let cleanup: (() => void) | null = null;
+  const start = () => {
+    cleanup?.();
+    cleanup = document.querySelector('main.wd') ? initWebsiteDesign(document) : null;
+  };
+  start();
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>

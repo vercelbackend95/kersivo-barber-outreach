@@ -1,0 +1,64 @@
+---
+import WdPrimaryCta from './WdPrimaryCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_BILLING_CLAIM, PRICE_VAT_DISCLAIMER } from '@/lib/pricing/claimsPolicy';
+import { offer } from '@/content/offer';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { WD_OFFER } from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const BILLING_NOTE = isFreePreviewFlowEnabled() ? FREE_PREVIEW_BILLING_CLAIM : offer.billing.cycle;
+const includes = [
+  offer.fees.setup,
+  'Website designed around your brand',
+  'Online booking and owner dashboard',
+  'Your own domain, hosting and SSL',
+];
+const icons = ['M12 3l2.6 5.6 6 .7-4.5 4.1 1.3 6L12 16.4 6.6 19.4l1.3-6L3.4 9.3l6-.7z', 'M5 5h14v14H5zM5 10h14M10 5v5', 'M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM11 18h2', 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z'];
+---
+
+<section class="wd-section wd-offer" id="kersivo" aria-labelledby="wd-offer-heading">
+  <div class="wd-wrap">
+    <header class="wd-head">
+      <p class="wd-eyebrow">{WD_OFFER.kicker}</p>
+      <h2 id="wd-offer-heading" class="wd-h2">{WD_OFFER.heading}</h2>
+      <p class="wd-lede">{WD_OFFER.lede}</p>
+    </header>
+
+    <div class="wd-offer__grid">
+      <ul class="wd-outcomes">
+        {WD_OFFER.outcomes.map((outcome, index) => (
+          <li class="wd-outcome">
+            <span class="wd-outcome__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path d={icons[index]} fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </span>
+            <h3 class="wd-outcome__title">{outcome.title}</h3>
+            <p class="wd-outcome__body">{outcome.body}</p>
+          </li>
+        ))}
+      </ul>
+
+      <div class="wd-price">
+        <p class="wd-price__eyebrow"><span aria-hidden="true"></span>{offer.plans.full}</p>
+        <p class="wd-price__amount">
+          <span class="wd-price__figure">£{offer.price.amount}</span>
+          <span class="wd-price__unit">/month<br />{offer.price.fullQualifier}</span>
+        </p>
+        <ul class="wd-price__list">
+          {includes.map((item) => <li>{item}</li>)}
+          <li>{offer.fees.commission} <small>— Stripe fees apply</small></li>
+        </ul>
+        <WdPrimaryCta placement="barbershop_website_design_final_cta" class="wd-btn--block" />
+        <a class="wd-price__link" href={BARBERSHOP_WEBSITES_PAGE_PATH} data-track="primary_cta_clicked" data-track-placement="barbershop_website_design_offer_websites">
+          See everything a KERSIVO website includes <span aria-hidden="true">→</span>
+        </a>
+        <p class="wd-price__note">
+          {BILLING_NOTE} {PRICE_VAT_DISCLAIMER} <a href="/terms#subscription">Subscription terms</a>
+        </p>
+        <p class="wd-price__starter">
+          Only need online booking for up to 4 barbers?
+          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement="barbershop_website_design_offer">{offer.plans.starter} is {offer.price.starter} →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

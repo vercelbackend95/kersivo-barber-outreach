@@ -1,0 +1,42 @@
+---
+import WdPrimaryCta from './WdPrimaryCta.astro';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { WD_FAQS } from '@/lib/seo/barbershopWebsiteDesignContent';
+---
+
+<section class="wd-section wd-faq" id="faq" aria-labelledby="wd-faq-heading">
+  <div class="wd-wrap wd-faq__grid">
+    <header class="wd-head">
+      <p class="wd-eyebrow">Questions</p>
+      <h2 id="wd-faq-heading" class="wd-h2">Website design questions, answered</h2>
+      <p class="wd-lede">Straight answers on cost, templates, photos, branding and changes.</p>
+    </header>
+
+    <div class="wd-faq__list">
+      {WD_FAQS.map((faq) => (
+        <details class="wd-faq__item" id={`faq-${faq.id}`}>
+          <summary class="wd-faq__summary">
+            <h3 class="wd-faq__question">{faq.question}</h3>
+            <span class="wd-faq__icon" aria-hidden="true"></span>
+          </summary>
+          <p class="wd-faq__answer">{faq.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="wd-close" aria-labelledby="wd-close-heading">
+  <div class="wd-wrap wd-close__inner">
+    <h2 id="wd-close-heading" class="wd-close__title">
+      <span>Your shop has a look.</span>
+      <span class="wd-close__accent">Your website should too.</span>
+    </h2>
+    <div class="wd-actions wd-actions--center">
+      <WdPrimaryCta placement="barbershop_website_design_close" />
+      <a href={DEMO_HOME_HREF} class="wd-btn wd-btn--ghost" data-track="view_live_demo_click" data-track-placement="barbershop_website_design_final_demo">
+        See the CUTSTATE demo
+      </a>
+    </div>
+  </div>
+</section>

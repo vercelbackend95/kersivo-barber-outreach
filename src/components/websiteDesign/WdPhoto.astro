@@ -1,0 +1,79 @@
+---
+import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { WD_PHOTO } from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const shots: Record<string, { src: string; width: number; height: number; alt: string }> = {
+  chair: { src: '/images/website-design/interior.webp', width: 960, height: 1440, alt: 'Barber stations and chairs in the CUTSTATE demo shop.' },
+  work: { src: '/images/website-design/hairline.webp', width: 640, height: 960, alt: 'Close-up of a razor refining a fade at the hairline.' },
+  hands: { src: '/images/website-design/at-work.webp', width: 640, height: 427, alt: 'A barber cutting a client’s hair in the demo shop.' },
+  detail: { src: '/images/website-design/beard.webp', width: 640, height: 427, alt: 'Clippers shaping a beard line, close up.' },
+};
+
+const portraits: Record<string, string> = {
+  'Ellis Ward': '/images/website-design/ellis-ward.webp',
+  'Noah Reid': '/images/website-design/noah-reid.webp',
+  'Marcus Bell': '/images/website-design/marcus-bell.webp',
+};
+const team = DEMO_BARBERS.filter((barber) => portraits[barber.name]).map((barber) => ({
+  name: barber.name,
+  first: barber.name.split(' ')[0],
+  src: portraits[barber.name],
+}));
+---
+
+<section class="wd-section wd-photo" id="photography" aria-labelledby="wd-photo-heading" data-wd-photo data-shot="chair">
+  <div class="wd-wrap">
+    <div class="wd-split wd-split--top">
+      <div class="wd-photo__copy">
+        <header class="wd-head">
+          <p class="wd-eyebrow">{WD_PHOTO.kicker}</p>
+          <h2 id="wd-photo-heading" class="wd-h2">{WD_PHOTO.heading}</h2>
+          <p class="wd-lede">{WD_PHOTO.lede}</p>
+        </header>
+
+        <p class="wd-photo__list-title" id="wd-shotlist-title">Your shot list</p>
+        <ol class="wd-shots" aria-labelledby="wd-shotlist-title">
+          {WD_PHOTO.shotList.map((shot, index) => (
+            <li>
+              <button type="button" class="wd-shot" data-shot-button={shot.id} aria-pressed={index === 0 ? 'true' : 'false'}>
+                <span class="wd-shot__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="wd-shot__text">
+                  <span class="wd-shot__title">{shot.title}</span>
+                  <span class="wd-shot__body">{shot.body}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div class="wd-mosaic">
+        {WD_PHOTO.shotList.map((shot) => (
+          <div class={`wd-mosaic__cell wd-mosaic__cell--${shot.id}`} data-shot-cell={shot.id}>
+            <img src={shots[shot.id].src} alt={shots[shot.id].alt} width={shots[shot.id].width} height={shots[shot.id].height} loading="lazy" decoding="async" />
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="wd-team" id="your-team">
+      <div class="wd-team__copy">
+        <h3 class="wd-h3">{WD_PHOTO.teamHeading}</h3>
+        <p class="wd-team__body">{WD_PHOTO.teamBody}</p>
+      </div>
+      <ul class="wd-team__list">
+        {team.map((barber) => (
+          <li>
+            <a class="wd-barber" href="/demo/barbers" data-track="view_live_demo_click" data-track-placement="barbershop_website_design_team">
+              <span class="wd-barber__photo">
+                <img src={barber.src} alt={`Portrait of ${barber.name}, a barber at the CUTSTATE demo shop.`} width="600" height="720" loading="lazy" decoding="async" />
+              </span>
+              <span class="wd-barber__name">{barber.name}</span>
+              <span class="wd-barber__book">Book with {barber.first}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
