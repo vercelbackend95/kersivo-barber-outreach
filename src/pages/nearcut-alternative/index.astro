@@ -1,4 +1,5 @@
 ---
+import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -46,6 +47,7 @@ const currentYear = new Date().getFullYear();
   <link slot="head" rel="preload" as="image" href="/images/nearcut/site-hero.webp" fetchpriority="high" />
   <main class="fresha-alt nc landing-overflow-guard">
     <NearcutHero />
+    <InShort competitor="Nearcut" />
     <NearcutAnswer />
     <NearcutWebsite />
     <NearcutOutcomes />

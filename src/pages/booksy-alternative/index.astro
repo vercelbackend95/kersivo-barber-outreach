@@ -1,4 +1,5 @@
 ---
+import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import Faq4 from '@/components/faq4.astro';
@@ -49,6 +50,7 @@ const currentYear = new Date().getFullYear();
 >
   <main class="fresha-alt bk landing-overflow-guard">
     <BooksyHero />
+    <InShort competitor="Booksy" />
     <BooksyAnswer />
     <BooksyOutcomes />
     <BooksyBill />

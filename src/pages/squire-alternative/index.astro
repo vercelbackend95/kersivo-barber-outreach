@@ -1,4 +1,5 @@
 ---
+import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -29,6 +30,7 @@ const currentYear = new Date().getFullYear();
   jsonLd={[buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
   <main class="fresha-alt squire-alt landing-overflow-guard">
     <SquireHero />
+    <InShort competitor="Squire" />
     <SquireIntro />
     <SquireCompare />
     <FreshaProof />

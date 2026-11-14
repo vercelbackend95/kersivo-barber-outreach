@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
-import { KERSIVO_ORGANIZATION_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
+import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 /**
@@ -14,9 +15,13 @@ export function buildLlmsTxt(siteUrl: string): string {
   return [
     '# KERSIVO',
     '',
-    `> ${KERSIVO_ORGANIZATION_DESCRIPTION} Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location and includes a branded website on the shop's own domain with online booking. KERSIVO Starter is £0/month: a KERSIVO-hosted booking page for up to 4 barbers, where every public booking takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through the shop's own Stripe account. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
+    `> ${KERSIVO_ENTITY_DESCRIPTION} Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location and includes a branded website on the shop's own domain with online booking. KERSIVO Starter is £0/month: a KERSIVO-hosted booking page for up to 4 barbers, where every public booking takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through the shop's own Stripe account. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     '',
     `Prices are per physical location, not per barber. ${NO_SETUP_FEE_SHORT} ${PRICE_VAT_DISCLAIMER} Clients book in the browser; there is no customer app and no marketplace listing.`,
+    '',
+    'Who KERSIVO is for: independent barbershops in the United Kingdom, from a single chair to a full team at one location, that want clients to book on the shop’s own website rather than through a marketplace.',
+    '',
+    `Who KERSIVO is not for: ${KERSIVO_NOT_FOR}`,
     '',
     '## Product',
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
@@ -36,6 +41,13 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/booksy-alternative', 'Booksy alternative', 'KERSIVO compared with Booksy'),
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),
     link('/treatwell-alternative', 'Treatwell alternative', 'KERSIVO compared with Treatwell'),
+    link('/nearcut-alternative', 'Nearcut alternative', 'KERSIVO compared with Nearcut'),
+    link('/vagaro-alternative', 'Vagaro alternative', 'KERSIVO compared with Vagaro'),
+    link('/timely-alternative', 'Timely alternative', 'KERSIVO compared with Timely'),
+    link('/phorest-alternative', 'Phorest alternative', 'KERSIVO compared with Phorest'),
+    link('/square-appointments-alternative', 'Square Appointments alternative', 'KERSIVO compared with Square Appointments'),
+    link('/squire-alternative', 'Squire alternative', 'KERSIVO compared with Squire'),
+    link('/setora-alternative', 'Setora alternative', 'KERSIVO compared with Setora'),
     '',
     '## Free tools',
     link(

@@ -1,0 +1,81 @@
+---
+/**
+ * Neutral "In short" answer placed directly under the hero (H1) of /compare and the alternative pages.
+ * Plain, always-visible text (no reveal animation) so search and AI tools read it as the page's answer.
+ */
+import { buildInShortAnswer } from '@/lib/seo/inShortAnswer';
+import '@/styles/components/ks-glass-card.css';
+
+interface Props {
+  /** Competitor name for alternative pages, e.g. "Booksy". Omit on /compare. */
+  competitor?: string;
+}
+
+const { competitor } = Astro.props;
+const answer = buildInShortAnswer(competitor);
+---
+
+<section class="in-short" aria-labelledby="in-short-title" data-in-short>
+  <div class="in-short__inner ks-glass-card ks-glass-card--accent">
+    <div class="in-short__main">
+      <h2 id="in-short-title" class="ks-eyebrow in-short__title">{answer.heading}</h2>
+      <p class="in-short__summary">{answer.summary}</p>
+    </div>
+    <div class="in-short__notfor">
+      <h3 class="ks-eyebrow ks-eyebrow--neutral in-short__label">{answer.notForLabel}</h3>
+      <p>{answer.notFor}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .in-short {
+    padding-block: clamp(1.75rem, 4vw, 3rem);
+    background: #030303;
+  }
+
+  .in-short__inner {
+    --ks-glass-pad: clamp(1.25rem, 3vw, 2rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    width: min(94vw, 91.1rem);
+    margin-inline: auto;
+    padding: var(--ks-glass-pad);
+  }
+
+  .in-short__title,
+  .in-short__label {
+    font-family: inherit;
+  }
+
+  .in-short__summary {
+    max-width: 72ch;
+    margin: 1rem 0 0;
+    color: #e7e7e9;
+    font-size: clamp(1rem, 1.2vw, 1.0625rem);
+    line-height: 1.7;
+  }
+
+  .in-short__notfor {
+    align-self: start;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .in-short__notfor p {
+    margin: 0.85rem 0 0;
+    color: #a8a8ad;
+    font-size: 0.94rem;
+    line-height: 1.65;
+  }
+
+  @media (max-width: 48rem) {
+    .in-short__inner {
+      grid-template-columns: minmax(0, 1fr);
+      width: calc(100% - 2rem);
+    }
+  }
+</style>
