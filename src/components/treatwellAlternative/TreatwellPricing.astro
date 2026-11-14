@@ -9,36 +9,25 @@ const freePreview = isFreePreviewFlowEnabled();
 const layout = getRateCard1LandingLayout(freePreview);
 ---
 
-<section
-  id="pricing"
-  class="fresha-alt__section scroll-mt-24"
-  aria-labelledby="fresha-alt-pricing-title"
->
-  <div class="fresha-alt__glow" aria-hidden="true"></div>
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">SIMPLE PRICING</p>
-      <h2 id="fresha-alt-pricing-title" class="fresha-alt__h2">
-        Start free. Upgrade per location when you need more.
-      </h2>
-      <p class="fresha-alt__lead">
-        <strong>KERSIVO Starter</strong> is £0/month for up to 4 active bookable barbers: a hosted
-        booking page, Team, Services, Clients Core, email reminders and Google booking setup. Every
-        public booking uses a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or Pay in full through the shop’s connected Stripe account.
-        <a href="/starter">See KERSIVO Starter</a>.
+<section id="pricing" class="tw-section tw-pricing scroll-mt-24" aria-labelledby="treatwell-pricing-title">
+  <div class="tw-wrap">
+    <header class="tw-head">
+      <p class="tw-eyebrow">Simple pricing</p>
+      <h2 id="treatwell-pricing-title" class="tw-h2">One flat price for your own booking site</h2>
+      <p class="tw-lead">
+        <strong>Full KERSIVO</strong> is £{SAAS_MONTHLY_GBP}/month per physical location: your branded barbershop
+        website and your own domain, larger teams, Pay at shop, deposit or full payment, Advanced Clients,
+        Reports, Retail pickup, SMS reminders within a monthly allowance and the KERSIVO Assistant, an AI
+        helper for running your shop. 0% KERSIVO commission on booking payments and Full retail sales.
       </p>
-      <p class="fresha-alt__lead">
-        <strong>Full KERSIVO</strong> is £{SAAS_MONTHLY_GBP}/month per physical location and adds your
-        branded barbershop website and your own domain, larger teams, editable booking-payment
-        controls including Pay at shop, Advanced Clients, Reports, Retail pickup, SMS reminders within a monthly allowance and
-        the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop.
-      </p>
-      <p class="fresha-alt__lead">
-        0% KERSIVO commission on booking payments on both plans, and on Full retail sales.
+      <p class="tw-body">
+        Just need a booking page? <strong>KERSIVO Starter</strong> is £0/month for up to 4 active bookable
+        barbers, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or Pay in full on every public booking through
+        your connected Stripe account. <a href="/starter">See KERSIVO Starter</a>.
       </p>
     </header>
 
-    <div class="rate-card1--landing fresha-alt-pricing__offer-host">
+    <div class="rate-card1--landing tw-pricing__offer">
       <RateCard1Offer freePreview={freePreview} />
       <div class="rate-card1__landing-conditions">
         <p>{layout.conditionsLine1}</p>

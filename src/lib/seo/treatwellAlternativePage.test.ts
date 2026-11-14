@@ -6,6 +6,7 @@ import { TREATWELL_ALTERNATIVE_PAGE_PATH,TREATWELL_ALTERNATIVE_TITLE,TREATWELL_A
 import { buildTreatwellAlternativeWebPageJsonLd,buildTreatwellAlternativeBreadcrumbJsonLd } from './treatwellAlternativeJsonLd';
 import { TREATWELL_COMPARE_SECTIONS,TREATWELL_SOURCES,requireVerifiedTreatwellFact,TREATWELL_UK_COMMERCIAL_FACTS } from './treatwellFacts';
 import { resolvePageSeo } from './meta';
+import { TW_HERO_FACTS,TW_STARTING_POINTS,TW_SWITCHING_LEAD } from './treatwellAlternativeContent';
 import { GET as getRobots } from '../../pages/robots.txt';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
@@ -44,30 +45,36 @@ describe('Treatwell Alternative UK marketing page',()=>{
   expect((faq.mainEntity as unknown[]).length).toBe(TREATWELL_ALTERNATIVE_FAQ_ITEMS.length);
   expect(TREATWELL_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(8);
  });
- it('reuses the existing Nearcut page flow without stray Nearcut copy',()=>{
-  const order=['<TreatwellHero','<TreatwellQuickAnswer','<TreatwellWhy','<TreatwellCosts','<TreatwellCompare','<TreatwellProof','<TreatwellFit','<TreatwellSwitching','<TreatwellPricing','<Faq4','<ComparisonFinalCta','<TreatwellSources'].map(x=>page.indexOf(x));
+ it('runs the owner-first section order without stray competitor copy',()=>{
+  const order=['<TreatwellHero','<TreatwellAnswer','<TreatwellOutcomes','<TreatwellRule','<TreatwellCosts','<TreatwellCompare','<TreatwellProof','<TreatwellFit','<TreatwellSwitching','<TreatwellPricing','<Faq4','<ComparisonFinalCta','<TreatwellSources'].map(x=>page.indexOf(x));
   expect(order.every(x=>x>=0)).toBe(true);
   expect(order).toEqual([...order].sort((a,b)=>a-b));
   const compare=read('../../components/treatwellAlternative/TreatwellCompare.astro');
   expect(compare).toContain('data-treatwell-comparison');
+  expect(compare).toContain('role="tablist"');
   expect(compare).not.toMatch(/>\s*nearcut\s*</i);
   expect(TREATWELL_COMPARE_SECTIONS).toHaveLength(6);
  });
- it('states correct first-marketplace versus repeat/direct fee distinction',()=>{
-  const costs=read('../../components/treatwellAlternative/TreatwellCosts.astro');
-  expect(costs).toContain("requireVerifiedTreatwellFact('newMarketplaceClientCommission')");
-  expect(costs).toContain("requireVerifiedTreatwellFact('onlinePrepaymentProcessing')");
-  expect(costs).toContain('365-day');
-  expect(costs).toContain('Stripe processing fees');
-  expect(requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent).toBe(35);
-  expect(requireVerifiedTreatwellFact('onlinePrepaymentProcessing').percent).toBe(2.5);
-  expect(TREATWELL_UK_COMMERCIAL_FACTS.softwareMonthlySubscription.status).toBe('unresolved');
-  expect(TREATWELL_SOURCES.every(x=>x.url.startsWith('https://'))).toBe(true);
+ it('does not assume the reader already uses Treatwell',()=>{
+  const ids=TW_STARTING_POINTS.map(x=>x.id);
+  expect(ids).toEqual(['on-treatwell','first-system','other-app','phone-dm']);
+  expect(read('../../components/treatwellAlternative/TreatwellAnswer.astro')).toContain('Where are you starting from?');
+  expect(TREATWELL_ALTERNATIVE_TITLE).toMatch(/Your Brand, Direct Bookings/);
+  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toContain('£39/month per location');
+  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toContain('Stripe fees apply');
+  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toMatch(/own branded site/);
+ });
+ it('keeps setup-time and commission wording within the claims policy',()=>{
+  const all=['TreatwellHero','TreatwellOutcomes','TreatwellRule','TreatwellCosts','TreatwellSwitching','TreatwellPricing'].map(n=>read(`../../components/treatwellAlternative/${n}.astro`)).join(' ')+JSON.stringify([TW_HERO_FACTS,TW_SWITCHING_LEAD]);
+  expect(all).toContain('a few days');
+  expect(all).not.toMatch(/1[–-]2 weeks|\d+ days? to go live/i);
+  expect(all).toMatch(/Stripe/);
+  expect(TW_HERO_FACTS.join(' ')).toContain('0% KERSIVO commission · Stripe fees apply');
  });
  it('is linked from marketing navigation, routing and sitemap',()=>{
   expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/treatwell-alternative')).toMatchObject({group:'compare',section:'alternatives'});
   expect(getRouteFamily('/treatwell-alternative')).toBe('marketing');
-  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-10-28')).toBe(true);
+  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-11-14')).toBe(true);
   for(const other of ['booksyAlternative/BooksyFit.astro','freshaAlternative/FreshaFit.astro','nearcutAlternative/NearcutFit.astro']) {
     expect(read('../../components/'+other)).toContain('/treatwell-alternative');
   }

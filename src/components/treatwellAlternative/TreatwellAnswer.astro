@@ -1,0 +1,62 @@
+---
+import {
+  TW_ANSWER_FACTS,
+  TW_ANSWER_LEAD,
+  TW_ANSWER_TITLE,
+  TW_STARTING_POINTS,
+} from '@/lib/seo/treatwellAlternativeContent';
+---
+
+<section id="quick-answer" class="tw-section tw-answer" aria-labelledby="treatwell-answer-title">
+  <div class="tw-wrap tw-answer__grid">
+    <div class="tw-answer__copy">
+      <p class="tw-eyebrow">The short version</p>
+      <h2 id="treatwell-answer-title" class="tw-h2">{TW_ANSWER_TITLE}</h2>
+      <p class="tw-lead">{TW_ANSWER_LEAD}</p>
+      <dl class="tw-answer__facts">
+        {TW_ANSWER_FACTS.map((fact) => (
+          <div class="tw-answer__fact">
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="tw-card tw-chooser" data-tw-tabs>
+      <h3 class="tw-chooser__title">Where are you starting from?</h3>
+      <div class="tw-chooser__tabs" role="tablist" aria-label="Where are you starting from?">
+        {TW_STARTING_POINTS.map((point, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tw-start-tab-${point.id}`}
+            class="tw-chooser__tab"
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls={`tw-start-${point.id}`}
+            tabindex={index === 0 ? 0 : -1}
+          >
+            {point.label}
+          </button>
+        ))}
+      </div>
+      {TW_STARTING_POINTS.map((point) => (
+        <div
+          id={`tw-start-${point.id}`}
+          class="tw-chooser__panel"
+          role="tabpanel"
+          aria-labelledby={`tw-start-tab-${point.id}`}
+          tabindex="0"
+        >
+          <p class="tw-chooser__headline">{point.title}</p>
+          <ul class="tw-ticks">
+            {point.points.map((item) => <li>{item}</li>)}
+          </ul>
+          <a class="tw-text-link" href={point.link.href}>
+            {point.link.label} <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

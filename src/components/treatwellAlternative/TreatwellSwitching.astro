@@ -1,26 +1,35 @@
 ---
-import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
 import {
   TREATWELL_SWITCHING_LIMITS,
-  TREATWELL_SWITCHING_REASSURANCE,
   TREATWELL_SWITCHING_STEPS,
+  TW_SWITCHING_LEAD,
+  TW_SWITCHING_TITLE,
 } from '@/lib/seo/treatwellAlternativeContent';
 ---
 
-<section id="switching" class="fresha-alt__section" aria-labelledby="fresha-alt-switching-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">MIGRATION</p>
-      <h2 id="fresha-alt-switching-title" class="fresha-alt__h2">Switching from Treatwell to KERSIVO</h2>
-      <p class="fresha-alt-switching__reassurance">{TREATWELL_SWITCHING_REASSURANCE}</p>
+<section id="switching" class="tw-section tw-switch-steps" aria-labelledby="treatwell-switching-title">
+  <div class="tw-wrap">
+    <header class="tw-head">
+      <p class="tw-eyebrow">Switching</p>
+      <h2 id="treatwell-switching-title" class="tw-h2">{TW_SWITCHING_TITLE}</h2>
+      <p class="tw-lead">{TW_SWITCHING_LEAD}</p>
     </header>
 
-    <ProcessTimeline
-      steps={TREATWELL_SWITCHING_STEPS}
-      noteTitle="Good to know"
-      notePoints={TREATWELL_SWITCHING_LIMITS}
-    >
-      <a href="#contact">Ask about your Treatwell migration <span aria-hidden="true">→</span></a>
-    </ProcessTimeline>
+    <ol class="tw-steps">
+      {TREATWELL_SWITCHING_STEPS.map((step, index) => (
+        <li class="tw-card tw-step">
+          <span class="tw-step__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="tw-h3">{step.title}</h3>
+          <p class="tw-body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="tw-switch-steps__foot">
+      <ul class="tw-notes" aria-label="Good to know">
+        {TREATWELL_SWITCHING_LIMITS.map((limit) => <li>{limit}</li>)}
+      </ul>
+      <a class="tw-text-link" href="#contact">Ask about your Treatwell migration <span aria-hidden="true">→</span></a>
+    </div>
   </div>
 </section>

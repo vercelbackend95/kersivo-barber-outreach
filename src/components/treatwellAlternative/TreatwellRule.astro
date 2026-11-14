@@ -1,0 +1,64 @@
+---
+import { TW_RULE_LEAD, TW_RULE_NOTE, TW_RULE_TITLE, TW_NEW_CLIENT_PERCENT, TW_REPEAT_PERCENT } from '@/lib/seo/treatwellAlternativeContent';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+
+const months = 8;
+const price = 25;
+---
+
+<section id="365-day-rule" class="tw-section tw-rule" aria-labelledby="treatwell-rule-title">
+  <div class="tw-wrap">
+    <header class="tw-head">
+      <p class="tw-eyebrow">New or repeat?</p>
+      <h2 id="treatwell-rule-title" class="tw-h2">{TW_RULE_TITLE}</h2>
+      <p class="tw-lead">{TW_RULE_LEAD}</p>
+    </header>
+
+    <div class="tw-card tw-rule__panel" data-tw-rule data-status="repeat" style={`--tw-rule-pos: ${months / 24}`}>
+      <div class="tw-rule__track" aria-hidden="true">
+        <span class="tw-rule__zone tw-rule__zone--repeat">Within 365 days</span>
+        <span class="tw-rule__zone tw-rule__zone--lapsed">Over 365 days</span>
+        <span class="tw-rule__marker"><span>365 days</span></span>
+        <span class="tw-rule__dot"></span>
+      </div>
+
+      <div class="tw-rule__controls">
+        <div class="tw-field">
+          <label for="tw-rule-months">Months since this client’s last completed visit</label>
+          <output for="tw-rule-months" data-tw-out="months">{months} months</output>
+          <input id="tw-rule-months" class="tw-range" type="range" min="1" max="24" step="1" value={months} data-tw-rule-months />
+        </div>
+        <div class="tw-field">
+          <label for="tw-rule-price">Price of the cut</label>
+          <output for="tw-rule-price" data-tw-out="price">£{price}</output>
+          <input id="tw-rule-price" class="tw-range" type="range" min="10" max="60" step="1" value={price} data-tw-rule-price />
+        </div>
+        <fieldset class="tw-field tw-segment">
+          <legend>How they book this time</legend>
+          <label><input type="radio" name="tw-rule-channel" value="marketplace" checked data-tw-rule-channel /> <span>Through the Treatwell marketplace</span></label>
+          <label><input type="radio" name="tw-rule-channel" value="direct" data-tw-rule-channel /> <span>Through your own link</span></label>
+        </fieldset>
+      </div>
+
+      <div class="tw-rule__results">
+        <div class="tw-rule__result tw-rule__result--tw">
+          <p class="tw-rule__who">On Treatwell</p>
+          <p class="tw-rule__status">
+            <span class="tw-rule__state tw-rule__state--repeat">Counts as a repeat booking: {TW_REPEAT_PERCENT}% marketplace commission</span>
+            <span class="tw-rule__state tw-rule__state--new-again">Can count as a new client again: {TW_NEW_CLIENT_PERCENT}% + VAT</span>
+            <span class="tw-rule__state tw-rule__state--direct">Direct booking: {TW_REPEAT_PERCENT}% marketplace commission; online prepayment processing may apply</span>
+          </p>
+          <p class="tw-rule__amount" data-tw-out="commission" data-value="0">£0 + VAT</p>
+        </div>
+        <div class="tw-rule__result tw-rule__result--ks">
+          <p class="tw-rule__who">On KERSIVO</p>
+          <p class="tw-rule__status">No marketplace, no 365-day clock. 0% KERSIVO commission on every visit.</p>
+          <p class="tw-rule__amount">£0</p>
+          <p class="tw-small">{STRIPE_FEES_NOTE}</p>
+        </div>
+      </div>
+
+      <p class="tw-small tw-rule__note">{TW_RULE_NOTE}</p>
+    </div>
+  </div>
+</section>

@@ -1,20 +1,24 @@
 ---
-import ModelComparison from '@/components/editorial/ModelComparison.astro';
-import { TREATWELL_FIT_CLOSING, TREATWELL_FIT_PATHS } from '@/lib/seo/treatwellAlternativeContent';
+import { TW_FIT, TW_FIT_CLOSING } from '@/lib/seo/treatwellAlternativeContent';
 ---
 
-<section id="which-model" class="fresha-alt__section" aria-labelledby="fresha-alt-fit-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">TWO MODELS</p>
-      <h2 id="fresha-alt-fit-title" class="fresha-alt__h2">Which model fits your barbershop?</h2>
+<section id="which-model" class="tw-section tw-fit" aria-labelledby="treatwell-fit-title">
+  <div class="tw-wrap">
+    <header class="tw-head">
+      <p class="tw-eyebrow">An honest fit check</p>
+      <h2 id="treatwell-fit-title" class="tw-h2">Which one fits your shop?</h2>
     </header>
-
-    <ModelComparison idPrefix="fresha-alt-fit" models={TREATWELL_FIT_PATHS} conclusion={TREATWELL_FIT_CLOSING}>
-      Also comparing other software? <a href="/booksy-alternative">Booksy comparison <span aria-hidden="true">→</span></a> <span> · </span> <a href="/fresha-alternative">Fresha comparison <span aria-hidden="true">→</span></a> <span> · </span><a href="/square-appointments-alternative">Square Appointments alternative <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/squire-alternative">Compare KERSIVO and SQUIRE <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/nearcut-alternative">Nearcut comparison <span aria-hidden="true">→</span></a>
-      <span> · </span><a href="/setora-alternative">Setora comparison <span aria-hidden="true">→</span></a>
-    </ModelComparison>
+    <div class="tw-fit__grid">
+      <div class="tw-card tw-fit__col">
+        <h3 class="tw-h3">{TW_FIT.treatwell.heading}</h3>
+        <ul class="tw-dots">{TW_FIT.treatwell.points.map((point) => <li>{point}</li>)}</ul>
+      </div>
+      <div class="tw-card tw-fit__col tw-fit__col--ks">
+        <h3 class="tw-h3">{TW_FIT.kersivo.heading}</h3>
+        <ul class="tw-ticks">{TW_FIT.kersivo.points.map((point) => <li>{point}</li>)}</ul>
+        <a class="tw-text-link" href="/pricing#plan" data-track="view_pricing_click" data-track-placement="treatwell_fit">See Full KERSIVO pricing <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <p class="tw-body tw-fit__closing">{TW_FIT_CLOSING} Comparing more than Treatwell? See the <a href="/fresha-alternative">Fresha alternative</a>, <a href="/booksy-alternative">Booksy alternative</a> or <a href="/compare">every comparison</a>.</p>
   </div>
 </section>

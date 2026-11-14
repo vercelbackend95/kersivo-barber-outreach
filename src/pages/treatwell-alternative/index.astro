@@ -5,16 +5,17 @@ import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import TreatwellHero from '@/components/treatwellAlternative/TreatwellHero.astro';
+import TreatwellAnswer from '@/components/treatwellAlternative/TreatwellAnswer.astro';
+import TreatwellOutcomes from '@/components/treatwellAlternative/TreatwellOutcomes.astro';
+import TreatwellRule from '@/components/treatwellAlternative/TreatwellRule.astro';
+import TreatwellCosts from '@/components/treatwellAlternative/TreatwellCosts.astro';
 import TreatwellCompare from '@/components/treatwellAlternative/TreatwellCompare.astro';
 import TreatwellProof from '@/components/treatwellAlternative/TreatwellProof.astro';
-import TreatwellPricing from '@/components/treatwellAlternative/TreatwellPricing.astro';
-import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
-import TreatwellQuickAnswer from '@/components/treatwellAlternative/TreatwellQuickAnswer.astro';
-import TreatwellWhy from '@/components/treatwellAlternative/TreatwellWhy.astro';
-import TreatwellCosts from '@/components/treatwellAlternative/TreatwellCosts.astro';
 import TreatwellFit from '@/components/treatwellAlternative/TreatwellFit.astro';
 import TreatwellSwitching from '@/components/treatwellAlternative/TreatwellSwitching.astro';
+import TreatwellPricing from '@/components/treatwellAlternative/TreatwellPricing.astro';
 import TreatwellSources from '@/components/treatwellAlternative/TreatwellSources.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import {
   TREATWELL_ALTERNATIVE_DESCRIPTION,
@@ -27,11 +28,13 @@ import {
   buildTreatwellAlternativeBreadcrumbJsonLd,
   buildTreatwellAlternativeWebPageJsonLd,
 } from '@/lib/seo/treatwellAlternativeJsonLd';
+import { TW_FAQ_HEADING, TW_FAQ_SUBHEADING } from '@/lib/seo/treatwellAlternativeContent';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/treatwell-alternative.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -42,10 +45,11 @@ const currentYear = new Date().getFullYear();
   canonicalPath={TREATWELL_ALTERNATIVE_PAGE_PATH}
   jsonLd={[buildKersivoEntityJsonLd(), buildTreatwellAlternativeWebPageJsonLd(), buildTreatwellAlternativeBreadcrumbJsonLd(), buildTreatwellAlternativeFaqJsonLd()]}
 >
-  <main class="fresha-alt landing-overflow-guard">
+  <main class="fresha-alt tw landing-overflow-guard">
     <TreatwellHero />
-    <TreatwellQuickAnswer />
-    <TreatwellWhy />
+    <TreatwellAnswer />
+    <TreatwellOutcomes />
+    <TreatwellRule />
     <TreatwellCosts />
     <TreatwellCompare />
     <TreatwellProof />
@@ -55,8 +59,8 @@ const currentYear = new Date().getFullYear();
 
     <Faq4
       className="faq4--landing"
-      heading="Questions about Treatwell and KERSIVO?"
-      subHeading="Clear answers on Treatwell commission, the 365-day client rule, pricing, switching and the live demo."
+      heading={TW_FAQ_HEADING}
+      subHeading={TW_FAQ_SUBHEADING}
       supportHeading="Still comparing options?"
       supportText="Tell us how you take bookings today and what you want to change."
       supportLinkLabel="Ask KERSIVO a question"
@@ -88,6 +92,21 @@ const currentYear = new Date().getFullYear();
     />
   </main>
 </LandingLayout>
+
+<script>
+  import { initTreatwellPage } from '@/lib/landing/treatwellPage';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main.tw');
+    if (!root || root.dataset.twBound === 'true') return;
+    root.dataset.twBound = 'true';
+    const cleanup = initTreatwellPage(document);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
 
 <script>
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
