@@ -13,19 +13,30 @@ import {
 } from './freshaAlternativeFaq';
 import {
   FRESHA_COST_ITEMS,
+  FRESHA_ESTIMATOR_CONFIG,
+  FRESHA_ESTIMATOR_NOTE,
   FRESHA_FIT_PATHS,
+  FRESHA_HERO_FACTS,
+  FRESHA_HERO_LEAD,
+  FRESHA_HERO_TITLE_LINES,
+  FRESHA_JOURNEY_ACTS,
   FRESHA_MARKETPLACE_FEE_EXAMPLE,
   FRESHA_MARKETPLACE_FEE_POINTS,
-  FRESHA_QUICK_ANSWER,
-  FRESHA_QUICK_ANSWER_DETAIL,
-  FRESHA_QUICK_ANSWER_FACTS,
-  FRESHA_QUICK_ANSWER_KICKER,
-  FRESHA_QUICK_ANSWER_LEAD,
-  FRESHA_QUICK_ANSWER_TITLE,
+  FRESHA_OUTCOMES,
+  FRESHA_OUTCOMES_INTRO,
+  FRESHA_REASONS,
+  FRESHA_REASONS_INTRO,
   FRESHA_SWITCHING_LIMITS,
   FRESHA_SWITCHING_REASSURANCE,
   FRESHA_SWITCHING_STEPS,
-  FRESHA_WHY_THEMES,
+  FRESHA_SWITCHING_TITLE,
+  FRESHA_VERDICT,
+  FRESHA_VERDICT_DETAIL,
+  FRESHA_VERDICT_FACTS,
+  FRESHA_VERDICT_FIT,
+  FRESHA_VERDICT_KICKER,
+  FRESHA_VERDICT_LEAD,
+  FRESHA_VERDICT_TITLE,
   FRESHA_WORKED_EXAMPLES,
   FRESHA_WORKED_EXAMPLES_NOTE,
   KERSIVO_MODEL_POINTS,
@@ -59,51 +70,61 @@ function readRepoFile(...segments: string[]): string {
 const componentDir = '../../components/freshaAlternative';
 const pageSource = readRepoFile('../../pages/fresha-alternative/index.astro');
 const heroSource = readRepoFile(componentDir, 'FreshaHero.astro');
+const verdictSource = readRepoFile(componentDir, 'FreshaVerdict.astro');
+const reasonsSource = readRepoFile(componentDir, 'FreshaReasons.astro');
+const reasonVisualSource = readRepoFile(componentDir, 'FreshaReasonVisual.astro');
+const outcomesSource = readRepoFile(componentDir, 'FreshaOutcomes.astro');
+const railSource = readRepoFile(componentDir, 'FreshaJourneyRail.astro');
 const compareSource = readRepoFile(componentDir, 'FreshaCompare.astro');
 const pricingSource = readRepoFile(componentDir, 'FreshaPricing.astro');
-const proofSource = readRepoFile(componentDir, 'FreshaProof.astro');
 const finalCtaSource = readRepoFile('../../components/comparison/ComparisonFinalCta.astro');
-const quickAnswerSource = readRepoFile(componentDir, 'FreshaQuickAnswer.astro');
-const editorialIntroSource = readRepoFile('../../components/editorial/EditorialIntro.astro');
-const editorialIntroCss = readRepoFile('../../styles/components/editorial-intro.css');
-const insightCardsSource = readRepoFile('../../components/editorial/InsightCards.astro');
-const insightIconSource = readRepoFile('../../components/editorial/InsightIcon.astro');
-const insightCardsCss = readRepoFile('../../styles/components/insight-cards.css');
-const whySource = readRepoFile(componentDir, 'FreshaWhy.astro');
 const costsSource = readRepoFile(componentDir, 'FreshaCosts.astro');
 const fitSource = readRepoFile(componentDir, 'FreshaFit.astro');
 const switchingSource = readRepoFile(componentDir, 'FreshaSwitching.astro');
 const sourcesSource = readRepoFile(componentDir, 'FreshaSources.astro');
 const contactSource = readRepoFile('../../components/contact16.astro');
 const booksyPageSource = readRepoFile('../../pages/booksy-alternative/index.astro');
+const journeyCss = readRepoFile('../../styles/components/fresha-journey.css');
+const journeyScript = readRepoFile('../landing/freshaJourney.ts');
 const factsSource = readRepoFile('freshaFacts.ts');
 const contentSource = readRepoFile('freshaAlternativeContent.ts');
 const faqSource = readRepoFile('freshaAlternativeFaq.ts');
 
+/** Components written for the journey page (shared components are checked on their own). */
 const newComponentSources = [
-  quickAnswerSource,
-  editorialIntroSource,
-  insightCardsSource,
-  whySource,
+  verdictSource,
+  reasonsSource,
+  reasonVisualSource,
   costsSource,
+  outcomesSource,
+  railSource,
   fitSource,
   switchingSource,
   sourcesSource,
 ];
 
 const renderedContentCopy = [
-  FRESHA_QUICK_ANSWER_KICKER,
-  FRESHA_QUICK_ANSWER_TITLE,
-  FRESHA_QUICK_ANSWER,
-  ...FRESHA_QUICK_ANSWER_FACTS.map((fact) => `${fact.label} ${fact.value}`),
-  ...FRESHA_WHY_THEMES.map((theme) => `${theme.title} ${theme.body}`),
+  ...FRESHA_HERO_TITLE_LINES,
+  FRESHA_HERO_LEAD,
+  ...FRESHA_HERO_FACTS,
+  FRESHA_VERDICT_KICKER,
+  FRESHA_VERDICT_TITLE,
+  FRESHA_VERDICT,
+  ...FRESHA_VERDICT_FACTS.map((fact) => `${fact.label} ${fact.value}`),
+  ...FRESHA_VERDICT_FIT.flatMap((group) => [group.label, ...group.points]),
+  FRESHA_REASONS_INTRO,
+  ...FRESHA_REASONS.flatMap((reason) => [reason.kicker, reason.title, reason.body, reason.kersivo]),
   ...FRESHA_COST_ITEMS.flatMap((item) => [item.kicker, item.figure, item.unit, ...item.notes]),
+  FRESHA_ESTIMATOR_NOTE,
   ...FRESHA_WORKED_EXAMPLES.map((row) => Object.values(row).join(' ')),
   FRESHA_WORKED_EXAMPLES_NOTE,
   ...KERSIVO_MODEL_POINTS,
   ...FRESHA_MARKETPLACE_FEE_POINTS,
   FRESHA_MARKETPLACE_FEE_EXAMPLE,
+  FRESHA_OUTCOMES_INTRO,
+  ...FRESHA_OUTCOMES.map((outcome) => `${outcome.title} ${outcome.body}`),
   ...FRESHA_FIT_PATHS.flatMap((path) => [path.heading, ...path.points]),
+  FRESHA_SWITCHING_TITLE,
   FRESHA_SWITCHING_REASSURANCE,
   ...FRESHA_SWITCHING_STEPS.map((step) => `${step.title} ${step.body}`),
   ...FRESHA_SWITCHING_LIMITS,
@@ -122,12 +143,13 @@ const pageCorpus = [
   heroSource,
   compareSource,
   pricingSource,
-  proofSource,
   finalCtaSource,
   ...newComponentSources,
   factsSource,
   renderedContentCopy,
 ].join('\n');
+
+const textOf = (source: string) => source.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 describe('fresha-alternative page SEO foundation', () => {
   it('wires LandingLayout with central title, description, canonical and JSON-LD', () => {
@@ -139,7 +161,7 @@ describe('fresha-alternative page SEO foundation', () => {
     );
     expect(pageSource).not.toContain('noindex');
     expect(FRESHA_ALTERNATIVE_PAGE_PATH).toBe('/fresha-alternative');
-    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative UK: Own Website & Flat Price | KERSIVO');
+    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative UK: Keep Your Clients & Brand | KERSIVO');
     expect(resolveCanonicalUrl(FRESHA_ALTERNATIVE_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/fresha-alternative',
     );
@@ -147,10 +169,11 @@ describe('fresha-alternative page SEO foundation', () => {
 
   it('keeps the title and meta description within normal SERP lengths and on intent', () => {
     expect(FRESHA_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
+    expect(FRESHA_ALTERNATIVE_TITLE.startsWith('Fresha Alternative UK')).toBe(true);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(110);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION).toBe(
-      'Looking for a Fresha alternative in the UK? Compare KERSIVO and Fresha pricing, fees, branding, bookings and switching for independent barbershops.',
+      'Looking for a Fresha alternative? KERSIVO gives UK barbershops their own booking website, flat pricing and 0% KERSIVO commission (Stripe fees apply).',
     );
     expect(FRESHA_ALTERNATIVE_DESCRIPTION).toContain('Fresha alternative');
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.match(/Fresha/g)?.length).toBeLessThanOrEqual(2);
@@ -161,154 +184,118 @@ describe('fresha-alternative page SEO foundation', () => {
     for (const source of [pageSource, ...newComponentSources]) {
       expect(source).not.toMatch(/<h1\b/);
     }
-    const h1Text = heroSource
-      .slice(heroSource.indexOf('<h1'), heroSource.indexOf('</h1>'))
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    expect(h1Text).toContain('A Fresha alternative built around your barbershop.');
+    expect(FRESHA_HERO_TITLE_LINES.join(' ')).toBe(
+      'The Fresha alternative for barbershops that want to own the booking',
+    );
+    expect(heroSource).toContain('{FRESHA_HERO_TITLE_LINES.map(');
   });
 
-  it('renders the content sections in the agreed order', () => {
+  it('renders the journey sections in the agreed order', () => {
     const order = [
       '<FreshaHero',
-      '<FreshaQuickAnswer',
-      '<FreshaWhy',
+      '<FreshaVerdict',
+      '<FreshaReasons',
       '<FreshaCosts',
+      '<FreshaOutcomes',
       '<FreshaCompare',
-      '<FreshaProof',
       '<FreshaFit',
       '<FreshaSwitching',
       '<FreshaPricing',
       '<Faq4',
       '<ComparisonFinalCta',
       '<Contact16',
+      '<CompareHubLink',
       '<FreshaSources',
       '<Footer50',
+      '<FreshaJourneyRail',
     ].map((tag) => pageSource.indexOf(tag));
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it('shows a concise Quick Answer directly after the hero', () => {
-    expect(quickAnswerSource).toContain('lead={FRESHA_QUICK_ANSWER_LEAD}');
-    expect(quickAnswerSource).toContain('detail={FRESHA_QUICK_ANSWER_DETAIL}');
-    expect(quickAnswerSource).toContain('facts={FRESHA_QUICK_ANSWER_FACTS}');
-    expect(quickAnswerSource).toContain('id="quick-answer"');
-    expect(FRESHA_QUICK_ANSWER).toBe(`${FRESHA_QUICK_ANSWER_LEAD} ${FRESHA_QUICK_ANSWER_DETAIL}`);
-    const words = FRESHA_QUICK_ANSWER.split(/\s+/).filter(Boolean).length;
+  it('tells the story in four acts whose ids exist on the page', () => {
+    expect(FRESHA_JOURNEY_ACTS.map((act) => act.id)).toEqual(['why-switch', 'costs', 'life-on-kersivo', 'switching']);
+    const sections = [reasonsSource, costsSource, outcomesSource, switchingSource];
+    FRESHA_JOURNEY_ACTS.forEach((act, index) => {
+      expect(sections[index]).toContain(`id="${act.id}"`);
+      expect(sections[index]).toContain(`data-fj-act="${act.numeral}"`);
+    });
+    expect(heroSource).toContain('aria-label="On this page"');
+    expect(railSource).toContain('aria-label="Story progress"');
+  });
+
+  it('answers the switching question in 30 seconds directly after the hero', () => {
+    expect(verdictSource).toContain('id="quick-answer"');
+    expect(verdictSource).toMatch(/<h2 id="fresha-verdict-title"[^>]*>\{FRESHA_VERDICT_TITLE\}<\/h2>/);
+    expect(FRESHA_VERDICT).toBe(`${FRESHA_VERDICT_LEAD} ${FRESHA_VERDICT_DETAIL}`);
+    const words = FRESHA_VERDICT.split(/\s+/).filter(Boolean).length;
     expect(words).toBeGreaterThanOrEqual(60);
-    expect(words).toBeLessThanOrEqual(110);
-    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('Fresha alternative');
-    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('UK barbershops');
-    expect(FRESHA_QUICK_ANSWER_LEAD).toContain('Stripe processing fees still apply');
-    expect(FRESHA_QUICK_ANSWER_DETAIL).toMatch(/^Fresha follows a different model/);
+    expect(words).toBeLessThanOrEqual(140);
+    expect(FRESHA_VERDICT_LEAD).toContain('Stay with Fresha if');
+    expect(FRESHA_VERDICT_LEAD).toContain('Stripe processing fees still apply');
+    expect(FRESHA_VERDICT_TITLE.toLowerCase()).not.toMatch(/\b(best|cheaper)\b/);
+    expect(FRESHA_VERDICT_FIT.map((group) => group.tone)).toEqual(['kersivo', 'fresha']);
+    expect(verdictSource).toContain('<dt>{fact.label}</dt>');
   });
 
-  it('presents the Quick Answer as an editorial intro with a real H2 and a fact list', () => {
-    expect(FRESHA_QUICK_ANSWER_TITLE).toBe('A Fresha alternative built around your own brand.');
-    expect(FRESHA_QUICK_ANSWER_TITLE.toLowerCase()).not.toMatch(/\b(best|better|cheaper)\b/);
-    expect(FRESHA_QUICK_ANSWER_KICKER).toBe('The short version');
-
-    expect(editorialIntroSource).toMatch(/<section\b[^>]*aria-labelledby=\{titleId\}/);
-    expect(editorialIntroSource).toMatch(/<h2 id=\{titleId\}/);
-    expect(editorialIntroSource).toContain('<dl class="editorial-intro__facts">');
-    expect(editorialIntroSource).toContain('<dt>{fact.label}</dt>');
-    expect(editorialIntroSource).toContain('<dd>{fact.value}</dd>');
-    expect(editorialIntroSource).not.toMatch(/fresha/i);
-  });
-
-  it('renders the four Why themes as reusable insight cards with a distinct topic icon each', () => {
-    expect(whySource).toContain('<InsightCards items={FRESHA_WHY_THEMES} />');
-    expect(FRESHA_WHY_THEMES).toHaveLength(4);
-    expect(FRESHA_WHY_THEMES.map((theme) => theme.icon)).toEqual([
-      'seats',
-      'storefront',
-      'discovery',
-      'stack',
+  it('covers the five switching reasons the brief names, each with an honest KERSIVO answer', () => {
+    expect(FRESHA_REASONS.map((reason) => reason.kicker)).toEqual([
+      'Commission',
+      'Fees',
+      'Client control',
+      'Your own website',
+      'Branding',
     ]);
-    for (const icon of ['seats', 'storefront', 'discovery', 'stack']) {
-      expect(insightIconSource).toContain(`name === '${icon}'`);
+    for (const reason of FRESHA_REASONS) {
+      expect(reason.kersivo.length).toBeGreaterThan(40);
     }
-    expect(insightIconSource).toContain('aria-hidden="true"');
-    expect(insightCardsSource).toContain('<h3 class="insight-card__title">{item.title}</h3>');
-    expect(insightCardsSource).toContain('<p class="insight-card__body">{item.body}</p>');
-    for (const source of [insightCardsSource, insightIconSource, insightCardsCss]) {
-      expect(source).not.toMatch(/fresha/i);
+    expect(FRESHA_REASONS[0].kersivo).toContain('Stripe processing fees still apply');
+    expect(FRESHA_REASONS_INTRO).toContain('plenty of shops do well on it');
+    expect(reasonsSource).toContain('<h3 class="fj-reason__title">{reason.title}</h3>');
+  });
+
+  it('keeps every reason readable without the pinned stage', () => {
+    expect(reasonsSource).toContain('class="fj-reason__inline-visual"');
+    expect(reasonsSource).toMatch(/class="fj-reasons__stage" aria-hidden="true"/);
+    expect(reasonVisualSource.match(/aria-hidden="true"/g)?.length).toBe(5);
+    // Dimmed, never hidden; fully visible again on narrow screens.
+    expect(journeyCss).toMatch(/\.fj-reason\[data-active='false'\] \{\s*opacity: 0\.5;/);
+    expect(journeyCss).not.toMatch(/\.fj-reason(\[data-active='false'\])? \{[^}]*(display: none|visibility: hidden)/);
+  });
+
+  it('runs its motion once, without dependencies, and rests under reduced motion', () => {
+    expect(heroSource).toContain('data-enter');
+    expect(journeyCss).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(journeyCss).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\.fj-enter \{\s*animation: none;/);
+    expect(journeyScript).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+    expect(journeyScript).not.toMatch(/from '(gsap|three|motion|framer-motion)/);
+    expect(pageSource).toContain("document.addEventListener('astro:before-swap', cleanup, { once: true });");
+  });
+
+  it('feeds the estimator only verified Fresha rates', () => {
+    const team = requireVerifiedFreshaFact('teamPlanPerMember');
+    const independent = requireVerifiedFreshaFact('independentPlan');
+    const marketplace = requireVerifiedFreshaFact('marketplaceNewClientFee');
+    expect(FRESHA_ESTIMATOR_CONFIG.teamPerMemberGbp).toBe(team.amountGbp);
+    expect(FRESHA_ESTIMATOR_CONFIG.independentGbp).toBe(independent.amountGbp);
+    expect(FRESHA_ESTIMATOR_CONFIG.marketplacePercent).toBe(marketplace.percent);
+    expect(FRESHA_ESTIMATOR_CONFIG.marketplaceMinimumGbp).toBe(marketplace.minimumGbp);
+    expect(costsSource).toContain('data-fj-estimator={JSON.stringify(config)}');
+    expect(FRESHA_ESTIMATOR_NOTE).toContain('leaves out payment processing on both sides');
+    for (const id of ['fj-barbers', 'fj-new-clients', 'fj-first-visit']) {
+      expect(costsSource).toContain(`<label for="${id}">`);
     }
-  });
-
-  it('balances uneven insight-card rows by width instead of padding', () => {
-    expect(insightCardsSource).toContain('const UNEVEN_ROW_RATIO = 1.3;');
-    expect(insightCardsSource).toContain("`insight-card--${widths[index]}`");
-    expect(insightCardsCss).toMatch(/\.insight-card--wide \{\s*grid-column: span 7;/);
-    expect(insightCardsCss).toMatch(/\.insight-card--narrow \{\s*grid-column: span 5;/);
-    expect(insightCardsCss).not.toMatch(/min-height/);
-    const words = FRESHA_WHY_THEMES.map((theme) => theme.body.split(/\s+/).length);
-    expect(words[2]).toBeGreaterThanOrEqual(words[3] * 1.3);
-    expect(Math.max(words[0], words[1])).toBeLessThan(Math.min(words[0], words[1]) * 1.3);
-  });
-
-  it('renders the two models through the reusable model comparison with aligned summaries', () => {
-    const modelComparisonSource = readRepoFile('../../components/editorial/ModelComparison.astro');
-    const modelComparisonCss = readRepoFile('../../styles/components/model-comparison.css');
-    expect(fitSource).toContain('<ModelComparison');
-    expect(fitSource).toContain('conclusion={FRESHA_FIT_CLOSING}');
-    expect(FRESHA_FIT_PATHS.map((path) => path.icon)).toEqual(['network', 'direct']);
-    const summaryLabels = FRESHA_FIT_PATHS.map((path) => path.summary?.map((row) => row.label));
-    expect(summaryLabels[0]).toEqual(summaryLabels[1]);
-    expect(modelComparisonSource).toMatch(/<h3 id=\{`\$\{idPrefix\}-\$\{index\}-title`\}/);
-    expect(modelComparisonSource).toContain('aria-hidden="true"');
-    for (const source of [modelComparisonSource, modelComparisonCss]) {
-      expect(source).not.toMatch(/fresha|\bvs\b|winner/i);
-    }
-  });
-
-  it('renders the migration steps as one vertical, scroll-revealed process timeline', () => {
-    const timelineSource = readRepoFile('../../components/editorial/ProcessTimeline.astro');
-    const timelineCss = readRepoFile('../../styles/components/process-timeline.css');
-    expect(switchingSource).toContain('<ProcessTimeline');
-    expect(switchingSource).toContain('steps={FRESHA_SWITCHING_STEPS}');
-    expect(switchingSource).toContain('<a href="#contact">Ask about moving your Fresha data');
-    expect(timelineSource).toContain('<ol class="process-timeline__steps">');
-    expect(timelineSource).toContain('<h3 class="process-timeline__title">');
-    expect(timelineSource).toMatch(/process-timeline__node" aria-hidden="true"/);
-    expect(timelineSource).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
-    expect(timelineCss).toMatch(
-      /@media \(prefers-reduced-motion: no-preference\) \{\s*\.process-timeline\.is-enhanced \.process-timeline__step \{/,
-    );
-    expect(timelineCss).not.toMatch(/dashed|@keyframes|animation|scale\(/);
-    for (const source of [timelineSource, timelineCss]) {
-      expect(source).not.toMatch(/fresha|kersivo|\bvs\b/i);
-    }
-    expect(readRepoFile('../../styles/components/fresha-alternative.css')).not.toMatch(
-      /fresha-alt-switching__(steps|step|limits|cta)\b/,
-    );
-  });
-
-  it('keeps insight card text visible without hover and motion opt-out', () => {
-    expect(insightCardsCss).not.toMatch(/opacity:\s*0|display:\s*none|visibility:\s*hidden/);
-    expect(insightCardsCss).not.toMatch(/@keyframes|animation/);
-    expect(insightCardsCss).toContain('@media (hover: hover) and (pointer: fine)');
-    expect(insightCardsCss).toContain('@media (prefers-reduced-motion: reduce)');
-  });
-
-  it('styles the editorial intro on the page canvas rather than as a card', () => {
-    expect(editorialIntroCss).not.toMatch(/border-radius|box-shadow|gradient|animation|transition/);
-    expect(editorialIntroCss).not.toMatch(/background:(?!\s*var\(--accent\);)/);
-    expect(editorialIntroCss).not.toMatch(/border-left:\s*2px/);
-    expect(readRepoFile('../../styles/components/fresha-alternative.css')).not.toContain(
-      '.fresha-alt-quick',
-    );
+    expect(costsSource).toContain('aria-live="polite"');
   });
 
   it('includes the required H2 sections', () => {
-    const corpus = newComponentSources.join('\n').replace(/\s+/g, ' ');
+    const corpus = [...newComponentSources, contentSource].join('\n').replace(/\s+/g, ' ');
     for (const heading of [
       'Why UK barbers look for a Fresha alternative',
-      'Fresha pricing and fees for UK barbers',
+      'Fresha pricing and fees for UK barbers, line by line',
+      'What changes when the booking is yours',
       'Which model fits your barbershop?',
-      'Switching from Fresha to KERSIVO',
+      'Switching from Fresha to KERSIVO without a gap in the diary',
       'Sources &amp; comparison notes',
     ]) {
       expect(corpus).toContain(heading);
@@ -397,9 +384,9 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-10-28');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-28');
-    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('28 October 2026');
+    expect(matches[0].lastmod).toBe('2026-11-14');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-11-14');
+    expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('14 November 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');
     expect(sourcesSource).toContain('datetime={FRESHA_ALTERNATIVE_LAST_UPDATED_ISO}');
   });
@@ -563,6 +550,7 @@ describe('comparison cluster internal links', () => {
   const homepageSource = readRepoFile('../../pages/index.astro');
   const homepageIncludedSource = readRepoFile('../../components/homeV2/HomeV2Included.astro');
   const booksyFitSource = readRepoFile('../../components/booksyAlternative/BooksyFit.astro');
+  const allSources = [pageSource, heroSource, compareSource, pricingSource, finalCtaSource, ...newComponentSources];
 
   function countLinks(source: string, href: string): number {
     return source.split(`href="${href}"`).length - 1;
@@ -585,20 +573,7 @@ describe('comparison cluster internal links', () => {
     expect(countLinks(fitSource, '/booksy-alternative')).toBe(1);
     expect(fitSource).toContain('Also comparing Booksy?');
     expect(fitSource).toContain('Compare KERSIVO and Booksy');
-    const otherSources = [
-      pageSource,
-      heroSource,
-      compareSource,
-      pricingSource,
-      proofSource,
-      finalCtaSource,
-      quickAnswerSource,
-      whySource,
-      costsSource,
-      switchingSource,
-      sourcesSource,
-    ];
-    for (const source of otherSources) {
+    for (const source of allSources.filter((source) => source !== fitSource)) {
       expect(countLinks(source, '/booksy-alternative')).toBe(0);
     }
   });
@@ -608,29 +583,23 @@ describe('comparison cluster internal links', () => {
     expect(costsSource).toMatch(
       /<a href="\/barber-software-cost-calculator">\s*Barber Software Cost Calculator\s*<\/a>/,
     );
-    expect(costsSource.indexOf('/barber-software-cost-calculator')).toBeGreaterThan(
-      costsSource.indexOf('{FRESHA_WORKED_EXAMPLES_NOTE}'),
-    );
-    const otherSources = [
-      pageSource,
-      heroSource,
-      compareSource,
-      pricingSource,
-      proofSource,
-      finalCtaSource,
-      quickAnswerSource,
-      whySource,
-      fitSource,
-      switchingSource,
-      sourcesSource,
-      faqSource,
-      contentSource,
-    ];
-    for (const source of otherSources) {
+    for (const source of [...allSources.filter((source) => source !== costsSource), faqSource, contentSource]) {
       expect(source).not.toContain('/barber-software-cost-calculator');
     }
-    for (const source of [costsSource, ...otherSources]) {
+    for (const source of allSources) {
       expect(source).not.toContain('/barber-booking-software-cost-calculator');
+    }
+  });
+
+  it('links out to the website, online booking and demo pages from the story', () => {
+    const reasonLinks = FRESHA_REASONS.flatMap((reason) => (reason.link ? [reason.link.href] : []));
+    expect(reasonLinks).toEqual(['/barbershop-websites', '/barbershop-online-booking']);
+    expect(reasonsSource).toContain('href={reason.link.href}');
+    expect(countLinks(outcomesSource, '/demo')).toBe(1);
+    expect(outcomesSource).toContain('data-track="view_live_demo_click"');
+    for (const path of ['barbershop-websites', 'barbershop-online-booking', 'demo']) {
+      const page = join(here, '../../pages', path);
+      expect(existsSync(`${page}.astro`) || existsSync(join(page, 'index.astro')), path).toBe(true);
     }
   });
 
@@ -657,11 +626,11 @@ describe('contact form placeholder', () => {
 
 describe('hero dashboard showcase', () => {
   const showcaseSource = readRepoFile('../../components/marketing/HeroDashboardShowcase.astro');
-  const heroCss = readRepoFile('../../styles/components/fresha-alternative.css');
+  const heroCss = journeyCss;
 
   it('renders the shared live dashboard showcase below the hero copy', () => {
     expect(heroSource).toContain("import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';");
-    expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeGreaterThan(heroSource.indexOf('fresha-alt-hero__meta'));
+    expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeGreaterThan(heroSource.indexOf('fj-hero__facts'));
     expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeLessThan(heroSource.indexOf('</section>'));
     expect(showcaseSource).toContain('data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"');
   });
@@ -675,7 +644,7 @@ describe('hero dashboard showcase', () => {
   });
 
   it('keeps the black hero background the showcase loads into', () => {
-    expect(heroCss).toMatch(/^\.fresha-alt-hero \{[^}]*background: #030303;/m);
+    expect(heroCss).toMatch(/^\.fj-hero \{[^}]*background: #030303;/m);
   });
 
   it('lets touch scrolling chain from the fixed hero showcase to the landing page', () => {

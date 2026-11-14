@@ -1,0 +1,56 @@
+---
+import { FRESHA_OUTCOMES, FRESHA_OUTCOMES_INTRO } from '@/lib/seo/freshaAlternativeContent';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+
+const [first, second, ...textOutcomes] = FRESHA_OUTCOMES;
+---
+
+<section id="life-on-kersivo" class="fj-section fj-outcomes" aria-labelledby="fresha-outcomes-title" data-fj-act="III">
+  <div class="fj-wrap">
+    <header class="fj-head">
+      <p class="fj-act-label"><span>Act III</span> The turn</p>
+      <h2 id="fresha-outcomes-title" class="fj-h2">What changes when the booking is yours</h2>
+      <p class="fj-lead">{FRESHA_OUTCOMES_INTRO}</p>
+    </header>
+
+    <div class="fj-bento">
+      {[first, second].map((outcome, index) => (
+        <article class={`fj-tile fj-tile--photo fj-tile--photo-${index + 1}`}>
+          <div class="fj-tile__media">
+            <img
+              src={outcome.image!.src}
+              alt={outcome.image!.alt}
+              width={index === 0 ? 960 : 720}
+              height={index === 0 ? 720 : 900}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="fj-tile__body">
+            <h3 class="fj-h3">{outcome.title}</h3>
+            <p class="fj-body">{outcome.body}</p>
+          </div>
+        </article>
+      ))}
+
+      <article class="fj-tile fj-tile--zero">
+        <p class="fj-zero" aria-hidden="true">0%</p>
+        <h3 class="fj-h3">KERSIVO commission on booking payments</h3>
+        <p class="fj-body">On Starter and Full, and on Full retail sales. {STRIPE_FEES_NOTE}</p>
+      </article>
+
+      {textOutcomes.map((outcome) => (
+        <article class="fj-tile fj-tile--text">
+          <h3 class="fj-h3">{outcome.title}</h3>
+          <p class="fj-body">{outcome.body}</p>
+        </article>
+      ))}
+
+      <a class="fj-tile fj-tile--demo" href="/demo" data-track="view_live_demo_click" data-track-placement="fresha_outcomes">
+        <span class="fj-eyebrow">Live demo</span>
+        <span class="fj-tile__demo-title">Book a cut at the demo barbershop, then open the owner dashboard behind it</span>
+        <span class="fj-tile__demo-cta">Open the live demo <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,57 @@
+---
+import FreshaReasonVisual from '@/components/freshaAlternative/FreshaReasonVisual.astro';
+import { FRESHA_REASONS, FRESHA_REASONS_INTRO } from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="why-switch" class="fj-section fj-reasons" aria-labelledby="fresha-reasons-title" data-fj-act="I">
+  <div class="fj-wrap">
+    <header class="fj-head">
+      <p class="fj-act-label"><span>Act I</span> The pressure</p>
+      <h2 id="fresha-reasons-title" class="fj-h2">Why UK barbers look for a Fresha alternative</h2>
+      <p class="fj-lead">{FRESHA_REASONS_INTRO}</p>
+    </header>
+
+    <div class="fj-reasons__layout" data-fj-reasons>
+      <ol class="fj-reasons__steps">
+        {FRESHA_REASONS.map((reason, index) => (
+          <li class="fj-reason" id={reason.id} data-fj-step={index} data-active={index === 0 ? 'true' : 'false'}>
+            <p class="fj-reason__kicker">
+              <span class="fj-reason__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              {reason.kicker}
+            </p>
+            <h3 class="fj-reason__title">{reason.title}</h3>
+            <p class="fj-body">{reason.body}</p>
+            <p class="fj-reason__kersivo"><strong>With KERSIVO:</strong> {reason.kersivo}</p>
+            {reason.link && (
+              <a class="fj-text-link" href={reason.link.href}>
+                {reason.link.label} <span aria-hidden="true">→</span>
+              </a>
+            )}
+            <div class="fj-reason__inline-visual">
+              <FreshaReasonVisual visual={reason.visual} />
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div class="fj-reasons__stage" aria-hidden="true">
+        <div class="fj-stage">
+          <div class="fj-stage__frame">
+            {FRESHA_REASONS.map((reason, index) => (
+              <div class="fj-stage__scene" data-fj-scene={index} data-active={index === 0 ? 'true' : 'false'}>
+                <FreshaReasonVisual visual={reason.visual} />
+              </div>
+            ))}
+          </div>
+          <div class="fj-stage__ticks">
+            {FRESHA_REASONS.map((reason, index) => (
+              <span class="fj-stage__tick" data-fj-tick={index} data-active={index === 0 ? 'true' : 'false'}>
+                {reason.kicker}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

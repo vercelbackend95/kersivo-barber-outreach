@@ -1,0 +1,42 @@
+---
+import {
+  FRESHA_VERDICT_DETAIL,
+  FRESHA_VERDICT_FACTS,
+  FRESHA_VERDICT_FIT,
+  FRESHA_VERDICT_KICKER,
+  FRESHA_VERDICT_LEAD,
+  FRESHA_VERDICT_TITLE,
+} from '@/lib/seo/freshaAlternativeContent';
+---
+
+<section id="quick-answer" class="fj-section fj-verdict" aria-labelledby="fresha-verdict-title">
+  <div class="fj-wrap fj-verdict__grid">
+    <div class="fj-verdict__copy">
+      <p class="fj-eyebrow">{FRESHA_VERDICT_KICKER}</p>
+      <h2 id="fresha-verdict-title" class="fj-h2">{FRESHA_VERDICT_TITLE}</h2>
+      <p class="fj-lead">{FRESHA_VERDICT_LEAD}</p>
+      <p class="fj-body">{FRESHA_VERDICT_DETAIL}</p>
+    </div>
+
+    <div class="fj-verdict__card ks-glass-card ks-glass-card--accent">
+      <dl class="fj-verdict__facts">
+        {FRESHA_VERDICT_FACTS.map((fact) => (
+          <div class="fj-verdict__fact">
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div class="fj-verdict__fit">
+        {FRESHA_VERDICT_FIT.map((group) => (
+          <div class={`fj-verdict__fit-col fj-verdict__fit-col--${group.tone}`}>
+            <h3 class="fj-h3">{group.label}</h3>
+            <ul class="fj-checklist">
+              {group.points.map((point) => <li>{point}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

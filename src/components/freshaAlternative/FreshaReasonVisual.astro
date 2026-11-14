@@ -1,0 +1,124 @@
+---
+/**
+ * Decorative stage visuals for the five switching reasons. Every Fresha figure is computed from
+ * freshaFacts.ts; the client, shop and domain shown are illustrative (CUTSTATE is the fictional demo shop).
+ */
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import type { FreshaReasonVisual } from '@/lib/seo/freshaAlternativeContent';
+import {
+  FRESHA_UK_VAT_PERCENT,
+  estimateFreshaMarketplaceNewClientFee,
+  estimateFreshaMonthlySubscription,
+  formatGbp,
+  formatPercent,
+  requireVerifiedFreshaFact,
+} from '@/lib/seo/freshaFacts';
+
+interface Props {
+  visual: FreshaReasonVisual;
+}
+
+const { visual } = Astro.props as Props;
+
+const money = (value: number) => `£${value.toFixed(2)}`;
+
+// Receipt: a first visit that started on the Marketplace.
+const FIRST_VISIT_GBP = 25;
+const marketplaceFee = requireVerifiedFreshaFact('marketplaceNewClientFee');
+const feeExVat = estimateFreshaMarketplaceNewClientFee(FIRST_VISIT_GBP);
+const feeVat = Math.round(feeExVat * FRESHA_UK_VAT_PERCENT) / 100;
+
+// Team chart: Fresha subscription (inc VAT) by team size against the flat Full price.
+const TEAM_SIZES = [1, 2, 3, 4, 5, 6, 7, 8];
+const teamRows = TEAM_SIZES.map((size) => ({ size, fresha: estimateFreshaMonthlySubscription(size).incVatGbp }));
+const chartMax = Math.max(...teamRows.map((row) => row.fresha), SAAS_MONTHLY_GBP) * 1.08;
+const kersivoLine = (SAAS_MONTHLY_GBP / chartMax) * 100;
+---
+
+{visual === 'receipt' && (
+  <div class="fj-vis fj-vis--receipt" aria-hidden="true">
+    <div class="fj-receipt">
+      <p class="fj-receipt__head">First visit · found on a marketplace</p>
+      <div class="fj-receipt__row"><span>Skin fade</span><span>{money(FIRST_VISIT_GBP)}</span></div>
+      <div class="fj-receipt__row fj-receipt__row--cut">
+        <span>New-client fee · {formatPercent(marketplaceFee.percent!)}</span><span>−{money(feeExVat)}</span>
+      </div>
+      <div class="fj-receipt__row fj-receipt__row--cut"><span>VAT on the fee</span><span>−{money(feeVat)}</span></div>
+      <div class="fj-receipt__rule"></div>
+      <div class="fj-receipt__row fj-receipt__row--total">
+        <span>Paid to the platform</span><span>{money(feeExVat + feeVat)}</span>
+      </div>
+    </div>
+    <div class="fj-receipt fj-receipt--kersivo">
+      <p class="fj-receipt__head">Same client, booked on your own page</p>
+      <div class="fj-receipt__row"><span>KERSIVO commission</span><span>{money(0)}</span></div>
+      <p class="fj-receipt__note">Stripe processing fees apply</p>
+    </div>
+  </div>
+)}
+
+{visual === 'team' && (
+  <div class="fj-vis fj-vis--team" aria-hidden="true">
+    <p class="fj-vis__label">Monthly subscription by number of bookable barbers</p>
+    <div class="fj-chart" style={`--kersivo-line: ${kersivoLine.toFixed(1)}`}>
+      {teamRows.map((row, index) => (
+        <div class="fj-chart__col" style={`--h: ${((row.fresha / chartMax) * 100).toFixed(1)}%; --i: ${index}`}>
+          <span class="fj-chart__value">{formatGbp(Math.round(row.fresha))}</span>
+          <span class="fj-chart__bar"></span>
+          <span class="fj-chart__size">{row.size}</span>
+        </div>
+      ))}
+      <div class="fj-chart__flat"><span>{formatGbp(SAAS_MONTHLY_GBP)} flat</span></div>
+    </div>
+    <p class="fj-vis__legend"><span class="fj-swatch fj-swatch--muted"></span>Fresha, inc. VAT <span class="fj-swatch fj-swatch--brand"></span>KERSIVO per location</p>
+  </div>
+)}
+
+{visual === 'clients' && (
+  <div class="fj-vis fj-vis--clients" aria-hidden="true">
+    <div class="fj-client">
+      <div class="fj-client__top">
+        <span class="fj-client__avatar">JC</span>
+        <div>
+          <p class="fj-client__name">Jamie Carter</p>
+          <p class="fj-client__meta">Regular · books every 3 weeks</p>
+        </div>
+        <span class="fj-pill">Your client</span>
+      </div>
+      <dl class="fj-client__grid">
+        <div><dt>Visits</dt><dd>14</dd></div>
+        <div><dt>Usual barber</dt><dd>Marcus</dd></div>
+        <div><dt>Last service</dt><dd>Skin fade</dd></div>
+      </dl>
+      <p class="fj-client__note">Note: number two on the sides, scissors on top</p>
+      <p class="fj-client__source"><span class="fj-dot"></span>Booked on cutstate.co.uk</p>
+    </div>
+  </div>
+)}
+
+{visual === 'website' && (
+  <div class="fj-vis fj-vis--website" aria-hidden="true">
+    <div class="fj-browser">
+      <div class="fj-browser__bar">
+        <span class="fj-browser__dots"><i></i><i></i><i></i></span>
+        <span class="fj-browser__url"><span class="fj-lock"></span>cutstate.co.uk/book</span>
+      </div>
+      <div class="fj-browser__view">
+        <img src="/images/barbershop-websites/site-hero-640.webp" alt="" width="640" height="524" loading="lazy" decoding="async" />
+        <span class="fj-browser__cta">Book now</span>
+      </div>
+    </div>
+  </div>
+)}
+
+{visual === 'brand' && (
+  <div class="fj-vis fj-vis--brand" aria-hidden="true">
+    <ol class="fj-trail">
+      <li><span class="fj-trail__step">Instagram bio</span><span class="fj-trail__value">cutstate.co.uk/book</span></li>
+      <li><span class="fj-trail__step">Booking page</span><span class="fj-trail__value">Your logo, barbers and prices</span></li>
+      <li><span class="fj-trail__step">Deposit</span><span class="fj-trail__value">Paid to your Stripe account</span></li>
+      <li><span class="fj-trail__step">Reminder email</span><span class="fj-trail__value">Signed by your shop</span></li>
+    </ol>
+    <img class="fj-trail__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
+  </div>
+)}
