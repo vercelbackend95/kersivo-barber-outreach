@@ -32,8 +32,8 @@ export const CHAIR_RENT_CALCULATOR_BREADCRUMBS: readonly BreadcrumbTrailItem[] =
 ];
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO = '2026-10-29';
-export const CHAIR_RENT_CALCULATOR_LAST_UPDATED_LABEL = '29 October 2026';
+export const CHAIR_RENT_CALCULATOR_LAST_UPDATED_ISO = '2026-11-14';
+export const CHAIR_RENT_CALCULATOR_LAST_UPDATED_LABEL = '14 November 2026';
 
 export const CHAIR_RENT_CALCULATOR_OG_IMAGE = '/images/og/chair-rent-vs-commission-calculator-1200x630.png';
 export const CHAIR_RENT_CALCULATOR_OG_IMAGE_ALT = 'Chair rent or commission? Run the numbers. KERSIVO calculator for UK barbershops.';
@@ -48,12 +48,16 @@ export const COMMISSION_ARTICLE_WORKED_EXAMPLE = `${INSIGHTS_COMMISSION_PAY.path
 
 /* ---------------------------------- Hero ---------------------------------- */
 
+/**
+ * `lead` is the direct answer under the H1 (40–60 words) for "chair rent vs commission UK".
+ * It restates the FAQ and trade-offs below, with no figures of its own.
+ */
 export const CHAIR_RENT_HERO = {
   eyebrow: 'FREE TOOL FOR UK BARBERSHOP OWNERS',
   title: 'Chair Rent vs Commission Calculator',
   lead:
-    'For one chair, compare what your shop keeps in a year from an employed barber on commission with what it keeps from a self-employed barber renting the chair.',
-  supporting: `Includes minimum wage top-ups in quiet months, holiday pay, employer’s National Insurance, pension and VAT, using ${UK_RATES_TAX_YEAR} rates.`,
+    'Chair rent or commission? For a UK barbershop, busy chairs tend to favour an employed barber on commission and quiet ones a fixed chair rent. Commission also brings minimum wage top-ups, holiday pay, employer’s National Insurance and pension costs. This free calculator compares both for one chair and shows your break-even rent.',
+  supporting: `Uses ${UK_RATES_TAX_YEAR} rates, checks the minimum wage month by month (quiet months included) and handles VAT if your shop is registered.`,
   examples: 'Example numbers — replace them with your own.',
   privacy: 'Everything is worked out in your browser. Nothing is stored or sent.',
 } as const;
@@ -96,6 +100,18 @@ export const RESULTS_COPY = {
   copy: 'Copy summary',
   print: 'Print',
   share: 'Copy share link',
+} as const;
+
+/* ------------------------------- How to use it ------------------------------- */
+
+/** "How to use it" steps; each one describes what the calculator already does. */
+export const HOW_TO_USE_SECTION = {
+  heading: 'How to use it',
+  steps: [
+    'Enter what the chair takes in a typical month and how much quieter your quiet months are.',
+    'Fill in the commission deal (A) and the chair rent deal (B), replacing the example numbers with your own.',
+    'Compare the shop’s yearly result for each, the break-even rent and the minimum wage check, then copy, print or share the summary.',
+  ],
 } as const;
 
 /* ------------------------------ Employment status ------------------------------ */

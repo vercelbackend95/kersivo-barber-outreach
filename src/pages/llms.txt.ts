@@ -22,7 +22,11 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
     link('/barbershop-online-booking', 'Online booking', 'how clients book, deposits and payment options on Starter and Full'),
-    link('/starter', 'KERSIVO Starter', 'the £0/month plan, its limits and when Full is the better fit'),
+    link(
+      '/starter',
+      'KERSIVO Starter',
+      `free barber booking system for UK shops: £0/month for up to 4 barbers, every public booking takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through the shop's Stripe account (Stripe fees apply), and when Full is the better fit`,
+    ),
     link('/demo', 'Live demo', 'a fictional demo barbershop running on KERSIVO'),
     link('/about', 'About KERSIVO', 'how setup, support and leaving work'),
     '',
@@ -37,17 +41,17 @@ export function buildLlmsTxt(siteUrl: string): string {
     link(
       '/barbershop-cancellation-policy-template',
       'Cancellation policy template',
-      'free generator for a barbershop cancellation, deposit and no-show policy in three lengths',
+      'free UK barbershop cancellation policy template: notice period, deposit, no-show and lateness rules in website, short and one-line versions, with nothing stored',
     ),
     link(
       '/barbershop-no-show-calculator',
       'No-show cost calculator',
-      'yearly cost of missed appointments and whether a deposit pays for itself',
+      'free barber no-show cost calculator: the yearly cost of missed appointments from your own numbers, and whether a deposit would pay for itself',
     ),
     link(
       '/chair-rent-vs-commission-calculator',
       'Chair rent vs commission calculator',
-      'what one chair leaves the shop with an employed barber on commission or a self-employed renter, with UK minimum wage and employer costs',
+      "free chair rent vs commission calculator for UK barbershops: what one chair leaves the shop either way, including minimum wage top-ups, holiday pay, employer's National Insurance and pension, plus the break-even rent",
     ),
     '',
     '## Insights',

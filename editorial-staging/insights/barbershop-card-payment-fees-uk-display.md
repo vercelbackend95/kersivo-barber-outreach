@@ -30,6 +30,8 @@ That has a practical consequence. Anything that splits one visit into several ca
 
 Your own provider may price these differently. None of this is a reason to stop taking deposits, but it is a cost worth knowing.
 
+<aside class="insights-tool-callout" aria-label="No-show cost calculator"><p class="insights-tool-callout__kicker">FREE TOOL</p><p class="insights-tool-callout__text"><a href="/barbershop-no-show-calculator">See whether a deposit pays for itself, card fees included → No-Show Cost Calculator</a></p></aside>
+
 ## Your real rate is a blend
 
 The rate on your contract is not the rate you pay. Your real rate depends on the mix of cards your clients use and the size of the payments.

@@ -19,7 +19,7 @@ The case for a website rests on jobs the free platforms either do badly or do on
 
 **1. A page you control.** Your Google profile and Instagram account belong to platforms with their own rules, layouts and priorities. You can't decide what appears next to your listing, how your price list is shown, or what happens if the account is suspended or hacked. A website is the one place online where you decide what's on the page.
 
-**2. Prices and policies in one place.** A shop that takes deposits or charges for no-shows needs its terms set out clearly, in a place the client can see before booking. The same applies to prices. Under the Provision of Services Regulations 2009, a service provider must make available the price of a service where it is predetermined, along with its name, address and contact details. One of the ways the regulations allow this is "easily accessible to the recipient electronically by means of an address supplied by the provider". A short page with your prices, cancellation policy and contact details does this tidily. A pinned Instagram post usually doesn't.
+**2. Prices and policies in one place.** A shop that takes deposits or charges for no-shows [needs its terms set out clearly](/barbershop-cancellation-policy-template), in a place the client can see before booking. The same applies to prices. Under the Provision of Services Regulations 2009, a service provider must make available the price of a service where it is predetermined, along with its name, address and contact details. One of the ways the regulations allow this is "easily accessible to the recipient electronically by means of an address supplied by the provider". A short page with your prices, cancellation policy and contact details does this tidily. A pinned Instagram post usually doesn't.
 
 **3. Legal disclosures, if you trade as a company.** If your shop is a limited company, the Company, Limited Liability Partnership and Business (Names and Trading Disclosures) Regulations 2015 require it to show its registered name on its websites (regulation 24). Regulation 25 adds the part of the UK where it's registered, its registered number and its registered office address. This doesn't oblige you to *have* a website. But it does mean the one you have needs a correct footer, which many small business sites lack.
 
@@ -38,7 +38,7 @@ This is a rule of thumb, not a scoring system. It's a quick way to see whether a
 | Question | If yes | If no |
 | --- | --- | --- |
 | Do new clients struggle to find your prices or book outside opening hours? | A booking page with prices is worth having | The platforms are probably enough |
-| Do you take deposits or charge for no-shows? | You need a clear, linkable policy page | Optional |
+| [Do you take deposits or charge for no-shows?](/barbershop-no-show-calculator) | You need a clear, linkable policy page | Optional |
 | Do you trade as a limited company and already have a site? | Check the footer disclosures now | Not applicable |
 | Do most of your new clients come through a marketplace you'd rather not depend on? | Your own booking route is worth building | Lower priority |
 

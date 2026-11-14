@@ -41,13 +41,29 @@ describe('Insights linking map', () => {
   });
 });
 
-/** Commercial links in the article body, excluding the numbered References / Sources list. */
-function bodyCommercialLinks(slug: string): string[] {
+/** Every link in the article body (Markdown links and HTML tool callouts), excluding the References / Sources list. */
+function bodyLinks(slug: string): string[] {
   const md = readFileSync(join(process.cwd(), 'editorial-staging/insights', `${slug}-display.md`), 'utf8');
   const refsAt = md.search(/^## (References|Sources)\b/m);
   const body = refsAt < 0 ? md : md.slice(0, refsAt);
-  return [...body.matchAll(/\]\(([^)\s]+)\)/g)].map((m) => m[1]).filter(isInsightsCommercialHref);
+  return [
+    ...[...body.matchAll(/\]\(([^)\s]+)\)/g)].map((m) => m[1]),
+    ...[...body.matchAll(/<a href="([^"]+)"/g)].map((m) => m[1]),
+  ];
 }
+
+/** Commercial links in the article body, tool callouts included. */
+function bodyCommercialLinks(slug: string): string[] {
+  return bodyLinks(slug).filter(isInsightsCommercialHref);
+}
+
+/** Free tools: allowed in off-buyer articles, still counted in the commercial budget where listed as commercial. */
+const FREE_TOOL_PATHS = [
+  '/barbershop-no-show-calculator',
+  '/barbershop-cancellation-policy-template',
+  '/chair-rent-vs-commission-calculator',
+  '/barber-software-cost-calculator',
+];
 
 const BUYER_ADJACENT = [
   'barbershop-no-show-cost-when-deposit-makes-sense',
@@ -103,9 +119,11 @@ describe('Insights commercial link budget (Batch 5)', () => {
     }
   });
 
-  it('forces no product links into off-buyer articles', () => {
+  it('forces no product links into off-buyer articles (free tools only)', () => {
     for (const slug of OFF_BUYER) {
-      expect(commercialLinks(slug), slug).toEqual([]);
+      const productLinks = commercialLinks(slug).filter((href) => !FREE_TOOL_PATHS.includes(href.split('#')[0]));
+      expect(productLinks, slug).toEqual([]);
+      expect(getInsightsCommercialNext(slug), slug).toBeUndefined();
     }
   });
 
@@ -166,6 +184,38 @@ describe('Owner-intent bridges', () => {
     expect(getInsightsAudience('barber-dermatitis-skin-care-hse')).toBe('For barbershop owners and managers');
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
       if (/owner/i.test(article.headline)) expect(getInsightsAudience(article.slug), article.slug).toBeUndefined();
+    }
+  });
+});
+
+describe('Insights → free tools contextual links', () => {
+  /** Articles about no-shows, deposits or cancellations. */
+  const NO_SHOW_TOPIC = [
+    'barbershop-no-show-cost-when-deposit-makes-sense',
+    'barbershop-walk-ins-vs-appointments',
+    'do-barbers-need-a-website-uk',
+  ];
+  /** Articles about pay, commission or chair rent. */
+  const PAY_TOPIC = [
+    'barber-commission-pay-minimum-wage-uk',
+    'how-much-do-barbershop-owners-make-uk',
+    'busy-barbershop-low-profit-chair-hour',
+  ];
+
+  it('links no-show, deposit and cancellation articles to the no-show calculator and the policy template', () => {
+    for (const slug of NO_SHOW_TOPIC) {
+      expect(bodyLinks(slug), slug).toContain('/barbershop-no-show-calculator');
+      expect(bodyLinks(slug), slug).toContain('/barbershop-cancellation-policy-template');
+    }
+  });
+
+  it('links the card fees article (split deposit payments) to the no-show calculator', () => {
+    expect(bodyLinks('barbershop-card-payment-fees-uk')).toContain('/barbershop-no-show-calculator');
+  });
+
+  it('links pay, commission and chair rent articles to the chair rent calculator', () => {
+    for (const slug of PAY_TOPIC) {
+      expect(bodyLinks(slug), slug).toContain('/chair-rent-vs-commission-calculator');
     }
   });
 });

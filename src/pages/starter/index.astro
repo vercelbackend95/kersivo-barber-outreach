@@ -7,6 +7,7 @@ import StarterFullPlanCards from '@/components/pricing/StarterFullPlanCards.astr
 import { STARTER_KEY_FACTS } from '@/lib/pricing/pricingPlans';
 import {
   STARTER_FAQ_ITEMS,
+  STARTER_FREE_BOOKING_BODY,
   STARTER_FREE_QUALIFIER,
   STARTER_FULL_FIT,
   STARTER_PAGE_DESCRIPTION,
@@ -141,10 +142,7 @@ const starterFeatures = [
         <header class="starter-section__header">
           <p class="starter-section__eyebrow">RUN THE DIARY</p>
           <h2 id="starter-core-title">The core tools to take bookings and run the day.</h2>
-          <p>
-            Starter is not a temporary trial. It is a real operating plan for independent shops that
-            want a straightforward booking setup before they need the wider Full KERSIVO toolkit.
-          </p>
+          <p>{STARTER_FREE_BOOKING_BODY}</p>
         </header>
 
         <div class="starter-feature-grid">
