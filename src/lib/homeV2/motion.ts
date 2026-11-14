@@ -280,45 +280,43 @@ function bindLedgerTicks(root: Document) {
   };
 }
 
-/** The price rolls in like a meter, the card catches the light, and the receipt prints every line as included. */
+/**
+ * A fair price, not a sales pitch: the price never counts up. It simply appears at its real value
+ * while the beam under it settles level on its red pivot, and the receipt prints every line as
+ * included, evenly.
+ */
 function bindPrice(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Document) {
   const plan = root.querySelector<HTMLElement>('[data-hv2-plan]');
   if (!plan) return undefined;
-  const cols = Array.from(plan.querySelectorAll<HTMLElement>('[data-hv2-odo-col]'));
+  const amount = plan.querySelector<HTMLElement>('[data-hv2-amount]');
   const per = plan.querySelector<HTMLElement>('[data-hv2-per]');
-  const glow = plan.querySelector<HTMLElement>('[data-hv2-glow]');
-  const sheen = plan.querySelector<HTMLElement>('[data-hv2-sheen]');
+  const level = plan.querySelector<HTMLElement>('[data-hv2-level]');
   const receipt = plan.querySelector<HTMLElement>('[data-hv2-receipt]');
   const lines = receipt ? Array.from(receipt.querySelectorAll<HTMLElement>('[data-hv2-receipt-line]')) : [];
   const included = receipt ? Array.from(receipt.querySelectorAll<HTMLElement>('li b')) : [];
 
-  const landing = (digit: number) => -((digit + 10) / 20) * 100;
-  gsap.set(cols, { y: 0, yPercent: 0 });
-  if (per) gsap.set(per, { autoAlpha: 0, x: -12 });
-  if (glow) gsap.set(glow, { autoAlpha: 0, scale: 0.5 });
+  if (amount) gsap.set(amount, { autoAlpha: 0, y: 6 });
+  if (per) gsap.set(per, { autoAlpha: 0 });
+  if (level) gsap.set(level, { rotation: -3.5, scaleX: 0.86, autoAlpha: 0.4 });
 
-  const amount = plan.querySelector<HTMLElement>('.hv2-plan__amount');
   once(ScrollTrigger, amount ?? plan, () => {
     const timeline = gsap.timeline();
-    cols.forEach((col, index) => {
-      timeline.to(col, { yPercent: landing(Number(col.dataset.digit)), duration: 1.5 + index * 0.45, ease: 'expo.out' }, index * 0.08);
-    });
-    const land = 1.25 + (cols.length - 1) * 0.45;
-    if (glow) timeline.to(glow, { autoAlpha: 1, scale: 1.25, duration: 0.5, ease: 'power2.out' }, land - 0.3).to(glow, { scale: 1, duration: 1.2, ease: 'elastic.out(1, 0.5)' });
-    if (per) timeline.to(per, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'expo.out' }, land - 0.2);
-    if (sheen) timeline.fromTo(sheen, { xPercent: -120 }, { xPercent: 120, duration: 1.3, ease: 'power2.inOut' }, land - 0.35);
+    if (amount) timeline.to(amount, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power2.out' }, 0);
+    // The beam comes to rest level: one calm settle, no bounce.
+    if (level) timeline.to(level, { rotation: 0, scaleX: 1, autoAlpha: 1, duration: 1.4, ease: 'power3.inOut' }, 0.1);
+    if (per) timeline.to(per, { autoAlpha: 1, duration: 0.7, ease: 'power1.out' }, 0.9);
   }, 'top 80%');
 
   if (receipt && lines.length) {
     gsap.set(receipt, { clipPath: 'inset(0% 0% 100% 0%)' });
     gsap.set(lines, { autoAlpha: 0, y: 8 });
-    gsap.set(included, { autoAlpha: 0, scale: 0.6 });
+    gsap.set(included, { autoAlpha: 0 });
     once(ScrollTrigger, receipt, () => {
       gsap
         .timeline()
         .to(receipt, { clipPath: 'inset(0% 0% -4% 0%)', duration: 1.1, ease: 'power2.inOut' })
         .to(lines, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.09, ease: 'power2.out' }, 0.15)
-        .to(included, { autoAlpha: 1, scale: 1, duration: 0.4, stagger: 0.09, ease: 'back.out(3)' }, 0.3);
+        .to(included, { autoAlpha: 1, duration: 0.4, stagger: 0.09, ease: 'power1.out' }, 0.3);
     }, 'top 82%');
   }
 
@@ -361,7 +359,7 @@ function bindPrice(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Documen
     grow?.kill();
     range?.removeEventListener('pointerdown', touch);
     range?.removeEventListener('keydown', touch);
-    gsap.set([...cols, per, glow, sheen, receipt, ...lines, ...included].filter(Boolean), { clearProps: 'all' });
+    gsap.set([amount, per, level, receipt, ...lines, ...included].filter(Boolean), { clearProps: 'all' });
   };
 }
 

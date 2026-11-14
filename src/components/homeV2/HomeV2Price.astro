@@ -30,38 +30,25 @@ const rows = Array.from({ length: MAX_BARBERS }, (_, index) => {
 });
 const scaleMax = rows[rows.length - 1].incValue;
 const initial = rows[DEFAULT_BARBERS - 1];
-const priceDigits = String(SAAS_MONTHLY_GBP).split('').map(Number);
-const reel = Array.from({ length: 20 }, (_, index) => index % 10);
 const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
 ---
 
 <section id="pricing" class="hv2-section hv2-price" aria-labelledby="hv2-price-title" data-hv2-chapter="05">
   <div class="hv2-shell">
     <header class="hv2-head hv2-price__head">
-      <p class="hv2-eyebrow">Pricing</p>
+      <p class="hv2-eyebrow hv2-eyebrow--sand"><span class="hv2-glyph" data-hv2-glyph="PRICING">Pricing</span></p>
       <h2 id="hv2-price-title" class="hv2-h2">One price per shop, not per barber</h2>
       <p class="hv2-lead">Take on your next barber without your software bill going up. Full KERSIVO is {offer.price.full} per location, whether you have one barber or ten.</p>
     </header>
 
     <div class="hv2-price__grid">
       <article class="hv2-plan hv2-card" aria-labelledby="hv2-plan-title" data-hv2-plan>
-        <span class="hv2-plan__sheen" aria-hidden="true" data-hv2-sheen></span>
         <p class="hv2-plan__eyebrow"><span class="hv2-dot" aria-hidden="true"></span><span id="hv2-plan-title">{offer.plans.full}</span></p>
         <p class="hv2-plan__price">
-          <span class="hv2-plan__glow" aria-hidden="true" data-hv2-glow></span>
-          <span class="hv2-plan__amount">
-            <span class="sr-only">£{SAAS_MONTHLY_GBP}</span>
-            <span class="hv2-odo" aria-hidden="true" data-hv2-odometer>
-              <span class="hv2-odo__sym">£</span>
-              {priceDigits.map((digit) => (
-                <span class="hv2-odo__col" style={`--d: ${digit + 10}`} data-hv2-odo-col data-digit={digit}>
-                  {reel.map((n) => <span>{n}</span>)}
-                </span>
-              ))}
-            </span>
-          </span>
+          <span class="hv2-plan__amount" data-hv2-amount>£{SAAS_MONTHLY_GBP}</span>
           <span class="hv2-plan__per" data-hv2-per>/month per location<em>not per barber</em></span>
         </p>
+        <span class="hv2-plan__level" aria-hidden="true" data-hv2-level></span>
         <ul class="hv2-plan__terms" role="list">
           <li>{offer.fees.setup}</li>
           <li>No VAT added</li>

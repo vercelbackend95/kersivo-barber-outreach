@@ -1,12 +1,12 @@
 /**
  * The homepage sand layer. The hero stays clean: the sand first appears at the One booking chapter
- * and, in every chapter after that, sculpts the one word that chapter is about (BOOKED., ONE DIARY,
- * YOUR CLIENTS, GO LIVE…) in the space its heading reserves for it.
+ * and, in every chapter after that, quietly settles into that section's eyebrow (BOOKED., ONE DIARY,
+ * YOUR CLIENTS, PRICING, GO LIVE…).
  *
- * The words live in the markup as empty `[data-hv2-glyph]` slots that CSS places (beside the heading
- * on wide screens, under the lead on phones), so layout stays in CSS and the text stays in the
- * component. three.js loads lazily shortly after first paint, only when motion is allowed and WebGL
- * works.
+ * Each eyebrow word is real text in a `[data-hv2-glyph]` slot, so it reads without the sand. While the
+ * sand holds a slot, the slot gets `is-sand` and its text fades out under the grains; when the sand
+ * moves on, the text fades back. three.js loads lazily shortly after first paint, only when motion is
+ * allowed and WebGL works.
  *
  * Two modes:
  * - Wide screens: one fixed full-viewport canvas. Positions are measured from the DOM every frame
@@ -23,9 +23,9 @@ type Target = { selector: string; mark: Mark; text?: boolean };
 
 const BRAND = [0xd7 / 255, 0x26 / 255, 0x38 / 255];
 /** Seconds for a full move between two marks at reading speed; fast scrolling shortens it. */
-const MORPH_SECONDS = 0.95;
+const MORPH_SECONDS = 1.1;
 /** Phones: the canvas reaches this far past its slot so loose grains and the pour-in are not clipped. */
-const LOCAL_PAD = 28;
+const LOCAL_PAD = 16;
 
 type Box = { x: number; y: number; w: number; h: number };
 type Resolved = Target & { el: HTMLElement; word?: string };
@@ -145,20 +145,27 @@ function glyphLayout(word: string, slot: HTMLElement, w: number, h: number, coun
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return out;
 
-  // Fit the word to the slot: as tall as the slot allows, never wider than it.
-  let size = ch * 1.02;
+  // Draw the word the way the slot draws its text (same size, tracking and baseline) so the sand
+  // lands on the letters it replaces. Never wider than the slot.
+  let size = (parseFloat(style.fontSize) || h) * scale;
+  const tracking = (parseFloat(style.letterSpacing) || 0) * scale;
+  const tracked = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
   ctx.font = `400 ${size}px ${family}`;
+  if ('letterSpacing' in tracked) tracked.letterSpacing = `${tracking}px`;
   const measured = ctx.measureText(word).width;
-  if (measured > cw * 0.98) size *= (cw * 0.98) / measured;
-  ctx.font = `400 ${size}px ${family}`;
+  if (measured > cw * 0.99) {
+    size *= (cw * 0.99) / measured;
+    ctx.font = `400 ${size}px ${family}`;
+  }
   ctx.textBaseline = 'alphabetic';
   ctx.textAlign = align;
   ctx.fillStyle = '#fff';
   const metrics = ctx.measureText(word);
-  const ascent = metrics.actualBoundingBoxAscent || size * 0.72;
-  const descent = metrics.actualBoundingBoxDescent || 0;
-  const baseline = ch - Math.max(2, descent) - (ch - ascent - descent) * 0.12;
-  const x = align === 'right' ? cw - 1 : align === 'center' ? cw / 2 : 1;
+  const fontAscent = metrics.fontBoundingBoxAscent || size * 0.9;
+  const fontDescent = metrics.fontBoundingBoxDescent || size * 0.25;
+  // CSS centres the font's content area in the line box.
+  const baseline = (ch - (fontAscent + fontDescent)) / 2 + fontAscent;
+  const x = align === 'right' ? cw : align === 'center' ? cw / 2 : 0;
   ctx.fillText(word, x, baseline);
 
   const data = ctx.getImageData(0, 0, cw, ch).data;
@@ -185,14 +192,14 @@ function glyphLayout(word: string, slot: HTMLElement, w: number, h: number, coun
     out[i * 3 + 1] = gy;
     out[i * 3 + 2] = b;
   };
-  const dune = Math.floor(count * 0.1);
+  const dune = Math.floor(count * 0.04);
   for (let i = 0; i < count; i++) {
     if (i < dune) {
       // A low dune under the word: a heap that is tallest in the middle and blows out at the ends.
       const u = rand();
       const span = (maxX - minX + 1) * inv;
-      const heap = Math.pow(Math.sin(Math.PI * u), 1.6) * Math.min(14, h * 0.07);
-      put(i, minX * inv + u * span * 1.04 - span * 0.02, (baseline + 3) * inv + 4 - Math.abs(gauss(rand)) * heap, 0.32 + rand() * 0.28);
+      const heap = Math.pow(Math.sin(Math.PI * u), 1.6) * Math.min(3, h * 0.1);
+      put(i, minX * inv + u * span, baseline * inv + 3 - Math.abs(gauss(rand)) * heap, 0.25 + rand() * 0.2);
       continue;
     }
     const fromEdge = edge.length > 0 && rand() < 0.38;
@@ -200,7 +207,8 @@ function glyphLayout(word: string, slot: HTMLElement, w: number, h: number, coun
     const p = list[Math.floor(rand() * list.length)];
     const gx = ((p % cw) + rand()) * inv;
     const gy = (Math.floor(p / cw) + rand()) * inv;
-    put(i, gx, gy, fromEdge ? 0.9 + rand() * 0.1 : 0.62 + rand() * 0.33);
+    // An even, matte fill: edges are sampled more so letters stay legible, but they do not glint.
+    put(i, gx, gy, 0.62 + rand() * 0.2);
   }
   return sweepOrder(out, count, rand);
 }
@@ -220,7 +228,7 @@ function markLayout(mark: 'underline' | 'frame' | 'scatter', w: number, h: numbe
 
   for (let i = 0; i < count; i++) {
     if (mark === 'scatter') {
-      put(i, w / 2 + gauss(rand) * w * 0.7, h / 2 + gauss(rand) * Math.max(h, 120), 0.2 + rand() * 0.2);
+      put(i, w / 2 + gauss(rand) * w * 0.45, h / 2 + gauss(rand) * Math.max(h * 1.4, 36), 0.18 + rand() * 0.15);
       continue;
     }
     if (rand() < 0.12) {
@@ -298,7 +306,8 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   // Phones (and narrow tablets) draw the sand inside the current slot instead of over the viewport.
   const local = window.matchMedia('(max-width: 47.99rem)').matches;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const count = local ? 7000 : 14000;
+  // Few grains: eyebrow words are small, and the sand should read as texture, not spectacle.
+  const count = local ? 1400 : 2200;
   const range = document.createRange();
 
   const targets: Resolved[] = [];
@@ -334,7 +343,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
   for (let i = 0; i < count; i++) {
     seeds[i * 4] = seedRand();
     // Phones get slightly coarser grains so the word reads at arm's length.
-    seeds[i * 4 + 1] = (1.0 + Math.pow(seedRand(), 2.4) * 1.8) * (local ? 1.25 : 1);
+    seeds[i * 4 + 1] = (1.0 + Math.pow(seedRand(), 2.4) * 0.7) * (local ? 1.15 : 1);
     seeds[i * 4 + 2] = seedRand();
     seeds[i * 4 + 3] = seedRand();
   }
@@ -354,7 +363,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     uMix: { value: 0 },
     uTime: { value: 0 },
     uDpr: { value: dpr },
-    uOpacity: { value: 0.92 },
+    uOpacity: { value: 0.85 },
     uPointer: { value: new THREE.Vector2(-999, -999) },
     uPush: { value: 0 },
     uBrand: { value: new THREE.Vector3(BRAND[0], BRAND[1], BRAND[2]) },
@@ -364,7 +373,9 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: THREE.AdditiveBlending,
+    // Normal blending: overlapping grains stay matte instead of blooming into highlights.
+    blending: THREE.NormalBlending,
+    premultipliedAlpha: true,
     uniforms,
     vertexShader: /* glsl */ `
       attribute vec3 aFrom;
@@ -395,28 +406,28 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
         vec2 b = uToO + aTo.xy;
         vec2 p = mix(a, b, e);
 
-        // In flight the grains spread into a drifting ribbon and swirl a little.
+        // In flight the grains drift in a loose, narrow stream.
         vec2 dir = b - a;
         float len = length(dir);
         vec2 n = len > 0.001 ? vec2(-dir.y, dir.x) / len : vec2(0.0, 1.0);
-        p += n * storm * (aSeed.x - 0.5) * min(len * 0.25, 120.0);
+        p += n * storm * (aSeed.x - 0.5) * min(len * 0.1, 40.0);
         float ph = aSeed.x * 6.2831;
-        p += vec2(sin(uTime * 1.3 + ph * 7.0), cos(uTime * 1.1 + aSeed.z * 30.0)) * storm * (8.0 + aSeed.z * 18.0);
+        p += vec2(sin(uTime * 0.9 + ph * 7.0), cos(uTime * 0.8 + aSeed.z * 30.0)) * storm * (2.0 + aSeed.z * 5.0);
 
-        // At rest the sand still shimmers; loose grains drift further.
+        // At rest the sand barely breathes; loose grains drift a little more.
         float bright = mix(aFrom.z, aTo.z, e);
         float rest = 1.0 - storm;
         float loose = 1.0 - step(0.3, bright);
-        p.x += sin(uTime * 0.7 + ph * 9.0) * (0.5 + loose * 6.0) * rest;
-        p.y += cos(uTime * 0.6 + aSeed.z * 50.0) * (0.4 + loose * 4.0) * rest;
+        p.x += sin(uTime * 0.5 + ph * 9.0) * (0.1 + loose * 1.5) * rest;
+        p.y += cos(uTime * 0.4 + aSeed.z * 50.0) * (0.08 + loose * 1.0) * rest;
 
-        // A fine pointer brushes grains aside.
+        // A fine pointer nudges grains aside, gently.
         vec2 d = p - uPointer;
         float r2 = dot(d, d);
-        p += normalize(d + 0.0001) * uPush * exp(-r2 / 1800.0) * (10.0 + aSeed.x * 16.0);
+        p += normalize(d + 0.0001) * uPush * exp(-r2 / 900.0) * (3.0 + aSeed.x * 4.0);
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p.x, -p.y, 0.0, 1.0);
-        gl_PointSize = aSeed.y * uDpr * (1.0 + storm * 0.25);
+        gl_PointSize = aSeed.y * uDpr;
         vBright = bright;
         vTone = aSeed.z;
         vStorm = storm;
@@ -433,13 +444,13 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
         float d = length(c);
         if (d > 0.5) discard;
         float soft = smoothstep(0.5, 0.1, d);
-        // Warm sand from umber to pale dune, with a rare brand-red grain as the KERSIVO fleck.
-        vec3 sandDark = vec3(0.56, 0.44, 0.31);
-        vec3 sandLight = vec3(0.97, 0.89, 0.74);
-        vec3 col = mix(sandDark, sandLight, vTone * 0.55 + vBright * 0.45);
-        float red = step(0.965, vTone);
-        col = mix(col, uBrand * 1.25, red);
-        float a = soft * uOpacity * vBright * (1.0 - vStorm * 0.3);
+        // Muted sand in the eyebrow's own tone range, with a very rare brand-red grain.
+        vec3 sandDark = vec3(0.58, 0.49, 0.38);
+        vec3 sandLight = vec3(0.86, 0.77, 0.63);
+        vec3 col = mix(sandDark, sandLight, vTone * 0.6 + vBright * 0.4);
+        float red = step(0.99, vTone);
+        col = mix(col, uBrand, red);
+        float a = soft * uOpacity * min(1.0, vBright * 1.25) * (1.0 - vStorm * 0.35);
         gl_FragColor = vec4(col * a, a);
       }`,
   });
@@ -557,6 +568,8 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
       // The new move starts from wherever the sand is now, anchored to the mark it was heading for.
       source = { origin: current.box, shape: mix >= 0.999 ? current.shape : settleInto(current.box), follow: current.index };
     }
+    if (current.index >= 0) targets[current.index].el.classList.remove('is-sand');
+    targets[index].el.classList.add('is-sand');
     current = { index, box, shape: shapeFor(index, box), w: box.w, h: box.h };
     mix = 0;
     upload();
@@ -682,7 +695,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     uniforms.uMix.value = mix;
     uniforms.uTime.value = time;
 
-    push += (pushTarget - push) * Math.min(1, dt * 3);
+    push += (pushTarget - push) * Math.min(1, dt * 2);
     uniforms.uPointer.value.set(px, py);
     uniforms.uPush.value = push;
 
@@ -712,6 +725,7 @@ function mount(THREE: Three, host: HTMLElement, onUnavailable?: () => void): () 
     window.removeEventListener('pointermove', onPointer);
     document.documentElement.removeEventListener('pointerleave', onLeave);
     range.detach();
+    for (const target of targets) target.el.classList.remove('is-sand');
     shapes.clear();
     geometry.dispose();
     material.dispose();
