@@ -1,69 +1,56 @@
 ---
 import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
 import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
-import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  FRESHA_HERO_EYEBROW,
+  FRESHA_HERO_FACTS,
+  FRESHA_HERO_LEAD,
+  FRESHA_HERO_TITLE_LINES,
+  FRESHA_JOURNEY_ACTS,
+} from '@/lib/seo/freshaAlternativeContent';
 ---
 
-<section class="fresha-alt-hero" aria-labelledby="fresha-alt-hero-title">
-  <div class="fresha-alt-hero__content">
-    <nav class="fresha-alt-breadcrumb" aria-label="Breadcrumb">
+<section class="fj-hero" aria-labelledby="fresha-alt-hero-title" data-enter>
+  <div class="fj-hero__ground" aria-hidden="true"></div>
+  <div class="fj-wrap fj-hero__content">
+    <nav class="fj-breadcrumb" aria-label="Breadcrumb">
       <a href="/">Home</a>
       <span aria-hidden="true">/</span>
       <span aria-current="page">Fresha alternative</span>
     </nav>
-    <p class="fresha-alt-hero__eyebrow">
-      <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
-      Fresha alternative for UK barbershops
-    </p>
 
-    <h1 id="fresha-alt-hero-title" class="fresha-alt-hero__title">
-      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Fresha alternative</span>
-      <span class="fresha-alt-hero__title-line">built around your</span>
-      <span class="fresha-alt-hero__title-line">barbershop.</span>
+    <p class="fj-eyebrow fj-enter" style="--i: 0">{FRESHA_HERO_EYEBROW}</p>
+
+    <h1 id="fresha-alt-hero-title" class="fj-hero__title">
+      {FRESHA_HERO_TITLE_LINES.map((line, index) => (
+        <span class="fj-hero__line fj-enter" style={`--i: ${index + 1}`}>{line}</span>
+      ))}
     </h1>
 
-    <p class="fresha-alt-hero__lead">
-      Fresha combines booking software with marketplace discovery. KERSIVO takes a more direct
-      route. Starter is £0/month, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking. Full
-      KERSIVO moves the complete customer journey onto your own website and domain.
-    </p>
+    <p class="fj-hero__lead fj-enter" style="--i: 4">{FRESHA_HERO_LEAD}</p>
 
-    <ComparisonHeroActions placement="fresha" />
-
-    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
-      <span><strong>Starter £0/month</strong></span>
-      <span aria-hidden="true">·</span>
-      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span>
-      <span aria-hidden="true">·</span>
-      <span>0% KERSIVO commission on booking payments (Stripe fees apply)</span>
-      <span aria-hidden="true">·</span>
-      <span>Built for independent UK barbershops</span>
+    <div class="fj-enter" style="--i: 5">
+      <ComparisonHeroActions placement="fresha" />
     </div>
+
+    <ul class="fj-hero__facts fj-enter" style="--i: 6" aria-label="KERSIVO commercial model">
+      {FRESHA_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+    </ul>
+
+    <nav class="fj-acts fj-enter" style="--i: 7" aria-label="On this page">
+      <p class="fj-acts__label">The switch, in four acts</p>
+      <ol class="fj-acts__list">
+        {FRESHA_JOURNEY_ACTS.map((act) => (
+          <li>
+            <a class="fj-acts__link" href={`#${act.id}`}>
+              <span class="fj-acts__numeral" aria-hidden="true">{act.numeral}</span>
+              <span>{act.label}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
   </div>
 
   <HeroDashboardShowcase />
 </section>
-
-<style>
-  .fresha-alt-breadcrumb {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-    margin-bottom: 1rem;
-    color: #9ca3af;
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-
-  .fresha-alt-breadcrumb a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .fresha-alt-breadcrumb a:hover,
-  .fresha-alt-breadcrumb a:focus-visible {
-    color: #f9fafb;
-    text-decoration: underline;
-  }
-</style>

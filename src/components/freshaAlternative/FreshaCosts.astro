@@ -2,6 +2,8 @@
 import {
   FRESHA_COSTS_INTRO,
   FRESHA_COST_ITEMS,
+  FRESHA_ESTIMATOR_CONFIG,
+  FRESHA_ESTIMATOR_NOTE,
   FRESHA_MARKETPLACE_FEE_EXAMPLE,
   FRESHA_MARKETPLACE_FEE_POINTS,
   FRESHA_WORKED_EXAMPLES,
@@ -12,107 +14,130 @@ import { FRESHA_FACTS_CHECKED_DATE, getFreshaSource } from '@/lib/seo/freshaFact
 
 const pricingSource = getFreshaSource('pricingUk');
 const marketplaceSource = getFreshaSource('marketplaceFee');
+const config = FRESHA_ESTIMATOR_CONFIG;
 ---
 
-<section id="fresha-pricing" class="fresha-alt__section" aria-labelledby="fresha-alt-costs-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">FRESHA COSTS EXPLAINED</p>
-      <h2 id="fresha-alt-costs-title" class="fresha-alt__h2">
-        Fresha pricing and fees for UK barbers
-      </h2>
-      <p class="fresha-alt__lead">{FRESHA_COSTS_INTRO}</p>
-      <p class="fresha-alt-costs__checked">
+<section id="costs" class="fj-section fj-costs" aria-labelledby="fresha-costs-title" data-fj-act="II">
+  <div class="fj-wrap">
+    <header class="fj-head">
+      <p class="fj-act-label"><span>Act II</span> The real bill</p>
+      <h2 id="fresha-costs-title" class="fj-h2">Fresha pricing and fees for UK barbers, line by line</h2>
+      <p class="fj-lead">{FRESHA_COSTS_INTRO}</p>
+      <p class="fj-meta">
         Checked {FRESHA_FACTS_CHECKED_DATE} ·
-        <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">
-          {pricingSource.label}
-        </a>
+        <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">{pricingSource.label}</a>
       </p>
     </header>
 
-    <ul class="fresha-alt-costs__grid">
-      {
-        FRESHA_COST_ITEMS.map((item) => (
-          <li class="fresha-alt-card fresha-alt-costs__item">
-            <p class="fresha-alt-costs__kicker">{item.kicker}</p>
-            <p class="fresha-alt-costs__figure">{item.figure}</p>
-            <p class="fresha-alt-costs__unit">{item.unit}</p>
-            <ul class="fresha-alt-costs__notes">
-              {item.notes.map((note) => (
-                <li>{note}</li>
-              ))}
+    <div class="fj-costs__top">
+      <ol class="fj-ledger">
+        {FRESHA_COST_ITEMS.map((item) => (
+          <li class="fj-ledger__row">
+            <div class="fj-ledger__label">
+              <p class="fj-ledger__kicker">{item.kicker}</p>
+              <p class="fj-ledger__unit">{item.unit}</p>
+            </div>
+            <p class="fj-ledger__figure">{item.figure}</p>
+            <ul class="fj-ledger__notes">
+              {item.notes.map((note) => <li>{note}</li>)}
             </ul>
           </li>
-        ))
-      }
-    </ul>
+        ))}
+      </ol>
 
-    <div class="fresha-alt-costs__examples">
-      <div class="fresha-alt-costs__table-wrap">
-        <h3 id="fresha-alt-costs-examples-title" class="fresha-alt-costs__h3">
-          Subscription cost by team size
-        </h3>
-        <table class="fresha-alt-costs__table" aria-labelledby="fresha-alt-costs-examples-title">
-          <thead>
-            <tr>
-              <th scope="col">Team size</th>
-              <th scope="col">Fresha plan</th>
-              <th scope="col">Fresha (ex VAT)</th>
-              <th scope="col">Fresha (inc. VAT)</th>
-              <th scope="col">KERSIVO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              FRESHA_WORKED_EXAMPLES.map((row) => (
+      <form
+        class="fj-estimator ks-glass-card ks-glass-card--accent"
+        aria-labelledby="fresha-estimator-title"
+        data-fj-estimator={JSON.stringify(config)}
+      >
+        <p class="fj-eyebrow">Your shop, your numbers</p>
+        <h3 id="fresha-estimator-title" class="fj-h3">Estimate your monthly platform bill</h3>
+
+        <div class="fj-field">
+          <label for="fj-barbers">Barbers taking bookings <output for="fj-barbers" data-fj-out="barbers">{config.defaults.barbers}</output></label>
+          <input id="fj-barbers" name="barbers" type="range" min="1" max={config.maxBarbers} step="1" value={config.defaults.barbers} />
+        </div>
+        <div class="fj-field">
+          <label for="fj-new-clients">New clients a month from the Marketplace <output for="fj-new-clients" data-fj-out="newClients">{config.defaults.newClients}</output></label>
+          <input id="fj-new-clients" name="newClients" type="range" min="0" max="40" step="1" value={config.defaults.newClients} />
+        </div>
+        <div class="fj-field">
+          <label for="fj-first-visit">Average first-visit price <output for="fj-first-visit" data-fj-out="firstVisitGbp">£{config.defaults.firstVisitGbp}</output></label>
+          <input id="fj-first-visit" name="firstVisitGbp" type="range" min="10" max="60" step="1" value={config.defaults.firstVisitGbp} />
+        </div>
+
+        <div class="fj-estimator__result" aria-live="polite">
+          <div class="fj-estimator__col">
+            <p class="fj-estimator__name">Fresha</p>
+            <p class="fj-estimator__total" data-fj-result="fresha">–</p>
+            <p class="fj-estimator__split" data-fj-result="freshaSplit"></p>
+          </div>
+          <div class="fj-estimator__col fj-estimator__col--kersivo">
+            <p class="fj-estimator__name">KERSIVO</p>
+            <p class="fj-estimator__total" data-fj-result="kersivo">–</p>
+            <p class="fj-estimator__split" data-fj-result="kersivoSplit"></p>
+          </div>
+        </div>
+        <p class="fj-estimator__year" data-fj-result="year"></p>
+        <p class="fj-small">{FRESHA_ESTIMATOR_NOTE}</p>
+      </form>
+    </div>
+
+    <div class="fj-costs__bottom">
+      <div class="fj-costs__table">
+        <h3 id="fresha-costs-examples-title" class="fj-h3">Subscription cost by team size</h3>
+        <div class="fj-table-scroll">
+          <table class="fj-table" aria-labelledby="fresha-costs-examples-title">
+            <thead>
+              <tr>
+                <th scope="col">Team size</th>
+                <th scope="col">Fresha plan</th>
+                <th scope="col">Fresha (ex VAT)</th>
+                <th scope="col">Fresha (inc. VAT)</th>
+                <th scope="col">KERSIVO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {FRESHA_WORKED_EXAMPLES.map((row) => (
                 <tr>
                   <th scope="row">{row.label}</th>
-                  <td data-label="Fresha plan">{row.plan}</td>
-                  <td data-label="Fresha (ex VAT)">{row.freshaExVat}</td>
-                  <td data-label="Fresha (inc. VAT)">{row.freshaIncVat}</td>
-                  <td data-label="KERSIVO" class="fresha-alt-costs__kersivo-cell">{row.kersivo}</td>
+                  <td>{row.plan}</td>
+                  <td>{row.freshaExVat}</td>
+                  <td>{row.freshaIncVat}</td>
+                  <td class="fj-table__kersivo">{row.kersivo}</td>
                 </tr>
-              ))
-            }
-          </tbody>
-        </table>
-        <p class="fresha-alt-costs__note">{FRESHA_WORKED_EXAMPLES_NOTE}</p>
-        <p class="fresha-alt-costs__calculator">
-          Want to run the numbers for your own shop? Use the
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="fj-small">{FRESHA_WORKED_EXAMPLES_NOTE}</p>
+        <p class="fj-body fj-costs__calculator">
+          Comparing more than two platforms? The
           <a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a>
-          to compare Fresha, Booksy and KERSIVO using your own shop numbers.
+          runs Fresha, Booksy and KERSIVO against your own shop numbers.
         </p>
       </div>
 
-      <aside class="fresha-alt-card fresha-alt-costs__kersivo" aria-labelledby="fresha-alt-costs-kersivo-title">
-        <p class="fresha-alt-costs__kicker">KERSIVO</p>
-        <h3 id="fresha-alt-costs-kersivo-title" class="fresha-alt-costs__h3">The KERSIVO model</h3>
-        <ul class="fresha-alt-list">
-          {KERSIVO_MODEL_POINTS.map((point) => (
-            <li>{point}</li>
-          ))}
+      <aside class="fj-costs__model" aria-labelledby="fresha-costs-kersivo-title">
+        <h3 id="fresha-costs-kersivo-title" class="fj-h3">The KERSIVO model</h3>
+        <ul class="fj-checklist">
+          {KERSIVO_MODEL_POINTS.map((point) => <li>{point}</li>)}
         </ul>
       </aside>
     </div>
 
-    <div class="fresha-alt-card fresha-alt-costs__marketplace">
-      <div class="fresha-alt-costs__marketplace-body">
-        <h3 class="fresha-alt-costs__h3">How the Fresha Marketplace new-client fee works</h3>
-        <ul class="fresha-alt-list">
-          {FRESHA_MARKETPLACE_FEE_POINTS.map((point) => (
-            <li>{point}</li>
-          ))}
+    <details class="fj-details">
+      <summary>How the Fresha Marketplace new-client fee works</summary>
+      <div class="fj-details__body">
+        <ul class="fj-bullets">
+          {FRESHA_MARKETPLACE_FEE_POINTS.map((point) => <li>{point}</li>)}
         </ul>
-      </div>
-      <div class="fresha-alt-costs__marketplace-aside">
-        <p class="fresha-alt-costs__example">{FRESHA_MARKETPLACE_FEE_EXAMPLE}</p>
-        <p class="fresha-alt-costs__checked">
+        <p class="fj-body">{FRESHA_MARKETPLACE_FEE_EXAMPLE}</p>
+        <p class="fj-meta">
           Source:
-          <a href={marketplaceSource.url} target="_blank" rel="noopener noreferrer">
-            {marketplaceSource.label}
-          </a>
+          <a href={marketplaceSource.url} target="_blank" rel="noopener noreferrer">{marketplaceSource.label}</a>
         </p>
       </div>
-    </div>
+    </details>
   </div>
 </section>

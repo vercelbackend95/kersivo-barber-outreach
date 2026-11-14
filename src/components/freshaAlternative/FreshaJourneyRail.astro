@@ -1,0 +1,17 @@
+---
+/** Floating act indicator for wide screens. Hidden until the reader leaves the hero. */
+import { FRESHA_JOURNEY_ACTS } from '@/lib/seo/freshaAlternativeContent';
+---
+
+<nav class="fj-rail" aria-label="Story progress" data-fj-rail data-visible="false">
+  <ol class="fj-rail__list">
+    {FRESHA_JOURNEY_ACTS.map((act) => (
+      <li>
+        <a class="fj-rail__link" href={`#${act.id}`} data-fj-rail-link={act.id}>
+          <span class="fj-rail__numeral" aria-hidden="true">{act.numeral}</span>
+          <span class="fj-rail__label">{act.label}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>

@@ -70,7 +70,6 @@ function readRepoFile(...segments: string[]): string {
 
 const componentDir = '../../components/booksyAlternative';
 const pageSource = readRepoFile('../../pages/booksy-alternative/index.astro');
-const freshaPageSource = readRepoFile('../../pages/fresha-alternative/index.astro');
 const homepageSource = readRepoFile('../../pages/index.astro');
 const homepageIncludedSource = readRepoFile('../../components/homeV2/HomeV2Included.astro');
 const calculatorBooksySource = readRepoFile('../../components/costCalculator/CostBooksy.astro');
@@ -204,9 +203,6 @@ describe('booksy-alternative: Fresha template structure', () => {
     for (const position of positions) expect(position).toBeGreaterThan(-1);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
 
-    const freshaOrder = order.map((tag) => tag.replace('Booksy', 'Fresha'));
-    const freshaPositions = freshaOrder.map((tag) => freshaPageSource.indexOf(tag));
-    expect(freshaPositions).toEqual([...freshaPositions].sort((a, b) => a - b));
   });
 
   it('reuses the Fresha stylesheet and shared editorial components instead of a second design system', () => {
