@@ -408,10 +408,100 @@ a.insights-article-meta__category:hover { color: var(--accent-text); }
   line-height: 1.65;
 }
 
+.insights-commercial-next__secondary {
+  margin: .9rem 0 0;
+  font-size: .95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.insights-commercial-next__secondary a,
+.insights-owner-note__link a {
+  color: #88242f;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+}
+
+.insights-commercial-next__secondary a:hover,
+.insights-owner-note__link a:hover {
+  color: #5e1119;
+}
+
+.insights-commercial-next__secondary a:focus-visible,
+.insights-owner-note__link a:focus-visible {
+  outline: 3px solid #b32938;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* "If you own the shop…" — owner bridge on articles that also draw employed barbers. */
+.insights-owner-note {
+  width: min(100%, var(--insights-copy));
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  padding: 1.35rem 1.5rem 1.45rem;
+  border: 1px solid #c9c7c1;
+  border-left: 4px solid var(--insights-accent);
+  background: #fbfaf6;
+}
+
+.insights-owner-note__kicker,
+.insights-article__audience {
+  margin: 0;
+  color: #5c6268;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.insights-owner-note__heading {
+  margin: .45rem 0 0;
+  color: #1a1c1f;
+  font-family: var(--font-serif, Georgia, 'Times New Roman', serif);
+  font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+  letter-spacing: -.02em;
+  line-height: 1.25;
+}
+
+.insights-owner-note__body {
+  margin: .75rem 0 0;
+  max-width: 62ch;
+  color: #3f444a;
+  font-size: .98rem;
+  line-height: 1.65;
+}
+
+.insights-owner-note__link {
+  margin: .9rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.insights-article__audience {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: 1.4rem;
+  color: #88242f;
+}
+
+.insights-article__audience::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--insights-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .insights-article__body a,
   .insights-related__list a,
-  .insights-commercial-next__heading a {
+  .insights-commercial-next__heading a,
+  .insights-commercial-next__secondary a,
+  .insights-owner-note__link a {
     transition: none;
   }
 }

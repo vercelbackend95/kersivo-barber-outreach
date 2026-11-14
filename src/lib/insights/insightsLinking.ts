@@ -43,6 +43,20 @@ export type InsightsCommercialNext = {
   href: string;
   label: string;
   note: string;
+  /** Optional second, lower-commitment step for shop owners (e.g. the free preview). */
+  secondary?: { href: string; label: string };
+};
+
+/**
+ * "If you own the shop…" note for articles that also draw employed barbers or the
+ * general public. Points owners at owner-focused Insights, never at a product page,
+ * so off-buyer articles stay at zero commercial links (Batch 5 rule).
+ */
+export type InsightsOwnerNote = {
+  heading: string;
+  body: string;
+  href: string;
+  label: string;
 };
 
 const RELATED: Record<string, InsightsRelatedLink[]> = {
@@ -80,11 +94,6 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
       href: INSIGHTS_HAIRCUT_PRICING.path,
       label: 'Price haircuts with your real operating costs',
       kind: 'article',
-    },
-    {
-      href: '/barber-software-cost-calculator',
-      label: 'Compare the costs of booking software',
-      kind: 'tool',
     },
   ],
   [INSIGHTS_UNFAIR_DISMISSAL.slug]: [
@@ -315,10 +324,19 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
     label: 'See how deposits and payment options work in KERSIVO online booking',
     note: `Starter takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking; on Full KERSIVO the shop chooses Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment. ${STRIPE_FEES_NOTE} Your cancellation policy is still yours to set.`,
   },
+  [INSIGHTS_OWNER_EARNINGS.slug]: {
+    href: '/compare#cost-by-team-size',
+    label: 'Compare what UK booking platforms cost for a team your size',
+    note: `Card processing and booking costs are one of the three lines behind the profit gap above. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
+  },
   [INSIGHTS_WALK_INS.slug]: {
     href: '/barbershop-websites',
     label: 'Show clients how to book, and how walk-ins work, on your own website',
     note: `Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) includes a branded website with online booking. Whether you take walk-ins is still your call.`,
+    secondary: {
+      href: '/free-preview',
+      label: 'See your own shop’s booking site first: get a free preview',
+    },
   },
   [INSIGHTS_BOOKING_LINK.slug]: {
     href: '/barbershop-websites',
@@ -362,6 +380,50 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
   },
 };
 
+const OWNER_NOTES: Record<string, InsightsOwnerNote> = {
+  [INSIGHTS_APPRENTICE_BARBER.slug]: {
+    heading: 'Count the chair, not just the wage',
+    body: 'An apprentice changes what one chair produces for 18 months. Before you decide, see how an extra employed chair changes the owner’s side of the numbers in our model profit and loss.',
+    href: INSIGHTS_OWNER_EARNINGS.path,
+    label: 'What a UK barbershop owner actually earns, chair by chair',
+  },
+  [INSIGHTS_BARBERS_HANDS.slug]: {
+    heading: 'Know what an hour in each chair is worth',
+    body: 'The cost of sore hands above is counted as contribution per chair-hour. If you have never worked that figure out for your own shop, it is the number to find first.',
+    href: INSIGHTS_BUSY_DIARY.path,
+    label: 'Why a full diary can still mean low profit: the chair-hour test',
+  },
+  [INSIGHTS_BUSINESS_RATES.slug]: {
+    heading: 'Rates are one of three lines that move owner profit',
+    body: 'In our model profit and loss, premises (rent plus rates) explains £18,000 of a £41,405 profit gap between two shops with the same takings. Staff pay, and the fees and products attached to each cut, explain most of the rest.',
+    href: INSIGHTS_OWNER_EARNINGS.path,
+    label: 'See all three lines in the model barbershop P&L',
+  },
+  [INSIGHTS_COMMISSION_PAY.slug]: {
+    heading: 'Commission sets your biggest cost line',
+    body: 'In our model profit and loss, two four-chair shops take the same £180,000. Paying barbers 40% rather than 50% commission explains £13,500 of the profit gap between them. The monthly check above protects the legal floor; the model shows what the percentage does to what the owner takes home.',
+    href: INSIGHTS_OWNER_EARNINGS.path,
+    label: 'What a UK barbershop owner actually earns, chair by chair',
+  },
+};
+
+/**
+ * Short audience line shown above the headline, only where the headline and opening
+ * do not already say the piece is written for shop owners. Titles are unchanged.
+ */
+const AUDIENCE: Record<string, string> = {
+  [INSIGHTS_COMMISSION_PAY.slug]: 'For shop owners who employ barbers',
+  [INSIGHTS_BARBERS_HANDS.slug]: 'For barbershop owners and managers',
+};
+
+export function getInsightsOwnerNote(slug: string): InsightsOwnerNote | undefined {
+  return OWNER_NOTES[slug];
+}
+
+export function getInsightsAudience(slug: string): string | undefined {
+  return AUDIENCE[slug];
+}
+
 /** Max commercial links per article: body links + related tools/guides + end box. */
 export const COMMERCIAL_LINK_LIMIT = 3;
 
@@ -370,7 +432,8 @@ export function isInsightsCommercialHref(href: string): boolean {
   const path = href.replace(/^https?:\/\/(www\.)?kersivo\.co\.uk/, '').split('#')[0];
   return (
     ['/pricing', '/starter', '/barbershop-websites', '/barbershop-online-booking', '/barbershop-website-design',
-      '/barber-software-cost-calculator', '/chair-rent-vs-commission-calculator', '/compare', '/demo'].includes(path) ||
+      '/barber-software-cost-calculator', '/chair-rent-vs-commission-calculator', '/compare', '/demo',
+      '/free-preview'].includes(path) ||
     path.startsWith('/admin') ||
     path.endsWith('-alternative')
   );

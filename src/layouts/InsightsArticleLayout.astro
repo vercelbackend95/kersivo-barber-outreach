@@ -5,6 +5,7 @@ import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
 import InsightsDataTables from '@/components/insights/InsightsDataTables.astro';
 import InsightsRelatedReading from '@/components/insights/InsightsRelatedReading.astro';
 import InsightsCommercialNext from '@/components/insights/InsightsCommercialNext.astro';
+import InsightsOwnerNote from '@/components/insights/InsightsOwnerNote.astro';
 import '@/styles/components/insights-preview.css';
 import {
   buildInsightsArticleJsonLd,
@@ -13,7 +14,9 @@ import {
 } from '@/lib/seo/insights';
 import { getInsightsCategory, type InsightsCategoryId } from '@/lib/insights/categories';
 import {
+  getInsightsAudience,
   getInsightsCommercialNext,
+  getInsightsOwnerNote,
   getInsightsRelatedLinks,
 } from '@/lib/insights/insightsLinking';
 
@@ -65,6 +68,24 @@ const categoryLabel = category ?? taxonomy.name;
 const isPublic = published && isInsightsArticlePublished(slug);
 const related = getInsightsRelatedLinks(slug);
 const commercialNext = getInsightsCommercialNext(slug);
+const ownerNote = getInsightsOwnerNote(slug);
+const audience = getInsightsAudience(slug);
+/**
+ * The owner note sits at the end of the article text, before the References/Sources list
+ * (and the rule above it), so readers meet it before the citations rather than after them.
+ */
+let bodyBeforeRefs: string | undefined;
+let bodyRefs = '';
+if (isPublic && ownerNote) {
+  const html = await Astro.slots.render('default');
+  const refsAt = html.search(/<h2[^>]*>\s*(?:References|Sources)\b/);
+  if (refsAt >= 0) {
+    const hrAt = html.slice(0, refsAt).search(/<hr\s*\/?>\s*$/);
+    const splitAt = hrAt >= 0 ? hrAt : refsAt;
+    bodyBeforeRefs = html.slice(0, splitAt);
+    bodyRefs = html.slice(splitAt);
+  }
+}
 const resolvedDateLabel = dateLabel ?? formatInsightsDateLabel(publishedDate);
 /** Visible only when an editorial revision date differs from the publication date. */
 const updatedDateLabel =
@@ -119,8 +140,17 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
     />
     <div class="insights-paper">
       <article class="insights-article" aria-label={headline}>
+        {audience && <p class="insights-article__audience">{audience}</p>}
         <div class="insights-article__body">
-          <slot />
+          {bodyBeforeRefs !== undefined ? (
+            <Fragment>
+              <Fragment set:html={bodyBeforeRefs} />
+              <InsightsOwnerNote note={ownerNote!} />
+              <Fragment set:html={bodyRefs} />
+            </Fragment>
+          ) : (
+            <slot />
+          )}
         </div>
         {!isPublic && (
           <div class="insights-article__provenance">
@@ -129,6 +159,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
             <a href={sourceUrl} target="_blank" rel="noopener noreferrer">Open editorial record <span aria-hidden="true">↗</span></a>
           </div>
         )}
+        {isPublic && ownerNote && bodyBeforeRefs === undefined && <InsightsOwnerNote note={ownerNote} />}
         {isPublic && <InsightsRelatedReading links={related} />}
         {isPublic && commercialNext && <InsightsCommercialNext next={commercialNext} />}
       </article>
