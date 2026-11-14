@@ -1,0 +1,87 @@
+---
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_SHOP_TAGLINE } from '@/lib/demo/site';
+import { WD_BRAND } from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const rows = ['Skin Fade', 'Taper Fade', 'Beard Sculpt & Hot Towel']
+  .map((name) => DEMO_SERVICES.find((service) => service.name === name))
+  .filter(Boolean)
+  .map((service) => ({ name: service!.name, price: formatDemoPriceGbp(service!.pricePence) }));
+---
+
+<section class="wd-section wd-brand" id="branding" aria-labelledby="wd-brand-heading">
+  <div class="wd-wrap">
+    <header class="wd-head">
+      <p class="wd-eyebrow">{WD_BRAND.kicker}</p>
+      <h2 id="wd-brand-heading" class="wd-h2">{WD_BRAND.heading}</h2>
+      <p class="wd-lede">{WD_BRAND.lede}</p>
+    </header>
+
+    <div class="wd-brand__grid">
+      <div class="wd-brand__controls">
+        <fieldset class="wd-choice">
+          <legend class="wd-choice__legend">Colour palette</legend>
+          {WD_BRAND.palettes.map((palette, index) => (
+            <label class="wd-choice__option">
+              <input type="radio" name="wd-palette" value={palette.id} checked={index === 0} data-wd-palette />
+              <span class={`wd-choice__swatch wd-choice__swatch--${palette.id}`} aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="wd-choice__text">
+                <span class="wd-choice__name">{palette.label}</span>
+                <span class="wd-choice__note">{palette.note}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+
+        <fieldset class="wd-choice">
+          <legend class="wd-choice__legend">Typeface</legend>
+          {WD_BRAND.typefaces.map((face, index) => (
+            <label class="wd-choice__option">
+              <input type="radio" name="wd-type" value={face.id} checked={index === 0} data-wd-type />
+              <span class={`wd-choice__glyph wd-choice__glyph--${face.id}`} aria-hidden="true">Aa</span>
+              <span class="wd-choice__text">
+                <span class="wd-choice__name">{face.label}</span>
+                <span class="wd-choice__note">{face.note}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      </div>
+
+      <div class="wd-brand__preview" data-wd-brand-preview data-palette="night" data-type="condensed" aria-hidden="true">
+        <div class="wd-site">
+          <div class="wd-site__nav">
+            <span class="wd-site__logo">CUTSTATE</span>
+            <span class="wd-site__links"><span>Services</span><span>Barbers</span><span>Visit</span></span>
+            <span class="wd-site__pill">Book</span>
+          </div>
+          <div class="wd-site__body">
+            <div class="wd-site__copy">
+              <span class="wd-site__kicker">Barbers · Northern Quarter</span>
+              <span class="wd-site__title">{DEMO_SHOP_TAGLINE}</span>
+              <span class="wd-site__rows">
+                {rows.map((row) => (
+                  <span class="wd-site__row"><span>{row.name}</span><b>{row.price}</b></span>
+                ))}
+              </span>
+              <span class="wd-site__book">Book an appointment</span>
+            </div>
+            <div class="wd-site__photo">
+              <img src="/images/website-design/fade.webp" alt="" width="640" height="960" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="wd-principles">
+      {WD_BRAND.principles.map((principle, index) => (
+        <li class="wd-principle">
+          <span class="wd-principle__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="wd-principle__title">{principle.title}</h3>
+          <p class="wd-principle__body">{principle.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

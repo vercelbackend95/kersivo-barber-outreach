@@ -1,0 +1,97 @@
+---
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_LOCATION } from '@/lib/demo/site';
+import { WD_GLANCE } from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const fade = DEMO_SERVICES.find((service) => service.name === 'Skin Fade');
+const cut = DEMO_SERVICES.find((service) => service.name === 'Classic Cut & Finish');
+const beard = DEMO_SERVICES.find((service) => service.name === 'Beard Trim & Shape');
+const chips = [fade, cut, beard].filter(Boolean).map((service) => ({
+  name: service!.name.replace(' & Finish', '').replace(' & Shape', ''),
+  price: formatDemoPriceGbp(service!.pricePence),
+}));
+---
+
+<section class="wd-section wd-glance" id="first-glance" aria-labelledby="wd-glance-heading">
+  <div class="wd-wrap">
+    <header class="wd-head">
+      <p class="wd-eyebrow">{WD_GLANCE.kicker}</p>
+      <h2 id="wd-glance-heading" class="wd-h2">{WD_GLANCE.heading}</h2>
+      <p class="wd-lede">{WD_GLANCE.lede}</p>
+    </header>
+
+    <div class="wd-glance__grid">
+      <div class="wd-compare" data-wd-compare style="--pos: 50%">
+        <div class="wd-compare__frame">
+          <div class="wd-compare__bar" aria-hidden="true"><i></i><i></i><i></i><span>yourbarbershop.co.uk</span></div>
+          <div class="wd-compare__view" aria-hidden="true">
+            <!-- Before: the generic template look -->
+            <div class="wd-before">
+              <div class="wd-before__top">
+                <span class="wd-before__logo">Welcome To Our Barbers!!</span>
+                <span class="wd-before__links"><u>Home</u> <u>About Us</u> <u>Gallery</u> <u>News</u> <u>Links</u> <u>Contact</u></span>
+              </div>
+              <div class="wd-before__slider">
+                <span class="wd-before__slide">Image slideshow</span>
+                <span class="wd-before__dots"><i></i><i></i><i></i><i></i><i></i></span>
+              </div>
+              <div class="wd-before__body">
+                <p class="wd-before__h">About Us</p>
+                <p>We are a friendly barbershop offering a wide range of services for all the family. Please see our services page for more information and prices on request.</p>
+                <p class="wd-before__small">For bookings please call or message us on social media. <u>Click here</u></p>
+              </div>
+            </div>
+
+            <!-- After: designed to book -->
+            <div class="wd-after">
+              <img src="/images/website-design/interior.webp" alt="" width="960" height="1440" loading="lazy" decoding="async" />
+              <div class="wd-after__shade"></div>
+              <div class="wd-after__top">
+                <span class="wd-after__logo">CUTSTATE</span>
+                <span class="wd-after__nav">Services · Barbers · Visit</span>
+                <span class="wd-after__cta">Book</span>
+              </div>
+              <div class="wd-after__copy">
+                <span class="wd-after__area">{DEMO_LOCATION} · Open 6 days</span>
+                <span class="wd-after__title">Defined cuts.<br />Precise finishes.</span>
+                <span class="wd-after__chips">
+                  {chips.map((chip) => <span><b>{chip.price}</b> {chip.name}</span>)}
+                </span>
+                <span class="wd-after__book">Book an appointment</span>
+              </div>
+            </div>
+          </div>
+
+          <span class="wd-compare__tag wd-compare__tag--before" aria-hidden="true">{WD_GLANCE.beforeLabel}</span>
+          <span class="wd-compare__tag wd-compare__tag--after" aria-hidden="true">{WD_GLANCE.afterLabel}</span>
+          <span class="wd-compare__handle" aria-hidden="true"><span></span></span>
+          <input
+            class="wd-compare__range"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="50"
+            aria-label="Compare a generic template with a website designed to book"
+            aria-valuetext="Halfway"
+            data-wd-compare-range
+          />
+        </div>
+      </div>
+
+      <ol class="wd-glance__questions" data-wd-glance-questions>
+        {WD_GLANCE.questions.map((item, index) => (
+          <li class="wd-question" data-step={index}>
+            <span class="wd-question__check" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </span>
+            <span>
+              <span class="wd-question__q">{item.q}</span>
+              <span class="wd-question__a">{item.a}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>

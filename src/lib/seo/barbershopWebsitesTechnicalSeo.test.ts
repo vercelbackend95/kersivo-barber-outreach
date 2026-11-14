@@ -26,7 +26,7 @@ const page = read('../../pages/barbershop-websites/index.astro');
 const hero = read('../../components/barbershop-websites/BarbershopWebsitesHero.astro');
 const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
 const css = read('../../styles/components/barbershop-websites-hero.css');
-const designTeamSection = read('../../components/barbershop-website-design/WebsiteDesignPhotography.astro');
+const designTeamSection = read('../../components/websiteDesign/WdPhoto.astro');
 
 describe('/barbershop-websites Batch 2 — technical SEO and link integrity', () => {
   it('creates a canonical WebPage entity with existing brand IDs and no invented rich-result proof', () => {

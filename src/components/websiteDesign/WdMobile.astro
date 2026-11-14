@@ -1,0 +1,40 @@
+---
+import WdPhoneScreen from './WdPhoneScreen.astro';
+import { WD_MOBILE } from '@/lib/seo/barbershopWebsiteDesignContent';
+---
+
+<section class="wd-section wd-mobile" id="mobile-ux" aria-labelledby="wd-mobile-heading" data-wd-mobile data-layer="thumb">
+  <div class="wd-wrap wd-split">
+    <div class="wd-mobile__stage">
+      <div class="wd-phone wd-phone--layers">
+        <WdPhoneScreen photo="/images/website-design/story.webp" photoPosition="center 40%" />
+        <div class="wd-layer wd-layer--thumb" aria-hidden="true">
+          <span class="wd-layer__arc"></span>
+          <span class="wd-layer__tag wd-layer__tag--easy">Easy reach</span>
+          <span class="wd-layer__tag wd-layer__tag--hard">Stretch</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wd-mobile__copy">
+      <header class="wd-head">
+        <p class="wd-eyebrow">{WD_MOBILE.kicker}</p>
+        <h2 id="wd-mobile-heading" class="wd-h2">{WD_MOBILE.heading}</h2>
+        <p class="wd-lede">{WD_MOBILE.lede}</p>
+      </header>
+
+      <p class="wd-mobile__hint" id="wd-mobile-hint">Choose a layer to see it on the phone.</p>
+      <ul class="wd-layers" aria-describedby="wd-mobile-hint">
+        {WD_MOBILE.layers.map((layer, index) => (
+          <li>
+            <button type="button" class="wd-layer-card" data-layer-button={layer.id} aria-pressed={index === 0 ? 'true' : 'false'}>
+              <span class="wd-layer-card__label">{layer.label}</span>
+              <span class="wd-layer-card__title">{layer.title}</span>
+              <span class="wd-layer-card__body">{layer.body}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

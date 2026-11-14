@@ -1,0 +1,91 @@
+---
+import WdPhoneScreen from './WdPhoneScreen.astro';
+import WdPrimaryCta from './WdPrimaryCta.astro';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import {
+  WD_HERO_EYEBROW,
+  WD_HERO_FACTS,
+  WD_HERO_LEAD,
+  WD_HERO_TITLE_LINES,
+  WD_INSPECTOR_POINTS,
+} from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const lastIndex = WD_HERO_TITLE_LINES.length - 1;
+---
+
+<section class="wd-hero" aria-labelledby="wd-hero-title" data-enter>
+  <div class="wd-hero__glow" aria-hidden="true"></div>
+  <div class="wd-wrap wd-hero__grid">
+    <div class="wd-hero__copy">
+      <nav class="wd-breadcrumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-hidden="true">/</li>
+          <li><a href={BARBERSHOP_WEBSITES_PAGE_PATH}>Barbershop websites</a></li>
+          <li aria-hidden="true">/</li>
+          <li><span aria-current="page">Website design</span></li>
+        </ol>
+      </nav>
+
+      <p class="wd-eyebrow wd-enter" style="--i: 0">{WD_HERO_EYEBROW}</p>
+
+      <h1 id="wd-hero-title" class="wd-hero__title">
+        {WD_HERO_TITLE_LINES.map((line, index) => (
+          <span class:list={['wd-hero__line wd-enter', { 'wd-hero__line--accent': index === lastIndex }]} style={`--i: ${index + 1}`}>
+            {line}
+          </span>
+        ))}
+      </h1>
+
+      <p class="wd-hero__lead wd-enter" style="--i: 4">{WD_HERO_LEAD}</p>
+
+      <div class="wd-actions wd-enter" style="--i: 5">
+        <WdPrimaryCta placement="barbershop_website_design_hero" />
+        <a
+          href={DEMO_HOME_HREF}
+          class="wd-btn wd-btn--ghost"
+          data-track="view_live_demo_click"
+          data-track-placement="barbershop_website_design_hero_demo"
+        >
+          See the CUTSTATE demo
+        </a>
+      </div>
+
+      <ul class="wd-hero__facts wd-enter" style="--i: 6" aria-label="What KERSIVO designs for you">
+        {WD_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+      </ul>
+    </div>
+
+    <div class="wd-inspector wd-enter" style="--i: 3" data-wd-inspector data-active={WD_INSPECTOR_POINTS[0].id}>
+      <div class="wd-inspector__stage">
+        <div class="wd-phone">
+          <WdPhoneScreen photo="/images/website-design/hero.webp" photoPosition="center 25%" eager />
+          {WD_INSPECTOR_POINTS.map((point, index) => (
+            <span class={`wd-inspector__pin wd-inspector__pin--${point.id}`} data-pin={point.id} aria-hidden="true">
+              {index + 1}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div class="wd-inspector__panel">
+        <p class="wd-inspector__title" id="wd-inspector-title">Inspect the design</p>
+        <ol class="wd-inspector__list" aria-labelledby="wd-inspector-title">
+          {WD_INSPECTOR_POINTS.map((point, index) => (
+            <li>
+              <button type="button" class="wd-inspector__item" data-point={point.id} aria-pressed={index === 0 ? 'true' : 'false'}>
+                <span class="wd-inspector__num" aria-hidden="true">{index + 1}</span>
+                <span class="wd-inspector__text">
+                  <span class="wd-inspector__label">{point.label}</span>
+                  <span class="wd-inspector__body">{point.body}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        <p class="wd-inspector__note">Shown: CUTSTATE, KERSIVO’s fictional demo shop.</p>
+      </div>
+    </div>
+  </div>
+</section>

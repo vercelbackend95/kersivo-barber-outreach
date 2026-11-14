@@ -135,7 +135,7 @@ describe('pay-first wording while the flag is on', () => {
     const close = read('src/components/barbershop-websites/FaqAndClose.astro');
     expect(close).toContain('{shownFaqs.map(');
     expect(close).toContain("You don't pay anything for your preview. If you decide to launch");
-    const design = read('src/components/barbershop-website-design/WebsiteDesignFaqClose.astro');
+    const design = read('src/components/websiteDesign/WdOffer.astro');
     expect(design).toContain('{BILLING_NOTE}');
   });
 });

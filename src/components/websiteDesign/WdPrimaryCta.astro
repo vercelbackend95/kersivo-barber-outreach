@@ -1,0 +1,27 @@
+---
+/**
+ * Primary Full KERSIVO action for /barbershop-website-design.
+ * Free-preview flag on: "Get my free preview". Flag off: Full KERSIVO pricing (no change to the public offer).
+ */
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_LABEL, FREE_PREVIEW_CTA_TRACK } from '@/lib/freePreview/fullPlanCta';
+import { COMPARISON_HERO_PRIMARY_HREF, COMPARISON_HERO_PRIMARY_LABEL } from '@/lib/seo/comparisonCtas';
+
+interface Props {
+  placement: string;
+  class?: string;
+}
+
+const { placement, class: className } = Astro.props;
+const freePreview = isFreePreviewFlowEnabled();
+const href = freePreview ? FREE_PREVIEW_CTA_HREF : COMPARISON_HERO_PRIMARY_HREF;
+const label = freePreview ? FREE_PREVIEW_CTA_LABEL : COMPARISON_HERO_PRIMARY_LABEL;
+const track = freePreview ? FREE_PREVIEW_CTA_TRACK : 'view_pricing_click';
+---
+
+<a href={href} class:list={['wd-btn wd-btn--primary', className]} data-track={track} data-track-placement={placement}>
+  <span>{label}</span>
+  <svg class="wd-btn__arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+    <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</a>

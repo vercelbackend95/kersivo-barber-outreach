@@ -1,0 +1,51 @@
+---
+import WdPrimaryCta from './WdPrimaryCta.astro';
+import { WD_AUDIT } from '@/lib/seo/barbershopWebsiteDesignContent';
+
+const total = WD_AUDIT.items.length;
+const circumference = 2 * Math.PI * 52;
+---
+
+<section class="wd-section wd-audit" id="self-check" aria-labelledby="wd-audit-heading" data-wd-audit>
+  <div class="wd-wrap">
+    <header class="wd-head wd-head--center">
+      <p class="wd-eyebrow">{WD_AUDIT.kicker}</p>
+      <h2 id="wd-audit-heading" class="wd-h2">{WD_AUDIT.heading}</h2>
+      <p class="wd-lede">{WD_AUDIT.lede}</p>
+    </header>
+
+    <div class="wd-audit__grid">
+      <fieldset class="wd-audit__list">
+        <legend class="wd-sr">Design details on your current website</legend>
+        {WD_AUDIT.items.map((item, index) => (
+          <label class="wd-check">
+            <input type="checkbox" value={String(index)} data-wd-audit-item />
+            <span class="wd-check__box" aria-hidden="true">
+              <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </span>
+            <span class="wd-check__text">{item}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <div class="wd-score" style={`--c: ${circumference.toFixed(2)}; --p: 0`} data-wd-score>
+        <div class="wd-score__ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="wd-score__track" cx="60" cy="60" r="52"></circle>
+            <circle class="wd-score__value" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <p class="wd-score__count"><span data-wd-score-count>0</span><small>/{total}</small></p>
+        </div>
+        <div class="wd-score__result" aria-live="polite">
+          {WD_AUDIT.results.map((result, index) => (
+            <div class="wd-score__tier" data-min={result.min} hidden={index !== 0}>
+              <p class="wd-score__title">{result.title}</p>
+              <p class="wd-score__body">{result.body}</p>
+            </div>
+          ))}
+        </div>
+        <WdPrimaryCta placement="barbershop_website_design_self_check" class="wd-btn--block" />
+      </div>
+    </div>
+  </div>
+</section>

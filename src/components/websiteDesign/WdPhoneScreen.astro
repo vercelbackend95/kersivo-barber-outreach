@@ -1,0 +1,48 @@
+---
+/**
+ * Static CUTSTATE (fictional demo shop) mobile home screen used as an illustration.
+ * Regions carry data-region so the hero inspector and the mobile UX layers can point at them.
+ */
+import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_LOCATION, DEMO_SHOP_TAGLINE } from '@/lib/demo/site';
+
+interface Props {
+  photo: string;
+  photoPosition?: string;
+  eager?: boolean;
+}
+
+const { photo, photoPosition = 'center 30%', eager = false } = Astro.props;
+const wanted = ['Skin Fade', 'Classic Cut & Finish', 'Beard Trim & Shape'];
+const services = wanted
+  .map((name) => DEMO_SERVICES.find((service) => service.name === name))
+  .filter((service): service is (typeof DEMO_SERVICES)[number] => Boolean(service));
+const area = DEMO_LOCATION.split(',')[0];
+---
+
+<div class="wd-screen" aria-hidden="true">
+  <div class="wd-screen__status"><span>9:41</span><span class="wd-screen__notch"></span><span class="wd-screen__bars"></span></div>
+  <div class="wd-screen__nav" data-region="identity">
+    <span class="wd-screen__logo">CUTSTATE</span>
+    <span class="wd-screen__menu"><i></i><i></i></span>
+  </div>
+  <div class="wd-screen__hero" data-region="photo">
+    <img src={photo} alt="" width="720" height="1080" loading={eager ? 'eager' : 'lazy'} decoding="async" style={`object-position: ${photoPosition}`} />
+    <div class="wd-screen__hero-copy">
+      <span class="wd-screen__area">{area}</span>
+      <span class="wd-screen__tagline">{DEMO_SHOP_TAGLINE}</span>
+    </div>
+  </div>
+  <div class="wd-screen__prices" data-region="prices">
+    <span class="wd-screen__label">Popular</span>
+    {services.map((service) => (
+      <span class="wd-screen__row">
+        <span>{service.name}</span>
+        <b>{formatDemoPriceGbp(service.pricePence)}</b>
+      </span>
+    ))}
+  </div>
+  <div class="wd-screen__book" data-region="book">
+    <span>Book an appointment</span>
+  </div>
+</div>

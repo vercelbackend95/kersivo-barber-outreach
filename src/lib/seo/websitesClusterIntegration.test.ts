@@ -62,7 +62,7 @@ describe('Websites three-page integrated cluster release gates', () => {
   it('retains both guide routes from website essentials and preserves demo links', () => {
     const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
     const essentials = read('../../components/barbershop-websites/WebsiteEssentials.astro');
-    const design = read('../../components/barbershop-website-design/WebsiteDesignPhotography.astro');
+    const design = read('../../components/websiteDesign/WdPhoto.astro');
     expect(essentials).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
     expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
