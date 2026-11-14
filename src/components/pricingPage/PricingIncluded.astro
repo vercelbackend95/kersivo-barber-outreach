@@ -1,0 +1,79 @@
+---
+/**
+ * Feature comparison as a real table. On small screens one plan column shows at a time
+ * (radio switch) and the later groups sit behind "Show all features".
+ */
+import { getRenderableCompareGroups, PRICING_COMPARE_CAPTION } from '@/lib/pricing/pricingPlans';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const groups = getRenderableCompareGroups();
+---
+
+<section id="included" class="pr-section pr-included" aria-labelledby="pricing-included-title">
+  <div class="pr-wrap">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">What’s included</p>
+      <h2 id="pricing-included-title" class="pr-h2">Barbershop software pricing: what each plan includes</h2>
+    </header>
+
+    <div class="pr-table pr-reveal" data-pr-table data-plan="full" data-expanded="true">
+      <div class="pr-table__switch" role="radiogroup" aria-label="Show plan in the comparison table">
+        <label class="pr-table__option">
+          <input type="radio" name="pricing-compare-plan" value="full" checked />
+          <span>Full · £{SAAS_MONTHLY_GBP}</span>
+        </label>
+        <label class="pr-table__option">
+          <input type="radio" name="pricing-compare-plan" value="starter" />
+          <span>Starter · £0</span>
+        </label>
+      </div>
+
+      <table class="pr-table__table">
+        <caption class="sr-only">{PRICING_COMPARE_CAPTION}</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="pr-table__feature-head">Feature</th>
+            <th scope="col" class="pr-table__col--full" data-plan-col="full">
+              <span class="pr-table__plan">Full KERSIVO</span>
+              <span class="pr-table__price">£{SAAS_MONTHLY_GBP}/month</span>
+            </th>
+            <th scope="col" data-plan-col="starter">
+              <span class="pr-table__plan">KERSIVO Starter</span>
+              <span class="pr-table__price">£0/month</span>
+            </th>
+          </tr>
+        </thead>
+        {groups.map((group) => (
+          <tbody data-collapse={group.collapseOnMobile ? '' : undefined}>
+            <tr class="pr-table__group">
+              <th scope="colgroup" colspan="3" data-group-span>{group.title}</th>
+            </tr>
+            {group.rows.map((row) => (
+              <tr>
+                <th scope="row">
+                  <span class="pr-table__name">{row.feature}</span>
+                  {row.help ? <span class="pr-table__help">{row.help}</span> : null}
+                </th>
+                {([['full', row.full], ['starter', row.starter]] as const).map(([plan, cell]) => (
+                  <td class={plan === 'full' ? 'pr-table__col--full' : undefined} data-plan-col={plan}>
+                    {cell.kind === 'included' ? (
+                      <span class="pr-table__yes"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 8.4l3 2.9 6-6.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg><span class="sr-only">Included</span></span>
+                    ) : cell.kind === 'excluded' ? (
+                      <><span class="pr-table__no" aria-hidden="true">—</span><span class="sr-only">Not included</span></>
+                    ) : (
+                      cell.value
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        ))}
+      </table>
+
+      <button type="button" class="pr-btn pr-btn--ghost pr-btn--sm pr-table__more" data-pr-table-more aria-expanded="true" hidden>
+        Show all features
+      </button>
+    </div>
+  </div>
+</section>

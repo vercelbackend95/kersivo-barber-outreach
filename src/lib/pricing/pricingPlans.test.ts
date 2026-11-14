@@ -33,39 +33,34 @@ const layout = getRateCard1LandingLayout();
 
 describe('/pricing plan cards', () => {
   it('uses the shared key facts for both plans and keeps Full visually primary', () => {
-    const card = read('components/pricing/PlanCard.astro');
-    expect(card).toContain('<KeyFacts facts={plan.keyFacts} />');
+    const card = read('components/pricingPage/PricingPlanCards.astro');
+    expect(card).toContain('full.keyFacts.details');
+    expect(card).toContain('starter.keyFacts.details');
     expect(PRICING_PLAN_CARDS.full.keyFacts.values[0]).toEqual({
       label: 'Monthly fee, per location',
       value: `£${SAAS_MONTHLY_GBP}`,
     });
     expect(PRICING_PLAN_CARDS.starter.keyFacts.values[0]).toEqual({ label: 'Monthly fee', value: '£0' });
-    expect(card).toContain('class="btn btn--primary btn--lg"');
-    expect(card).toContain('class="btn btn--outline btn--lg"');
+    expect(card).toContain('pr-btn pr-btn--primary pr-btn--block');
+    expect(card).toContain('pr-btn pr-btn--outline pr-btn--block');
   });
 
-  it('shares one surface and facts source with the /starter hero card', () => {
-    const card = read('components/pricing/PlanCard.astro');
+  it('shares one facts source with the /starter hero card', () => {
     const starterPage = read('pages/starter/index.astro');
-    expect(card).toContain("isFull ? 'ks-glass-card--accent' : 'ks-glass-card--plain'");
-    expect(starterPage).toContain('ks-glass-card ks-glass-card--accent starter-glance-card starter-hero__card');
     expect(starterPage).toContain('<KeyFacts facts={STARTER_KEY_FACTS} />');
     expect(PRICING_PLAN_CARDS.starter.keyFacts).toBe(STARTER_KEY_FACTS);
-    expect(read('components/pricing/PricingPlans.astro')).toContain(
-      'pricing-billing__item ks-glass-card ks-glass-card--plain',
-    );
   });
 
   it('keeps Stripe fees next to the 0% tile and the tile facts out of the Starter line', () => {
-    expect(read('components/pricing/PlanCard.astro')).toContain('{PRICING_FACTS_STRIPE_NOTE}');
+    expect(read('components/pricingPage/PricingPlanCards.astro')).toContain('{PRICING_FACTS_STRIPE_NOTE}');
     expect(PRICING_FACTS_STRIPE_NOTE).toBe('Stripe fees apply.');
     expect(PRICING_STARTER_DESCRIPTION).not.toMatch(/£5|Up to 4|0%|hosted/i);
     expect(PRICING_STARTER_DESCRIPTION.length).toBeLessThanOrEqual(85);
   });
 
   it('keeps Full as the first card and Starter as the outline CTA', () => {
-    const plans = read('components/pricing/PricingPlans.astro');
-    expect(plans.indexOf('variant="full"')).toBeLessThan(plans.indexOf('variant="starter"'));
+    const plans = read('components/pricingPage/PricingPlanCards.astro');
+    expect(plans.indexOf('pr-plan--full')).toBeLessThan(plans.indexOf('pr-plan--starter'));
     expect(plans).toContain('id="plan"');
     expect(PRICING_PLAN_CARDS.starter.primaryCta.track).toBe('starter_signup_click');
     expect(PRICING_PLAN_CARDS.full.chips).toContain(KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''));
@@ -95,9 +90,9 @@ describe('/pricing plan cards', () => {
 
 describe('/pricing comparison table', () => {
   it('is a real table with caption, thead and row/column headers', () => {
-    const table = read('components/pricing/PricingCompareTable.astro');
+    const table = read('components/pricingPage/PricingIncluded.astro');
     expect(table).toContain('id="included"');
-    expect(table).toContain('<table class="pricing-compare__table">');
+    expect(table).toContain('<table class="pr-table__table">');
     expect(table).toContain('<caption class="sr-only">');
     expect(table).toContain('<thead>');
     expect(table).toContain('scope="col"');
@@ -185,20 +180,14 @@ describe('/pricing comparison table', () => {
     expect(compareCellText({ kind: 'excluded' })).toBe('Not included');
   });
 
-  it('draws the Full column as one outline, not a border per row', () => {
-    const css = read('styles/components/pricing-compare.css');
-    expect(css).not.toContain('box-shadow: inset 0 2px 0 var(--color-brand)');
-    expect(css).toContain('.pricing-compare__wrap::after');
-    expect(css.slice(css.indexOf('.pricing-compare__wrap {'), css.indexOf('.pricing-compare__wrap::after'))).not.toContain(
-      'overflow',
-    );
-    const table = read('components/pricing/PricingCompareTable.astro');
-    expect(table).toContain('<CheckIcon label="Included" />');
+  it('announces included and excluded cells to screen readers', () => {
+    const table = read('components/pricingPage/PricingIncluded.astro');
+    expect(table).toContain('<span class="sr-only">Included</span>');
     expect(table).toContain('<span class="sr-only">Not included</span>');
   });
 
   it('keeps a mobile plan switcher with a radio group', () => {
-    const table = read('components/pricing/PricingCompareTable.astro');
+    const table = read('components/pricingPage/PricingIncluded.astro');
     expect(table).toContain('role="radiogroup"');
     expect(table).toContain('value="full" checked');
     expect(table).toContain('Show all features');
@@ -226,7 +215,7 @@ describe('/pricing billing and page clean-up', () => {
     expect(page).not.toContain('fresha-alt-final');
     expect(page).not.toContain('pricing-starter-offer');
     expect(page).not.toContain('<Faq4');
-    expect(page).toContain('<PricingFaq');
-    expect(read('components/pricing/PricingFaq.astro')).toContain("import Accordion from '@/components/ui/Accordion.astro'");
+    expect(page).toContain('<PricingFaqList');
+    expect(read('components/pricingPage/PricingFaqList.astro')).toContain('<details');
   });
 });

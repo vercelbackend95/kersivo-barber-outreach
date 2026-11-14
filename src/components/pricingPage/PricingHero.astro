@@ -1,0 +1,105 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
+import { offer } from '@/content/offer';
+import { PRICING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { PRICING_PAGE_H1 } from '@/lib/seo/pricingPage';
+import {
+  PRICING_HERO_FACTS,
+  PRICING_HERO_FEED,
+  PRICING_HERO_LEAD,
+  PRICING_HERO_LINES,
+} from '@/lib/seo/pricingPageContent';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const { freePreview } = Astro.props;
+const icons: Record<string, string> = {
+  site: 'M3 5h18v14H3zM3 9h18M7 7h.01M10 7h.01',
+  booking: 'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4M9 15l2 2 4-4',
+  reminder: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4',
+  retail: 'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
+  report: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+};
+---
+
+<section class="pr-hero" aria-labelledby="pricing-hero-title">
+  <div class="pr-wrap pr-hero__grid">
+    <div class="pr-hero__copy">
+      <div class="pr-enter" style="--i: 0"><PageBreadcrumbs trail={PRICING_BREADCRUMBS} /></div>
+
+      <h1 id="pricing-hero-title" class="pr-hero__title">
+        <span class="pr-eyebrow pr-enter" style="--i: 1">{PRICING_PAGE_H1}</span>
+        {PRICING_HERO_LINES.map((line, index) => (
+          <span class={`pr-hero__line pr-enter${index === 1 ? ' pr-hero__line--quiet' : ''}`} style={`--i: ${index + 2}`}>
+            {line}
+          </span>
+        ))}
+      </h1>
+
+      <p class="pr-hero__lead pr-enter" style="--i: 4">{PRICING_HERO_LEAD}</p>
+
+      <div class="pr-hero__actions pr-enter" style="--i: 5">
+        {freePreview ? (
+          <FullPlanCta part="primary" placement="pricing_hero" primaryClass="pr-btn pr-btn--primary" />
+        ) : (
+          <a href="/admin/launch" class="btn btn--primary btn--lg pr-btn pr-btn--primary" data-track="saas_subscribe_click" data-track-placement="pricing_hero">
+            {offer.cta.subscribeDirect}
+          </a>
+        )}
+        <a href="#plan" class="pr-btn pr-btn--ghost">
+          Compare the two plans
+        </a>
+      </div>
+
+      <p class="pr-hero__aside pr-enter" style="--i: 6">
+        {freePreview ? <FullPlanCta part="subscribe" placement="pricing_hero" /> : null}
+        <a href="/demo" data-track="view_live_demo_click" data-track-placement="pricing_hero">Or see the demo first</a>
+      </p>
+
+      <ul class="pr-hero__facts pr-enter" style="--i: 7" aria-label="Full KERSIVO terms">
+        {PRICING_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+      </ul>
+    </div>
+
+    <div class="pr-hero__stage pr-enter" style="--i: 3">
+      <article class="pr-card pr-live" aria-labelledby="pricing-live-title" data-pr-live>
+        <header class="pr-live__head">
+          <p class="pr-eyebrow pr-eyebrow--dot" id="pricing-live-title">{offer.plans.full}</p>
+          <span class="pr-live__tag">Example shop</span>
+        </header>
+
+        <p class="pr-live__price">
+          <span class="pr-live__amount" data-pr-count={SAAS_MONTHLY_GBP}>£{SAAS_MONTHLY_GBP}</span>
+          <span class="pr-live__per">/month<br />per location</span>
+        </p>
+
+        <p class="pr-live__label">A month in your shop</p>
+        <div class="pr-live__feedwrap">
+        <span class="pr-live__marker" aria-hidden="true" data-pr-marker></span>
+        <ol class="pr-live__feed" data-pr-feed>
+          {PRICING_HERO_FEED.map((item) => (
+            <li class="pr-live__item" data-pr-feed-item>
+              <span class="pr-live__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={icons[item.kind]} /></svg>
+              </span>
+              <span class="pr-live__text">
+                <strong>{item.title}</strong>
+                <span>{item.meta}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        </div>
+
+        <p class="pr-live__foot">
+          <span>0% KERSIVO commission</span>
+          <span>Stripe fees apply</span>
+        </p>
+      </article>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,34 @@
+---
+import { getPricingFaqItems } from '@/lib/seo/pricingPage';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const { freePreview } = Astro.props;
+const items = getPricingFaqItems(freePreview);
+---
+
+<section id="faq" class="pr-section pr-faq" aria-labelledby="pricing-faq-title">
+  <div class="pr-wrap pr-faq__grid">
+    <header class="pr-head pr-faq__head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">FAQ</p>
+      <h2 id="pricing-faq-title" class="pr-h2">Questions about KERSIVO pricing?</h2>
+      <p class="pr-lead">Clear answers on Starter and Full KERSIVO, fees, VAT, SMS reminders and cancelling.</p>
+      <p class="pr-body">Still not sure? <a href="#contact">Ask us a question</a> and we’ll reply by email.</p>
+    </header>
+    <div class="pr-faq__list">
+      {items.map((item, index) => (
+        <details class="pr-faq__item" id={`pricing-faq-${index + 1}`} name="pricing-faq" open={index === 0}>
+          <summary>
+            <span>{item.question}</span>
+            <span class="pr-faq__icon" aria-hidden="true"></span>
+          </summary>
+          <div class="pr-faq__answer">
+            <p>{item.answer}</p>
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,59 @@
+---
+import { PRICING_FEES_POINTS } from '@/lib/seo/pricingPage';
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { PRICING_BILL_FOOTNOTE, PRICING_BILL_LINES, PRICING_BILL_TERMS } from '@/lib/seo/pricingPageContent';
+---
+
+<section id="fees" class="pr-section pr-bill" aria-labelledby="pricing-fees-title">
+  <div class="pr-wrap pr-bill__grid">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">Fees and billing</p>
+      <h2 id="pricing-fees-title" class="pr-h2">What you pay, and what you don’t</h2>
+      <p class="pr-lead">No setup fee, no per-barber add-ons, no VAT on top and nothing taken from your bookings. This is the whole bill.</p>
+      <ul class="pr-ticks">
+        {PRICING_FEES_POINTS.map((point) => <li>{point}</li>)}
+      </ul>
+    </header>
+
+    <div class="pr-bill__stack">
+      <figure class="pr-receipt pr-reveal" data-pr-receipt aria-labelledby="pricing-receipt-title">
+        <figcaption class="pr-receipt__head">
+          <span id="pricing-receipt-title">Your monthly bill</span>
+          <span aria-hidden="true">KERSIVO</span>
+        </figcaption>
+        <dl class="pr-receipt__lines">
+          {PRICING_BILL_LINES.map((line) => (
+            <div class="pr-receipt__line" data-pr-receipt-line>
+              <dt>
+                {line.label}
+                {line.note ? <small>{line.note}</small> : null}
+              </dt>
+              <dd>{line.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="pr-receipt__total" data-pr-receipt-line>
+          <span>Total per month</span>
+          <strong>£{SAAS_MONTHLY_GBP}.00</strong>
+        </p>
+        <p class="pr-receipt__foot">{PRICING_BILL_FOOTNOTE}</p>
+      </figure>
+
+      <div class="pr-card pr-example pr-reveal">
+        <p class="pr-eyebrow">Worked example</p>
+        <p class="pr-example__line">
+          A <strong>£20</strong> cut booked with a <strong>£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</strong>
+        </p>
+        <div class="pr-example__bar" role="img" aria-label={`£${KERSIVO_BOOKING_DEPOSIT_GBP} paid online, £15 paid in the shop, £0 to KERSIVO`}>
+          <span class="pr-example__seg pr-example__seg--online" style="--w: 25%">£{KERSIVO_BOOKING_DEPOSIT_GBP} online</span>
+          <span class="pr-example__seg pr-example__seg--shop" style="--w: 75%">£15 in the shop</span>
+        </div>
+        <p class="pr-body">The deposit is part of the price, not an extra fee. KERSIVO takes <strong>£0</strong> of it; Stripe’s processing fee applies to the online part.</p>
+      </div>
+
+      <ul class="pr-terms pr-reveal">
+        {PRICING_BILL_TERMS.map((term) => <li>{term}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>

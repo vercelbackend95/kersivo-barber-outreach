@@ -1,0 +1,44 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { PRICING_OUTCOMES } from '@/lib/seo/pricingPageContent';
+---
+
+<section id="outcomes" class="pr-section pr-outcomes" aria-labelledby="pricing-outcomes-title">
+  <div class="pr-wrap">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">What £{SAAS_MONTHLY_GBP} does for your shop</p>
+      <h2 id="pricing-outcomes-title" class="pr-h2">Less admin. More of the chair.</h2>
+      <p class="pr-lead">You cut hair. Full KERSIVO handles the bit around it — the website, the bookings, the reminders and the numbers.</p>
+    </header>
+
+    <ul class="pr-bento">
+      {PRICING_OUTCOMES.map((item, index) => (
+        <li class={`pr-card pr-tile pr-tile--${item.id} pr-reveal`} style={`--d: ${index % 3}`}>
+          <span class="pr-tile__art" aria-hidden="true">
+            {item.id === 'brand' && (
+              <span class="pr-art-url"><i></i>yourshop.co.uk</span>
+            )}
+            {item.id === 'team' && (
+              <span class="pr-art-team">{[0, 1, 2, 3, 4, 5].map((n) => <i style={`--n: ${n}`}></i>)}<b>£{SAAS_MONTHLY_GBP}</b></span>
+            )}
+            {item.id === 'payments' && (
+              <span class="pr-art-pay"><i>Pay at shop</i><i>£5 deposit</i><i>Pay in full</i></span>
+            )}
+            {item.id === 'reminders' && (
+              <span class="pr-art-ping"><i></i><i></i></span>
+            )}
+            {item.id === 'reports' && (
+              <span class="pr-art-bars">{[38, 54, 46, 70, 62, 84].map((h) => <i style={`--h: ${h}%`}></i>)}</span>
+            )}
+            {item.id === 'retail' && (
+              <span class="pr-art-bag"><i></i></span>
+            )}
+          </span>
+          <p class="pr-tile__kicker">{item.kicker}</p>
+          <h3 class="pr-h3">{item.title}</h3>
+          <p class="pr-body">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

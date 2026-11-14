@@ -43,7 +43,7 @@ describe('shared BreadcrumbList helper', () => {
 
   it('renders the visible trail on pricing, starter and about heroes', () => {
     for (const [file, trail] of [
-      ['src/pages/pricing.astro', 'PRICING_BREADCRUMBS'],
+      ['src/components/pricingPage/PricingHero.astro', 'PRICING_BREADCRUMBS'],
       ['src/pages/starter/index.astro', 'STARTER_BREADCRUMBS'],
       ['src/pages/about.astro', 'ABOUT_BREADCRUMBS'],
     ]) {

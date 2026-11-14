@@ -1,0 +1,30 @@
+---
+import { PRICING_ALTERNATIVE_LINKS, PRICING_COMPARE_LINKS } from '@/lib/seo/pricingPageContent';
+---
+
+<section id="compare" class="pr-section pr-links" aria-labelledby="pricing-links-title">
+  <div class="pr-wrap">
+    <header class="pr-head pr-reveal">
+      <p class="pr-eyebrow pr-eyebrow--dot">Still weighing it up?</p>
+      <h2 id="pricing-links-title" class="pr-h2">Check it against what you pay now</h2>
+    </header>
+    <ul class="pr-links__grid">
+      {PRICING_COMPARE_LINKS.map((link, index) => (
+        <li class="pr-reveal" style={`--d: ${index}`}>
+          <a class="pr-card pr-link-card" href={link.href}>
+            <span class="pr-link-card__kicker">{link.kicker}</span>
+            <span class="pr-link-card__title">{link.title}</span>
+            <span class="pr-body">{link.body}</span>
+            <span class="pr-link-card__go" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="pr-links__alts pr-reveal">
+      <span>Switching from another app?</span>
+      {PRICING_ALTERNATIVE_LINKS.map((link) => (
+        <a class="pr-links__alt" href={link.href}>KERSIVO vs {link.label}</a>
+      ))}
+    </p>
+  </div>
+</section>

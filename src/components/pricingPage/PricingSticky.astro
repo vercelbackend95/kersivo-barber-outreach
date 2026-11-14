@@ -1,0 +1,24 @@
+---
+/** Mobile-only bar: appears once the hero CTA scrolls away, hides near the closing CTA. */
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_LABEL, FREE_PREVIEW_CTA_TRACK } from '@/lib/freePreview/fullPlanCta';
+import { PRICING_STICKY_NOTE } from '@/lib/seo/pricingPageContent';
+
+interface Props {
+  freePreview: boolean;
+}
+
+const { freePreview } = Astro.props;
+---
+
+<div class="pr-sticky" data-pr-sticky aria-hidden="true" inert>
+  <p class="pr-sticky__note"><span>{PRICING_STICKY_NOTE.plan}</span> <strong>{PRICING_STICKY_NOTE.price}<small>{PRICING_STICKY_NOTE.unit}</small></strong></p>
+  {freePreview ? (
+    <a class="pr-btn pr-btn--primary pr-btn--sm" href={FREE_PREVIEW_CTA_HREF} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement="pricing_sticky">
+      {FREE_PREVIEW_CTA_LABEL}
+    </a>
+  ) : (
+    <a class="pr-btn pr-btn--primary pr-btn--sm" href="/admin/launch" data-track="saas_subscribe_click" data-track-placement="pricing_sticky">
+      Start Full KERSIVO
+    </a>
+  )}
+</div>

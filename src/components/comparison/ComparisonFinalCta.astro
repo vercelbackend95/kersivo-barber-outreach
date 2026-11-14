@@ -17,6 +17,8 @@ import {
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import {
   COMPARISON_FINAL_CTA_HEADING,
+  COMPARISON_FINAL_CTA_PRICING_HREF,
+  COMPARISON_FINAL_CTA_PRICING_LABEL,
   comparisonFinalCtaSwitchLabel,
   COMPARISON_FINAL_CTA_STARTER_LABEL,
 } from '@/lib/seo/comparisonCtas';
@@ -67,6 +69,12 @@ const freePreview = isFreePreviewFlowEnabled();
           },
         ]
       : []),
+    {
+      href: COMPARISON_FINAL_CTA_PRICING_HREF,
+      label: COMPARISON_FINAL_CTA_PRICING_LABEL,
+      track: 'view_pricing_click',
+      placement: trackPlacement,
+    },
     {
       href: '/starter',
       label: COMPARISON_FINAL_CTA_STARTER_LABEL,
