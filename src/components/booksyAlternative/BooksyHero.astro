@@ -1,73 +1,137 @@
 ---
 import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
-import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
-import { BOOKSY_ALTERNATIVE_H1_LINES } from '@/lib/seo/booksyAlternativeFaq';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BOOKSY_ALTERNATIVE_H1_LINES } from '@/lib/seo/booksyAlternativeFaq';
+import { BK_HERO_EYEBROW, BK_HERO_FACTS, BK_HERO_LEAD, BK_HERO_VIEWS } from '@/lib/seo/booksyAlternativeContent';
 
 const [firstLine, secondLine, thirdLine] = BOOKSY_ALTERNATIVE_H1_LINES;
+const slots = ['10:15', '11:00', '12:30', '14:45'];
+const barbers = ['MB', 'NR', 'EW'];
 ---
 
-<section class="fresha-alt-hero" aria-labelledby="booksy-alt-hero-title">
-  <div class="fresha-alt-hero__content">
-    <nav class="booksy-alt-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Home</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">Booksy alternative</span>
-    </nav>
-    <p class="fresha-alt-hero__eyebrow">
-      <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
-      Booksy alternative for UK barbershops
-    </p>
+<section class="bk-hero" aria-labelledby="booksy-alt-hero-title">
+  <div class="bk-hero__aura" aria-hidden="true"></div>
+  <div class="bk-wrap bk-hero__grid">
+    <div class="bk-hero__copy">
+      <nav class="bk-breadcrumb bk-enter" style="--i: 0" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Booksy alternative</span>
+      </nav>
 
-    <h1 id="booksy-alt-hero-title" class="fresha-alt-hero__title">
-      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">{firstLine}</span>
-      <span class="fresha-alt-hero__title-line">{secondLine}</span>
-      <span class="fresha-alt-hero__title-line">{thirdLine}</span>
-    </h1>
+      <p class="bk-eyebrow bk-enter" style="--i: 1">{BK_HERO_EYEBROW}</p>
 
-    <p class="fresha-alt-hero__lead">
-      Booksy pairs booking software with its Marketplace and customer app. KERSIVO takes a more
-      direct route. Starter is £0/month, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking.
-      Full KERSIVO moves the complete customer journey onto your own website and domain for
-      £{SAAS_MONTHLY_GBP}/month per location.
-    </p>
+      <h1 id="booksy-alt-hero-title" class="bk-hero__title">
+        <span class="bk-hero__line bk-enter" style="--i: 2">{firstLine}</span>
+        <span class="bk-hero__line bk-enter" style="--i: 3">{secondLine}</span>
+        <span class="bk-hero__line bk-hero__line--accent bk-enter" style="--i: 4">{thirdLine}<span class="bk-hero__stop">.</span></span>
+      </h1>
 
-    <ComparisonHeroActions placement="booksy" />
+      <p class="bk-hero__lead bk-enter" style="--i: 5">{BK_HERO_LEAD}</p>
 
-    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
-      <span><strong>Starter £0/month</strong></span>
-      <span aria-hidden="true">·</span>
-      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span>
-      <span aria-hidden="true">·</span>
-      <span>0% KERSIVO commission on booking payments (Stripe fees apply)</span>
-      <span aria-hidden="true">·</span>
-      <span>Built for independent UK barbershops</span>
+      <div class="bk-enter" style="--i: 6">
+        <ComparisonHeroActions placement="booksy" />
+      </div>
+
+      <ul class="bk-hero__facts bk-enter" style="--i: 7" aria-label="KERSIVO commercial model">
+        {BK_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+      </ul>
+      <p class="bk-hero__price-note bk-enter" style="--i: 8">
+        £{SAAS_MONTHLY_GBP}/month per location · 0% KERSIVO commission · Stripe fees apply · No setup fee
+      </p>
+    </div>
+
+    <div class="bk-hero__stage bk-enter" style="--i: 4">
+      <figure class="bk-hero__photo" aria-hidden="true">
+        <img
+          src="/images/website-design/fade.webp"
+          alt=""
+          width="640"
+          height="960"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </figure>
+
+      <div class="bk-switch" role="group" aria-label="Show where your clients book">
+        {BK_HERO_VIEWS.map((view) => (
+          <button type="button" class="bk-switch__btn" data-bk-view={view.id} aria-pressed={view.id === 'booksy' ? 'true' : 'false'}>
+            {view.label}
+          </button>
+        ))}
+        <span class="bk-switch__thumb" aria-hidden="true"></span>
+      </div>
+
+      <div class="bk-browser" data-bk-browser data-view="booksy">
+        <div class="bk-browser__chrome">
+          <span class="bk-browser__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p class="bk-browser__url">
+            <svg aria-hidden="true" viewBox="0 0 16 16" width="11" height="11"><path fill="currentColor" d="M4 7V5a4 4 0 1 1 8 0v2h1v8H3V7h1Zm2 0h4V5a2 2 0 1 0-4 0v2Z"/></svg>
+            <span class="bk-browser__url-text" data-bk-url data-booksy="booksy.com/en-gb/…/your-shop" data-own="yourshop.co.uk">booksy.com/en-gb/…/your-shop</span>
+            <span class="bk-browser__caret" aria-hidden="true"></span>
+          </p>
+        </div>
+
+        <div class="bk-browser__body">
+          <div class="bk-layer bk-layer--booksy" data-bk-layer="booksy">
+            <div class="bk-profile" data-bk-item>
+              <span class="bk-profile__avatar" aria-hidden="true"></span>
+              <span class="bk-profile__text">
+                <strong>Your Shop</strong>
+                <span>Barber shop · Booksy Profile</span>
+              </span>
+            </div>
+            <div class="bk-profile__tabs" data-bk-item aria-hidden="true">
+              <span class="is-on">Services</span><span>Reviews</span><span>Portfolio</span>
+            </div>
+            <div class="bk-profile__rows" data-bk-item aria-hidden="true">
+              <span><i></i><b></b></span>
+              <span><i></i><b></b></span>
+              <span><i></i><b></b></span>
+            </div>
+            <p class="bk-profile__meta" data-bk-item>
+              Listed on the Booksy Marketplace and app
+            </p>
+            <p class="bk-profile__bill" data-bk-item>
+              Each extra barber adds a monthly user fee
+            </p>
+          </div>
+
+          <div class="bk-layer bk-layer--own" data-bk-layer="own">
+            <div class="bk-own__brand" data-bk-item>
+              <span class="bk-own__logo" aria-hidden="true">YS</span>
+              <span>
+                <strong>Your Shop</strong>
+                <span>Book your next cut</span>
+              </span>
+            </div>
+            <div class="bk-own__barbers" data-bk-item aria-hidden="true">
+              {barbers.map((initials, index) => (
+                <span class={`bk-own__barber${index === 0 ? ' bk-own__barber--on' : ''}`}>{initials}</span>
+              ))}
+              <span class="bk-own__barber bk-own__barber--add">+</span>
+            </div>
+            <div class="bk-own__row" data-bk-item>
+              <span class="bk-own__chip bk-own__chip--on">Skin fade</span>
+              <span class="bk-own__chip">Beard trim</span>
+            </div>
+            <div class="bk-own__slots" data-bk-item>
+              {slots.map((slot, index) => (
+                <span class={`bk-own__slot${index === 1 ? ' bk-own__slot--on' : ''}`}>{slot}</span>
+              ))}
+            </div>
+            <p class="bk-own__cta" data-bk-item>Confirm with £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bk-toast" data-bk-toast aria-hidden="true">
+        <span class="bk-toast__icon"></span>
+        <span class="bk-toast__text">
+          <strong>New booking · Skin fade</strong>
+          <span>Sat 11:00 · £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit paid · saved to your clients</span>
+        </span>
+      </div>
     </div>
   </div>
-
-  <HeroDashboardShowcase />
 </section>
-
-<style>
-  .booksy-alt-breadcrumb {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-    margin-bottom: 1rem;
-    color: #9ca3af;
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-
-  .booksy-alt-breadcrumb a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .booksy-alt-breadcrumb a:hover,
-  .booksy-alt-breadcrumb a:focus-visible {
-    color: #f9fafb;
-    text-decoration: underline;
-  }
-</style>

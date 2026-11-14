@@ -1,0 +1,73 @@
+---
+import { estimateBoost, formatGbp } from '@/lib/landing/booksyMath';
+import {
+  BK_CARD_FEES,
+  BK_COMMISSION_LEAD,
+  BK_COMMISSION_TITLE,
+  BOOKSY_BOOST_EXAMPLE,
+  BOOKSY_BOOST_POINTS,
+} from '@/lib/seo/booksyAlternativeContent';
+
+const initialClients = 4;
+const initialPrice = 25;
+const initial = estimateBoost({ newClients: initialClients, firstVisitGbp: initialPrice });
+---
+
+<section id="booksy-commission" class="bk-section bk-commission scroll-mt-24" aria-labelledby="booksy-alt-commission-title">
+  <div class="bk-wrap">
+    <header class="bk-head" data-bk-reveal>
+      <p class="bk-eyebrow">Commission</p>
+      <h2 id="booksy-alt-commission-title" class="bk-h2">{BK_COMMISSION_TITLE}</h2>
+      <p class="bk-lead">{BK_COMMISSION_LEAD}</p>
+    </header>
+
+    <div class="bk-commission__grid">
+      <div class="bk-card bk-boost" data-bk-boost data-bk-reveal>
+        <p class="bk-card__eyebrow">If you switch on Boost</p>
+
+        <div class="bk-field">
+          <label class="bk-field__label" for="bk-boost-clients">
+            New clients Boost brings you each month
+            <output class="bk-field__value" for="bk-boost-clients" data-bk-out="clients">{initialClients}</output>
+          </label>
+          <input id="bk-boost-clients" class="bk-range" type="range" min="0" max="30" step="1" value={initialClients} data-bk-boost-clients aria-valuetext={`${initialClients} new clients a month`} style={`--bk-pos: ${initialClients / 30}`} />
+        </div>
+
+        <div class="bk-field">
+          <label class="bk-field__label" for="bk-boost-price">
+            Price of their first visit
+            <output class="bk-field__value" for="bk-boost-price" data-bk-out="price">{formatGbp(initialPrice)}</output>
+          </label>
+          <input id="bk-boost-price" class="bk-range" type="range" min="10" max="60" step="1" value={initialPrice} data-bk-boost-price aria-valuetext={formatGbp(initialPrice)} style={`--bk-pos: ${(initialPrice - 10) / 50}`} />
+        </div>
+
+        <dl class="bk-boost__out" aria-live="polite">
+          <div><dt>Boost fee per new client</dt><dd><span data-bk-out="per" data-value={initial.perClientExVatGbp}>{formatGbp(initial.perClientExVatGbp)}</span> + VAT</dd></div>
+          <div><dt>Per month, inc VAT</dt><dd data-bk-out="month" data-value={initial.monthlyIncVatGbp}>{formatGbp(initial.monthlyIncVatGbp)}</dd></div>
+          <div class="bk-boost__year"><dt>Per year, inc VAT</dt><dd data-bk-out="boost-year" data-value={initial.yearlyIncVatGbp}>{formatGbp(initial.yearlyIncVatGbp)}</dd></div>
+        </dl>
+
+        <p class="bk-boost__k"><span class="bk-boost__k-mark" aria-hidden="true">0%</span> KERSIVO commission on the same bookings. Stripe fees apply.</p>
+        <p class="bk-small">Boost is optional. Leave it off and standard Booksy bookings carry no commission. {BOOKSY_BOOST_EXAMPLE}</p>
+      </div>
+
+      <div class="bk-commission__notes" data-bk-reveal style="--d: 1">
+        <h3 class="bk-h3">How Booksy Boost is charged</h3>
+        <ul class="bk-dots">
+          {BOOKSY_BOOST_POINTS.map((point) => <li>{point}</li>)}
+        </ul>
+
+        <h3 class="bk-h3 bk-commission__sub">Card fees, side by side</h3>
+        <div class="bk-cardfees">
+          {BK_CARD_FEES.map((row) => (
+            <div class="bk-cardfees__row">
+              <p class="bk-cardfees__label">{row.label}</p>
+              <p><span class="bk-tag">Booksy</span>{row.booksy}</p>
+              <p><span class="bk-tag bk-tag--k">KERSIVO</span>{row.kersivo}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

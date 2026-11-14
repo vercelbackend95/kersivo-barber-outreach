@@ -1,0 +1,33 @@
+---
+import {
+  BOOKSY_QUICK_ANSWER_DETAIL,
+  BOOKSY_QUICK_ANSWER_FACTS,
+  BOOKSY_QUICK_ANSWER_KICKER,
+  BOOKSY_QUICK_ANSWER_LEAD,
+  BOOKSY_QUICK_ANSWER_TITLE,
+} from '@/lib/seo/booksyAlternativeContent';
+---
+
+<section id="quick-answer" class="bk-section bk-answer scroll-mt-24" aria-labelledby="booksy-alt-answer-title">
+  <div class="bk-wrap bk-answer__grid">
+    <div class="bk-answer__copy" data-bk-reveal>
+      <p class="bk-eyebrow">{BOOKSY_QUICK_ANSWER_KICKER}</p>
+      <h2 id="booksy-alt-answer-title" class="bk-h2">{BOOKSY_QUICK_ANSWER_TITLE}</h2>
+      <p class="bk-lead">{BOOKSY_QUICK_ANSWER_LEAD}</p>
+      <p class="bk-body">{BOOKSY_QUICK_ANSWER_DETAIL}</p>
+    </div>
+
+    <div class="bk-card bk-answer__card" data-bk-reveal style="--d: 1">
+      <p class="bk-card__eyebrow">At a glance</p>
+      <dl class="bk-answer__facts">
+        {BOOKSY_QUICK_ANSWER_FACTS.map((fact, index) => (
+          <div class={`bk-answer__fact${index === 3 ? ' bk-answer__fact--muted' : ''}`}>
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <a class="bk-text-link" href="#booksy-pricing">Work out your monthly bill <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>

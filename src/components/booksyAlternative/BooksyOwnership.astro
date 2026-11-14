@@ -1,0 +1,57 @@
+---
+import {
+  BK_DOMAIN_LEAD,
+  BK_DOMAIN_POINTS,
+  BK_DOMAIN_TITLE,
+  BK_RELATIONSHIP_LEAD,
+  BK_RELATIONSHIP_STEPS,
+  BK_RELATIONSHIP_TITLE,
+} from '@/lib/seo/booksyAlternativeContent';
+
+const places = ['Business card', 'Instagram bio', 'Google profile', 'Shop window'];
+---
+
+<section id="own-domain" class="bk-section bk-own scroll-mt-24" aria-labelledby="booksy-alt-domain-title">
+  <div class="bk-wrap bk-own__grid">
+    <div class="bk-own__copy" data-bk-reveal>
+      <p class="bk-eyebrow">Your own domain</p>
+      <h2 id="booksy-alt-domain-title" class="bk-h2">{BK_DOMAIN_TITLE}</h2>
+      <p class="bk-lead">{BK_DOMAIN_LEAD}</p>
+      <ul class="bk-ticks">
+        {BK_DOMAIN_POINTS.map((point) => <li>{point}</li>)}
+      </ul>
+    </div>
+
+    <div class="bk-card bk-domain" data-bk-reveal style="--d: 1" aria-hidden="true">
+      <div class="bk-domain__bar">
+        <span class="bk-domain__lock"></span>
+        <span class="bk-domain__name">yourshop<b>.co.uk</b></span>
+        <span class="bk-domain__ssl">SSL</span>
+      </div>
+      <ul class="bk-domain__places">
+        {places.map((place, index) => (
+          <li style={`--i: ${index}`}><span class="bk-domain__check"></span>{place}<em>yourshop.co.uk</em></li>
+        ))}
+      </ul>
+      <p class="bk-domain__foot">With Full KERSIVO: one address everywhere, with bookings, prices and team on it.</p>
+    </div>
+  </div>
+
+  <div id="direct-clients" class="bk-wrap bk-loop scroll-mt-24">
+    <header class="bk-head bk-head--narrow" data-bk-reveal>
+      <p class="bk-eyebrow">Direct client relationship</p>
+      <h2 class="bk-h2">{BK_RELATIONSHIP_TITLE}</h2>
+      <p class="bk-lead">{BK_RELATIONSHIP_LEAD}</p>
+    </header>
+
+    <ol class="bk-loop__steps" role="list">
+      {BK_RELATIONSHIP_STEPS.map((step, index) => (
+        <li class="bk-card bk-loop__step" data-bk-reveal style={`--d: ${index}`}>
+          <span class="bk-loop__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="bk-h3">{step.title}</h3>
+          <p class="bk-body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

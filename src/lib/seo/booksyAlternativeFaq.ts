@@ -15,23 +15,23 @@ export type BooksyAlternativeFaqItem = {
 
 export const BOOKSY_ALTERNATIVE_PAGE_PATH = '/booksy-alternative';
 
-export const BOOKSY_ALTERNATIVE_TITLE = 'Booksy Alternative UK: No Per-Barber Fees | KERSIVO';
+/** Search title: the query first, then the two things a Booksy user is weighing (own site, flat price). */
+export const BOOKSY_ALTERNATIVE_TITLE = `Booksy Alternative UK for Barbers: Own Site, £${SAAS_MONTHLY_GBP}/Month`;
 
-export const BOOKSY_ALTERNATIVE_DESCRIPTION =
-  'Looking for a Booksy alternative in the UK? Compare KERSIVO and Booksy pricing, Boost fees, branding, bookings and switching for independent barbershops.';
+export const BOOKSY_ALTERNATIVE_DESCRIPTION = `Leaving Booksy? Own booking site and domain, £${SAAS_MONTHLY_GBP}/month per location with no per-barber fees, help moving clients and 0% KERSIVO commission (Stripe fees apply).`;
 
 /** Visual line breaks of the hero H1; joined with spaces they form the exact H1 text. */
 export const BOOKSY_ALTERNATIVE_H1_LINES = [
-  'A Booksy Alternative',
-  'Built Around Your',
-  'Barbershop',
+  'The Booksy alternative',
+  'with your name',
+  'on the door',
 ] as const;
 
 export const BOOKSY_ALTERNATIVE_H1 = BOOKSY_ALTERNATIVE_H1_LINES.join(' ');
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
-export const BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-28';
-export const BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL = '28 October 2026';
+export const BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';
+export const BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL = '14 November 2026';
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const STARTER_PRICE = formatGbp(0);
@@ -52,7 +52,7 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
   {
     question: 'What is a good Booksy alternative for UK barbers?',
     answer:
-      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want a more direct booking relationship: KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) gives you a hosted booking page where public bookings use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full, plus Clients Core and email reminders. Full KERSIVO adds your branded website and domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS reminders within a monthly allowance and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
+      `It depends on how your shop wins clients. KERSIVO may be a good Booksy alternative for independent UK barbershops that want clients to book them directly. Full KERSIVO is ${KERSIVO_PRICE}/month per location and gives you a branded website on your own domain, editable payment controls, Advanced Clients, Reports, Retail pickup, SMS reminders within a monthly allowance and the KERSIVO Assistant, an AI helper for guidance on using KERSIVO and running your shop. KERSIVO Starter (${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers) is a hosted booking page where public bookings use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full. If Booksy Marketplace discovery is central to how you grow, Booksy’s model may suit you better.`,
   },
   {
     question: 'How much does Booksy cost in the UK?',
@@ -64,21 +64,21 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
   },
   {
     question: 'Is KERSIVO cheaper than Booksy?',
-    answer: `On subscription alone, KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers and Full KERSIVO is ${KERSIVO_PRICE}/month per location. Booksy is ${formatGbp(solo.exVatGbp)}/month plus VAT for one user and ${formatGbp(fiveUsers.exVatGbp)}/month plus VAT for five users. The full cost also depends on whether you use Booksy Boost and how you take card payments — payment-processing fees apply on either platform, and KERSIVO uses Stripe. KERSIVO charges 0% commission on booking payments, and on retail sales with Full.`,
+    answer: `On subscription alone, Full KERSIVO is ${KERSIVO_PRICE}/month per location and KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers. Booksy is ${formatGbp(solo.exVatGbp)}/month plus VAT for one user and ${formatGbp(fiveUsers.exVatGbp)}/month plus VAT for five users. The full cost also depends on whether you use Booksy Boost and how you take card payments — payment-processing fees apply on either platform, and KERSIVO uses Stripe. KERSIVO charges 0% commission on booking payments, and on retail sales with Full.`,
   },
   {
     question: 'Does KERSIVO charge per barber?',
-    answer: `No. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers at one location. Full KERSIVO is ${KERSIVO_PRICE}/month per physical location, with unlimited barbers within that location, subject to reasonable fair use.`,
+    answer: `No. Full KERSIVO is ${KERSIVO_PRICE}/month per physical location, with unlimited barbers within that location, subject to reasonable fair use. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers at one location.`,
   },
   {
     question: 'Does KERSIVO charge commission on bookings?',
     answer:
-      `No. KERSIVO takes 0% commission on booking payments on both KERSIVO Starter (${STARTER_PRICE}/month) and Full KERSIVO (${KERSIVO_PRICE}/month per location), and 0% on Full retail sales. Starter public bookings require a connected Stripe account and use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full; standard Stripe processing fees still apply.`,
+      `No. KERSIVO takes 0% commission on booking payments on both Full KERSIVO (${KERSIVO_PRICE}/month per location) and KERSIVO Starter (${STARTER_PRICE}/month), and 0% on Full retail sales. Standard Stripe processing fees still apply. Starter public bookings require a connected Stripe account and use a ${STARTER_DEPOSIT_PRICE} deposit or Pay in full.`,
   },
   {
     question: 'Can I move my clients from Booksy to KERSIVO?',
     answer:
-      'Yes, where the data is available. Booksy’s UK Help Centre says you can request a copy of your client list, with contact details, from Booksy Support. We’ll help migrate the usable business data available from your current booking system, including supported CSV exports. What can be moved depends on what Booksy provides and how complete it is.',
+      'Yes, where the data is available. Booksy’s UK Help Centre says you can request a copy of your client list, with contact details, from Booksy Support. Migration help is included in Full KERSIVO: we review what Booksy sends, including supported CSV exports, and map the usable details into your KERSIVO client list. What can be moved depends on what Booksy provides and how complete it is. Saved payment-card data is not part of the standard migration.',
   },
   {
     question: 'Can I keep Booksy running while KERSIVO is set up?',
@@ -86,13 +86,23 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
       'Yes. Keep Booksy live while your KERSIVO setup is prepared. You review a private preview first, and your public booking links (and, on Full, your domain routing) are only switched once you approve.',
   },
   {
+    question: 'How long does it take to switch from Booksy?',
+    answer:
+      'Your KERSIVO setup is typically ready in a few days once we receive all required information. Timing depends on how complete your details are, the quality of the client list Booksy provides and domain access. Booksy keeps taking bookings until you approve the switch.',
+  },
+  {
+    question: 'Can I use my own domain instead of a Booksy link?',
+    answer:
+      'Yes, on Full KERSIVO, which includes one standard domain per location. If you already own a domain, you keep ownership and we help with the DNS records. If you need a new one, KERSIVO may register it on behalf of your business; legal ownership stays with your business and the domain can be transferred to you when the engagement ends. KERSIVO Starter uses a hosted KERSIVO booking page instead.',
+  },
+  {
     question: 'Can clients book Booksy without the app?',
     answer: `Yes. Booksy’s UK Help Centre covers booking without the Booksy for Customers app, and Booksy lists booking through your Booksy Profile and direct booking link, Instagram and Facebook buttons, Reserve with Google and a widget on your own website. The customer app and Marketplace are still part of how Booksy presents your business. Checked against Booksy’s UK pages on ${BOOKSY_FACTS_CHECKED_DATE}.`,
   },
   {
-    question: 'Do clients need to download an app to book?',
+    question: 'Do clients need to download an app to book with KERSIVO?',
     answer:
-      'No. KERSIVO has no customer app: clients book in the browser, through a hosted KERSIVO booking page on Starter or your own branded website on Full KERSIVO, so there is nothing to download. The trade-off is that there is no KERSIVO app or marketplace where new clients can discover your shop.',
+      'No. KERSIVO has no customer app: clients book in the browser, on your own branded website with Full KERSIVO or a hosted KERSIVO booking page on Starter, so there is nothing to download. The trade-off is that there is no KERSIVO app or marketplace where new clients can discover your shop.',
   },
   {
     question: 'Does KERSIVO have a marketplace like Booksy?',
