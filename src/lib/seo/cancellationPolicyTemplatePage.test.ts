@@ -94,13 +94,13 @@ describe('claims', () => {
 });
 
 describe('internal links to the tool', () => {
-  it('appears in the sitemap with a real lastmod, the Resources nav and the footer', () => {
+  it('appears in the sitemap with a real lastmod, the Free tools nav and the footer', () => {
     expect(MARKETING_SITEMAP_ENTRIES).toContainEqual({
       path: CANCELLATION_POLICY_PAGE_PATH,
       lastmod: CANCELLATION_POLICY_LAST_UPDATED_ISO,
     });
     const nav = MARKETING_NAV_ITEMS.find((item) => item.href === CANCELLATION_POLICY_PAGE_PATH);
-    expect(nav).toMatchObject({ group: 'resources', section: 'tools', label: 'Cancellation Policy Template' });
+    expect(nav).toMatchObject({ group: 'tools', section: 'templates', label: 'Cancellation policy template' });
     expect(FOOTER_COLUMNS.flatMap((column) => column.links).map((link) => link.href)).toContain(
       CANCELLATION_POLICY_PAGE_PATH,
     );

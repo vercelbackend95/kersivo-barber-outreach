@@ -13,7 +13,8 @@ const panel = read(...marketingDir, 'MarketingNavPanel.astro');
 const link = read(...marketingDir, 'MarketingNavLink.astro');
 const actions = read(...marketingDir, 'MarketingNavActions.astro');
 const client = read(...marketingDir, 'MarketingNavbarClient.astro');
-const allMarkup = [navbar, mobile, panel, link, actions];
+const finder = read(...marketingDir, 'MarketingNavFinder.astro');
+const allMarkup = [navbar, mobile, panel, link, actions, finder];
 const landingLayout = read('layouts', 'LandingLayout.astro');
 const mainLayout = read('layouts', 'MainLayout.astro');
 const css = read('styles', 'components', 'marketing-navbar.css');
@@ -37,9 +38,11 @@ describe('marketing navbar markup', () => {
     expect(navbar).toContain('buildMarketingNavTopLevelEntries(groups, MARKETING_NAV_DIRECT_LINKS)');
     expect(navbar).toContain('navEntries.map((entry)');
     expect(mobile).toContain('buildMarketingNavTopLevelEntries(groups, directLinks)');
-    expect(mobile).toContain('navEntries.map((entry)');
+    expect(mobile).toContain('buildMarketingNavQuickLinks(groups)');
     expect(navbar).toContain('directLinks={MARKETING_NAV_DIRECT_LINKS}');
-    for (const source of [navbar, mobile, panel]) expect(source).not.toMatch(/href="\/(booksy|fresha|barber-software)/);
+    expect(navbar).toContain('<MarketingNavFinder groups={groups} />');
+    expect(finder).toContain('buildMarketingNavFinderEntries(groups)');
+    for (const source of [navbar, mobile, panel, finder]) expect(source).not.toMatch(/href="\/(booksy|fresha|barber-software)/);
   });
 
   it('renders crawlable anchors without menu roles or nofollow', () => {
@@ -52,15 +55,34 @@ describe('marketing navbar markup', () => {
     expect(link).toContain("aria-current={current ? 'page' : undefined}");
   });
 
-  it('uses disclosure semantics for desktop triggers and mobile accordions', () => {
+  it('uses disclosure semantics for desktop triggers and tab semantics in the mobile hub', () => {
     expect(navbar).toContain('aria-expanded="false"');
     expect(navbar).toContain('aria-controls={`mnav-panel-${entry.group.id}`}');
     expect(navbar).toContain('aria-controls="mnav-hub"');
     expect(navbar).toContain('<nav class="mnav__desktop" aria-label="Main">');
-    expect(mobile).toContain('aria-controls={`${id}-${entry.group.id}`}');
+    expect(mobile).toContain('role="tablist"');
+    expect(mobile).toContain('role="tab"');
+    expect(mobile).toContain('role="tabpanel"');
+    expect(mobile).toContain('aria-controls={`${id}-${group.id}`}');
+    expect(mobile).toContain('aria-labelledby={`${id}-tab-${group.id}`}');
     expect(mobile).toMatch(/class="mnav-hub"[^>]*hidden inert/);
     expect(mobile).toContain('<template data-mnav-hub-content>');
     expect(panel).toMatch(/data-mnav-panel[^>]*hidden/);
+  });
+
+  it('shows the brand as the logo mark only, with an accessible name', () => {
+    expect(navbar).toContain('aria-label="KERSIVO home"');
+    expect(navbar).toContain('src="/images/brand/logo-mark-nav-36.webp"');
+    expect(navbar).not.toContain('mnav__wordmark');
+  });
+
+  it('ships the finder as a modal dialog whose results mount lazily', () => {
+    expect(finder).toMatch(/<dialog class="mnav-finder"[^>]*data-mnav-finder/);
+    expect(finder).toContain('<template data-mnav-finder-content>');
+    expect(finder).toContain('role="combobox"');
+    expect(finder).toContain('role="listbox"');
+    expect(finder).toContain('aria-live="polite"');
+    expect(navbar).toContain('aria-keyshortcuts="/ Control+K Meta+K"');
   });
 
   it('persists across marketing swaps and boots the controller on page-load', () => {

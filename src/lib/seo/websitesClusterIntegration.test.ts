@@ -42,7 +42,7 @@ describe('Websites three-page integrated cluster release gates', () => {
     expect(MARKETING_NAV_DIRECT_LINKS.find((link) => link.id === 'websites')).toBeUndefined();
     expect(buildMarketingNavTopLevelEntries().map((entry) =>
       entry.kind === 'group' ? entry.group.label : entry.link.label,
-    )).toEqual(['Product', 'Compare', 'Resources', 'Pricing']);
+    )).toEqual(['Product', 'Compare', 'Free tools', 'Resources', 'Pricing']);
 
     for (const id of ['resources-website-design', 'resources-online-booking']) {
       const item = MARKETING_NAV_ITEMS.find((entry) => entry.id === id);

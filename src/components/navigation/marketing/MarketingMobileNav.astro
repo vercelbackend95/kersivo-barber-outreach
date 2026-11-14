@@ -3,9 +3,10 @@ import MarketingNavActions from '@/components/navigation/marketing/MarketingNavA
 import MarketingNavLink from '@/components/navigation/marketing/MarketingNavLink.astro';
 import { MARKETING_NAV_ICONS } from '@/lib/nav/marketingNavIcons';
 import {
+  buildMarketingNavQuickLinks,
   buildMarketingNavTopLevelEntries,
-  isMarketingDirectLinkCurrent,
   isMarketingNavGroupCurrent,
+  isMarketingNavItemCurrent,
 } from '@/lib/nav/marketingNavigation';
 import type {
   MarketingNavAction,
@@ -23,83 +24,114 @@ interface Props {
 
 const { id, groups, directLinks, primary, secondary } = Astro.props;
 const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
+// Groups become tabs; direct links (Pricing) are already quick links at the top of the hub.
 const navEntries = buildMarketingNavTopLevelEntries(groups, directLinks);
+const tabGroups = navEntries.flatMap((entry) => (entry.kind === 'group' ? [entry.group] : []));
+const quickLinks = buildMarketingNavQuickLinks(groups);
+const selected =
+  tabGroups.find((group) => isMarketingNavGroupCurrent(group, pathname)) ??
+  tabGroups.find((group) => group.defaultOpen) ??
+  tabGroups[0];
 ---
 
 <div id={id} class="mnav-hub" data-mnav-hub hidden inert>
   {/*
-    Inert until the menu is first opened (marketingNavController mounts it), so ~235 duplicate
+    Inert until the menu is first opened (marketingNavController mounts it), so the duplicate
     nodes stay out of the live DOM on every page. The desktop nav carries the same links for crawlers.
   */}
   <template data-mnav-hub-content>
   <div class="mnav-hub__scroll">
-    <p class="mnav-hub__context">Booking software for UK barbershops</p>
+    <button type="button" class="mnav-hub__search mnav-stagger" style="--i: 0" data-mnav-finder-open>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d={MARKETING_NAV_ICONS.search} />
+      </svg>
+      <span>Search pages and tools</span>
+    </button>
+
     <nav class="mnav-hub__nav" aria-label="Main">
-      <ul class="mnav-hub__list" role="list">
-        {
-          navEntries.map((entry) => entry.kind === 'group' ? (
-            <li class="mnav-hub__group">
-              <button
-                type="button"
-                class="mnav-hub__row mnav-hub__row--toggle"
-                aria-expanded={entry.group.defaultOpen ? 'true' : 'false'}
-                aria-controls={`${id}-${entry.group.id}`}
-                data-mnav-accordion={entry.group.id}
-                data-mnav-current-prefix={entry.group.currentPrefixes?.join(' ') || undefined}
-                data-current={isMarketingNavGroupCurrent(entry.group, pathname) ? '' : undefined}
-              >
-                <span class="mnav-hub__row-label">{entry.group.label}</span>
-                <span class="mnav-hub__chevron" aria-hidden="true" />
-              </button>
-              <div id={`${id}-${entry.group.id}`} class="mnav-hub__section" hidden={entry.group.defaultOpen ? undefined : true}>
-                {entry.group.description ? <p class="mnav-hub__lead">{entry.group.description}</p> : null}
-                {entry.group.featured.length ? (
-                  <ul class="mnav-hub__items mnav-hub__items--featured" role="list">
-                    {entry.group.featured.map((item) => (
-                      <li>
-                        <MarketingNavLink item={item} featured />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {entry.group.sections.map((section) => (
-                  <div class="mnav-hub__subsection">
-                    {section.label ? <p class="mnav-hub__section-label">{section.label}</p> : null}
-                    <ul class="mnav-hub__items" role="list">
-                      {section.items.map((item) => (
-                        <li>
-                          <MarketingNavLink item={item} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-                {entry.group.featuredAction ? (
-                  <a class="mnav-hub__action" href={entry.group.featuredAction.href}>
-                    {entry.group.featuredAction.label}
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d={MARKETING_NAV_ICONS.arrow} />
-                    </svg>
-                  </a>
-                ) : null}
-              </div>
-            </li>
-          ) : (
-            <li class="mnav-hub__group">
-              <a
-                class="mnav-hub__row"
-                href={entry.link.href}
-                data-mnav-section={entry.link.sectionId}
-                data-mnav-match={entry.link.sectionId ? undefined : entry.link.href}
-                data-mnav-match-prefix={entry.link.matchPrefix}
-                aria-current={isMarketingDirectLinkCurrent(entry.link, pathname) ? 'page' : undefined}
-              >
-                <span class="mnav-hub__row-label">{entry.link.label}</span>
-              </a>
-            </li>
-          ))
-        }
+      <ul class="mnav-hub__quick" role="list">
+        {quickLinks.map((link, index) => (
+          <li class="mnav-stagger" style={`--i: ${index + 1}`}>
+            <a
+              class="mnav-tile"
+              href={link.href}
+              data-mnav-match={link.href}
+              aria-current={isMarketingNavItemCurrent({ href: link.href }, pathname) ? 'page' : undefined}
+            >
+              <span class="mnav-tile__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d={MARKETING_NAV_ICONS[link.icon]} />
+                </svg>
+              </span>
+              <span class="mnav-tile__label">{link.label}</span>
+              <span class="mnav-tile__meta">{link.meta}</span>
+            </a>
+          </li>
+        ))}
       </ul>
+
+      <div class="mnav-hub__tabs mnav-stagger" style="--i: 5" role="tablist" aria-label="Browse KERSIVO" data-mnav-tablist>
+        {tabGroups.map((group) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${id}-tab-${group.id}`}
+            class="mnav-hub__tab"
+            aria-selected={group === selected ? 'true' : 'false'}
+            aria-controls={`${id}-${group.id}`}
+            tabindex={group === selected ? undefined : '-1'}
+            data-mnav-tab={group.id}
+            data-mnav-current-prefix={group.currentPrefixes?.join(' ') || undefined}
+            data-current={isMarketingNavGroupCurrent(group, pathname) ? '' : undefined}
+          >
+            {group.tabLabel ?? group.label}
+          </button>
+        ))}
+        <span class="mnav-hub__tab-thumb" aria-hidden="true" data-mnav-tab-thumb></span>
+      </div>
+
+      {tabGroups.map((group) => (
+        <div
+          id={`${id}-${group.id}`}
+          class="mnav-hub__section"
+          role="tabpanel"
+          aria-labelledby={`${id}-tab-${group.id}`}
+          data-mnav-tabpanel={group.id}
+          data-layout={group.layout}
+          hidden={group === selected ? undefined : true}
+        >
+          {group.description ? <p class="mnav-hub__lead">{group.description}</p> : null}
+          {group.featured.length ? (
+            <ul class="mnav-hub__items mnav-hub__items--featured" role="list">
+              {group.featured.map((item) => (
+                <li>
+                  <MarketingNavLink item={item} featured />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {group.sections.map((section) => (
+            <div class="mnav-hub__subsection">
+              {section.label ? <p class="mnav-hub__section-label">{section.label}</p> : null}
+              <ul class:list={['mnav-hub__items', { 'mnav-hub__items--compact': group.layout === 'compact' }]} role="list">
+                {section.items.map((item) => (
+                  <li>
+                    <MarketingNavLink item={item} compact={group.layout === 'compact'} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          {group.featuredAction ? (
+            <a class="mnav-hub__action" href={group.featuredAction.href}>
+              {group.featuredAction.label}
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d={MARKETING_NAV_ICONS.arrow} />
+              </svg>
+            </a>
+          ) : null}
+        </div>
+      ))}
     </nav>
   </div>
   <MarketingNavActions class="mnav-hub__actions" primary={primary} secondary={secondary} />
