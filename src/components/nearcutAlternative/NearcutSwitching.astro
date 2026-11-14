@@ -1,5 +1,5 @@
 ---
-import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
+import NearcutPrimaryCta from './NearcutPrimaryCta.astro';
 import {
   NEARCUT_SWITCHING_LIMITS,
   NEARCUT_SWITCHING_REASSURANCE,
@@ -7,20 +7,29 @@ import {
 } from '@/lib/seo/nearcutAlternativeContent';
 ---
 
-<section id="switching" class="fresha-alt__section" aria-labelledby="fresha-alt-switching-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">MIGRATION</p>
-      <h2 id="fresha-alt-switching-title" class="fresha-alt__h2">Switching from Nearcut to KERSIVO</h2>
-      <p class="fresha-alt-switching__reassurance">{NEARCUT_SWITCHING_REASSURANCE}</p>
+<section id="switching" class="nc-section nc-switch" aria-labelledby="nearcut-alt-switch-title">
+  <div class="nc-wrap">
+    <header class="nc-head nc-head--split">
+      <div class="nc-head__main">
+        <p class="nc-eyebrow">Switching from Nearcut</p>
+        <h2 id="nearcut-alt-switch-title" class="nc-h2">Switch without a quiet week</h2>
+      </div>
+      <p class="nc-lead"><strong>{NEARCUT_SWITCHING_REASSURANCE}</strong> Your clients keep booking the way they do today until your new website is approved and live.</p>
     </header>
 
-    <ProcessTimeline
-      steps={NEARCUT_SWITCHING_STEPS}
-      noteTitle="Good to know"
-      notePoints={NEARCUT_SWITCHING_LIMITS}
-    >
-      <a href="#contact">Ask about your Nearcut migration <span aria-hidden="true">→</span></a>
-    </ProcessTimeline>
+    <ol class="nc-switch__steps">
+      {NEARCUT_SWITCHING_STEPS.map((step, index) => (
+        <li class="nc-card nc-switch__step">
+          <span class="nc-switch__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="nc-h3">{step.title}</h3>
+          <p class="nc-body">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="nc-switch__foot">
+      <ul class="nc-notes">{NEARCUT_SWITCHING_LIMITS.map((limit) => <li>{limit}</li>)}</ul>
+      <NearcutPrimaryCta placement="nearcut_switching" />
+    </div>
   </div>
 </section>

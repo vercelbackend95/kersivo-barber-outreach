@@ -1,0 +1,127 @@
+---
+/**
+ * A KERSIVO barbershop website in miniature, built from the CUTSTATE demo shop's own photos.
+ * Sized with container units so it scales as one picture. Regions carry data-nc-part so the
+ * anatomy section can point at them. Purely illustrative: hidden from assistive tech, the
+ * surrounding section describes it in text.
+ */
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+
+interface Props {
+  /** "hero" loads the photo eagerly with high priority. */
+  priority?: boolean;
+  class?: string;
+}
+
+const { priority = false, class: className } = Astro.props;
+const loading = priority ? 'eager' : 'lazy';
+
+const work = ['fade', 'beard', 'hairline', 'scissor-cut'];
+const barbers = [
+  { name: 'Marcus', file: 'marcus-bell', role: 'Fades' },
+  { name: 'Ellis', file: 'ellis-ward', role: 'Beards' },
+  { name: 'Noah', file: 'noah-reid', role: 'Scissor cuts' },
+];
+const services = [
+  ['Skin fade', '45 min', '£26'],
+  ['Cut & beard', '60 min', '£34'],
+  ['Beard sculpt', '30 min', '£16'],
+];
+const slots = ['10:15', '11:00', '12:30', '14:45'];
+const products = [
+  ['ironclad-pomade', 'Pomade', '£14'],
+  ['beard-oil', 'Beard oil', '£12'],
+  ['matte-clay', 'Matte clay', '£13'],
+];
+---
+
+<div class:list={['nc-site', className]} aria-hidden="true" data-nc-site>
+  <div class="nc-site__chrome" data-nc-part="domain">
+    <span class="nc-site__dots"><i></i><i></i><i></i></span>
+    <span class="nc-site__url">
+      <svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M4 7V5a4 4 0 1 1 8 0v2h1v8H3V7h1Zm2 0h4V5a2 2 0 1 0-4 0v2Z"/></svg>
+      yourshop.co.uk
+    </span>
+  </div>
+
+  <div class="nc-site__viewport">
+    <div class="nc-site__page" data-nc-page>
+      <header class="nc-site__nav">
+        <img class="nc-site__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading={loading} decoding="async" />
+        <span class="nc-site__links"><span>Work</span><span>Barbers</span><span>Prices</span><span>Shop</span></span>
+        <span class="nc-site__btn">Book</span>
+      </header>
+
+      <section class="nc-site__hero">
+        <div class="nc-site__hero-copy">
+          <span class="nc-site__eyebrow">Cutstate Barbers</span>
+          <span class="nc-site__display">Sharp cuts.<br />Booked in<br />seconds.</span>
+          <span class="nc-site__hero-cta"><span class="nc-site__btn nc-site__btn--red">Book a cut</span><span class="nc-site__ghost">See our work</span></span>
+        </div>
+        <img
+          class="nc-site__hero-img"
+          src="/images/nearcut/site-hero.webp"
+          alt=""
+          width="1200"
+          height="1800"
+          loading={loading}
+          fetchpriority={priority ? 'high' : 'auto'}
+          decoding="async"
+        />
+      </section>
+
+      <section class="nc-site__block" data-nc-part="work">
+        <span class="nc-site__h">Our work</span>
+        <div class="nc-site__work">
+          {work.map((name) => <img src={`/images/nearcut/work-${name}.webp`} alt="" width="480" height="480" loading="lazy" decoding="async" />)}
+        </div>
+      </section>
+
+      <section class="nc-site__block" data-nc-part="team">
+        <span class="nc-site__h">The barbers</span>
+        <div class="nc-site__team">
+          {barbers.map((b) => (
+            <span class="nc-site__barber">
+              <img src={`/images/nearcut/barber-${b.file}.webp`} alt="" width="320" height="400" loading="lazy" decoding="async" />
+              <strong>{b.name}</strong>
+              <span>{b.role}</span>
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section class="nc-site__block" data-nc-part="prices">
+        <span class="nc-site__h">Prices</span>
+        <div class="nc-site__prices">
+          {services.map(([name, time, price]) => (
+            <span class="nc-site__price"><strong>{name}</strong><span>{time}</span><b>{price}</b></span>
+          ))}
+        </div>
+      </section>
+
+      <section class="nc-site__block" data-nc-part="book">
+        <span class="nc-site__h">Book online</span>
+        <div class="nc-site__book">
+          <span class="nc-site__chips"><span class="is-on">Skin fade</span><span>Marcus</span><span>Tomorrow</span></span>
+          <span class="nc-site__slots">{slots.map((s, i) => <span class:list={[{ 'is-on': i === 1 }]}>{s}</span>)}</span>
+          <span class="nc-site__btn nc-site__btn--red nc-site__btn--wide">Confirm with £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</span>
+        </div>
+      </section>
+
+      <section class="nc-site__block" data-nc-part="shop">
+        <span class="nc-site__h">Shop · collect in store</span>
+        <div class="nc-site__products">
+          {products.map(([file, name, price]) => (
+            <span class="nc-site__product">
+              <img src={`/images/nearcut/product-${file}.webp`} alt="" width="320" height="320" loading="lazy" decoding="async" />
+              <strong>{name}</strong>
+              <span>{price}</span>
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <footer class="nc-site__foot">Powered by KERSIVO</footer>
+    </div>
+  </div>
+</div>

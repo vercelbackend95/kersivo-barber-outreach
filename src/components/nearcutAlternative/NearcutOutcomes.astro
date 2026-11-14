@@ -1,0 +1,52 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { NEARCUT_OUTCOMES, NEARCUT_OUTCOMES_LEAD, NEARCUT_OUTCOMES_TITLE } from '@/lib/seo/nearcutAlternativeContent';
+
+const bars = [38, 52, 46, 64, 58, 72, 80];
+---
+
+<section id="outcomes" class="nc-section nc-outcomes" aria-labelledby="nearcut-alt-outcomes-title">
+  <div class="nc-wrap">
+    <header class="nc-head">
+      <p class="nc-eyebrow">For the owner</p>
+      <h2 id="nearcut-alt-outcomes-title" class="nc-h2">{NEARCUT_OUTCOMES_TITLE}</h2>
+      <p class="nc-lead">{NEARCUT_OUTCOMES_LEAD}</p>
+    </header>
+
+    <ul class="nc-outcomes__grid">
+      {NEARCUT_OUTCOMES.map((item) => (
+        <li class={`nc-card nc-outcome nc-outcome--${item.id}`}>
+          <div class="nc-outcome__visual" aria-hidden="true">
+            {item.id === 'found' && (
+              <span class="nc-viz-url"><span class="nc-viz-url__lock"></span><span class="nc-viz-url__text">yourshop.co.uk</span><span class="nc-viz-url__caret"></span></span>
+            )}
+            {item.id === 'price' && (
+              <span class="nc-viz-receipt">
+                <span><i>Skin fade</i><b>£26.00</b></span>
+                <span><i>KERSIVO booking charge</i><b>£0.00</b></span>
+                <span class="nc-viz-receipt__total"><i>Your client pays</i><b>£26.00</b></span>
+              </span>
+            )}
+            {item.id === 'flat' && (
+              <span class="nc-viz-flat"><strong>£{SAAS_MONTHLY_GBP}</strong><span>/month<br />per location</span></span>
+            )}
+            {item.id === 'remind' && (
+              <span class="nc-viz-notes">
+                <span class="nc-viz-note"><b>Reminder</b> Skin fade with Marcus, tomorrow 11:00</span>
+                <span class="nc-viz-note nc-viz-note--2"><b>Booked</b> £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit paid</span>
+              </span>
+            )}
+            {item.id === 'setup' && (
+              <span class="nc-viz-steps"><span class="is-done">Build</span><span class="is-done">Preview</span><span class="is-now">Approve</span></span>
+            )}
+            {item.id === 'month' && (
+              <span class="nc-viz-bars">{bars.map((h) => <i style={`--h: ${h}%`}></i>)}</span>
+            )}
+          </div>
+          <h3 class="nc-h3">{item.title}</h3>
+          <p class="nc-body">{item.body}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

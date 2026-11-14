@@ -1,0 +1,28 @@
+---
+import {
+  NEARCUT_QUICK_ANSWER_DETAIL,
+  NEARCUT_QUICK_ANSWER_FACTS,
+  NEARCUT_QUICK_ANSWER_KICKER,
+  NEARCUT_QUICK_ANSWER_LEAD,
+  NEARCUT_QUICK_ANSWER_TITLE,
+} from '@/lib/seo/nearcutAlternativeContent';
+---
+
+<section id="short-answer" class="nc-section nc-answer" aria-labelledby="nearcut-alt-answer-title">
+  <div class="nc-wrap nc-answer__grid">
+    <header class="nc-head">
+      <p class="nc-eyebrow">{NEARCUT_QUICK_ANSWER_KICKER}</p>
+      <h2 id="nearcut-alt-answer-title" class="nc-h2">{NEARCUT_QUICK_ANSWER_TITLE}</h2>
+      <p class="nc-lead">{NEARCUT_QUICK_ANSWER_LEAD}</p>
+      <p class="nc-body">{NEARCUT_QUICK_ANSWER_DETAIL} <a href="/starter">See KERSIVO Starter</a>.</p>
+    </header>
+    <dl class="nc-card nc-answer__facts">
+      {NEARCUT_QUICK_ANSWER_FACTS.map((fact, index) => (
+        <div class:list={['nc-answer__fact', { 'nc-answer__fact--ks': index < 2 }]}>
+          <dt>{fact.label}</dt>
+          <dd><strong>{fact.value}</strong><span>{fact.note}</span></dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
