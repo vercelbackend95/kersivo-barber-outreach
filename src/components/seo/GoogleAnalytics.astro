@@ -123,24 +123,51 @@ const gaSiteSection = siteSection.trim();
         secure;
     }
 
-    try {
-      var internalUrl = new URL(window.location.href);
-      var internalFlag = internalUrl.searchParams.get('internal');
-      if (internalFlag === '1' || internalFlag === '0') {
+    // ?internal=1 marks this device, ?internal=0 unmarks it. Mirrors src/lib/analytics/internalTraffic.ts.
+    function consumeInternalParam(href, stripFromAddressBar) {
+      try {
+        var internalUrl = new URL(href, window.location.href);
+        var internalFlag = internalUrl.searchParams.get('internal');
+        if (internalFlag !== '1' && internalFlag !== '0') return;
         writeInternalCookie(internalFlag === '1' ? 60 * 60 * 24 * 365 : 0);
+        if (!stripFromAddressBar) return;
         internalUrl.searchParams.delete('internal');
         history.replaceState(
           history.state,
           '',
           internalUrl.pathname + internalUrl.search + internalUrl.hash,
         );
+      } catch (e) {}
+    }
+
+    function isInternalTraffic() {
+      var host = (window.location.hostname || '').toLowerCase();
+      var productionHost = host === 'kersivo.co.uk' || host === 'www.kersivo.co.uk';
+      return readInternalCookie() === '1' || !productionHost;
+    }
+
+    // gtag('set') reaches every later hit on this page: enhanced-measurement page views after a
+    // ClientRouter navigation and every custom event, not only the hits of one config call.
+    function applyInternalTraffic() {
+      if (isInternalTraffic()) gtag('set', { traffic_type: 'internal' });
+    }
+    window.__kersivoApplyInternalTraffic = applyInternalTraffic;
+
+    consumeInternalParam(window.location.href, true);
+    applyInternalTraffic();
+
+    // ClientRouter: a link to /?internal=1 never reloads this script, so read the target first.
+    document.addEventListener('astro:before-preparation', function (event) {
+      if (event && event.to) {
+        consumeInternalParam(String(event.to), false);
+        applyInternalTraffic();
       }
-    } catch (e) {}
+    });
 
     function gaConfig(extra) {
       var cfg = { anonymize_ip: true };
       if (gaSiteSection) cfg.site_section = gaSiteSection;
-      if (readInternalCookie() === '1') cfg.traffic_type = 'internal';
+      if (isInternalTraffic()) cfg.traffic_type = 'internal';
       if (extra) {
         for (var key in extra) cfg[key] = extra[key];
       }
@@ -198,6 +225,8 @@ const gaSiteSection = siteSection.trim();
 
     var spaPageLoadSeen = false;
     document.addEventListener('astro:page-load', function () {
+      consumeInternalParam(window.location.href, true);
+      applyInternalTraffic();
       if (!spaPageLoadSeen) {
         spaPageLoadSeen = true;
         return;

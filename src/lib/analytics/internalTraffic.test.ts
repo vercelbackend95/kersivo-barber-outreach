@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  applyInternalTrafficTag,
   gaConfig,
+  isInternalTraffic,
+  isProductionHostname,
+  readInternalTrafficCookie,
   internalTrafficParamAction,
   isInternalTrafficCookie,
   urlWithoutInternalParam,
@@ -33,5 +37,33 @@ describe('internal traffic cookie', () => {
       anonymize_ip: true,
       traffic_type: 'internal',
     });
+  });
+});
+
+describe('internal traffic detection', () => {
+  it('treats only the production hosts as real traffic', () => {
+    expect(isProductionHostname('kersivo.co.uk')).toBe(true);
+    expect(isProductionHostname('www.kersivo.co.uk')).toBe(true);
+    expect(isProductionHostname('localhost')).toBe(false);
+    expect(isProductionHostname('kersivo-barber-outreach-git-x.vercel.app')).toBe(false);
+  });
+
+  it('is internal when the device is marked or the host is not production', () => {
+    expect(isInternalTraffic({ cookieValue: '1', hostname: 'kersivo.co.uk' })).toBe(true);
+    expect(isInternalTraffic({ cookieValue: null, hostname: 'localhost' })).toBe(true);
+    expect(isInternalTraffic({ cookieValue: null, hostname: 'kersivo.co.uk' })).toBe(false);
+  });
+
+  it('reads the cookie from document.cookie', () => {
+    expect(readInternalTrafficCookie('a=1; kersivo_internal=1; b=2')).toBe('1');
+    expect(readInternalTrafficCookie('a=1')).toBeNull();
+  });
+
+  it('sets traffic_type for every later hit only when internal', () => {
+    const gtag = vi.fn();
+    expect(applyInternalTrafficTag(gtag, false)).toBe(false);
+    expect(gtag).not.toHaveBeenCalled();
+    expect(applyInternalTrafficTag(gtag, true)).toBe(true);
+    expect(gtag).toHaveBeenCalledWith('set', { traffic_type: 'internal' });
   });
 });

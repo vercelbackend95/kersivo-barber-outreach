@@ -55,7 +55,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 - `robots.txt`: explicit AI-crawler groups; do not use robots for `/seo-growth` (it must stay public for Google OAuth verification).
 - GSC 404 export → 301/410 old pre-September URLs; `barberdemo.kersivo.co.uk` cleanup.
 - Accessibility: contrast on red buttons, skip link, focus ring (target a11y ≥ 95).
-- Server-side `signup_completed` (Starter account created) — currently defined but never fired.
+- ~~Server-side `signup_completed` (Starter account created)~~ — done in `analytics/clean-ga4` (Better Auth `user.create.after`).
 
 ### Batch 7 — Optional — DONE except sameAs URLs, H2 typeface, nav (founder input), see `docs/seo/batch-7-changelog.md`
 `/llms.txt`, square 512px logo for schema/OG, Facebook vanity URL in `sameAs`, one display typeface for H2s, nav simplification (only with GA4 click data), merge FAQPage into the main `@graph`.
@@ -65,6 +65,6 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).
 
 ## Founder actions (outside code)
-- GA4: key events `saas_subscription_paid`, `setup_enquiry_submit`; Data filter "Internal traffic" → Active; visit `/?internal=1` once per own device.
+- GA4: follow `docs/analytics/ga4-setup.md` (internal traffic filter → Active, key events, "AI assistants" channel group, annotation, DebugView check). `setup_enquiry_submit` can also be a key event.
 - Search Console: request indexing for `/`, `/pricing`, `/barbershop-websites`.
 - Off-site (not in this roadmap, high value): directory listings (Capterra/GetApp, G2, etc.) to fix the brand SERP.

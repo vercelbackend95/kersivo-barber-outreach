@@ -118,6 +118,11 @@ export type FireSaasPurchaseTrackingInput = {
    * Has no effect if Ads was never wanted.
    */
   abandonAds?: boolean;
+  /**
+   * True when the Stripe webhook sends the GA4 `saas_subscription_paid` event (live mode only), so
+   * this call sends just the Google Ads conversion and GA4 does not count the payment twice.
+   */
+  ga4FromServer?: boolean;
 };
 
 export type FireSaasPurchaseTrackingResult = {
@@ -153,9 +158,11 @@ export function fireSaasPurchaseTracking(
     return empty;
   }
 
-  const targets = resolvePurchaseTrackingTargets(input.consent, input.adsSendTo);
+  const resolved = resolvePurchaseTrackingTargets(input.consent, input.adsSendTo);
+  const targets = { ...resolved, wantGa4: resolved.wantGa4 && !input.ga4FromServer };
   if (!targets.wantGa4 && !targets.wantAdsConversion) {
-    return empty;
+    // Nothing left for the browser once GA4 is the webhook's job: done, stop polling.
+    return input.ga4FromServer && resolved.wantGa4 ? { ...empty, complete: true } : empty;
   }
 
   const tagReady = input.tagReady ?? { ga4Configured: true, adsConfigured: true };

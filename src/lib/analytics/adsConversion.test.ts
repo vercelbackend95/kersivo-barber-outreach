@@ -250,3 +250,34 @@ describe('fireSaasPurchaseTracking (progressive)', () => {
     expect(saasPurchaseDedupKeyAds('sub_1')).toBe('saas_subscription_paid:ads:sub_1');
   });
 });
+
+describe('fireSaasPurchaseTracking with ga4FromServer', () => {
+  it('sends only the Ads conversion and reports complete', () => {
+    const gtag = vi.fn();
+    const result = fireSaasPurchaseTracking({
+      transactionId: 'sub_srv',
+      value: 39,
+      adsSendTo: 'AW-1/label',
+      consent: { analytics: true, advertisingMeasurement: true },
+      gtag,
+      ga4FromServer: true,
+    });
+    expect(gtag).toHaveBeenCalledTimes(1);
+    expect(gtag).toHaveBeenCalledWith('event', 'conversion', expect.objectContaining({ send_to: 'AW-1/label' }));
+    expect(result).toMatchObject({ firedGa4: false, firedAdsConversion: true, complete: true });
+  });
+
+  it('is complete straight away with analytics-only consent', () => {
+    const gtag = vi.fn();
+    const result = fireSaasPurchaseTracking({
+      transactionId: 'sub_srv',
+      value: 39,
+      adsSendTo: null,
+      consent: { analytics: true, advertisingMeasurement: false },
+      gtag,
+      ga4FromServer: true,
+    });
+    expect(gtag).not.toHaveBeenCalled();
+    expect(result.complete).toBe(true);
+  });
+});

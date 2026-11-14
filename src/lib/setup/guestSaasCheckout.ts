@@ -13,7 +13,7 @@ import {
   saasCheckoutIdempotencyKey,
   saasCheckoutSuccess,
 } from '@/lib/setup/saasCheckoutGuard';
-import { buildSaasSubscriptionStripeMetadata } from '@/lib/setup/saasSubscription';
+import { analyticsIdsForCheckout, buildSaasSubscriptionStripeMetadata } from '@/lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import {
   createSubscriptionCheckoutSession,
@@ -231,6 +231,7 @@ export async function runGuestSaasCheckout(input: GuestSaasCheckoutInput): Promi
       ...buildSaasSubscriptionStripeMetadata({
         checkoutAttemptId,
         shopId: previewShopId,
+        ...analyticsIdsForCheckout(request),
       }),
       ...(input.extraMetadata ?? {}),
       ...termsAcceptanceStripeMetadata(),

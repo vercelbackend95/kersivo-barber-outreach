@@ -16,6 +16,7 @@ const findUniqueSaas = vi.fn();
 const createSaas = vi.fn();
 const updateSaas = vi.fn();
 
+const sendServerAnalyticsEvent = vi.fn(async (_input: { name: string }) => true);
 const ATTEMPT = '550e8400-e29b-41d4-a716-446655440000';
 const OTHER_ATTEMPT = '660e8400-e29b-41d4-a716-446655440099';
 
@@ -27,6 +28,12 @@ vi.mock('../../../lib/shop/stripe', () => ({
   getCheckoutSubscriptionId: (...args: unknown[]) => getCheckoutSubscriptionId(...args),
   getSubscriptionCurrentPeriodEnd: (...args: unknown[]) => getSubscriptionCurrentPeriodEnd(...args),
   retrieveSubscription: (...args: unknown[]) => retrieveSubscription(...args),
+}));
+
+vi.mock('../../../lib/analytics/serverEvents', () => ({
+  GA_CLIENT_ID_METADATA_KEY: 'gaClientId',
+  GA_SESSION_ID_METADATA_KEY: 'gaSessionId',
+  sendServerAnalyticsEvent: (input: { name: string }) => sendServerAnalyticsEvent(input),
 }));
 
 vi.mock('../../../lib/ops/stripeWebhookLedger', () => ({
@@ -478,5 +485,72 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
     const second = await POST(signedRequest(saasCheckoutEvent(minimisedMeta, 'cs_retry')) as never);
     expect(second.status).toBe(200);
     expect(createSaas).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/shop/webhook SaaS → GA4 saas_subscription_paid', () => {
+  const gaMeta = { ...minimisedMeta, gaClientId: '123.456', gaSessionId: '1700000000' };
+
+  function liveEvent(livemode: boolean) {
+    return { ...saasCheckoutEvent(gaMeta), livemode };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    markStripeWebhookStatus.mockResolvedValue(undefined);
+    recordStripeWebhookReceived.mockResolvedValue({ alreadyFinalized: false, previousStatus: null });
+    getCheckoutSubscriptionId.mockReturnValue('sub_1');
+    getCheckoutCustomerId.mockReturnValue('cus_1');
+    getSubscriptionCurrentPeriodEnd.mockReturnValue(Math.floor(Date.now() / 1000) + 86400);
+    retrieveSubscription.mockResolvedValue({ id: 'sub_1', status: 'active', cancel_at_period_end: false });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_saas_1',
+      payment_status: 'paid',
+      amount_total: 3900,
+      currency: 'gbp',
+      customer_email: 'alex@example.com',
+      metadata: gaMeta,
+    });
+    findUniqueSaas.mockResolvedValue(pendingRow);
+    updateSaas.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      ...pendingRow,
+      customerEmailSentAt: new Date(),
+      internalEmailSentAt: new Date(),
+      ...data,
+    }));
+  });
+
+  function paidCalls() {
+    return sendServerAnalyticsEvent.mock.calls.filter((call) => call[0]?.name === 'saas_subscription_paid');
+  }
+
+  it('sends it once for a live payment, with the GA ids stored at checkout', async () => {
+    const res = await POST(signedRequest(liveEvent(true)) as never);
+    expect(res.status).toBe(200);
+    expect(paidCalls()).toHaveLength(1);
+    expect(paidCalls()[0]![0]).toEqual({
+      name: 'saas_subscription_paid',
+      clientId: '123.456',
+      sessionId: '1700000000',
+      params: { transaction_id: 'sub_1', value: 39, currency: 'GBP', event_source: 'stripe_webhook' },
+    });
+  });
+
+  it('never sends it for a Stripe test-mode payment', async () => {
+    await POST(signedRequest(liveEvent(false)) as never);
+    expect(paidCalls()).toHaveLength(0);
+  });
+
+  it('does not send it again when the subscription is already active (replayed delivery)', async () => {
+    findUniqueSaas.mockResolvedValue({
+      ...pendingRow,
+      status: 'ACTIVE',
+      activatedAt: new Date(),
+      stripeSubscriptionId: 'sub_1',
+      stripeCustomerId: 'cus_1',
+      currentPeriodEnd: new Date(Date.now() + 86400_000),
+    });
+    await POST(signedRequest(liveEvent(true)) as never);
+    expect(paidCalls()).toHaveLength(0);
   });
 });
