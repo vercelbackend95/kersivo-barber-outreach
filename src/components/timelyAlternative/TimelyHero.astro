@@ -1,0 +1,95 @@
+---
+import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  HERO_DIARY,
+  HERO_WEEK_DAYS,
+  TIMELY_HERO_EYEBROW,
+  TIMELY_HERO_FACTS,
+  TIMELY_HERO_LEAD,
+  TIMELY_HERO_TITLE_LINES,
+} from '@/lib/seo/timelyAlternativeContent';
+
+const times = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30'];
+---
+
+<section class="ta-hero" aria-labelledby="timely-alt-title">
+  <div class="ta-hero__glow" aria-hidden="true"></div>
+  <div class="ta-wrap ta-hero__grid">
+    <div class="ta-hero__copy">
+      <nav class="ta-breadcrumb ta-enter" style="--i: 0" aria-label="Breadcrumb">
+        <a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Timely alternative</span>
+      </nav>
+      <p class="ta-eyebrow ta-enter" style="--i: 1">{TIMELY_HERO_EYEBROW}</p>
+      <h1 id="timely-alt-title" class="ta-hero__title">
+        {TIMELY_HERO_TITLE_LINES.map((line, index) => (
+          <span class="ta-hero__line ta-enter" style={`--i: ${index + 2}`}>{line}</span>
+        ))}
+      </h1>
+      <p class="ta-hero__lead ta-enter" style="--i: 5">{TIMELY_HERO_LEAD}</p>
+      <div class="ta-enter" style="--i: 6">
+        <ComparisonHeroActions placement="timely" />
+      </div>
+      <ul class="ta-hero__facts ta-enter" style="--i: 7" aria-label="KERSIVO commercial model">
+        {TIMELY_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+      </ul>
+    </div>
+
+    <figure class="ta-diary ks-glass-card ks-glass-card--accent ta-enter" style="--i: 4" data-ta-diary data-state="idle">
+      <div class="ta-diary__head">
+        <p class="ks-eyebrow">This week at your shop</p>
+        <p class="ta-diary__count"><span data-ta-count>{HERO_DIARY.length}</span> bookings</p>
+      </div>
+
+      <div class="ta-diary__board" aria-hidden="true">
+        <div class="ta-diary__times">
+          <span></span>
+          {times.map((time) => <span>{time}</span>)}
+        </div>
+        <div class="ta-diary__days">
+          {HERO_WEEK_DAYS.map((day, dayIndex) => (
+            <div class="ta-diary__col">
+              <span class="ta-diary__day">{day}</span>
+              <div class="ta-diary__slots">
+                {HERO_DIARY.filter((slot) => slot.day === dayIndex).map((slot) => (
+                  <span
+                    class="ta-diary__slot"
+                    data-ta-slot
+                    style={`grid-row: ${slot.start + 1} / span ${slot.span}`}
+                  >
+                    {slot.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="ta-diary__bills">
+        <div class="ta-diary__bill ta-diary__bill--timely">
+          <div class="ta-diary__bill-text">
+            <p class="ta-diary__bill-name">Booking-based weekly bill</p>
+            <p class="ta-diary__bill-note">How Timely prices UK plans: rises with bookings</p>
+          </div>
+          <span class="ta-diary__meter" data-ta-meter aria-hidden="true"><span></span></span>
+        </div>
+        <div class="ta-diary__bill ta-diary__bill--kersivo">
+          <div class="ta-diary__bill-text">
+            <p class="ta-diary__bill-name">Full KERSIVO</p>
+            <p class="ta-diary__bill-note">Per location, however full the week</p>
+          </div>
+          <p class="ta-diary__price">£{SAAS_MONTHLY_GBP}<small>/month</small></p>
+        </div>
+      </div>
+
+      <figcaption class="ta-diary__caption">
+        <span>Illustration of a barbershop week filling up. Timely’s weekly bill rises with bookings; Full KERSIVO stays at £{SAAS_MONTHLY_GBP} a month.</span>
+        <button type="button" class="ta-diary__replay" data-ta-replay>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5V5h2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          Replay the week
+        </button>
+      </figcaption>
+    </figure>
+  </div>
+</section>

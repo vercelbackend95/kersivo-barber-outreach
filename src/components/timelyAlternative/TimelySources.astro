@@ -1,0 +1,37 @@
+---
+import { TIMELY_SOURCES_NOTE } from '@/lib/seo/timelyAlternativeContent';
+import {
+  TIMELY_FACTS_CHECKED_DATE,
+  TIMELY_FACTS_CHECKED_ISO,
+  TIMELY_SOURCES,
+  TIMELY_TRADEMARK_DISCLAIMER,
+} from '@/lib/seo/timelyFacts';
+
+const sources = [
+  ...TIMELY_SOURCES.filter((source) => source.id !== 'rateUpdate').map((source) => ({ name: source.label, url: source.url, note: source.supports })),
+  { name: 'KERSIVO pricing', url: '/pricing', note: 'Official Starter and Full KERSIVO plans' },
+];
+---
+
+<section id="sources" class="ta-sources" aria-labelledby="timely-sources-title">
+  <div class="ta-wrap">
+    <header class="ta-sources__head">
+      <h2 id="timely-sources-title" class="ta-sources__title">Sources and comparison notes</h2>
+      <p class="ta-meta">Reviewed <time datetime={TIMELY_FACTS_CHECKED_ISO}>{TIMELY_FACTS_CHECKED_DATE}</time></p>
+    </header>
+    <p class="ta-body">{TIMELY_SOURCES_NOTE}</p>
+    <ul class="ta-sources__list">
+      {sources.map((source) => (
+        <li>
+          <a
+            href={source.url}
+            target={source.url.startsWith('https') ? '_blank' : undefined}
+            rel={source.url.startsWith('https') ? 'noopener noreferrer' : undefined}
+          >{source.name}</a>
+          <span>{source.note}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="ta-small">{TIMELY_TRADEMARK_DISCLAIMER}</p>
+  </div>
+</section>

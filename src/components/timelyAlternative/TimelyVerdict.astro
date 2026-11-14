@@ -1,0 +1,33 @@
+---
+import { TIMELY_VERDICT_FIT, TIMELY_VERDICT_LEAD, TIMELY_VERDICT_TITLE } from '@/lib/seo/timelyAlternativeContent';
+---
+
+<section id="quick-answer" class="ta-section ta-verdict" aria-labelledby="timely-verdict-title">
+  <div class="ta-wrap">
+    <header class="ta-head ta-head--split" data-ta-reveal>
+      <div>
+        <p class="ta-eyebrow">The straight answer</p>
+        <h2 id="timely-verdict-title" class="ta-h2">{TIMELY_VERDICT_TITLE}</h2>
+      </div>
+      <p class="ta-lead">{TIMELY_VERDICT_LEAD}</p>
+    </header>
+
+    <div class="ta-fit">
+      {TIMELY_VERDICT_FIT.map((side, index) => (
+        <article
+          class:list={['ta-fit__card', side.tone === 'kersivo' ? 'ta-fit__card--kersivo ks-glass-card ks-glass-card--accent' : 'ta-fit__card--timely']}
+          data-ta-reveal
+          style={`--d: ${index * 120}ms`}
+        >
+          <h3 class="ta-fit__title">{side.label}</h3>
+          <ul class="ta-fit__list">
+            {side.points.map((point) => <li>{point}</li>)}
+          </ul>
+        </article>
+      ))}
+    </div>
+    <p class="ta-verdict__jump" data-ta-reveal>
+      <a class="ta-text-link" href="#bill-builder">Work out your own numbers <span aria-hidden="true">↓</span></a>
+    </p>
+  </div>
+</section>

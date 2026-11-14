@@ -27,7 +27,7 @@ const PAGES = [
   { page: 'pages/treatwell-alternative/index.astro', hero: 'components/treatwellAlternative/TreatwellHero.astro', placement: 'treatwell', competitor: 'Treatwell' },
   { page: 'pages/nearcut-alternative/index.astro', hero: 'components/nearcutAlternative/NearcutHero.astro', placement: 'nearcut', competitor: 'Nearcut' },
   { page: 'pages/vagaro-alternative/index.astro', hero: 'components/vagaroAlternative/VagaroHero.astro', placement: 'vagaro', competitor: 'Vagaro' },
-  { page: 'pages/timely-alternative/index.astro', hero: 'pages/timely-alternative/index.astro', placement: 'timely', competitor: 'Timely' },
+  { page: 'pages/timely-alternative/index.astro', hero: 'components/timelyAlternative/TimelyHero.astro', placement: 'timely', competitor: 'Timely' },
   { page: 'pages/phorest-alternative/index.astro', hero: 'components/phorestAlternative/PhorestHero.astro', placement: 'phorest', competitor: 'Phorest' },
   { page: 'pages/square-appointments-alternative/index.astro', hero: 'components/squareAlternative/SquareHero.astro', placement: 'square', competitor: 'Square Appointments' },
   { page: 'pages/squire-alternative/index.astro', hero: 'components/squireAlternative/SquireHero.astro', placement: 'squire', competitor: 'SQUIRE' },

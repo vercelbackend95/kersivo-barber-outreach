@@ -1,0 +1,103 @@
+---
+import {
+  BUILDER_CONFIG,
+  BUILDER_DEFAULT_FEATURES,
+  BUILDER_FEATURES,
+  BUILDER_NOTE,
+} from '@/lib/seo/timelyAlternativeContent';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import { COMPARISON_HERO_PRIMARY_HREF, COMPARISON_HERO_PRIMARY_LABEL } from '@/lib/seo/comparisonCtas';
+
+const config = BUILDER_CONFIG;
+const freePreview = isFreePreviewFlowEnabled();
+const cta = freePreview
+  ? { href: FREE_PREVIEW_CTA_HREF, label: FREE_PREVIEW_CTA_LABEL, track: FREE_PREVIEW_CTA_TRACK }
+  : { href: COMPARISON_HERO_PRIMARY_HREF, label: COMPARISON_HERO_PRIMARY_LABEL, track: 'view_pricing_click' };
+const defaults = new Set<string>(BUILDER_DEFAULT_FEATURES);
+---
+
+<section id="bill-builder" class="ta-section ta-builder-section" aria-labelledby="timely-builder-title">
+  <div class="ta-wrap">
+    <header class="ta-head" data-ta-reveal>
+      <p class="ta-eyebrow">Your shop, your numbers</p>
+      <h2 id="timely-builder-title" class="ta-h2">Which Timely plan would you need, and what would KERSIVO cost?</h2>
+      <p class="ta-lead">Tick what your shop actually uses. We’ll show the Timely plan that covers it, what it starts at, and the KERSIVO plan that does the same job.</p>
+    </header>
+
+    <form class="ta-builder" data-ta-builder={JSON.stringify(config)} data-plan="full" aria-labelledby="timely-builder-title" data-ta-reveal>
+      <div class="ta-builder__inputs">
+        <fieldset class="ta-builder__features">
+          <legend class="ta-builder__legend"><span>1</span> What does your shop need?</legend>
+          <div class="ta-chips">
+            {BUILDER_FEATURES.map((feature) => (
+              <label class="ta-chip">
+                <input type="checkbox" name="feature" value={feature.id} checked={defaults.has(feature.id)} />
+                <span class="ta-chip__box" aria-hidden="true"></span>
+                <span class="ta-chip__label">{feature.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="ta-builder__numbers">
+          <legend class="ta-builder__legend"><span>2</span> How busy is it?</legend>
+          <div class="ta-field">
+            <label for="ta-barbers">Barbers taking bookings <output for="ta-barbers" data-ta-out="barbers">{config.defaults.barbers}</output></label>
+            <input id="ta-barbers" name="barbers" type="range" min="1" max="12" step="1" value={config.defaults.barbers} />
+          </div>
+          <div class="ta-field">
+            <label for="ta-bookings">Bookings a week <output for="ta-bookings" data-ta-out="bookingsPerWeek">{config.defaults.bookingsPerWeek}</output></label>
+            <input id="ta-bookings" name="bookingsPerWeek" type="range" min="10" max="400" step="5" value={config.defaults.bookingsPerWeek} />
+          </div>
+        </fieldset>
+
+        <fieldset class="ta-builder__invoice">
+          <legend class="ta-builder__legend"><span>3</span> Already on Timely? <em>Optional</em></legend>
+          <div class="ta-field ta-field--money">
+            <label for="ta-actual">Your typical weekly Timely bill</label>
+            <div class="ta-money">
+              <span aria-hidden="true">£</span>
+              <input id="ta-actual" name="actualWeeklyGbp" type="number" inputmode="decimal" min="0" max="500" step="0.01" placeholder="0.00" aria-describedby="ta-actual-hint" />
+            </div>
+            <p id="ta-actual-hint" class="ta-small">Find it on your Timely invoice. It gives an exact like-for-like comparison.</p>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="ta-builder__result ks-glass-card ks-glass-card--accent" aria-live="polite">
+        <div class="ta-result__cols">
+          <div class="ta-result__col ta-result__col--timely">
+            <p class="ta-result__name" data-ta-out="tier">Timely</p>
+            <p class="ta-result__label" data-ta-out="timelyLabel">From, monthly</p>
+            <p class="ta-result__total" data-ta-out="timely">–</p>
+            <p class="ta-result__split" data-ta-out="timelySplit"></p>
+          </div>
+          <div class="ta-result__col ta-result__col--kersivo">
+            <p class="ta-result__name" data-ta-out="plan">Full KERSIVO</p>
+            <p class="ta-result__label">Monthly, flat</p>
+            <p class="ta-result__total" data-ta-out="kersivo">–</p>
+            <p class="ta-result__split" data-ta-out="kersivoSplit"></p>
+          </div>
+        </div>
+        <p class="ta-result__verdict" data-ta-out="verdict"></p>
+        <p class="ta-result__missing" data-ta-out="missing" hidden></p>
+        <div class="ta-result__actions">
+          <a class="ta-button" href={cta.href} data-track={cta.track} data-track-placement="timely_builder">{cta.label}</a>
+          <a class="ta-text-link ta-result__starter" href="/starter" data-track="starter_plan_explore_click" data-track-placement="timely_builder">Only need bookings? Start on Starter (£0/month)</a>
+        </div>
+        <p class="ta-small">{BUILDER_NOTE}</p>
+      </div>
+    </form>
+
+    <p class="ta-body ta-builder__calc" data-ta-reveal>
+      Comparing more than two platforms? The
+      <a href="/barber-software-cost-calculator">barber software cost calculator</a>
+      runs Timely, Fresha, Booksy and KERSIVO against your own shop numbers.
+    </p>
+  </div>
+</section>

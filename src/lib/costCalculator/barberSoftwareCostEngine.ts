@@ -414,7 +414,7 @@ export const WARNING_MESSAGES: Record<WarningCode, string> = {
   'treatwell-quote-vat-unknown': 'Confirm the VAT treatment of your Treatwell subscription quote. No complete cash total is estimated until the quote VAT basis is selected.',
   'square-subscription-vat-unverified': 'Square publishes paid per-location subscription prices, but the VAT basis of these UK headline prices is not verified. The headline is shown in the breakdown; no final cash total, VAT charge or VAT-recoverable figure is guessed.',
   'square-deposit-processing-unverified': 'Square Appointments offers deposits, but the precise processing rate for this appointment-deposit flow is not confirmed. Square Online and Card on File use different published rates. With deposits included, a complete Square total cannot be estimated.',
-  'timely-quote-unknown': 'Enter your real Timely UK monthly invoice total including any VAT; public USD per-staff prices are not used for UK cost estimates.',
+  'timely-quote-unknown': 'Enter your real Timely UK monthly invoice total including any VAT; Timely’s weekly “from” prices adjust with bookings, so they are not used as a UK estimate.',
   'timely-vat-not-separated': 'Timely invoice VAT is included in the amount you enter, but is not separately estimated or treated as recoverable. Extra processing VAT, if charged, and undisclosed add-ons are excluded.',
   'phorest-quote-required': 'Phorest does not publish a universal UK monthly subscription. Enter your own Phorest quote excluding VAT.',
   'phorest-vat-unknown': 'Confirm whether your Phorest quote is subject to UK standard VAT. A complete total cannot be estimated until this is known.',
