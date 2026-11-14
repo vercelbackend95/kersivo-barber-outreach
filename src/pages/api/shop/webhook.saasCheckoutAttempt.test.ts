@@ -16,7 +16,7 @@ const findUniqueSaas = vi.fn();
 const createSaas = vi.fn();
 const updateSaas = vi.fn();
 
-const sendServerAnalyticsEvent = vi.fn(async () => true);
+const sendServerAnalyticsEvent = vi.fn(async (_input: { name: string }) => true);
 const ATTEMPT = '550e8400-e29b-41d4-a716-446655440000';
 const OTHER_ATTEMPT = '660e8400-e29b-41d4-a716-446655440099';
 
@@ -33,7 +33,7 @@ vi.mock('../../../lib/shop/stripe', () => ({
 vi.mock('../../../lib/analytics/serverEvents', () => ({
   GA_CLIENT_ID_METADATA_KEY: 'gaClientId',
   GA_SESSION_ID_METADATA_KEY: 'gaSessionId',
-  sendServerAnalyticsEvent: (...args: unknown[]) => sendServerAnalyticsEvent(...(args as [])),
+  sendServerAnalyticsEvent: (input: { name: string }) => sendServerAnalyticsEvent(input),
 }));
 
 vi.mock('../../../lib/ops/stripeWebhookLedger', () => ({
@@ -521,9 +521,7 @@ describe('POST /api/shop/webhook SaaS → GA4 saas_subscription_paid', () => {
   });
 
   function paidCalls() {
-    return sendServerAnalyticsEvent.mock.calls.filter(
-      (call) => (call as unknown as [{ name: string }])[0]?.name === 'saas_subscription_paid',
-    );
+    return sendServerAnalyticsEvent.mock.calls.filter((call) => call[0]?.name === 'saas_subscription_paid');
   }
 
   it('sends it once for a live payment, with the GA ids stored at checkout', async () => {
