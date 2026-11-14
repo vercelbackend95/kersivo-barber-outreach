@@ -1,9 +1,24 @@
 ---
 import { COST_SCENARIO_TABLES } from '@/lib/costCalculator/costScenarios';
-import { SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
+import { formatMoneyGbp } from '@/lib/costCalculator/money';
+import { barShare } from '@/lib/costCalculator/costVerdict';
+import { BARBER_COST_CALCULATOR_PAGE_PATH, SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
+
+const displayName = (id: string, name: string) => (id === 'kersivo' ? 'Full KERSIVO' : name);
+const tables = COST_SCENARIO_TABLES.map((scenario) => {
+  const priced = scenario.rows
+    .filter((row): row is typeof row & { monthlyGbp: number } => row.monthlyGbp !== null)
+    .sort((a, b) => b.monthlyGbp - a.monthlyGbp);
+  const max = Math.max(...priced.map((row) => row.monthlyGbp));
+  return {
+    ...scenario,
+    priced: priced.map((row) => ({ ...row, share: barShare(row.monthlyGbp, max) })),
+    quoted: scenario.rows.filter((row) => row.monthlyGbp === null).map((row) => row.name),
+  };
+});
 ---
 
-<section id="cost-examples" class="cost-calc__section" aria-labelledby="cost-calc-scenarios-title">
+<section id="cost-examples" class="cost-calc__section cost-examples" aria-labelledby="cost-calc-scenarios-title">
   <div class="container">
     <header class="cost-calc__intro">
       <p class="cost-calc__eyebrow">Worked examples</p>
@@ -13,11 +28,30 @@ import { SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorP
 
     <ul class="cost-calc-scenarios">
       {
-        COST_SCENARIO_TABLES.map((scenario) => (
+        tables.map((scenario) => (
           <li class="cost-calc-scenarios__item">
-            <h3 id={`cost-calc-scenario-${scenario.barbers}`} class="cost-calc-scenarios__title">{scenario.label}</h3>
-            <p class="cost-calc-scenarios__barbers">{scenario.inputs}</p>
-            <table class="cost-calc-scenarios__table" aria-labelledby={`cost-calc-scenario-${scenario.barbers}`}>
+            <div class="cost-calc-scenarios__head">
+              <h3 id={`cost-calc-scenario-${scenario.barbers}`} class="cost-calc-scenarios__title">{scenario.label}</h3>
+              <p class="cost-calc-scenarios__barbers">{scenario.inputs}</p>
+            </div>
+
+            <ol class="cost-calc-scenarios__bars" aria-hidden="true">
+              {scenario.priced.map((row) => (
+                <li
+                  class="cost-calc-scenarios__bar"
+                  data-kersivo={row.providerId === 'kersivo' ? 'true' : undefined}
+                  style={`--share:${row.share.toFixed(4)}`}
+                >
+                  <span class="cost-calc-scenarios__bar-name">{displayName(row.providerId, row.name)}</span>
+                  <span class="cost-calc-scenarios__bar-track">
+                    <span class="cost-calc-scenarios__bar-fill" />
+                  </span>
+                  <span class="cost-calc-scenarios__bar-value">{formatMoneyGbp(row.monthlyGbp)}</span>
+                </li>
+              ))}
+            </ol>
+
+            <table class="cost-calc-scenarios__table sr-only" aria-labelledby={`cost-calc-scenario-${scenario.barbers}`}>
               <thead>
                 <tr>
                   <th scope="col">Provider</th>
@@ -25,16 +59,26 @@ import { SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorP
                 </tr>
               </thead>
               <tbody>
-                {
-                  scenario.rows.map((row) => (
-                    <tr data-provider={row.providerId} data-state={row.state}>
-                      <th scope="row">{row.name}</th>
-                      <td>{row.monthlyTotal}</td>
-                    </tr>
-                  ))
-                }
+                {scenario.rows.map((row) => (
+                  <tr data-provider={row.providerId} data-state={row.state}>
+                    <th scope="row">{row.name}</th>
+                    <td>{row.monthlyTotal}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+
+            <p class="cost-calc-scenarios__quoted">Needs your quote: {scenario.quoted.join(', ')}</p>
+            <a
+              class="cost-calc-scenarios__load"
+              href={`${BARBER_COST_CALCULATOR_PAGE_PATH}?${scenario.loadQuery}#calculator`}
+              rel="nofollow"
+              data-calc-load
+              data-track="cost_calculator_example_load"
+              data-track-placement={`cost_calculator_example_${scenario.barbers}`}
+            >
+              Load this shop into the calculator <span aria-hidden="true">↑</span>
+            </a>
           </li>
         ))
       }

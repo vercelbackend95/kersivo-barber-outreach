@@ -1,31 +1,75 @@
 ---
-import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
-import CostCalcPanel from '@/components/costCalculator/CostCalcPanel.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_LABEL, FREE_PREVIEW_CTA_TRACK } from '@/lib/freePreview/fullPlanCta';
+import { offer } from '@/content/offer';
 import {
   BARBER_COST_CALCULATOR_LAST_UPDATED_ISO,
   BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL,
   COST_CALC_HERO,
+  COST_CALC_HERO_EXAMPLE,
   COST_CALC_TRUST_SIGNALS,
 } from '@/lib/seo/barberCostCalculatorPage';
+import { buildCostScenarioTable } from '@/lib/costCalculator/costScenarios';
 import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePaint';
+import { formatMoneyGbp } from '@/lib/costCalculator/money';
+import { barShare } from '@/lib/costCalculator/costVerdict';
+
+const freePreview = isFreePreviewFlowEnabled();
+const primary = freePreview
+  ? { href: FREE_PREVIEW_CTA_HREF, label: FREE_PREVIEW_CTA_LABEL, track: FREE_PREVIEW_CTA_TRACK }
+  : { href: '/admin/launch', label: offer.cta.subscribeDirect, track: 'saas_subscribe_click' };
+
+const example = buildCostScenarioTable(COST_CALC_HERO_EXAMPLE.barbers);
+const priced = example.rows
+  .filter((row): row is typeof row & { monthlyGbp: number } => row.monthlyGbp !== null)
+  .sort((a, b) => b.monthlyGbp - a.monthlyGbp);
+const max = Math.max(...priced.map((row) => row.monthlyGbp));
+const quoted = example.rows.filter((row) => row.monthlyGbp === null).map((row) => row.name);
+const displayName = (id: string, name: string) => (id === 'kersivo' ? 'Full KERSIVO' : name);
 ---
 
 <script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />
 <section class="cost-calc-hero" aria-labelledby="cost-calc-hero-title">
   <div class="cost-calc-hero__grid">
     <div class="cost-calc-hero__content">
-      <p class="cost-calc-hero__eyebrow">
+      <p class="cost-calc-hero__eyebrow" data-enter="1">
         <span class="cost-calc-hero__eyebrow-dot" aria-hidden="true"></span>
         {COST_CALC_HERO.eyebrow}
       </p>
 
-      <h1 id="cost-calc-hero-title" class="cost-calc-hero__title">{COST_CALC_HERO.title}</h1>
+      <h1 id="cost-calc-hero-title" class="cost-calc-hero__title" data-enter="2">{COST_CALC_HERO.title}</h1>
 
-      <p class="cost-calc-hero__lead">{COST_CALC_HERO.lead}</p>
-      <p class="cost-calc-hero__supporting">{COST_CALC_HERO.supporting}</p>
-      <ComparisonHeroActions placement="cost_calculator" />
+      <p class="cost-calc-hero__lead" data-enter="3">{COST_CALC_HERO.lead}</p>
 
-      <ul class="cost-calc-hero__trust" aria-label="About this cost comparison">
+      <div class="cost-calc-hero__fact" data-enter="4">
+        <span class="cost-calc-hero__fact-mark" aria-hidden="true"></span>
+        <p>
+          <strong>{COST_CALC_HERO.fact}</strong>
+          <span>{COST_CALC_HERO.factNote}</span>
+        </p>
+      </div>
+
+      <div class="cost-calc-hero__actions" data-enter="5">
+        <a
+          class="cost-calc-btn cost-calc-btn--primary"
+          href="#calculator"
+          data-track="cost_calculator_start_click"
+          data-track-placement="cost_calculator_hero"
+        >
+          {COST_CALC_HERO.primaryTool}
+          <span class="cost-calc-btn__icon" aria-hidden="true">↓</span>
+        </a>
+        <a
+          class="cost-calc-btn cost-calc-btn--ghost"
+          href={primary.href}
+          data-track={primary.track}
+          data-track-placement="cost_calculator_hero"
+        >
+          {primary.label}
+        </a>
+      </div>
+
+      <ul class="cost-calc-hero__trust" aria-label="About this cost comparison" data-enter="6">
         {
           COST_CALC_TRUST_SIGNALS.map((signal) => (
             <li>
@@ -36,7 +80,7 @@ import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePa
         }
       </ul>
 
-      <p class="cost-calc-hero__note">
+      <p class="cost-calc-hero__note" data-enter="6">
         {COST_CALC_HERO.builtBy}
         <span class="cost-calc-hero__updated">
           Last updated <time datetime={BARBER_COST_CALCULATOR_LAST_UPDATED_ISO}>{BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL}</time>
@@ -44,6 +88,32 @@ import { CALCULATOR_PREPAINT_SCRIPT } from '@/lib/costCalculator/calculatorPrePa
       </p>
     </div>
 
-    <CostCalcPanel />
+    <figure class="cost-bill" aria-labelledby="cost-bill-title" data-enter="3">
+      <div class="cost-bill__head">
+        <p class="cost-bill__eyebrow"><span class="cost-bill__dot" aria-hidden="true"></span>Worked example</p>
+        <p id="cost-bill-title" class="cost-bill__title">{COST_CALC_HERO_EXAMPLE.title}</p>
+        <p class="cost-bill__meta">{COST_CALC_HERO_EXAMPLE.caption}</p>
+      </div>
+      <ol class="cost-bill__rows">
+        {
+          priced.map((row, index) => (
+            <li
+              class="cost-bill__row"
+              data-kersivo={row.providerId === 'kersivo' ? 'true' : undefined}
+              style={`--share:${barShare(row.monthlyGbp, max).toFixed(4)};--i:${index}`}
+            >
+              <span class="cost-bill__name">{displayName(row.providerId, row.name)}</span>
+              <span class="cost-bill__track" aria-hidden="true">
+                <span class="cost-bill__fill" />
+              </span>
+              <span class="cost-bill__value">{formatMoneyGbp(row.monthlyGbp)}</span>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="cost-bill__foot">
+        {example.inputs}. Needs your own quote: {quoted.join(', ')}. Nearcut Free for You clients pay a separate booking charge.
+      </p>
+    </figure>
   </div>
 </section>

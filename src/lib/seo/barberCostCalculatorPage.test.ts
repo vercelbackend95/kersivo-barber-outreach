@@ -65,12 +65,13 @@ const visibleCopy = [
 describe('barber software cost calculator SEO foundation', () => {
   it('uses the evergreen route, exact title, description and canonical', () => {
     expect(BARBER_COST_CALCULATOR_PAGE_PATH).toBe('/barber-software-cost-calculator');
-    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Barber Software Cost Calculator UK | KERSIVO');
+    expect(BARBER_COST_CALCULATOR_TITLE).toBe('Barber Booking Software Cost UK: Free Calculator | KERSIVO');
     expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
     expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
-      'Compare Booksy, Fresha, Treatwell, Nearcut, Setora, Square Appointments, Phorest, Timely and KERSIVO costs for UK barbershops. Model fees, VAT and quotes.',
+      'How much does barber booking software cost? Compare subscriptions, per-barber fees and commission across Booksy, Fresha, Treatwell and 7 more. No sign-up.',
     );
+    expect(BARBER_COST_CALCULATOR_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(resolveCanonicalUrl(BARBER_COST_CALCULATOR_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/barber-software-cost-calculator',
     );
@@ -89,10 +90,15 @@ describe('barber software cost calculator SEO foundation', () => {
   it('renders exactly one H1 with the approved hero copy', () => {
     expect(heroSource.match(/<h1\b/g)).toHaveLength(1);
     expect(heroSource).toContain('{COST_CALC_HERO.title}');
-    expect(COST_CALC_HERO.title).toBe('Barber Booking Software Cost Calculator');
-    expect(COST_CALC_HERO.eyebrow).toBe('UK BARBER SOFTWARE COST CALCULATOR');
-    expect(COST_CALC_HERO.lead).toBe(
-      'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest, Timely and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
+    expect(COST_CALC_HERO.title).toBe('How much does barber booking software really cost?');
+    expect(COST_CALC_HERO.eyebrow).toBe('UK BARBERSHOP SOFTWARE COSTS');
+    expect(COST_CALC_HERO.lead).toContain('Per-barber charges, marketplace commission, VAT and card fees');
+    expect(COST_CALC_HERO.fact).toBe(
+      `Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, with every barber, your website and your own domain included.`,
+    );
+    // "0% KERSIVO commission" always sits next to the Stripe fees note.
+    expect(COST_CALC_HERO.factNote).toBe(
+      '0% KERSIVO commission. Standard Stripe payment-processing fees apply to online payments.',
     );
     for (const [file, source] of Object.entries(components)) {
       if (file !== 'CostCalcHero.astro') expect(source).not.toMatch(/<h1\b/);
@@ -128,6 +134,10 @@ describe('barber software cost calculator SEO foundation', () => {
     const order = [
       '<CostCalcHero',
       '<CostResults',
+      '<CostPricingModels',
+      '<CostScenarios',
+      '<CostKersivoOutcomes',
+      '<CostMethodology',
       '<CostAtAGlance',
       '<CostBooksy',
       '<CostFresha',
@@ -140,8 +150,6 @@ describe('barber software cost calculator SEO foundation', () => {
       '<CostMarketplaceFees',
       '<CostVat',
       '<CostPayments',
-      '<CostScenarios',
-      '<CostMethodology',
       '<CostSources',
       '<Faq4',
       '<Footer50',
@@ -169,7 +177,7 @@ describe('barber software cost calculator SEO foundation', () => {
     );
     expect(matches).toHaveLength(1);
     expect(matches[0].lastmod).toBe(BARBER_COST_CALCULATOR_LAST_UPDATED_ISO);
-    expect(BARBER_COST_CALCULATOR_LAST_UPDATED_ISO).toBe('2026-10-08');
+    expect(BARBER_COST_CALCULATOR_LAST_UPDATED_ISO).toBe('2026-11-14');
     expect(heroSource).toContain('datetime={BARBER_COST_CALCULATOR_LAST_UPDATED_ISO}');
   });
 });
@@ -501,23 +509,30 @@ describe('booksy additional-user wording', () => {
 });
 
 describe('calculator client scope', () => {
-  it('ships one contained shell script, one inline pre-paint script and no hydrated islands', () => {
+  it('ships the calculator shell, the team-size chart, one inline pre-paint script and no hydrated islands', () => {
     expect(pageSource).not.toMatch(/<script\b/);
+    const scripted = new Set(['CostCalcPanel.astro', 'CostCalcHero.astro', 'CostPricingModels.astro']);
     for (const [file, source] of Object.entries(components)) {
       expect(source).not.toMatch(/client:(load|idle|visible|only|media)/);
-      if (file !== 'CostCalcPanel.astro' && file !== 'CostCalcHero.astro') expect(source).not.toMatch(/<script\b/);
+      if (!scripted.has(file)) expect(source).not.toMatch(/<script\b/);
     }
+    expect(components['CostPricingModels.astro'].match(/<script\b[^>]*>/g) ?? []).toEqual(['<script>']);
     const panelScripts = components['CostCalcPanel.astro'].match(/<script\b[^>]*>/g) ?? [];
     expect(panelScripts).toEqual(['<script>']);
     const heroScripts = components['CostCalcHero.astro'].match(/<script\b[^>]*>/g) ?? [];
     expect(heroScripts).toEqual(['<script is:inline set:html={CALCULATOR_PREPAINT_SCRIPT} />']);
   });
 
-  it('keeps form controls inside the calculator panel and results', () => {
+  it('keeps form controls inside the calculator panel and results, plus the chart slider', () => {
     for (const [file, source] of Object.entries(components)) {
       if (file === 'CostCalcPanel.astro' || file === 'CostResults.astro') continue;
+      if (file === 'CostPricingModels.astro') {
+        expect(source.match(/<(input|select|textarea|form)\b[^>]*/g)).toHaveLength(1);
+        expect(source).toContain('type="range"');
+        continue;
+      }
       expect(source).not.toMatch(/<(input|select|textarea|form)\b/);
     }
-    expect(heroSource).toContain('<CostCalcPanel />');
+    expect(components['CostResults.astro']).toContain('<CostCalcPanel />');
   });
 });

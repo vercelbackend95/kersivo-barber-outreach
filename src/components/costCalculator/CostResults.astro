@@ -16,39 +16,123 @@ import {
   THREE_YEAR_NOTE,
 } from '@/lib/costCalculator/calculatorUi';
 import { buildCalculatorView } from '@/lib/costCalculator/resultView';
+import { buildCostVerdict, VERDICT_BAR_ROWS } from '@/lib/costCalculator/costVerdict';
+import { formatMoneyGbp } from '@/lib/costCalculator/money';
 import SegmentedControl from '@/components/ui/SegmentedControl.astro';
+import CostCalcPanel from '@/components/costCalculator/CostCalcPanel.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { FREE_PREVIEW_CTA_HREF, FREE_PREVIEW_CTA_LABEL, FREE_PREVIEW_CTA_TRACK } from '@/lib/freePreview/fullPlanCta';
+import { offer } from '@/content/offer';
 
 const view = buildCalculatorView(DEFAULT_SCENARIO, DEFAULT_PERIOD);
 const viewFor = (id: string) => view.providers.find((provider) => provider.id === id)!;
+const verdict = buildCostVerdict(view);
+const barFor = (id: string) => verdict.bars.findIndex((bar) => bar.id === id);
+const freePreview = isFreePreviewFlowEnabled();
+const cta = freePreview
+  ? { href: FREE_PREVIEW_CTA_HREF, label: FREE_PREVIEW_CTA_LABEL, track: FREE_PREVIEW_CTA_TRACK }
+  : { href: '/admin/launch', label: offer.cta.subscribeDirect, track: 'saas_subscribe_click' };
 ---
 
 <section id="cost-comparison" class="calc-results" aria-labelledby="calc-results-title" data-calc-results>
   <div class="calc-results__inner">
-    <header class="calc-results__header">
-      <div class="calc-results__intro">
-        <h2 id="calc-results-title" class="calc-results__title">{RESULTS_HEADING}</h2>
-        <p class="calc-results__supporting">{RESULTS_SUPPORTING}</p>
+    <div class="calc-workbench">
+      <div class="calc-workbench__inputs">
+        <CostCalcPanel />
       </div>
 
-      <div class="calc-results__period-wrap">
-        <SegmentedControl
-          as="fieldset"
-          name="period"
-          legend="Cost period"
-          class="calc-results__period"
-          data-calc-period
-          value={view.period}
-          options={PERIOD_OPTIONS}
-        />
-        <div class="calc-share">
-          <button type="button" class="calc-share__button" data-calc-share>{SHARE_SCENARIO.label}</button>
-          <p class="calc-share__status" data-calc-share-status role="status" aria-live="polite"></p>
+      <div class="calc-workbench__output">
+        <div class="calc-verdict" data-calc-verdict data-state={verdict.ok ? 'ready' : 'invalid'}>
+          <header class="calc-results__header">
+            <div class="calc-results__intro">
+              <h2 id="calc-results-title" class="calc-results__title">{RESULTS_HEADING}</h2>
+              <p class="calc-results__supporting">{RESULTS_SUPPORTING}</p>
+            </div>
+
+            <div class="calc-results__period-wrap">
+              <SegmentedControl
+                as="fieldset"
+                name="period"
+                legend="Cost period"
+                class="calc-results__period"
+                data-calc-period
+                value={view.period}
+                options={PERIOD_OPTIONS}
+              />
+            </div>
+          </header>
+
+          <p class="calc-results__note" data-calc-three-year-note hidden={!view.showThreeYearNote}>{THREE_YEAR_NOTE}</p>
+          <p class="calc-results__status" data-slot="results-status" hidden={view.ok}>{RESULTS_INVALID}</p>
+
+          <div class="calc-verdict__hero">
+            <p class="calc-verdict__eyebrow"><span class="calc-verdict__dot" aria-hidden="true"></span>Full KERSIVO, whole shop</p>
+            <p class="calc-verdict__figure">
+              <span class="calc-verdict__amount" data-verdict="kersivo">{verdict.kersivoLabel}</span>
+              <span class="calc-verdict__period" data-verdict="period">a month</span>
+            </p>
+            <p class="calc-verdict__headline" data-verdict="headline">{verdict.headline}</p>
+            <ul class="calc-verdict__lines" data-verdict="lines">
+              {verdict.lines.map((line) => <li>{line}</li>)}
+            </ul>
+          </div>
+
+          <ol class="calc-bars" data-calc-bars aria-label="Calculated cash cost by platform, highest first">
+            {
+              VERDICT_BAR_ROWS.map((provider) => {
+                const index = barFor(provider.id);
+                const bar = verdict.bars[index];
+                return (
+                  <li
+                    class="calc-bars__row"
+                    data-bar={provider.id}
+                    data-kersivo={provider.id === 'kersivo' ? 'true' : undefined}
+                    hidden={!bar}
+                    style={bar ? `order:${index};--share:${bar.share.toFixed(4)}` : undefined}
+                  >
+                    <span class="calc-bars__name">{provider.name}</span>
+                    <span class="calc-bars__track" aria-hidden="true">
+                      <span class="calc-bars__fill" />
+                    </span>
+                    <span class="calc-bars__value" data-bar-value>{bar ? formatMoneyGbp(bar.amountGbp) : ''}</span>
+                  </li>
+                );
+              })
+            }
+          </ol>
+
+          <p class="calc-verdict__quote" data-verdict="quote" hidden={verdict.quoteNeeded.length === 0}>
+            <span class="calc-verdict__quote-label">Needs your quote</span>
+            <span data-verdict="quote-names">{verdict.quoteNeeded.join(' · ')}</span>
+          </p>
+
+          <div class="calc-verdict__actions">
+            <a class="cost-calc-btn cost-calc-btn--primary" href={cta.href} data-track={cta.track} data-track-placement="cost_calculator_results">
+              {cta.label}
+            </a>
+            <div class="calc-share">
+              <button type="button" class="calc-share__button" data-calc-share>{SHARE_SCENARIO.label}</button>
+              <p class="calc-share__status" data-calc-share-status role="status" aria-live="polite"></p>
+            </div>
+          </div>
+          <p class="sr-only" data-verdict="status" role="status" aria-live="polite"></p>
         </div>
       </div>
-    </header>
+    </div>
 
-    <p class="calc-results__note" data-calc-three-year-note hidden={!view.showThreeYearNote}>{THREE_YEAR_NOTE}</p>
-    <p class="calc-results__status" data-slot="results-status" hidden={view.ok}>{RESULTS_INVALID}</p>
+    <aside class="calc-insight" aria-labelledby="calc-insight-title">
+      <p id="calc-insight-title" class="calc-insight__eyebrow">{INSIGHT_EYEBROW}</p>
+      <p class="calc-insight__text" data-slot="insight">{view.insight}</p>
+    </aside>
+
+    <details class="calc-results__detail">
+      <summary class="calc-results__detail-head">
+        <span class="calc-results__detail-copy">
+          <span class="calc-results__detail-title">Every platform, line by line</span>
+          <span class="calc-results__detail-text">The subscription, team fees, marketplace charges, VAT and deposit processing behind each total.</span>
+        </span>
+        <span class="calc-results__detail-toggle" aria-hidden="true"><span class="calc-advanced__chevron"></span></span>
+      </summary>
 
     <ol class="calc-results__cards">
       {
@@ -58,9 +142,9 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
           return (
             <li class="calc-card" data-provider={provider.id} data-state={result.state}>
               <article class="calc-card__inner" aria-labelledby={`calc-card-${provider.id}`}>
-                <h3 id={`calc-card-${provider.id}`} class="calc-card__name">
+                <h4 id={`calc-card-${provider.id}`} class="calc-card__name">
                   {provider.name}
-                </h3>
+                </h4>
                 <p class="calc-card__period" data-calc-period-label>
                   {view.periodLabel}
                 </p>
@@ -152,10 +236,14 @@ const viewFor = (id: string) => view.providers.find((provider) => provider.id ==
         {view.sharedAssumptions.map((message) => <li>{message}</li>)}
       </ul>
     </details>
+    </details>
 
-    <aside class="calc-insight" aria-labelledby="calc-insight-title">
-      <p id="calc-insight-title" class="calc-insight__eyebrow">{INSIGHT_EYEBROW}</p>
-      <p class="calc-insight__text" data-slot="insight">{view.insight}</p>
-    </aside>
+  </div>
+
+  <div class="calc-dock" data-calc-dock data-visible="false" aria-hidden="true">
+    <span class="calc-dock__label">KERSIVO</span>
+    <span class="calc-dock__amount" data-dock="kersivo">{verdict.kersivoLabel}</span>
+    <span class="calc-dock__vs" data-dock="top">{verdict.bars.find((bar) => !bar.isKersivo) ? `${verdict.bars.find((bar) => !bar.isKersivo)!.name} ${formatMoneyGbp(verdict.bars.find((bar) => !bar.isKersivo)!.amountGbp)}` : ''}</span>
+    <a class="calc-dock__link" href="#calc-results-title" tabindex="-1">See results</a>
   </div>
 </section>

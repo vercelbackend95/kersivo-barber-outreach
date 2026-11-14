@@ -209,8 +209,8 @@ describe('calculator panel inputs', () => {
 
 describe('calculator results structure', () => {
   it('offers all three periods, Monthly by default, with cash-cost labels', () => {
-    expect(RESULTS_HEADING).toBe('Your cost comparison');
-    expect(RESULTS_SUPPORTING).toBe('Based on the barbershop numbers above.');
+    expect(RESULTS_HEADING).toBe('What your shop would pay');
+    expect(RESULTS_SUPPORTING).toBe('Updates as you type. Estimates from official UK pricing, not quotes.');
     expect(PERIOD_OPTIONS.map((option) => [option.value, option.label, option.resultLabel])).toEqual([
       ['monthly', 'Monthly', 'Estimated monthly cash cost'],
       ['annual', '12 months', 'Estimated 12-month cash cost'],

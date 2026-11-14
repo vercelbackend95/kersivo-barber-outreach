@@ -105,7 +105,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-10-29');
     expect(byLoc['https://kersivo.co.uk/chair-rent-vs-commission-calculator']).toBe('2026-10-29');

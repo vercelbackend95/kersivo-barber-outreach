@@ -335,8 +335,8 @@ export const DEFAULT_SCENARIO: CostScenarioInput = {
 
 /* --------------------------------- Results --------------------------------- */
 
-export const RESULTS_HEADING = 'Your cost comparison';
-export const RESULTS_SUPPORTING = 'Based on the barbershop numbers above.';
+export const RESULTS_HEADING = 'What your shop would pay';
+export const RESULTS_SUPPORTING = 'Updates as you type. Estimates from official UK pricing, not quotes.';
 export const RESULTS_INVALID = 'Check the highlighted inputs to see your cost comparison.';
 
 export type PeriodOption = {
