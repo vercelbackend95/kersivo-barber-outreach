@@ -101,7 +101,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-10-28');
     expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-10-28');
+    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
     expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');

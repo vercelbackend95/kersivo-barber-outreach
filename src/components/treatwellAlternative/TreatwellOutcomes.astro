@@ -1,0 +1,69 @@
+---
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { TW_OUTCOMES_LEAD, TW_OUTCOMES_TITLE } from '@/lib/seo/treatwellAlternativeContent';
+---
+
+<section id="outcomes" class="tw-section tw-outcomes" aria-labelledby="treatwell-outcomes-title">
+  <div class="tw-wrap">
+    <header class="tw-head">
+      <p class="tw-eyebrow">For the owner</p>
+      <h2 id="treatwell-outcomes-title" class="tw-h2">{TW_OUTCOMES_TITLE}</h2>
+      <p class="tw-lead">{TW_OUTCOMES_LEAD}</p>
+    </header>
+
+    <div class="tw-bento">
+      <article class="tw-card tw-tile tw-tile--brand">
+        <div class="tw-tile__media">
+          <img src="/images/website-design/story.webp" alt="An empty barber’s chair in a shop with exposed brick walls" width="720" height="1080" loading="lazy" decoding="async" />
+        </div>
+        <div class="tw-tile__body">
+          <h3 class="tw-h3">Your name at the top of every booking</h3>
+          <p class="tw-body">With Full KERSIVO, clients book on your own website and your own domain. No neighbouring shops on the page, no “you might also like”.</p>
+        </div>
+      </article>
+
+      <article class="tw-card tw-tile tw-tile--price">
+        <p class="tw-tile__kicker">One bill</p>
+        <p class="tw-price" aria-hidden="true">£{SAAS_MONTHLY_GBP}<span>/month</span></p>
+        <h3 class="tw-h3">A bill you can say out loud</h3>
+        <p class="tw-body">£{SAAS_MONTHLY_GBP}/month per location, no per-barber subscription charge (fair use applies) and no setup fee. 0% KERSIVO commission. {STRIPE_FEES_NOTE}</p>
+      </article>
+
+      <article class="tw-card tw-tile tw-tile--clients">
+        <div class="tw-client" aria-hidden="true">
+          <span class="tw-client__avatar">JM</span>
+          <span class="tw-client__text"><strong>Returning client</strong><span>Last visit 14 months ago</span></span>
+          <span class="tw-client__tag">0% KERSIVO commission</span>
+        </div>
+        <h3 class="tw-h3">Regulars stay regulars, however long they’re away</h3>
+        <p class="tw-body">KERSIVO has no marketplace and no new-versus-repeat test. A client who comes back after two years costs you the same 0% KERSIVO commission as one who came last week.</p>
+      </article>
+
+      <article class="tw-card tw-tile tw-tile--deposit">
+        <div class="tw-receipt" aria-hidden="true">
+          <span class="tw-receipt__row"><span>Skin fade · Sat 11:00</span><strong>Booked</strong></span>
+          <span class="tw-receipt__row"><span>Deposit paid</span><strong>£{KERSIVO_BOOKING_DEPOSIT_GBP}</strong></span>
+        </div>
+        <h3 class="tw-h3">Money behind every held chair</h3>
+        <p class="tw-body">Full lets you choose Pay at shop, a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full online payment, with SMS reminders within a monthly allowance.</p>
+      </article>
+
+      <article class="tw-card tw-tile tw-tile--photo">
+        <div class="tw-tile__media">
+          <img src="/images/switch/barber-at-work-960.webp" alt="A barber finishing a client’s haircut at the chair" width="960" height="720" loading="lazy" decoding="async" />
+        </div>
+        <div class="tw-tile__body">
+          <h3 class="tw-h3">Live in a few days, with help moving over</h3>
+          <p class="tw-body">Typically ready in a few days once we receive all required information. Standard setup and migration help are included.</p>
+        </div>
+      </article>
+
+      <a class="tw-card tw-tile tw-tile--demo" href="/demo" data-track="view_live_demo_click" data-track-placement="treatwell_outcomes">
+        <span class="tw-eyebrow">Live demo</span>
+        <span class="tw-tile__demo-title">Book a cut at the demo barbershop, then open the owner dashboard behind it.</span>
+        <span class="tw-tile__demo-cta">Open the live demo <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+  </div>
+</section>

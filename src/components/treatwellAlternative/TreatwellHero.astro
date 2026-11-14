@@ -1,68 +1,125 @@
 ---
 import ComparisonHeroActions from '@/components/comparison/ComparisonHeroActions.astro';
-import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';
-import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import {
+  TW_HERO_EYEBROW,
+  TW_HERO_FACTS,
+  TW_HERO_LEAD,
+  TW_HERO_TITLE_LINES,
+  TW_HERO_VIEWS,
+  TW_NEW_CLIENT_PERCENT,
+} from '@/lib/seo/treatwellAlternativeContent';
+
+const slots = ['10:15', '11:00', '12:30', '14:45'];
 ---
 
-<section class="fresha-alt-hero" aria-labelledby="treatwell-alt-hero-title">
-  <div class="fresha-alt-hero__content">
-    <nav class="treatwell-alt-breadcrumb" aria-label="Breadcrumb">
-      <a href="/">Home</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">Treatwell alternative</span>
-    </nav>
-    <p class="fresha-alt-hero__eyebrow">
-      <span class="fresha-alt-hero__eyebrow-dot" aria-hidden="true"></span>
-      Treatwell alternative for UK barbershops
-    </p>
+<section class="tw-hero" aria-labelledby="treatwell-alt-hero-title">
+  <div class="tw-wrap tw-hero__grid">
+    <div class="tw-hero__copy">
+      <nav class="tw-breadcrumb tw-enter" style="--i: 0" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Treatwell alternative</span>
+      </nav>
 
-    <h1 id="treatwell-alt-hero-title" class="fresha-alt-hero__title">
-      <span class="fresha-alt-hero__title-line fresha-alt-hero__title-line--primary">A Treatwell alternative</span>
-      <span class="fresha-alt-hero__title-line">built around your</span>
-      <span class="fresha-alt-hero__title-line">barbershop.</span>
-    </h1>
+      <p class="tw-eyebrow tw-enter" style="--i: 1">{TW_HERO_EYEBROW}</p>
 
-    <p class="fresha-alt-hero__lead">
-      Treatwell combines salon management with marketplace discovery, including commission on qualifying first bookings from new marketplace clients. KERSIVO Starter is £0/month, with a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment via Stripe. Full KERSIVO is £{SAAS_MONTHLY_GBP}/month per location, with your branded website and your own domain.
-    </p>
+      <h1 id="treatwell-alt-hero-title" class="tw-hero__title">
+        {TW_HERO_TITLE_LINES.map((line, index) => (
+          <span class="tw-hero__line tw-enter" style={`--i: ${index + 2}`}>{line}{index === TW_HERO_TITLE_LINES.length - 1 && <span class="tw-hero__stop">.</span>}</span>
+        ))}
+      </h1>
 
-    <ComparisonHeroActions placement="treatwell" />
+      <p class="tw-hero__lead tw-enter" style="--i: 5">{TW_HERO_LEAD}</p>
 
-    <div class="fresha-alt-hero__meta" aria-label="KERSIVO commercial model">
-      <span><strong>Starter £0/month</strong></span>
-      <span aria-hidden="true">·</span>
-      <span><strong>Full £{SAAS_MONTHLY_GBP}/month per location</strong></span>
-      <span aria-hidden="true">·</span>
-      <span>0% KERSIVO commission on booking payments (Stripe fees apply)</span>
-      <span aria-hidden="true">·</span>
-      <span>Built for independent UK barbershops</span>
+      <div class="tw-enter" style="--i: 6">
+        <ComparisonHeroActions placement="treatwell" />
+      </div>
+
+      <ul class="tw-hero__facts tw-enter" style="--i: 7" aria-label="KERSIVO commercial model">
+        {TW_HERO_FACTS.map((fact) => <li>{fact}</li>)}
+      </ul>
+    </div>
+
+    <div class="tw-hero__stage tw-enter" style="--i: 4">
+      <figure class="tw-hero__photo">
+        <img
+          src="/images/website-design/hero.webp"
+          alt="A barber trimming a client’s hair with clippers"
+          width="720"
+          height="1080"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </figure>
+
+      <div class="tw-hero__device">
+        <div class="tw-switch" role="group" aria-label="Show the same shop">
+          {TW_HERO_VIEWS.map((view) => (
+            <button type="button" class="tw-switch__btn" data-tw-view={view.id} aria-pressed={view.id === 'listing' ? 'true' : 'false'}>
+              {view.label}
+            </button>
+          ))}
+        </div>
+
+        <div class="tw-phone" data-tw-phone data-view="listing">
+          <div class="tw-phone__notch" aria-hidden="true"></div>
+
+          <div class="tw-phone__layer tw-phone__layer--listing" data-tw-layer="listing">
+            <p class="tw-phone__bar" data-tw-item>
+              <span class="tw-phone__search" aria-hidden="true"></span>
+              Barbers near you
+            </p>
+            <div class="tw-listing tw-listing--other" data-tw-item aria-hidden="true">
+              <span class="tw-listing__thumb"></span>
+              <span class="tw-listing__lines"><i></i><i></i></span>
+              <span class="tw-listing__pill">0.2 mi</span>
+            </div>
+            <div class="tw-listing tw-listing--you" data-tw-item>
+              <span class="tw-listing__thumb tw-listing__thumb--you" aria-hidden="true"></span>
+              <span class="tw-listing__text">
+                <strong>Your shop</strong>
+                <span>Listed with the others</span>
+              </span>
+            </div>
+            <p class="tw-listing__fee" data-tw-item>
+              New marketplace client: <strong>{TW_NEW_CLIENT_PERCENT}% + VAT</strong>
+            </p>
+            <div class="tw-listing tw-listing--other" data-tw-item aria-hidden="true">
+              <span class="tw-listing__thumb"></span>
+              <span class="tw-listing__lines"><i></i><i></i></span>
+              <span class="tw-listing__pill">0.4 mi</span>
+            </div>
+            <div class="tw-listing tw-listing--other" data-tw-item aria-hidden="true">
+              <span class="tw-listing__thumb"></span>
+              <span class="tw-listing__lines"><i></i><i></i></span>
+              <span class="tw-listing__pill">0.6 mi</span>
+            </div>
+          </div>
+
+          <div class="tw-phone__layer tw-phone__layer--own" data-tw-layer="own">
+            <p class="tw-phone__url" data-tw-item><svg aria-hidden="true" viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M4 7V5a4 4 0 1 1 8 0v2h1v8H3V7h1Zm2 0h4V5a2 2 0 1 0-4 0v2Z"/></svg> yourshop.co.uk</p>
+            <div class="tw-own__brand" data-tw-item>
+              <span class="tw-own__logo" aria-hidden="true">YS</span>
+              <span>
+                <strong>Your Shop</strong>
+                <span>Book your next cut</span>
+              </span>
+            </div>
+            <div class="tw-own__row" data-tw-item>
+              <span class="tw-own__chip tw-own__chip--on">Skin fade</span>
+              <span class="tw-own__chip">Beard trim</span>
+            </div>
+            <div class="tw-own__slots" data-tw-item>
+              {slots.map((slot, index) => (
+                <span class={`tw-own__slot${index === 1 ? ' tw-own__slot--on' : ''}`}>{slot}</span>
+              ))}
+            </div>
+            <p class="tw-own__cta" data-tw-item>Confirm with £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</p>
+            <p class="tw-own__note" data-tw-item>0% KERSIVO commission · Stripe fees apply</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <HeroDashboardShowcase />
 </section>
-
-
-<style>
-  .treatwell-alt-breadcrumb {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-    margin-bottom: 1rem;
-    color: #9ca3af;
-    font-size: 0.75rem;
-    line-height: 1.5;
-  }
-
-  .treatwell-alt-breadcrumb a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .treatwell-alt-breadcrumb a:hover,
-  .treatwell-alt-breadcrumb a:focus-visible {
-    color: #f9fafb;
-    text-decoration: underline;
-  }
-</style>
