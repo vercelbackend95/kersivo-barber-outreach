@@ -1,0 +1,120 @@
+---
+import { BK_TEAM_MAX, BK_TEAM_MIN, BK_VAT_PERCENT, estimateBill, formatGbp } from '@/lib/landing/booksyMath';
+import {
+  BOOKSY_COSTS_INTRO,
+  BOOKSY_COST_ITEMS,
+  BOOKSY_WORKED_EXAMPLES,
+  BOOKSY_WORKED_EXAMPLES_NOTE,
+} from '@/lib/seo/booksyAlternativeContent';
+import { getBooksySource, requireVerifiedBooksyFact } from '@/lib/seo/booksyFacts';
+
+const initial = estimateBill(3);
+const userFee = formatGbp(requireVerifiedBooksyFact('additionalUser').amountGbp!);
+const baseFee = formatGbp(requireVerifiedBooksyFact('baseSubscription').amountGbp!);
+const pricingSource = getBooksySource('pricingUk');
+const boostSource = getBooksySource('boost');
+---
+
+<section id="booksy-pricing" class="bk-section bk-bill scroll-mt-24" aria-labelledby="booksy-alt-bill-title">
+  <div class="bk-wrap">
+    <header class="bk-head" data-bk-reveal>
+      <p class="bk-eyebrow">Your monthly bill</p>
+      <h2 id="booksy-alt-bill-title" class="bk-h2">Booksy pricing and fees for UK barbers</h2>
+      <p class="bk-lead">Move the slider to your team size. Booksy’s subscription climbs with every barber you add; Full KERSIVO doesn’t.</p>
+    </header>
+
+    <div class="bk-card bk-bill__panel" data-bk-bill data-bk-reveal data-kersivo-gbp={initial.kersivoFullGbp}>
+      <div class="bk-field">
+        <label class="bk-field__label" for="bk-team">
+          Team members taking bookings
+          <output class="bk-field__value" for="bk-team" data-bk-out="team">{initial.teamSize}</output>
+        </label>
+        <input
+          id="bk-team"
+          class="bk-range"
+          type="range"
+          min={BK_TEAM_MIN}
+          max={BK_TEAM_MAX}
+          step="1"
+          value={initial.teamSize}
+          aria-valuetext={`${initial.teamSize} team members`}
+          data-bk-team
+          style={`--bk-pos: ${(initial.teamSize - BK_TEAM_MIN) / (BK_TEAM_MAX - BK_TEAM_MIN)}`}
+        />
+        <div class="bk-range__ticks" aria-hidden="true"><span>{BK_TEAM_MIN}</span><span>{BK_TEAM_MAX}</span></div>
+      </div>
+
+      <div class="bk-receipts">
+        <article class="bk-receipt bk-receipt--booksy" aria-labelledby="bk-receipt-booksy">
+          <p id="bk-receipt-booksy" class="bk-receipt__name">Booksy subscription</p>
+          <ul class="bk-receipt__lines">
+            <li><span>Base subscription</span><span>{baseFee}</span></li>
+            <li><span><span data-bk-out="extra-count">{initial.additionalUsers}</span> × additional user ({userFee})</span><span data-bk-out="extra">{formatGbp(initial.booksyExVatGbp - requireVerifiedBooksyFact('baseSubscription').amountGbp!)}</span></li>
+            <li><span>VAT at {BK_VAT_PERCENT}%</span><span data-bk-out="vat">{formatGbp(initial.booksyVatGbp)}</span></li>
+          </ul>
+          <p class="bk-receipt__total"><span>Per month</span><strong data-bk-out="booksy" data-value={initial.booksyIncVatGbp}>{formatGbp(initial.booksyIncVatGbp)}</strong></p>
+          <div class="bk-receipt__bar" aria-hidden="true"><span style={`--bk-bar: ${initial.booksyIncVatGbp / 120}`} data-bk-bar="booksy"></span></div>
+        </article>
+
+        <article class="bk-receipt bk-receipt--kersivo" aria-labelledby="bk-receipt-kersivo">
+          <p id="bk-receipt-kersivo" class="bk-receipt__name">Full KERSIVO</p>
+          <ul class="bk-receipt__lines">
+            <li><span>Per location, every barber</span><span>{formatGbp(initial.kersivoFullGbp)}</span></li>
+            <li><span>Per-barber fees</span><span>£0</span></li>
+            <li><span>VAT (not VAT registered)</span><span>£0</span></li>
+          </ul>
+          <p class="bk-receipt__total"><span>Per month</span><strong>{formatGbp(initial.kersivoFullGbp)}</strong></p>
+          <div class="bk-receipt__bar" aria-hidden="true"><span style={`--bk-bar: ${initial.kersivoFullGbp / 120}`} data-bk-bar="kersivo"></span></div>
+        </article>
+      </div>
+
+      <div class="bk-bill__summary" aria-live="polite">
+        <p class="bk-bill__diff">
+          Over a year, Booksy’s subscription comes to <strong data-bk-out="year" data-value={initial.yearlyDifferenceGbp}>{formatGbp(initial.yearlyDifferenceGbp)}</strong> more than Full KERSIVO for this team.
+        </p>
+        <p class="bk-bill__starter" data-bk-starter hidden={!initial.starterEligible}>
+          Up to 4 barbers and only need bookings? <a href="/starter">KERSIVO Starter is £0/month</a>.
+        </p>
+      </div>
+      <p class="bk-small">Subscription only. Boost and card-processing fees are covered below; KERSIVO card payments carry Stripe processing fees.</p>
+    </div>
+
+    <div class="bk-bill__detail">
+      <div class="bk-bill__intro" data-bk-reveal>
+        <h3 class="bk-h3">Every Booksy fee, line by line</h3>
+        <p class="bk-body">{BOOKSY_COSTS_INTRO} Sources: <a href={pricingSource.url} target="_blank" rel="noopener noreferrer">{pricingSource.label}</a> and <a href={boostSource.url} target="_blank" rel="noopener noreferrer">{boostSource.label}</a>.</p>
+      </div>
+
+      <ol class="bk-fees" role="list">
+        {BOOKSY_COST_ITEMS.map((item, index) => (
+          <li class="bk-fee" data-bk-reveal style={`--d: ${index % 3}`}>
+            <p class="bk-fee__kicker">{item.kicker}</p>
+            <p class="bk-fee__figure">{item.figure}</p>
+            <p class="bk-fee__unit">{item.unit}</p>
+            <ul class="bk-dots">
+              {item.notes.map((note) => <li>{note}</li>)}
+            </ul>
+          </li>
+        ))}
+      </ol>
+
+      <div class="bk-table-wrap" data-bk-reveal>
+        <table class="bk-table">
+          <caption>Subscription cost by team size</caption>
+          <thead>
+            <tr><th scope="col">Team</th><th scope="col">Booksy plan</th><th scope="col">Booksy ex VAT</th><th scope="col">Booksy inc VAT</th><th scope="col">KERSIVO</th></tr>
+          </thead>
+          <tbody>
+            {BOOKSY_WORKED_EXAMPLES.map((row) => (
+              <tr><th scope="row">{row.label}</th><td>{row.plan}</td><td>{row.booksyExVat}</td><td>{row.booksyIncVat}</td><td class="bk-table__k">{row.kersivo}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="bk-small">{BOOKSY_WORKED_EXAMPLES_NOTE}</p>
+      <p class="bk-bill__calculator">
+        Want to run the numbers for your own shop? Use the <a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a> to compare Booksy, Fresha and KERSIVO using your own shop numbers.
+      </p>
+    </div>
+  </div>
+</section>

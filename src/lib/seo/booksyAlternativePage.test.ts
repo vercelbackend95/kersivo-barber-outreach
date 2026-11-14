@@ -14,6 +14,19 @@ import {
   buildBooksyAlternativeFaqJsonLd,
 } from './booksyAlternativeFaq';
 import {
+  BK_CARD_FEES,
+  BK_COMMISSION_LEAD,
+  BK_DOMAIN_LEAD,
+  BK_DOMAIN_POINTS,
+  BK_HERO_FACTS,
+  BK_HERO_LEAD,
+  BK_MIGRATION_MOVES,
+  BK_OUTCOMES,
+  BK_OUTCOMES_LEAD,
+  BK_RELATIONSHIP_LEAD,
+  BK_RELATIONSHIP_STEPS,
+  BK_SCOREBOARD,
+  BK_SWITCHING_LEAD,
   BOOKSY_BOOST_EXAMPLE,
   BOOKSY_BOOST_POINTS,
   BOOKSY_COSTS_INTRO,
@@ -27,11 +40,8 @@ import {
   BOOKSY_SWITCHING_LIMITS,
   BOOKSY_SWITCHING_REASSURANCE,
   BOOKSY_SWITCHING_STEPS,
-  BOOKSY_WHY_INTRO,
-  BOOKSY_WHY_THEMES,
   BOOKSY_WORKED_EXAMPLES,
   BOOKSY_WORKED_EXAMPLES_NOTE,
-  KERSIVO_MODEL_POINTS,
 } from './booksyAlternativeContent';
 import { buildBooksyAlternativeWebPageJsonLd, buildBooksyAlternativeBreadcrumbJsonLd } from './booksyAlternativeJsonLd';
 import {
@@ -80,13 +90,16 @@ const faqSource = readRepoFile('booksyAlternativeFaq.ts');
 
 const componentNames = [
   'BooksyHero',
-  'BooksyQuickAnswer',
-  'BooksyWhy',
-  'BooksyCosts',
+  'BooksyAnswer',
+  'BooksyOutcomes',
+  'BooksyBill',
+  'BooksyCommission',
+  'BooksyScoreboard',
   'BooksyCompare',
+  'BooksyOwnership',
+  'BooksySwitching',
   'BooksyProof',
   'BooksyFit',
-  'BooksySwitching',
   'BooksyPricing',
   'BooksySources',
 ] as const;
@@ -107,15 +120,25 @@ function countLinks(source: string, href: string): number {
 const visibleCopy = [
   BOOKSY_QUICK_ANSWER,
   ...BOOKSY_QUICK_ANSWER_FACTS.map((fact) => `${fact.label} ${fact.value}`),
-  BOOKSY_WHY_INTRO,
-  ...BOOKSY_WHY_THEMES.map((theme) => `${theme.title} ${theme.body}`),
+  BK_HERO_LEAD,
+  ...BK_HERO_FACTS,
+  BK_OUTCOMES_LEAD,
+  ...BK_OUTCOMES.map((outcome) => `${outcome.kicker} ${outcome.title} ${outcome.body}`),
   BOOKSY_COSTS_INTRO,
   ...BOOKSY_COST_ITEMS.flatMap((item) => [item.kicker, item.figure, item.unit, ...item.notes]),
   ...BOOKSY_WORKED_EXAMPLES.flatMap((row) => Object.values(row)),
   BOOKSY_WORKED_EXAMPLES_NOTE,
-  ...KERSIVO_MODEL_POINTS,
+  BK_COMMISSION_LEAD,
   ...BOOKSY_BOOST_POINTS,
   BOOKSY_BOOST_EXAMPLE,
+  ...BK_CARD_FEES.map((row) => `${row.label} ${row.booksy} ${row.kersivo}`),
+  ...BK_SCOREBOARD.map((row) => `${row.label} ${row.booksy} ${row.kersivo}`),
+  BK_DOMAIN_LEAD,
+  ...BK_DOMAIN_POINTS,
+  BK_RELATIONSHIP_LEAD,
+  ...BK_RELATIONSHIP_STEPS.map((step) => `${step.title} ${step.body}`),
+  BK_SWITCHING_LEAD,
+  ...BK_MIGRATION_MOVES.map((item) => `${item.title} ${item.body}`),
   ...BOOKSY_COMPARE_SECTIONS.flatMap((section) => [
     section.title,
     section.subtitle,
@@ -144,24 +167,24 @@ const visibleCopy = [
 const renderedCorpus = [visibleCopy, ...bodySources].join('\n');
 
 describe('booksy-alternative: metadata and URL', () => {
-  it('keeps the existing URL, title and H1 and uses the new SERP-length meta description', () => {
+  it('keeps the URL and uses a query-first title and a SERP-length description that sells the switch', () => {
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
-    expect(BOOKSY_ALTERNATIVE_TITLE).toBe('Booksy Alternative UK: No Per-Barber Fees | KERSIVO');
-    expect(BOOKSY_ALTERNATIVE_H1).toBe('A Booksy Alternative Built Around Your Barbershop');
-    expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(
-      'Looking for a Booksy alternative in the UK? Compare KERSIVO and Booksy pricing, Boost fees, branding, bookings and switching for independent barbershops.',
-    );
+    expect(BOOKSY_ALTERNATIVE_TITLE).toBe(`Booksy Alternative UK for Barbers: Own Site, £${SAAS_MONTHLY_GBP}/Month`);
+    expect(BOOKSY_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
+    expect(BOOKSY_ALTERNATIVE_H1).toBe('The Booksy alternative with your name on the door');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
-    expect(BOOKSY_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
+    for (const phrase of ['Booksy', 'domain', `£${SAAS_MONTHLY_GBP}/month per location`, 'no per-barber fees', 'moving clients', '0% KERSIVO commission', 'Stripe fees apply']) {
+      expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toContain(phrase);
+    }
   });
 
-  it('wires LandingLayout with title, description, canonical and both JSON-LD blocks, without noindex', () => {
+  it('wires LandingLayout with title, description, canonical and the JSON-LD blocks, without noindex', () => {
     expect(pageSource).toContain('title={BOOKSY_ALTERNATIVE_TITLE}');
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain(
-      'jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
+      'jsonLd={[buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
     );
     expect(pageSource).not.toMatch(/noindex|Astro\.redirect/);
     expect(resolveCanonicalUrl(BOOKSY_ALTERNATIVE_PAGE_PATH)).toBe(
@@ -175,23 +198,24 @@ describe('booksy-alternative: metadata and URL', () => {
     const h1Count = bodySources.reduce((total, source) => total + (source.match(/<h1\b/g)?.length ?? 0), 0);
     expect(h1Count).toBe(1);
     expect(components.BooksyHero).toMatch(/<h1\b/);
-    expect(components.BooksyHero).toContain('{firstLine}');
-    expect(components.BooksyHero).toContain('{secondLine}');
-    expect(components.BooksyHero).toContain('{thirdLine}');
+    for (const line of ['{firstLine}', '{secondLine}', '{thirdLine}']) expect(components.BooksyHero).toContain(line);
   });
 });
 
-describe('booksy-alternative: Fresha template structure', () => {
-  it('renders sections in the Fresha order', () => {
+describe('booksy-alternative: owner-first structure', () => {
+  it('runs the sections in the sales order', () => {
     const order = [
       '<BooksyHero',
-      '<BooksyQuickAnswer',
-      '<BooksyWhy',
-      '<BooksyCosts',
+      '<BooksyAnswer',
+      '<BooksyOutcomes',
+      '<BooksyBill',
+      '<BooksyCommission',
+      '<BooksyScoreboard',
       '<BooksyCompare',
+      '<BooksyOwnership',
+      '<BooksySwitching',
       '<BooksyProof',
       '<BooksyFit',
-      '<BooksySwitching',
       '<BooksyPricing',
       '<Faq4',
       '<ComparisonFinalCta',
@@ -202,47 +226,43 @@ describe('booksy-alternative: Fresha template structure', () => {
     const positions = order.map((tag) => pageSource.indexOf(tag));
     for (const position of positions) expect(position).toBeGreaterThan(-1);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
-
-  });
-
-  it('reuses the Fresha stylesheet and shared editorial components instead of a second design system', () => {
-    expect(pageSource).toContain("import '@/styles/components/fresha-alternative.css';");
-    expect(pageSource).not.toContain('booksy-alternative.css');
-    expect(existsSync(join(here, '../../styles/components/booksy-alternative.css'))).toBe(false);
-    expect(pageSource).toContain('<main class="fresha-alt landing-overflow-guard">');
-    expect(components.BooksyHero).toContain('<HeroDashboardShowcase />');
-    expect(components.BooksyQuickAnswer).toContain('<EditorialIntro');
-    expect(components.BooksyWhy).toContain('<InsightCards');
-    expect(components.BooksyFit).toContain('<ModelComparison');
-    expect(components.BooksySwitching).toContain('<ProcessTimeline');
-    expect(components.BooksyProof).toContain('<LandingDemoPreview');
-    expect(components.BooksyPricing).toContain('<RateCard1Offer freePreview={freePreview} />');
-    for (const name of ['BooksyApproaches', 'BooksyJourney', 'BooksyDecision']) {
+    for (const name of ['BooksyQuickAnswer', 'BooksyWhy', 'BooksyCosts']) {
       expect(existsSync(join(here, componentDir, `${name}.astro`))).toBe(false);
     }
   });
 
-  it('hero uses the approved eyebrow, CTAs and price meta', () => {
-    const hero = components.BooksyHero;
-    expect(hero).toContain('Booksy alternative for UK barbershops');
-    expect(hero).toContain('<ComparisonHeroActions placement="booksy" />');
-    expect(hero).toContain('£{SAAS_MONTHLY_GBP}/month');
-    expect(hero).toContain('0% KERSIVO commission');
-    expect(hero).not.toMatch(/iframe/i);
+  it('uses its own scoped stylesheet on top of the shared comparison styles, and boots one page script', () => {
+    expect(pageSource).toContain("import '@/styles/components/fresha-alternative.css';");
+    expect(pageSource).toContain("import '@/styles/components/booksy-alternative.css';");
+    expect(pageSource).toContain('<main class="fresha-alt bk landing-overflow-guard">');
+    expect(pageSource).toContain("import { initBooksyPage } from '@/lib/landing/booksyPage';");
+    const css = readRepoFile('../../styles/components/booksy-alternative.css');
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(css).toContain('.bk-motion [data-bk-reveal]:not(.is-in)');
   });
 
-  it('proof, pricing and final CTA match the Fresha sections', () => {
+  it('hero carries the breadcrumb, approved CTAs, price and commission with Stripe nearby', () => {
+    const hero = components.BooksyHero;
+    expect(hero).toContain('<ComparisonHeroActions placement="booksy" />');
+    expect(hero).toContain('£{SAAS_MONTHLY_GBP}/month per location');
+    expect(hero).toContain('0% KERSIVO commission · Stripe fees apply');
+    expect(hero).toContain('data-bk-browser');
+    expect(hero).toContain('aria-pressed');
+    expect(hero).not.toMatch(/iframe/i);
+    expect(BK_HERO_FACTS.join(' ')).toContain('0% KERSIVO commission · Stripe fees apply');
+    expect(BK_HERO_FACTS.join(' ')).toContain('a few days');
+  });
+
+  it('keeps proof, pricing and final CTA on the shared components', () => {
     for (const label of ['ADMIN SYSTEM', 'CLIENT BOOKING EXPERIENCE', 'RETAIL PICKUP SHOP']) {
       expect(components.BooksyProof).toContain(label);
     }
     expect(components.BooksyProof).not.toMatch(/prisma|@\/lib\/db|resolveLandingBookingData/);
     expect(components.BooksyPricing).toContain('id="pricing"');
-    expect(components.BooksyPricing).toContain('Start free. Upgrade per location when you need more.');
-    expect(components.BooksyPricing).not.toContain('One plan. One barbershop location.');
+    expect(components.BooksyPricing).toContain('<RateCard1Offer freePreview={freePreview} />');
     expect(components.BooksyPricing).toContain('KERSIVO Starter');
     expect(components.BooksyPricing).toContain('href="/starter"');
-    expect(components.BooksyPricing).toContain('{layout.conditionsLine1}');
-    expect(components.BooksyPricing).not.toContain('barber-software-cost-calculator');
+    expect(components.BooksyFit).toContain('<ModelComparison');
     expect(pageSource).toContain('<ComparisonFinalCta placement="booksy" competitor="Booksy" />');
     expect(pageSource).toContain('title="Still comparing KERSIVO and Booksy?"');
     expect(pageSource).not.toMatch(/id=["']contact["']/);
@@ -252,39 +272,41 @@ describe('booksy-alternative: Fresha template structure', () => {
 describe('booksy-alternative: Quick Answer', () => {
   it('states the short version within 70–110 words with both commercial models', () => {
     expect(BOOKSY_QUICK_ANSWER_KICKER).toBe('The short version');
-    expect(BOOKSY_QUICK_ANSWER_TITLE).toBe('A Booksy alternative built around your own brand.');
+    expect(BOOKSY_QUICK_ANSWER_TITLE).toContain('leave Booksy');
     const words = BOOKSY_QUICK_ANSWER.split(/\s+/).filter(Boolean).length;
     expect(words).toBeGreaterThanOrEqual(70);
     expect(words).toBeLessThanOrEqual(110);
-    expect(BOOKSY_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month for up to 4 barbers');
     expect(BOOKSY_QUICK_ANSWER).toContain(`Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location`);
+    expect(BOOKSY_QUICK_ANSWER).toContain('KERSIVO Starter is £0/month for up to 4 barbers');
+    expect(BOOKSY_QUICK_ANSWER.indexOf('Full KERSIVO')).toBeLessThan(BOOKSY_QUICK_ANSWER.indexOf('KERSIVO Starter'));
     expect(BOOKSY_QUICK_ANSWER).toContain('KERSIVO commission is 0%');
     expect(BOOKSY_QUICK_ANSWER).toContain('Stripe processing fees still apply');
     expect(BOOKSY_QUICK_ANSWER).toContain(`£${BOOKSY_BASE_PRICE_GBP} a month plus VAT`);
     expect(BOOKSY_QUICK_ANSWER).toContain(`£${BOOKSY_ADDITIONAL_USER_GBP} a month plus VAT for each additional user`);
     expect(BOOKSY_QUICK_ANSWER).toContain('Standard Marketplace bookings are free when Boost is off');
-    expect(BOOKSY_QUICK_ANSWER).toContain('optional Boost');
     expect(BOOKSY_QUICK_ANSWER_FACTS).toHaveLength(4);
-    expect(components.BooksyQuickAnswer).toContain('id="quick-answer"');
+    expect(components.BooksyAnswer).toContain('id="quick-answer"');
   });
 });
 
-describe('booksy-alternative: costs', () => {
-  it('renders the costs section with the approved H2 and a checked-date source link', () => {
-    const costs = components.BooksyCosts;
-    expect(costs).toContain('id="booksy-pricing"');
-    expect(costs).toContain('Booksy pricing and fees for UK barbers');
-    expect(costs).toContain('Subscription cost by team size');
-    expect(costs).toContain("getBooksySource('pricingUk')");
-    expect(costs).toContain("getBooksySource('boost')");
-    expect(costs).toContain('rel="noopener noreferrer"');
+describe('booksy-alternative: costs and commission', () => {
+  it('renders the bill with the approved H2, an interactive team-size slider and checked-date sources', () => {
+    const bill = components.BooksyBill;
+    expect(bill).toContain('id="booksy-pricing"');
+    expect(bill).toContain('Booksy pricing and fees for UK barbers');
+    expect(bill).toContain('Subscription cost by team size');
+    expect(bill).toContain('type="range"');
+    expect(bill).toContain('data-bk-team');
+    expect(bill).toContain("getBooksySource('pricingUk')");
+    expect(bill).toContain("getBooksySource('boost')");
+    expect(bill).toContain('rel="noopener noreferrer"');
     expect(BOOKSY_COSTS_INTRO).toContain(BOOKSY_FACTS_CHECKED_DATE);
   });
 
   it('computes the 1 / 3 / 5 worked examples from the verified facts', () => {
     expect(BOOKSY_WORKED_EXAMPLES.map((row) => [row.label, row.booksyExVat, row.booksyIncVat, row.kersivo])).toEqual([
-      ['Solo barber', '£40', '£48', '£0 Starter or £39 Full'],
-      ['3 users', '£50', '£60', '£0 Starter or £39 Full'],
+      ['Solo barber', '£40', '£48', '£39 Full or £0 Starter'],
+      ['3 users', '£50', '£60', '£39 Full or £0 Starter'],
       ['5 users', '£60', '£72', '£39 Full'],
     ]);
     for (const users of [1, 3, 5]) {
@@ -299,27 +321,46 @@ describe('booksy-alternative: costs', () => {
   });
 
   it('places exactly one plain calculator link directly after the worked-examples note', () => {
-    const costs = components.BooksyCosts;
-    const paragraph = costs.match(/<p class="fresha-alt-costs__calculator">([\s\S]*?)<\/p>/)?.[0] ?? '';
+    const bill = components.BooksyBill;
+    const paragraph = bill.match(/<p class="bk-bill__calculator">([\s\S]*?)<\/p>/)?.[0] ?? '';
     expect(paragraph.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()).toBe(
       'Want to run the numbers for your own shop? Use the Barber Software Cost Calculator to compare Booksy, Fresha and KERSIVO using your own shop numbers.',
     );
     expect(paragraph).toContain('<a href="/barber-software-cost-calculator">Barber Software Cost Calculator</a>');
     expect(paragraph).not.toMatch(/target=|nofollow|btn/);
-    const noteIndex = costs.indexOf('{BOOKSY_WORKED_EXAMPLES_NOTE}');
-    const calculatorIndex = costs.indexOf('<p class="fresha-alt-costs__calculator">');
-    expect(noteIndex).toBeGreaterThan(-1);
-    expect(calculatorIndex).toBeGreaterThan(noteIndex);
-    expect(costs.slice(noteIndex, calculatorIndex)).not.toMatch(/<(p|div|ul|table)\b/);
+    expect(bill.indexOf('{BOOKSY_WORKED_EXAMPLES_NOTE}')).toBeLessThan(bill.indexOf('<p class="bk-bill__calculator">'));
   });
 
-  it('explains Boost with a computed example and the commission-free channels', () => {
+  it('explains Boost with a computed example, the commission-free channels and an estimator', () => {
     expect(BOOKSY_BOOST_POINTS.join(' ')).toContain('free to turn on');
     expect(BOOKSY_BOOST_POINTS.join(' ')).toContain('Google Search');
     expect(estimateBooksyBoostFee(25)).toBe(7.5);
     expect(estimateBooksyBoostFee(15)).toBe(BOOKSY_BOOST_MINIMUM_GBP);
     expect(BOOKSY_BOOST_EXAMPLE).toContain('£7.50 plus VAT');
     expect(BOOKSY_BOOST_EXAMPLE).toContain(`£${BOOKSY_BOOST_MINIMUM_GBP} minimum applies`);
+    expect(components.BooksyCommission).toContain('id="booksy-commission"');
+    expect(components.BooksyCommission).toContain('data-bk-boost');
+    expect(components.BooksyCommission).toContain('Boost is optional');
+    expect(components.BooksyCommission).toContain('Stripe fees apply');
+  });
+});
+
+describe('booksy-alternative: domain, direct relationship and migration', () => {
+  it('scopes the own domain to Full KERSIVO and keeps domain ownership with the shop', () => {
+    expect(components.BooksyOwnership).toContain('id="own-domain"');
+    expect(components.BooksyOwnership).toContain('id="direct-clients"');
+    const domain = BK_DOMAIN_POINTS.join(' ');
+    expect(domain).toContain('Full KERSIVO includes one standard domain per location');
+    expect(domain).toContain('You keep ownership');
+    expect(domain).toContain('transferred to you');
+    expect(BK_RELATIONSHIP_STEPS).toHaveLength(4);
+  });
+
+  it('lists what moves across from Booksy honestly, including what does not', () => {
+    expect(BK_MIGRATION_MOVES.map((item) => item.status)).toContain('not');
+    expect(BK_MIGRATION_MOVES.find((item) => item.status === 'not')?.title).toBe('Saved payment cards');
+    expect(BK_SWITCHING_LEAD).toContain('a few days');
+    expect(BK_SWITCHING_LEAD).not.toMatch(/\d+\s?(days|weeks)/);
   });
 });
 
@@ -454,8 +495,8 @@ describe('booksy-alternative: comparison, fit, switching', () => {
 });
 
 describe('booksy-alternative: FAQ and schema', () => {
-  it('has 11 FAQs covering the required questions with no "best" claims', () => {
-    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS).toHaveLength(11);
+  it('has 13 FAQs covering the required questions with no "best" claims', () => {
+    expect(BOOKSY_ALTERNATIVE_FAQ_ITEMS).toHaveLength(13);
     const questions = BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => item.question.toLowerCase()).join('\n');
     for (const topic of [
       'good booksy alternative',
@@ -468,6 +509,8 @@ describe('booksy-alternative: FAQ and schema', () => {
       'keep booksy running',
       'app',
       'marketplace',
+      'own domain',
+      'how long',
     ]) {
       expect(questions).toContain(topic);
     }
@@ -530,8 +573,8 @@ describe('booksy-alternative: freshness, sources and sitemap', () => {
   it('uses the real verification and update dates, never build time', () => {
     expect(BOOKSY_FACTS_CHECKED_DATE).toBe('2 October 2026');
     expect(BOOKSY_FACTS_CHECKED_ISO).toBe('2026-10-02');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-10-28');
-    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('28 October 2026');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-11-14');
+    expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('14 November 2026');
     for (const source of [faqSource, factsSource, ...bodySources]) {
       expect(source).not.toMatch(/new Date\(\)\.toISOString|Date\.now\(\)/);
     }
@@ -571,7 +614,7 @@ describe('booksy-alternative: internal links and claim safety', () => {
     expect(calculator).toBe(1);
     expect(countLinks(components.BooksyFit, '/fresha-alternative')).toBe(1);
     expect(components.BooksyFit).toContain('Also comparing Fresha?');
-    expect(countLinks(components.BooksyCosts, '/barber-software-cost-calculator')).toBe(1);
+    expect(countLinks(components.BooksyBill, '/barber-software-cost-calculator')).toBe(1);
     expect(bodySources.reduce((total, source) => total + countLinks(source, '/booksy-alternative'), 0)).toBe(0);
   });
 

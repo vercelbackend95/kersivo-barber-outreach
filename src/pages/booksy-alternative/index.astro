@@ -1,16 +1,20 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
 import BooksyHero from '@/components/booksyAlternative/BooksyHero.astro';
-import BooksyQuickAnswer from '@/components/booksyAlternative/BooksyQuickAnswer.astro';
-import BooksyWhy from '@/components/booksyAlternative/BooksyWhy.astro';
-import BooksyCosts from '@/components/booksyAlternative/BooksyCosts.astro';
+import BooksyAnswer from '@/components/booksyAlternative/BooksyAnswer.astro';
+import BooksyOutcomes from '@/components/booksyAlternative/BooksyOutcomes.astro';
+import BooksyBill from '@/components/booksyAlternative/BooksyBill.astro';
+import BooksyCommission from '@/components/booksyAlternative/BooksyCommission.astro';
+import BooksyScoreboard from '@/components/booksyAlternative/BooksyScoreboard.astro';
 import BooksyCompare from '@/components/booksyAlternative/BooksyCompare.astro';
+import BooksyOwnership from '@/components/booksyAlternative/BooksyOwnership.astro';
+import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
 import BooksyProof from '@/components/booksyAlternative/BooksyProof.astro';
 import BooksyFit from '@/components/booksyAlternative/BooksyFit.astro';
-import BooksySwitching from '@/components/booksyAlternative/BooksySwitching.astro';
 import BooksyPricing from '@/components/booksyAlternative/BooksyPricing.astro';
 import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import BooksySources from '@/components/booksyAlternative/BooksySources.astro';
@@ -26,11 +30,13 @@ import {
   buildBooksyAlternativeBreadcrumbJsonLd,
   buildBooksyAlternativeWebPageJsonLd,
 } from '@/lib/seo/booksyAlternativeJsonLd';
+import { BK_FAQ_HEADING, BK_FAQ_SUBHEADING } from '@/lib/seo/booksyAlternativeContent';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fresha-alternative.css';
+import '@/styles/components/booksy-alternative.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -39,23 +45,26 @@ const currentYear = new Date().getFullYear();
   title={BOOKSY_ALTERNATIVE_TITLE}
   description={BOOKSY_ALTERNATIVE_DESCRIPTION}
   canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
+  jsonLd={[buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
 >
-  <main class="fresha-alt landing-overflow-guard">
+  <main class="fresha-alt bk landing-overflow-guard">
     <BooksyHero />
-    <BooksyQuickAnswer />
-    <BooksyWhy />
-    <BooksyCosts />
+    <BooksyAnswer />
+    <BooksyOutcomes />
+    <BooksyBill />
+    <BooksyCommission />
+    <BooksyScoreboard />
     <BooksyCompare />
+    <BooksyOwnership />
+    <BooksySwitching />
     <BooksyProof />
     <BooksyFit />
-    <BooksySwitching />
     <BooksyPricing />
 
     <Faq4
       className="faq4--landing"
-      heading="Questions about comparing Booksy and KERSIVO?"
-      subHeading="Clear answers on Booksy pricing, Boost, commission, switching and client booking."
+      heading={BK_FAQ_HEADING}
+      subHeading={BK_FAQ_SUBHEADING}
       supportHeading="Still comparing options?"
       supportText="Tell us what you use today and what you want your booking journey to look like."
       supportLinkLabel="Ask KERSIVO a question"
@@ -87,6 +96,21 @@ const currentYear = new Date().getFullYear();
     />
   </main>
 </LandingLayout>
+
+<script>
+  import { initBooksyPage } from '@/lib/landing/booksyPage';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main.bk');
+    if (!root || root.dataset.bkBound === 'true') return;
+    root.dataset.bkBound = 'true';
+    const cleanup = initBooksyPage(document);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
 
 <script>
   import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';

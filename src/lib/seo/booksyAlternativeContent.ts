@@ -1,4 +1,4 @@
-import type { InsightCardItem, ModelComparisonItem } from '@/lib/editorial/insightIcons';
+import type { ModelComparisonItem } from '@/lib/editorial/insightIcons';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   BOOKSY_FACTS_CHECKED_DATE,
@@ -12,8 +12,9 @@ import {
 import { formatGbp, formatPercent } from '@/lib/seo/freshaFacts';
 
 /**
- * Visible copy for the /booksy-alternative content sections.
- * Every Booksy figure is interpolated from verified facts in booksyFacts.ts.
+ * Visible copy for /booksy-alternative. Written to the shop owner ("you").
+ * Every Booksy figure is interpolated from verified facts in booksyFacts.ts;
+ * every KERSIVO claim follows src/lib/pricing/claimsPolicy.ts.
  */
 
 const base = requireVerifiedBooksyFact('baseSubscription');
@@ -24,60 +25,104 @@ const tapToPay = requireVerifiedBooksyFact('tapToPay');
 
 const KERSIVO_PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const STARTER_PRICE = formatGbp(0);
-const STARTER_MAX_BARBERS = 4;
+export const BK_STARTER_MAX_BARBERS = 4;
 const STARTER_DEPOSIT_PRICE = formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP);
 const BASE_PRICE = formatGbp(base.amountGbp!);
 const USER_PRICE = formatGbp(additionalUser.amountGbp!);
 const BOOST_PERCENT = formatPercent(boostFee.percent!);
 const BOOST_MINIMUM = formatGbp(boostFee.minimumGbp!);
 
+/* ---------- Hero ---------- */
+
+export const BK_HERO_EYEBROW = 'Booksy alternative for UK barbershops';
+
+export const BK_HERO_LEAD = `With Full KERSIVO, clients book you on your own website and domain, every client lands in your own list, and one flat ${KERSIVO_PRICE} a month per location covers the whole team. We help move your Booksy clients across, and Booksy stays live until you approve the switch.`;
+
+export const BK_HERO_FACTS: readonly string[] = [
+  `Full KERSIVO ${KERSIVO_PRICE}/month per location`,
+  'No per-barber fees',
+  '0% KERSIVO commission · Stripe fees apply',
+  'Typically ready in a few days',
+];
+
+export const BK_HERO_VIEWS = [
+  { id: 'booksy', label: 'On Booksy' },
+  { id: 'own', label: 'On your site' },
+] as const;
+
+/* ---------- Short answer ---------- */
+
 export const BOOKSY_QUICK_ANSWER_KICKER = 'The short version';
 
-export const BOOKSY_QUICK_ANSWER_TITLE = 'A Booksy alternative built around your own brand.';
+export const BOOKSY_QUICK_ANSWER_TITLE = 'Yes, you can leave Booksy and keep your clients booking.';
 
-export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want a more direct booking relationship. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} barbers, with a hosted page where clients pay a ${STARTER_DEPOSIT_PRICE} deposit or pay in full. Full KERSIVO is ${KERSIVO_PRICE}/month per location, adding your website, domain and payment control. KERSIVO commission is 0%; Stripe processing fees still apply.`;
+export const BOOKSY_QUICK_ANSWER_LEAD = `KERSIVO is a Booksy alternative for independent UK barbershops that want clients to book them directly. Full KERSIVO is ${KERSIVO_PRICE}/month per location and gives you a branded website on your own domain, payment control and migration help, with no per-barber fees. KERSIVO Starter is ${STARTER_PRICE}/month for up to ${BK_STARTER_MAX_BARBERS} barbers, with a hosted booking page. KERSIVO commission is 0%; Stripe processing fees still apply.`;
 
-export const BOOKSY_QUICK_ANSWER_DETAIL = `Booksy combines booking software with its Marketplace and customer app. It lists ${BASE_PRICE} a month plus VAT, and ${USER_PRICE} a month plus VAT for each additional user. Standard Marketplace bookings are free when Boost is off; optional Boost adds a one-time fee for qualifying new clients it brings in.`;
+export const BOOKSY_QUICK_ANSWER_DETAIL = `Booksy lists ${BASE_PRICE} a month plus VAT, and ${USER_PRICE} a month plus VAT for each additional user. Standard Marketplace bookings are free when Boost is off; optional Boost adds a one-time fee for qualifying new clients it brings in.`;
 
 export const BOOKSY_QUICK_ANSWER = `${BOOKSY_QUICK_ANSWER_LEAD} ${BOOKSY_QUICK_ANSWER_DETAIL}`;
 
 export const BOOKSY_QUICK_ANSWER_FACTS: readonly { label: string; value: string }[] = [
-  { label: 'KERSIVO Starter', value: `${STARTER_PRICE}/month, up to ${STARTER_MAX_BARBERS} barbers` },
   { label: 'Full KERSIVO', value: `${KERSIVO_PRICE}/month per location` },
-  { label: 'KERSIVO commission', value: '0% on booking payments' },
+  { label: 'KERSIVO Starter', value: `${STARTER_PRICE}/month, up to ${BK_STARTER_MAX_BARBERS} barbers` },
+  { label: 'KERSIVO commission', value: '0% · Stripe fees apply' },
   { label: 'Booksy', value: `${BASE_PRICE}/month + ${USER_PRICE} per extra user, plus VAT` },
 ];
 
-export type BooksyContentTheme = {
+/* ---------- Outcomes ---------- */
+
+export type BkOutcome = {
+  id: 'door' | 'bill' | 'commission' | 'clients' | 'noshow' | 'reminders';
+  kicker: string;
   title: string;
   body: string;
 };
 
-export const BOOKSY_WHY_INTRO =
-  'Booksy is a widely used booking app with its own Marketplace. When independent barbers compare it with an own-brand system, the same four structural questions tend to come up.';
+export const BK_OUTCOMES_TITLE = 'What changes the day you switch';
 
-export const BOOKSY_WHY_THEMES: readonly InsightCardItem[] = [
+export const BK_OUTCOMES_LEAD =
+  'Booksy is a capable booking app with a big marketplace. KERSIVO is built for a different job: making your own shop the place clients book, pay and come back to.';
+
+export const BK_OUTCOMES: readonly BkOutcome[] = [
   {
-    icon: 'seats',
-    title: 'Pricing as the team grows',
-    body: `Booksy lists ${BASE_PRICE} a month plus VAT, then ${USER_PRICE} a month plus VAT for each additional user, so the subscription rises as more barbers join. KERSIVO Starter is ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers; Full KERSIVO is ${KERSIVO_PRICE} a month per location, with unlimited barbers subject to fair use.`,
+    id: 'door',
+    kicker: 'Your name on the door',
+    title: 'Clients book on yourshop.co.uk',
+    body: 'With Full KERSIVO your booking journey lives on your own branded website and domain: your logo, your barbers, your prices. No app to download.',
   },
   {
-    icon: 'storefront',
-    title: 'Where the booking journey lives',
-    body: 'Booksy clients book through your Booksy Profile, direct links, social buttons, Reserve with Google or a website widget, alongside the Booksy for Customers app. Some owners prefer the whole journey to sit on their own website and domain. That is the model KERSIVO is built around.',
+    id: 'bill',
+    kicker: 'One flat bill',
+    title: 'Hire your next barber. Same price.',
+    body: `Full KERSIVO is ${KERSIVO_PRICE} a month per location with no per-barber fees. On Booksy each additional user adds ${USER_PRICE} a month plus VAT.`,
   },
   {
-    icon: 'discovery',
-    title: 'Marketplace discovery and optional Boost',
-    body: `The Booksy Marketplace is a genuine discovery channel, and standard Marketplace bookings are free when Boost is off. With Boost on, Booksy charges a one-time ${BOOST_PERCENT} fee (minimum ${BOOST_MINIMUM}, plus VAT) on a new client’s first visit when Booksy found that client. KERSIVO has no consumer marketplace, so the useful question is how much of your new business comes from one.`,
+    id: 'commission',
+    kicker: 'Keep the takings',
+    title: '0% KERSIVO commission',
+    body: 'On booking payments on both plans, and on retail sales with Full. Stripe processing fees apply.',
   },
   {
-    icon: 'stack',
-    title: 'Own-brand website or platform ecosystem',
-    body: 'Booksy gives every business a Booksy Profile inside its ecosystem, and a widget can add booking to a website you run separately. Full KERSIVO includes a branded barbershop website and your own domain, so the website and booking journey arrive together. KERSIVO Starter uses a hosted KERSIVO booking page instead.',
+    id: 'clients',
+    kicker: 'Your client list',
+    title: 'Every regular in your own dashboard',
+    body: 'Contact details, visits and upcoming bookings on both plans; full history and internal notes with Advanced Clients on Full.',
+  },
+  {
+    id: 'noshow',
+    kicker: 'No-shows still pay',
+    title: `A ${STARTER_DEPOSIT_PRICE} deposit, or paid in full`,
+    body: 'Secure bookings at the moment they are made. Full KERSIVO also lets you choose Pay at shop when you trust the client.',
+  },
+  {
+    id: 'reminders',
+    kicker: 'Fewer empty chairs',
+    title: 'Reminders go out automatically',
+    body: 'Email confirmations and reminders on both plans, plus SMS reminders within a monthly allowance on Full.',
   },
 ];
+
+/* ---------- Monthly bill (subscription) ---------- */
 
 export type BooksyCostItem = {
   kicker: string;
@@ -87,7 +132,7 @@ export type BooksyCostItem = {
   sourceIds: readonly BooksySourceId[];
 };
 
-export const BOOKSY_COSTS_INTRO = `Booksy’s costs come from a few places, not one headline number. The subscription is the fixed monthly cost; Boost and payment-processing fees depend on how each shop uses Booksy. Checked against Booksy’s official UK pricing, Boost and payments pages on ${BOOKSY_FACTS_CHECKED_DATE}. Booksy lists its UK prices plus VAT.`;
+export const BOOKSY_COSTS_INTRO = `Booksy’s cost comes from a few places, not one headline number. The subscription grows with your team; Boost and card fees depend on how you use Booksy. Checked against Booksy’s official UK pricing, Boost and payments pages on ${BOOKSY_FACTS_CHECKED_DATE}. Booksy lists its UK prices plus VAT.`;
 
 const FIVE_PERSON_TEAM = estimateBooksyMonthlySubscription(5);
 
@@ -165,22 +210,17 @@ export const BOOKSY_WORKED_EXAMPLES: readonly BooksyWorkedExample[] =
           : `Base + ${estimate.additionalUsers} × ${USER_PRICE}`,
       booksyExVat: formatGbp(estimate.exVatGbp),
       booksyIncVat: formatGbp(estimate.incVatGbp),
-      kersivo: size <= STARTER_MAX_BARBERS ? `${STARTER_PRICE} Starter or ${KERSIVO_PRICE} Full` : `${KERSIVO_PRICE} Full`,
+      kersivo: size <= BK_STARTER_MAX_BARBERS ? `${KERSIVO_PRICE} Full or ${STARTER_PRICE} Starter` : `${KERSIVO_PRICE} Full`,
     };
   });
 
 export const BOOKSY_WORKED_EXAMPLES_NOTE = `Subscription cost only — not a total cost of ownership. Potential additional costs depend on each shop: for Booksy, optional Boost fees and payment processing; for KERSIVO, Stripe payment-processing fees. Booksy figures including VAT use the UK standard rate of ${BOOKSY_UK_VAT_PERCENT}%. KERSIVO is not currently VAT registered, so no VAT is added.`;
 
-export const KERSIVO_MODEL_POINTS: readonly string[] = [
-  `KERSIVO Starter: ${STARTER_PRICE}/month for up to ${STARTER_MAX_BARBERS} active bookable barbers, with a hosted booking page`,
-  `Starter public bookings: ${STARTER_DEPOSIT_PRICE} deposit or Pay in full through a connected Stripe account`,
-  `Full KERSIVO: ${KERSIVO_PRICE}/month per physical location`,
-  'Full: editable payment controls including Pay at shop, plus unlimited barbers within one location subject to reasonable fair use',
-  'No setup fee on either plan',
-  '0% KERSIVO commission on booking payments',
-  '0% KERSIVO commission on Full retail sales',
-  'Stripe payment-processing fees still apply',
-];
+/* ---------- Commission and Boost ---------- */
+
+export const BK_COMMISSION_TITLE = 'Commission: what a new client really costs you';
+
+export const BK_COMMISSION_LEAD = `Booksy’s standard bookings carry no commission. The fee arrives when you switch on Boost and Booksy finds you a brand-new client: ${BOOST_PERCENT} of that first visit, at least ${BOOST_MINIMUM}, plus VAT. KERSIVO takes 0% commission on booking payments, whoever the client is.`;
 
 const EXAMPLE_HIGHER_SERVICE_GBP = 25;
 const EXAMPLE_LOWER_SERVICE_GBP = 15;
@@ -194,6 +234,145 @@ export const BOOKSY_BOOST_POINTS: readonly string[] = [
 ];
 
 export const BOOKSY_BOOST_EXAMPLE = `For example, on a ${formatGbp(EXAMPLE_HIGHER_SERVICE_GBP)} first haircut the Boost fee would be ${formatGbp(estimateBooksyBoostFee(EXAMPLE_HIGHER_SERVICE_GBP))} plus VAT. On a ${formatGbp(EXAMPLE_LOWER_SERVICE_GBP)} service, the ${BOOST_MINIMUM} minimum applies.`;
+
+export const BK_CARD_FEES: readonly { label: string; booksy: string; kersivo: string }[] = [
+  { label: 'Online and in-app card payments', booksy: `${formatBooksyRate(mobilePayments)} + VAT (Mobile Payments)`, kersivo: 'Stripe processing fees apply' },
+  { label: 'In-person card payments', booksy: `${formatBooksyRate(tapToPay)} + VAT (Tap to Pay)`, kersivo: 'Pay at shop on Full: clients pay you in person, your usual way' },
+];
+
+/* ---------- Side-by-side scoreboard ---------- */
+
+export type BkScoreRow = { label: string; booksy: string; kersivo: string };
+
+export const BK_SCOREBOARD_TITLE = 'Booksy vs KERSIVO, line by line';
+
+export const BK_SCOREBOARD: readonly BkScoreRow[] = [
+  {
+    label: 'Monthly price',
+    booksy: `${BASE_PRICE}/month + VAT`,
+    kersivo: `${KERSIVO_PRICE}/month per location on Full · ${STARTER_PRICE} Starter for up to ${BK_STARTER_MAX_BARBERS} barbers`,
+  },
+  {
+    label: 'Extra barbers',
+    booksy: `${USER_PRICE}/month + VAT per additional user`,
+    kersivo: 'No per-barber fees · unlimited barbers within one location on Full, subject to fair use',
+  },
+  {
+    label: 'Commission on bookings',
+    booksy: `None on standard bookings · optional Boost: ${BOOST_PERCENT} one-time (min ${BOOST_MINIMUM}) + VAT per new Boost client`,
+    kersivo: '0% KERSIVO commission · Stripe fees apply',
+  },
+  {
+    label: 'Card processing',
+    booksy: `${formatBooksyRate(mobilePayments)} + VAT, or ${formatBooksyRate(tapToPay)} + VAT with Tap to Pay`,
+    kersivo: 'Standard Stripe processing fees',
+  },
+  {
+    label: 'Your own website and domain',
+    booksy: 'A booking widget for a website you run separately',
+    kersivo: 'Branded website and one standard domain included on Full',
+  },
+  {
+    label: 'Where clients book',
+    booksy: 'Booksy Profile, direct links, social buttons, Reserve with Google, the Booksy app and Marketplace',
+    kersivo: 'Your own website on Full, or a hosted KERSIVO booking page on Starter',
+  },
+  {
+    label: 'Customer app and marketplace',
+    booksy: 'Booksy for Customers app and Marketplace discovery',
+    kersivo: 'No app to download and no marketplace: clients book in the browser',
+  },
+  {
+    label: 'Deposits and no-shows',
+    booksy: 'Deposits and cancellation fees through Mobile Payments',
+    kersivo: `${STARTER_DEPOSIT_PRICE} deposit or Pay in full; Full adds Pay at shop`,
+  },
+  {
+    label: 'Reminders',
+    booksy: 'Free appointment confirmations and reminders',
+    kersivo: 'Email reminders on both plans; SMS reminders within a monthly allowance on Full',
+  },
+  {
+    label: 'Retail',
+    booksy: 'Add-ons, gift cards, memberships and packages',
+    kersivo: 'Retail pickup shop on your own website with Full',
+  },
+];
+
+/* ---------- Own domain + direct relationship ---------- */
+
+export const BK_DOMAIN_TITLE = 'An address that’s yours, not a profile link';
+
+export const BK_DOMAIN_LEAD =
+  'On Full KERSIVO your booking page is your website: one address on your card, your Instagram bio, your Google profile and the shop window.';
+
+export const BK_DOMAIN_POINTS: readonly string[] = [
+  'Full KERSIVO includes one standard domain per location, with hosting and SSL.',
+  'Already own a domain? You keep ownership; we provide the DNS records or help set them up.',
+  'Need a new one? KERSIVO may register it on behalf of your business. Legal ownership stays with your business, and it can be transferred to you when the engagement ends.',
+  'Your Booksy links keep working until you approve the switch.',
+];
+
+export const BK_RELATIONSHIP_TITLE = 'A direct line to every client';
+
+export const BK_RELATIONSHIP_LEAD =
+  'On Booksy, clients can find and book you through your Profile, your links or the Booksy app and Marketplace. With KERSIVO the whole loop runs through your own shop.';
+
+export const BK_RELATIONSHIP_STEPS: readonly { title: string; body: string }[] = [
+  { title: 'They book you', body: 'On your website or booking page, in the browser. Nothing to download.' },
+  { title: 'They land in your list', body: 'Name, contact details and visit history in your KERSIVO dashboard.' },
+  { title: 'They get reminded', body: 'Email confirmations and reminders, plus SMS within an allowance on Full.' },
+  { title: 'They come back to you', body: 'Next time they book, it’s straight to your shop again.' },
+];
+
+/* ---------- Switching ---------- */
+
+export const BOOKSY_SWITCHING_REASSURANCE = 'Keep Booksy live while your KERSIVO setup is prepared.';
+
+export const BK_SWITCHING_LEAD =
+  'Booksy keeps taking bookings while we build. Your setup is typically ready in a few days once we receive all required information, and nothing goes public until you approve it.';
+
+export const BOOKSY_SWITCHING_STEPS: readonly { title: string; body: string }[] = [
+  {
+    title: 'Keep Booksy live',
+    body: 'Your current bookings keep running on Booksy. Nothing changes for your clients while the new setup is prepared.',
+  },
+  {
+    title: 'Export what Booksy makes available',
+    body: 'Booksy’s UK Help Centre says you can request a copy of your client list, with contact details, from Booksy Support.',
+  },
+  {
+    title: 'We review and map compatible data',
+    body: 'We help migrate the usable business data from your current booking system, including supported CSV exports. Migration help is included in Full KERSIVO.',
+  },
+  {
+    title: 'We prepare your setup',
+    body: 'Services, barbers and opening hours are prepared in KERSIVO, plus your branded barbershop website on Full KERSIVO.',
+  },
+  {
+    title: 'You review a private preview',
+    body: 'Check the website, booking journey and admin before anything goes public.',
+  },
+  {
+    title: 'Switch when you approve',
+    body: 'Only once you approve are your public booking links (and, on Full, your domain routing) switched to KERSIVO.',
+  },
+];
+
+export const BK_MIGRATION_MOVES: readonly { title: string; body: string; status: 'moves' | 'built' | 'not' }[] = [
+  { title: 'Your client list', body: 'Names and contact details from the copy Booksy Support sends you.', status: 'moves' },
+  { title: 'Services and prices', body: 'Set up in KERSIVO to match your current menu.', status: 'built' },
+  { title: 'Barbers and opening hours', body: 'Each barber’s working pattern, ready for bookings.', status: 'built' },
+  { title: 'Website and domain', body: 'Your branded site on your own domain, with Full KERSIVO.', status: 'built' },
+  { title: 'Saved payment cards', body: 'Not included in the standard KERSIVO migration.', status: 'not' },
+];
+
+export const BOOKSY_SWITCHING_LIMITS: readonly string[] = [
+  'Booksy’s Help Centre does not state the format or fields of the client list it provides, so what can be moved depends on what Booksy sends.',
+  'Saved payment-card data is not included in the standard KERSIVO migration.',
+];
+
+/* ---------- Fit ---------- */
 
 export const BOOKSY_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonItem] = [
   {
@@ -218,15 +397,15 @@ export const BOOKSY_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonIte
     descriptor: 'Own-brand booking model',
     icon: 'direct',
     summary: [
-      { label: 'Pricing', value: `${STARTER_PRICE} Starter or ${KERSIVO_PRICE}/month per location on Full` },
+      { label: 'Pricing', value: `${KERSIVO_PRICE}/month per location on Full, or ${STARTER_PRICE} Starter` },
       { label: 'Discovery', value: 'Your own website and channels' },
     ],
     heading: 'KERSIVO may suit your shop if…',
     points: [
       'You want a direct booking journey under your own brand, with your own website and domain on Full KERSIVO',
       'Your clients already find you through Google, Instagram, referrals or walk-ins',
-      `You prefer ${STARTER_PRICE} for up to ${STARTER_MAX_BARBERS} barbers on Starter, or a flat ${KERSIVO_PRICE}/month per location on Full, however many barbers take bookings`,
-      `You want Starter bookings secured by a ${STARTER_DEPOSIT_PRICE} deposit or full payment, with Full unlocking Pay at shop and wider payment control — all with 0% KERSIVO commission`,
+      `You prefer a flat ${KERSIVO_PRICE}/month per location on Full, however many barbers take bookings, or ${STARTER_PRICE} for up to ${BK_STARTER_MAX_BARBERS} barbers on Starter`,
+      `You want bookings secured by a ${STARTER_DEPOSIT_PRICE} deposit or full payment, with Full unlocking Pay at shop and wider payment control — all with 0% KERSIVO commission`,
     ],
   },
 ];
@@ -234,36 +413,5 @@ export const BOOKSY_FIT_PATHS: readonly [ModelComparisonItem, ModelComparisonIte
 export const BOOKSY_FIT_CLOSING =
   'Neither model is right for every barbershop. The real question is where you want new clients to come from, and where you want the booking journey to live.';
 
-export const BOOKSY_SWITCHING_REASSURANCE = 'Keep Booksy live while your KERSIVO setup is prepared.';
-
-export const BOOKSY_SWITCHING_STEPS: readonly BooksyContentTheme[] = [
-  {
-    title: 'Keep Booksy live',
-    body: 'Your current bookings keep running on Booksy. Nothing changes for your clients while the new setup is prepared.',
-  },
-  {
-    title: 'Export what Booksy makes available',
-    body: 'Booksy’s UK Help Centre says you can request a copy of your client list, with contact details, from Booksy Support.',
-  },
-  {
-    title: 'We review and map compatible data',
-    body: 'We’ll help migrate the usable business data available from your current booking system, including supported CSV exports.',
-  },
-  {
-    title: 'We prepare your setup',
-    body: 'Services, barbers and opening hours are prepared in KERSIVO, plus your branded barbershop website on Full KERSIVO.',
-  },
-  {
-    title: 'You review a private preview',
-    body: 'Check the website, booking journey and admin before anything goes public.',
-  },
-  {
-    title: 'Switch when you approve',
-    body: 'Only once you approve are your public booking links (and, on Full, your domain routing) switched to KERSIVO.',
-  },
-];
-
-export const BOOKSY_SWITCHING_LIMITS: readonly string[] = [
-  'Booksy’s Help Centre does not state the format or fields of the client list it provides, so what can be moved depends on what Booksy sends.',
-  'Saved payment-card data is not included in the standard KERSIVO migration.',
-];
+export const BK_FAQ_HEADING = 'Questions owners ask before leaving Booksy';
+export const BK_FAQ_SUBHEADING = 'Straight answers on Booksy pricing, Boost, commission, your own domain and moving your clients.';

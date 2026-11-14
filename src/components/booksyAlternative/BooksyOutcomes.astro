@@ -1,0 +1,62 @@
+---
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BK_OUTCOMES, BK_OUTCOMES_LEAD, BK_OUTCOMES_TITLE } from '@/lib/seo/booksyAlternativeContent';
+
+const clients = [
+  { initials: 'JD', name: 'Jordan D.', note: '6 visits · Skin fade' },
+  { initials: 'AK', name: 'Amir K.', note: 'Next: Sat 11:00' },
+  { initials: 'TL', name: 'Tom L.', note: 'Beard trim regular' },
+];
+---
+
+<section id="outcomes" class="bk-section bk-outcomes scroll-mt-24" aria-labelledby="booksy-alt-outcomes-title">
+  <div class="bk-wrap">
+    <header class="bk-head" data-bk-reveal>
+      <p class="bk-eyebrow">For the owner</p>
+      <h2 id="booksy-alt-outcomes-title" class="bk-h2">{BK_OUTCOMES_TITLE}</h2>
+      <p class="bk-lead">{BK_OUTCOMES_LEAD}</p>
+    </header>
+
+    <ul class="bk-bento" role="list">
+      {BK_OUTCOMES.map((outcome, index) => (
+        <li class={`bk-card bk-tile bk-tile--${outcome.id}`} data-bk-reveal style={`--d: ${index % 3}`}>
+          <div class="bk-tile__art" aria-hidden="true">
+            {outcome.id === 'door' && (
+              <div class="bk-art-url">
+                <span class="bk-art-url__old">booksy.com/…/your-shop</span>
+                <span class="bk-art-url__new"><i></i>yourshop.co.uk</span>
+              </div>
+            )}
+            {outcome.id === 'bill' && (
+              <div class="bk-art-bill">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <span class="bk-art-bill__col" style={`--n: ${n}`}><b></b></span>
+                ))}
+                <span class="bk-art-bill__flat">£{SAAS_MONTHLY_GBP} flat</span>
+              </div>
+            )}
+            {outcome.id === 'commission' && (
+              <div class="bk-art-zero"><span>0</span><small>%</small></div>
+            )}
+            {outcome.id === 'clients' && (
+              <div class="bk-art-list">
+                {clients.map((client) => (
+                  <span class="bk-art-list__row"><i>{client.initials}</i><b>{client.name}</b><em>{client.note}</em></span>
+                ))}
+              </div>
+            )}
+            {outcome.id === 'noshow' && (
+              <div class="bk-art-deposit"><span class="bk-art-deposit__dot"></span>Deposit paid</div>
+            )}
+            {outcome.id === 'reminders' && (
+              <div class="bk-art-bell"><span class="bk-art-bell__msg">Reminder: your cut tomorrow at 11:00</span></div>
+            )}
+          </div>
+          <p class="bk-tile__kicker">{outcome.kicker}</p>
+          <h3 class="bk-h3">{outcome.title}</h3>
+          <p class="bk-body">{outcome.body}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

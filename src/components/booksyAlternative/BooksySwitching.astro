@@ -1,26 +1,58 @@
 ---
-import ProcessTimeline from '@/components/editorial/ProcessTimeline.astro';
 import {
+  BK_MIGRATION_MOVES,
+  BK_SWITCHING_LEAD,
   BOOKSY_SWITCHING_LIMITS,
   BOOKSY_SWITCHING_REASSURANCE,
   BOOKSY_SWITCHING_STEPS,
 } from '@/lib/seo/booksyAlternativeContent';
+import { getBooksySource } from '@/lib/seo/booksyFacts';
+
+const clientListSource = getBooksySource('clientList');
+const statusLabel = { moves: 'Moves across', built: 'We set it up', not: 'Not included' } as const;
 ---
 
-<section id="switching" class="fresha-alt__section" aria-labelledby="booksy-alt-switching-title">
-  <div class="container">
-    <header class="fresha-alt__intro">
-      <p class="fresha-alt__eyebrow">MIGRATION</p>
-      <h2 id="booksy-alt-switching-title" class="fresha-alt__h2">Switching from Booksy to KERSIVO</h2>
-      <p class="fresha-alt-switching__reassurance">{BOOKSY_SWITCHING_REASSURANCE}</p>
+<section id="switching" class="bk-section bk-switching scroll-mt-24" aria-labelledby="booksy-alt-switching-title">
+  <div class="bk-wrap">
+    <header class="bk-head" data-bk-reveal>
+      <p class="bk-eyebrow">Data migration</p>
+      <h2 id="booksy-alt-switching-title" class="bk-h2">Switching from Booksy to KERSIVO</h2>
+      <p class="bk-lead"><strong>{BOOKSY_SWITCHING_REASSURANCE}</strong> {BK_SWITCHING_LEAD}</p>
     </header>
 
-    <ProcessTimeline
-      steps={BOOKSY_SWITCHING_STEPS}
-      noteTitle="Good to know"
-      notePoints={BOOKSY_SWITCHING_LIMITS}
-    >
-      <a href="#contact">Ask about moving your Booksy data <span aria-hidden="true">→</span></a>
-    </ProcessTimeline>
+    <div class="bk-switching__grid">
+      <div class="bk-steps-wrap" data-bk-steps>
+      <span class="bk-steps__rail" aria-hidden="true"><span class="bk-steps__fill" data-bk-steps-fill></span></span>
+      <ol class="bk-steps" role="list">
+        {BOOKSY_SWITCHING_STEPS.map((step, index) => (
+          <li class="bk-step" data-bk-step>
+            <span class="bk-step__dot" aria-hidden="true">{index + 1}</span>
+            <div>
+              <h3 class="bk-h3">{step.title}</h3>
+              <p class="bk-body">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      </div>
+
+      <aside class="bk-card bk-moves" data-bk-reveal aria-labelledby="bk-moves-title">
+        <p class="bk-card__eyebrow">What comes across</p>
+        <h3 id="bk-moves-title" class="bk-h3">From Booksy to your own setup</h3>
+        <ul class="bk-moves__list" role="list">
+          {BK_MIGRATION_MOVES.map((item) => (
+            <li class={`bk-moves__item bk-moves__item--${item.status}`}>
+              <span class="bk-moves__status">{statusLabel[item.status]}</span>
+              <strong>{item.title}</strong>
+              <span>{item.body}</span>
+            </li>
+          ))}
+        </ul>
+        <ul class="bk-notes">
+          {BOOKSY_SWITCHING_LIMITS.map((limit) => <li>{limit}</li>)}
+        </ul>
+        <p class="bk-small">Source: <a href={clientListSource.url} target="_blank" rel="noopener noreferrer">{clientListSource.label}</a></p>
+      </aside>
+    </div>
   </div>
 </section>

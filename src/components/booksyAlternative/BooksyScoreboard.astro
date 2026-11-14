@@ -1,0 +1,41 @@
+---
+import { BK_SCOREBOARD, BK_SCOREBOARD_TITLE } from '@/lib/seo/booksyAlternativeContent';
+import { BOOKSY_FACTS_CHECKED_DATE } from '@/lib/seo/booksyFacts';
+---
+
+<section id="side-by-side" class="bk-section bk-score scroll-mt-24" aria-labelledby="booksy-alt-score-title">
+  <div class="bk-wrap">
+    <header class="bk-head" data-bk-reveal>
+      <p class="bk-eyebrow">Side by side</p>
+      <h2 id="booksy-alt-score-title" class="bk-h2">{BK_SCOREBOARD_TITLE}</h2>
+      <p class="bk-lead">The things owners ask about first: price, commission, your website, your clients. Booksy figures checked on {BOOKSY_FACTS_CHECKED_DATE}.</p>
+    </header>
+
+    <div class="bk-card bk-score__card" data-bk-reveal>
+      <table class="bk-score__table">
+        <caption class="bk-visually-hidden">Booksy compared with KERSIVO for UK barbershops</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="bk-visually-hidden">Feature</span></th>
+            <th scope="col" class="bk-score__col-booksy">Booksy</th>
+            <th scope="col" class="bk-score__col-k">
+              <span class="bk-score__k-head">
+                <img src="/images/brand/kersivo-mark.png" alt="" width="20" height="20" loading="lazy" decoding="async" />
+                KERSIVO
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {BK_SCOREBOARD.map((row, index) => (
+            <tr class="bk-score__row" style={`--r: ${index}`}>
+              <th scope="row">{row.label}</th>
+              <td data-label="Booksy">{row.booksy}</td>
+              <td data-label="KERSIVO" class="bk-score__k">{row.kersivo}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
