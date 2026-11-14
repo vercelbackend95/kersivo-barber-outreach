@@ -14,12 +14,19 @@ export const STARTER_PAGE_DESCRIPTION =
 
 export const STARTER_PAGE_H1 = 'A free booking system for UK barbershops — £0/month.';
 
-export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-10-28';
-export const STARTER_PAGE_LAST_UPDATED_LABEL = '28 October 2026';
+export const STARTER_PAGE_LAST_UPDATED_ISO = '2026-11-14';
+export const STARTER_PAGE_LAST_UPDATED_LABEL = '14 November 2026';
 
 /** Directly under the H1: "free" never appears without the £5 / Stripe qualifier. */
 export const STARTER_FREE_QUALIFIER =
   'Free means £0/month and 0% KERSIVO commission. Every public booking is secured by a £5 deposit or paid in full through your own connected Stripe account; standard Stripe processing fees apply.';
+
+/**
+ * Body copy for "free barber booking system UK": the keyword phrase always sits in the same
+ * paragraph as the £5 deposit / full payment and Stripe fees wording.
+ */
+export const STARTER_FREE_BOOKING_BODY =
+  'KERSIVO Starter is a free barber booking system for UK shops: £0/month and 0% KERSIVO commission, with every public booking secured by a £5 deposit or full payment through your own Stripe account. Stripe processing fees apply. It is a real operating plan, not a temporary trial, for shops that want straightforward booking before they need the wider Full KERSIVO toolkit.';
 
 /** "When Full is the better fit" box — Full-only scope from STARTER_FULL_PLAN_FULL_ONLY. */
 export const STARTER_FULL_FIT = {
@@ -45,6 +52,11 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
     question: 'Is KERSIVO Starter really £0 a month?',
     answer:
       'Yes. KERSIVO Starter has no monthly software subscription fee and no setup fee. It is a real operating plan, not a time-limited trial. KERSIVO also takes 0% commission on Starter booking payments.',
+  },
+  {
+    question: 'Is there a free barber booking app for UK barbershops?',
+    answer:
+      'KERSIVO Starter is a free barber booking system for UK barbershops: £0/month and 0% KERSIVO commission for up to 4 active bookable barbers. Every public booking is secured by a £5 deposit or full payment through your own connected Stripe account, and standard Stripe processing fees apply. Clients book in the browser on your KERSIVO-hosted booking page, so there is no app for them to download.',
   },
   {
     question: 'Does KERSIVO charge commission on Starter bookings?',

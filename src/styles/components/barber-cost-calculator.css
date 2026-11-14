@@ -317,6 +317,27 @@
   background: color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
+/* Numbered variant for "How to use it" steps. */
+.cost-calc__list--steps {
+  counter-reset: cost-calc-step;
+}
+
+.cost-calc__list--steps li {
+  counter-increment: cost-calc-step;
+  padding-left: 1.6rem;
+}
+
+.cost-calc__list--steps li::before {
+  content: counter(cost-calc-step) '.';
+  top: 0;
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .cost-calc__closing {
   margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
   max-width: 64ch;

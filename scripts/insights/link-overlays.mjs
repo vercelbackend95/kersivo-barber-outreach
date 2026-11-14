@@ -38,6 +38,10 @@ export const INSIGHTS_LINK_OVERLAYS = {
   ],
   'barbershop-walk-ins-vs-appointments': [
     {
+      phrase: 'Policies on deposits and no-shows',
+      href: '/barbershop-cancellation-policy-template',
+    },
+    {
       phrase: 'like being able to book without phoning',
       href: '/barbershop-online-booking',
     },
@@ -58,6 +62,22 @@ export const INSIGHTS_LINK_OVERLAYS = {
     {
       phrase: 'A voucher sold in December is a client you might gain in February',
       href: '/insights/get-more-barbershop-clients-locally-uk',
+    },
+  ],
+  'do-barbers-need-a-website-uk': [
+    {
+      phrase: 'needs its terms set out clearly',
+      href: '/barbershop-cancellation-policy-template',
+    },
+    {
+      phrase: 'Do you take deposits or charge for no-shows?',
+      href: '/barbershop-no-show-calculator',
+    },
+  ],
+  'busy-barbershop-low-profit-chair-hour': [
+    {
+      phrase: 'rent chairs to self-employed barbers for a fixed rent',
+      href: '/chair-rent-vs-commission-calculator',
     },
   ],
 };

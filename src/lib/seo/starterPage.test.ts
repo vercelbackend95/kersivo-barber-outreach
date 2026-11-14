@@ -6,6 +6,7 @@ import { STARTER_KEY_FACTS } from '@/lib/pricing/pricingPlans';
 import { DEFAULT_TITLE } from './defaults';
 import {
   STARTER_FAQ_ITEMS,
+  STARTER_FREE_BOOKING_BODY,
   STARTER_FREE_QUALIFIER,
   STARTER_FULL_FIT,
   STARTER_PAGE_DESCRIPTION,
@@ -101,8 +102,21 @@ describe('KERSIVO Starter landing page structure and claims', () => {
 
   it('uses the KERSIVO Starter name, not the old Free Booking naming', () => {
     expect(allCopy).not.toMatch(/Free Booking/);
-    // The keyword phrase is allowed only in the title and meta description, never in body copy.
-    expect(`${page} ${planCards} ${faqText}`).not.toMatch(/free barber booking/i);
+    // The keyword phrase stays out of the shared plan cards; on this page it only appears in the
+    // body paragraph and one FAQ answer, each carrying the £5 deposit and Stripe fees wording.
+    expect(planCards).not.toMatch(/free barber booking/i);
+    expect(page).not.toMatch(/free barber booking/i);
+    const freeBookingCopy = [STARTER_FREE_BOOKING_BODY, ...STARTER_FAQ_ITEMS.map((item) => item.answer)].filter((text) =>
+      /free barber booking/i.test(text),
+    );
+    expect(freeBookingCopy).toHaveLength(2);
+    for (const text of freeBookingCopy) {
+      expect(text).toContain('£0/month');
+      expect(text).toContain('£5 deposit');
+      expect(text).toMatch(/Stripe processing fees apply/);
+    }
+    expect(page).toContain('<p>{STARTER_FREE_BOOKING_BODY}</p>');
+    expect(STARTER_FAQ_ITEMS.map((item) => item.question)).toContain('Is there a free barber booking app for UK barbershops?');
     expect(STARTER_PAGE_TITLE).toBe('Free Barber Booking System UK – £0/Month | KERSIVO Starter');
   });
 

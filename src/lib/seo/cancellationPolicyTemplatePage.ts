@@ -28,14 +28,28 @@ export const CANCELLATION_POLICY_BREADCRUMB_NAME = 'Cancellation Policy Template
 export const CANCELLATION_POLICY_APP_NAME = 'Barbershop Cancellation Policy Template';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const CANCELLATION_POLICY_LAST_UPDATED_ISO = '2026-10-29';
-export const CANCELLATION_POLICY_LAST_UPDATED_LABEL = '29 October 2026';
+export const CANCELLATION_POLICY_LAST_UPDATED_ISO = '2026-11-14';
+export const CANCELLATION_POLICY_LAST_UPDATED_LABEL = '14 November 2026';
 
 export const CANCELLATION_POLICY_OG_IMAGE_PATH = '/images/og/barbershop-cancellation-policy-template.jpg';
 export const CANCELLATION_POLICY_OG_IMAGE_ALT = 'Free Cancellation Policy Template for Barbershops — KERSIVO';
 
-export const CANCELLATION_POLICY_LEAD =
-  'Choose a few options and get a ready-to-paste cancellation, deposit and no-show policy for your website, Instagram or Google Business Profile and booking confirmations. Free, no sign-up, and nothing you enter is stored.';
+/**
+ * Direct answer under the H1 (40–60 words) for "barbershop cancellation policy template UK".
+ * Restates the guide and FAQ below; no new claims.
+ */
+export const CANCELLATION_POLICY_DIRECT_ANSWER =
+  'A UK barbershop cancellation policy should say how much notice clients must give to cancel (24 hours is a common choice), what happens to a deposit after a late cancellation or no-show, how lateness is handled and that clients get a full refund if you cancel. Show it before clients book. This free template writes it for you.';
+
+/** "How to use it" steps; each one describes what the tool already does. */
+export const CANCELLATION_POLICY_HOW_TO_USE = {
+  heading: 'How to use it',
+  steps: [
+    'Choose your deposit, notice period, lateness rules and how clients should cancel.',
+    'Watch the three versions update as you choose: website, short and one line.',
+    'Copy, download or print each version and show it wherever clients book.',
+  ],
+} as const;
 
 export const CANCELLATION_POLICY_EYEBROW = 'Free tool for UK barbershops';
 
