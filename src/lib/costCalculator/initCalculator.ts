@@ -10,6 +10,7 @@ import {
   type ValidationIssue,
 } from './barberSoftwareCostEngine';
 import {
+  BARBERS_FIELD,
   DEFAULT_PERIOD,
   DEFAULT_SCENARIO,
   MARKETPLACE_CLIENTS_FIELD,
@@ -29,6 +30,8 @@ import {
 import { isCostPeriod, type CostPeriod } from './costPeriod';
 import { initCalculatorShell } from './initCalculatorShell';
 import { renderResults } from './renderResults';
+import { buildCostVerdict } from './costVerdict';
+import { renderVerdict } from './renderVerdict';
 import { buildCalculatorView } from './resultView';
 
 const READY_FLAG = 'calcReady';
@@ -250,6 +253,52 @@ function initShareLink(form: HTMLFormElement, results: HTMLElement) {
   });
 }
 
+/** "Load this shop into the calculator" links: same URL contract as shared links, applied without a reload. */
+function initScenarioLinks(root: Document, form: HTMLFormElement, results: HTMLElement, recalculate: () => void) {
+  for (const link of root.querySelectorAll<HTMLAnchorElement>('a[data-calc-load]')) {
+    link.addEventListener('click', (event) => {
+      const url = new URL(link.href, root.defaultView?.location.href);
+      const state = decodeScenarioQuery(url.search);
+      if (!state.hasScenarioParams) return;
+      event.preventDefault();
+      applyScenarioToForm(form, results, state);
+      recalculate();
+      for (const input of form.querySelectorAll<HTMLInputElement>('input')) {
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      root.defaultView?.history.replaceState(null, '', `${url.pathname}${url.search}#calculator`);
+      const target = root.getElementById('cost-comparison') ?? form;
+      const reduce = root.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      root.getElementById(BARBERS_FIELD.id)?.focus({ preventScroll: true });
+    });
+  }
+}
+
+/** Phone and tablet: a slim live result bar while the inputs are on screen and the results are not. */
+function initResultDock(root: Document, form: HTMLFormElement) {
+  const dock = root.querySelector<HTMLElement>('[data-calc-dock]');
+  const verdict = root.querySelector<HTMLElement>('[data-calc-verdict]');
+  const win = root.defaultView;
+  if (!dock || !verdict || !win || typeof win.IntersectionObserver !== 'function') return;
+  let formVisible = false;
+  let verdictVisible = true;
+  const sync = () => {
+    dock.dataset.visible = String(formVisible && !verdictVisible);
+  };
+  new win.IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.target === form) formVisible = entry.isIntersecting;
+      else verdictVisible = entry.isIntersecting;
+    }
+    sync();
+  }, { rootMargin: '0px 0px -80px 0px' }).observe(form);
+  new win.IntersectionObserver((entries) => {
+    verdictVisible = entries.some((entry) => entry.isIntersecting);
+    sync();
+  }).observe(verdict);
+}
+
 export function initCalculator(root: Document) {
   const form = root.querySelector<HTMLFormElement>('[data-calc-form]');
   const results = root.querySelector<HTMLElement>('[data-calc-results]');
@@ -270,7 +319,9 @@ export function initCalculator(root: Document) {
   const recalculate = () => {
     const scenario = readScenario(form);
     renderValidation(form, validateCostScenario(scenario));
-    renderResults(results, buildCalculatorView(scenario, readPeriod(results)));
+    const view = buildCalculatorView(scenario, readPeriod(results));
+    renderResults(results, view);
+    renderVerdict(results, buildCostVerdict(view), view.period);
   };
 
   form.addEventListener('input', recalculate);
@@ -280,5 +331,7 @@ export function initCalculator(root: Document) {
     form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   });
 
+  initScenarioLinks(root, form, results, recalculate);
+  initResultDock(root, form);
   recalculate();
 }

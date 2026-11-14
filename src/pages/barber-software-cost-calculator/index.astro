@@ -21,6 +21,8 @@ import CostPayments from '@/components/costCalculator/CostPayments.astro';
 import CostScenarios from '@/components/costCalculator/CostScenarios.astro';
 import CostMethodology from '@/components/costCalculator/CostMethodology.astro';
 import CostSources from '@/components/costCalculator/CostSources.astro';
+import CostPricingModels from '@/components/costCalculator/CostPricingModels.astro';
+import CostKersivoOutcomes from '@/components/costCalculator/CostKersivoOutcomes.astro';
 import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
 import CompareHubLink from '@/components/alternativesHub/CompareHubLink.astro';
 import ChairRentToolLink from '@/components/chairRentCalculator/ChairRentToolLink.astro';
@@ -37,6 +39,7 @@ import {
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/barber-cost-calculator.css';
 import '@/styles/components/barber-cost-calculator-tool.css';
+import '@/styles/components/barber-cost-calculator-v2.css';
 
 const currentYear = new Date().getFullYear();
 ---
@@ -50,6 +53,10 @@ const currentYear = new Date().getFullYear();
   <main class="cost-calc landing-overflow-guard">
     <CostCalcHero />
     <CostResults />
+    <CostPricingModels />
+    <CostScenarios />
+    <CostKersivoOutcomes />
+    <CostMethodology />
     <CostAtAGlance />
     <CostBooksy />
     <CostFresha />
@@ -64,8 +71,6 @@ const currentYear = new Date().getFullYear();
     <CostMarketplaceFees />
     <CostVat />
     <CostPayments />
-    <CostScenarios />
-    <CostMethodology />
     <CompareHubLink />
     <aside class="compare-hub-link" aria-label="Related tools">
       <div class="compare-hub-link__inner">

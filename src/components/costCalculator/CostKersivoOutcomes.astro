@@ -1,0 +1,86 @@
+---
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import { offer } from '@/content/offer';
+import {
+  KERSIVO_PRICE,
+  MARKETPLACE_KERSIVO_NOTE,
+  OUTCOMES,
+  OUTCOMES_EYEBROW,
+  OUTCOMES_HEADING,
+  OUTCOMES_HONEST_TITLE,
+  OUTCOMES_INTRO,
+  OUTCOMES_STARTER_NOTE,
+} from '@/lib/seo/barberCostCalculatorPage';
+
+const freePreview = isFreePreviewFlowEnabled();
+const placement = 'cost_calculator_outcomes';
+---
+
+<section id="what-you-get" class="cost-calc__section cost-outcomes" aria-labelledby="cost-outcomes-title">
+  <div class="container">
+    <div class="cost-outcomes__layout">
+      <header class="cost-outcomes__intro">
+        <p class="cost-calc__eyebrow">{OUTCOMES_EYEBROW}</p>
+        <h2 id="cost-outcomes-title" class="cost-calc__h2">{OUTCOMES_HEADING}</h2>
+        <p class="cost-calc__lead">{OUTCOMES_INTRO}</p>
+
+        <div class="cost-outcomes__price" aria-hidden="true">
+          <span class="cost-outcomes__price-amount">{KERSIVO_PRICE}</span>
+          <span class="cost-outcomes__price-unit">/month per location</span>
+        </div>
+
+        <div class="cost-outcomes__actions">
+          {
+            freePreview ? (
+              <>
+                <a class="cost-calc-btn cost-calc-btn--primary" href={FREE_PREVIEW_CTA_HREF} data-track={FREE_PREVIEW_CTA_TRACK} data-track-placement={placement}>
+                  {FREE_PREVIEW_CTA_LABEL}
+                </a>
+                <a class="cost-outcomes__text-link" href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement={placement}>
+                  {SUBSCRIBE_NOW_CTA_LABEL}
+                </a>
+              </>
+            ) : (
+              <a class="cost-calc-btn cost-calc-btn--primary" href="/admin/launch" data-track="saas_subscribe_click" data-track-placement={placement}>
+                {offer.cta.subscribeDirect}
+              </a>
+            )
+          }
+        </div>
+        <p class="cost-outcomes__starter">
+          <a href="/starter" data-track="starter_plan_explore_click" data-track-placement={placement}>{OUTCOMES_STARTER_NOTE}</a>
+        </p>
+      </header>
+
+      <ul class="cost-outcomes__grid">
+        {
+          OUTCOMES.map((outcome, index) => (
+            <li class="cost-outcomes__card" data-outcome={outcome.id}>
+              <span class="cost-outcomes__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <h3 class="cost-outcomes__title">{outcome.title}</h3>
+              <p class="cost-outcomes__body">{outcome.body}</p>
+              {outcome.link && (
+                <a class="cost-outcomes__link" href={outcome.link.href}>
+                  {outcome.link.label} <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </li>
+          ))
+        }
+        <li class="cost-outcomes__card cost-outcomes__card--honest">
+          <span class="cost-outcomes__index" aria-hidden="true">!</span>
+          <h3 class="cost-outcomes__title">{OUTCOMES_HONEST_TITLE}</h3>
+          <p class="cost-outcomes__body">{MARKETPLACE_KERSIVO_NOTE}</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>

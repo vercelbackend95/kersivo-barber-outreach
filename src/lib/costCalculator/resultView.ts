@@ -48,6 +48,8 @@ export type ProviderView = {
   id: ProviderId;
   state: ProviderViewState;
   total: string;
+  /** Engine cash total for the selected period; null unless the provider is fully calculated. */
+  cashTotalGbp: number | null;
   /** Long totals use a smaller type size so they never overflow the card. */
   totalSize: 'regular' | 'long';
   totalSr: string | null;
@@ -186,6 +188,7 @@ function unavailableProvider(id: ProviderId): ProviderView {
     id,
     state: 'unavailable',
     total: PLACEHOLDER_TOTAL,
+    cashTotalGbp: null,
     totalSize: 'regular',
     totalSr: NOT_CALCULATED_SR,
     net: null,
@@ -223,6 +226,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
       ...shared,
       state: 'custom-pricing',
       total: result.provider === 'square' ? NOT_ESTIMATED : CUSTOM_PRICING,
+      cashTotalGbp: null,
       totalSize: 'regular',
       totalSr: null,
       net: null,
@@ -239,6 +243,7 @@ function providerView(result: ProviderMonthlyResult, boostEnabled: boolean, near
     ...shared,
     state: 'calculated',
     total,
+    cashTotalGbp: amounts.cashTotalGbp,
     totalSize: total.length >= LONG_TOTAL_LENGTH ? 'long' : 'regular',
     totalSr: null,
     net:

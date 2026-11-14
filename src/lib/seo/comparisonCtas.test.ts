@@ -61,11 +61,17 @@ describe('comparison engine CTAs', () => {
     expect(heroActions).toContain('data-track-placement={trackPlacement}');
   });
 
-  it('wires both shared components on all twelve comparison pages', () => {
+  it('wires the shared CTAs on all twelve comparison pages', () => {
     for (const entry of PAGES) {
       const page = read(entry.page);
       const hero = read(entry.hero);
-      expect(hero, entry.hero).toContain(`<ComparisonHeroActions placement="${entry.placement}" />`);
+      // The cost calculator hero leads with the tool itself ("Work out my costs") and the Full KERSIVO CTA.
+      if (entry.placement === 'cost_calculator') {
+        expect(hero, entry.hero).toContain('href="#calculator"');
+        expect(hero, entry.hero).toContain('data-track-placement="cost_calculator_hero"');
+      } else {
+        expect(hero, entry.hero).toContain(`<ComparisonHeroActions placement="${entry.placement}" />`);
+      }
       const expected = 'competitor' in entry
         ? `<ComparisonFinalCta placement="${entry.placement}" competitor="${entry.competitor}" />`
         : `<ComparisonFinalCta placement="${entry.placement}" />`;

@@ -1,0 +1,164 @@
+---
+import {
+  PRICING_MODELS,
+  PRICING_MODELS_HEADING,
+  PRICING_MODELS_INTRO,
+  TEAM_GROWTH_HEADING,
+  TEAM_GROWTH_NOTE,
+  TEAM_GROWTH_SLIDER_LABEL,
+} from '@/lib/seo/barberCostCalculatorPage';
+import { TEAM_GROWTH_MAX_BARBERS, TEAM_GROWTH_SERIES } from '@/lib/costCalculator/costScenarios';
+import { formatMoneyGbp } from '@/lib/costCalculator/money';
+
+/* Chart geometry, in SVG user units. */
+const W = 640;
+const H = 300;
+const PAD = { top: 16, right: 116, bottom: 36, left: 52 };
+const peak = Math.max(...TEAM_GROWTH_SERIES.flatMap((series) => series.points));
+const yMax = Math.ceil(peak / 20) * 20;
+const x = (barbers: number) => PAD.left + ((barbers - 1) / (TEAM_GROWTH_MAX_BARBERS - 1)) * (W - PAD.left - PAD.right);
+const y = (gbp: number) => PAD.top + (1 - gbp / yMax) * (H - PAD.top - PAD.bottom);
+const ticks = Array.from({ length: yMax / 20 + 1 }, (_, index) => index * 20);
+const barbers = Array.from({ length: TEAM_GROWTH_MAX_BARBERS }, (_, index) => index + 1);
+const displayName = (id: string, name: string) => (id === 'kersivo' ? 'Full KERSIVO' : name);
+
+const series = TEAM_GROWTH_SERIES.map((entry) => ({
+  ...entry,
+  label: displayName(entry.providerId, entry.name),
+  d: entry.points.map((gbp, index) => `${index === 0 ? 'M' : 'L'}${x(index + 1).toFixed(1)},${y(gbp).toFixed(1)}`).join(' '),
+}));
+
+/* End labels: nudge apart so two close totals never overlap. */
+const labelY = new Map<string, number>();
+const MIN_GAP = 15;
+[...series]
+  .sort((a, b) => y(a.points[a.points.length - 1]) - y(b.points[b.points.length - 1]))
+  .forEach((entry, index, sorted) => {
+    const natural = y(entry.points[entry.points.length - 1]);
+    const previous = index > 0 ? labelY.get(sorted[index - 1].providerId)! : -Infinity;
+    labelY.set(entry.providerId, Math.max(natural, previous + MIN_GAP));
+  });
+
+const START = 3;
+const chartData = JSON.stringify({
+  series: series.map((entry) => ({ id: entry.providerId, label: entry.label, points: entry.points })),
+  yMax,
+  geometry: { W, H, PAD, max: TEAM_GROWTH_MAX_BARBERS },
+});
+const readoutAt = (count: number) =>
+  [...series]
+    .map((entry) => ({ id: entry.providerId, label: entry.label, gbp: entry.points[count - 1] }))
+    .sort((a, b) => b.gbp - a.gbp);
+---
+
+<section id="pricing-models" class="cost-calc__section cost-models" aria-labelledby="cost-models-title">
+  <div class="container">
+    <header class="cost-calc__intro">
+      <p class="cost-calc__eyebrow">How you are charged</p>
+      <h2 id="cost-models-title" class="cost-calc__h2">{PRICING_MODELS_HEADING}</h2>
+      <p class="cost-calc__lead">{PRICING_MODELS_INTRO}</p>
+    </header>
+
+    <ul class="cost-models__grid">
+      {
+        PRICING_MODELS.map((model) => (
+          <li class="cost-models__card" data-model={model.id}>
+            <div class="cost-models__glyph" aria-hidden="true">
+              <svg viewBox="0 0 120 48" fill="none">
+                <path class="cost-models__glyph-base" d="M4 44H116" />
+                {model.id === 'flat' && <path class="cost-models__glyph-line" pathLength="1" d="M4 26H116" />}
+                {model.id === 'per-barber' && (
+                  <path class="cost-models__glyph-line" pathLength="1" d="M4 40H26V34H48V27H70V19H92V11H116" />
+                )}
+                {model.id === 'commission' && (
+                  <path class="cost-models__glyph-line" pathLength="1" d="M4 40H22L26 14L30 40H58L62 20L66 40H90L94 8L98 40H116" />
+                )}
+              </svg>
+            </div>
+            <p class="cost-models__label">{model.label}</p>
+            <h3 class="cost-models__title">{model.title}</h3>
+            <p class="cost-models__body">{model.body}</p>
+            <ul class="cost-models__examples">
+              {model.examples.map((example) => <li>{example}</li>)}
+            </ul>
+            <p class="cost-models__watch">{model.watch}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="cost-growth" data-cost-growth data-chart={chartData}>
+      <div class="cost-growth__head">
+        <h3 class="cost-growth__title">{TEAM_GROWTH_HEADING}</h3>
+        <div class="cost-growth__control">
+          <label class="cost-growth__label" for="cost-growth-barbers">
+            {TEAM_GROWTH_SLIDER_LABEL}
+            <output class="cost-growth__count" for="cost-growth-barbers" data-growth-count>{START}</output>
+          </label>
+          <input
+            id="cost-growth-barbers"
+            class="cost-growth__range"
+            type="range"
+            min="1"
+            max={TEAM_GROWTH_MAX_BARBERS}
+            step="1"
+            value={START}
+            data-growth-range
+          />
+        </div>
+      </div>
+
+      <div class="cost-growth__body">
+        <div class="cost-growth__chart">
+          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="cost-growth-svg-title" preserveAspectRatio="xMidYMid meet">
+            <title id="cost-growth-svg-title">Monthly cost for one to ten barbers. Full KERSIVO stays flat; per-barber plans rise with each hire.</title>
+            <g class="cost-growth__grid">
+              {
+                ticks.map((tick) => (
+                  <g>
+                    <line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} />
+                    <text x={PAD.left - 10} y={y(tick) + 4} text-anchor="end">{formatMoneyGbp(tick).replace('.00', '')}</text>
+                  </g>
+                ))
+              }
+              {
+                barbers.map((count) => (
+                  <text class="cost-growth__xtick" x={x(count)} y={H - 12} text-anchor="middle">{count}</text>
+                ))
+              }
+            </g>
+            <line class="cost-growth__marker" data-growth-marker x1={x(START)} x2={x(START)} y1={PAD.top} y2={H - PAD.bottom} />
+            {
+              series.map((entry) => (
+                <g class="cost-growth__series" data-series={entry.providerId} data-kersivo={entry.providerId === 'kersivo' ? 'true' : undefined}>
+                  <path class="cost-growth__line" pathLength="1" d={entry.d} />
+                  <circle class="cost-growth__dot" r="5" cx={x(START)} cy={y(entry.points[START - 1])} data-growth-dot />
+                  <text class="cost-growth__end" x={W - PAD.right + 10} y={labelY.get(entry.providerId)! + 4}>{entry.label}</text>
+                </g>
+              ))
+            }
+          </svg>
+        </div>
+
+        <ol class="cost-growth__readout" data-growth-readout aria-live="polite">
+          {
+            readoutAt(START).map((row) => (
+              <li data-kersivo={row.id === 'kersivo' ? 'true' : undefined}>
+                <span>{row.label}</span>
+                <strong>{formatMoneyGbp(row.gbp)}</strong>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+      <p class="cost-growth__note">{TEAM_GROWTH_NOTE}</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initTeamGrowthChart } from '@/lib/costCalculator/teamGrowthChart';
+
+  initTeamGrowthChart(document);
+  document.addEventListener('astro:page-load', () => initTeamGrowthChart(document));
+</script>

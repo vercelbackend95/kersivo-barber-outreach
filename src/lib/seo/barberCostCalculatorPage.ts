@@ -18,6 +18,7 @@ import {
   BOOKSY_PAYMENT_FACTS_CHECKED_DATE,
   BOOKSY_STANDARD_MARKETPLACE_BOOKINGS,
 } from '@/lib/seo/booksyFacts';
+import { KERSIVO_COMMISSION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import {
   STRIPE_FACTS_CHECKED_DATE,
   STRIPE_UK_STANDARD_CARD_FIXED_GBP,
@@ -40,16 +41,16 @@ import {
 
 export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculator';
 
-export const BARBER_COST_CALCULATOR_TITLE = 'Barber Software Cost Calculator UK | KERSIVO';
+export const BARBER_COST_CALCULATOR_TITLE = 'Barber Booking Software Cost UK: Free Calculator | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'Compare Booksy, Fresha, Treatwell, Nearcut, Setora, Square Appointments, Phorest, Timely and KERSIVO costs for UK barbershops. Model fees, VAT and quotes.';
+  'How much does barber booking software cost? Compare subscriptions, per-barber fees and commission across Booksy, Fresha, Treatwell and 7 more. No sign-up.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const BARBER_COST_CALCULATOR_LAST_UPDATED_ISO = '2026-10-08';
-export const BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL = '8 October 2026';
+export const BARBER_COST_CALCULATOR_LAST_UPDATED_ISO = '2026-11-14';
+export const BARBER_COST_CALCULATOR_LAST_UPDATED_LABEL = '14 November 2026';
 
 const independent = requireVerifiedFreshaFact('independentPlan');
 const teamPlan = requireVerifiedFreshaFact('teamPlanPerMember');
@@ -72,13 +73,21 @@ const feeLabel = (percent: number, fixedGbp: number) => `${formatPercent(percent
 /* ---------------------------------- Hero ---------------------------------- */
 
 export const COST_CALC_HERO = {
-  eyebrow: 'UK BARBER SOFTWARE COST CALCULATOR',
-  title: 'Barber Booking Software Cost Calculator',
-  lead: 'Compare Booksy, Fresha, Nearcut, Treatwell, Setora, Square Appointments, Phorest, Timely and KERSIVO using your own UK barbershop numbers. Nearcut customer booking charges are shown separately from shop costs.',
-  supporting:
-    'See how team size, marketplace fees, VAT, payments and optional features can change what your booking software really costs.',
+  eyebrow: 'UK BARBERSHOP SOFTWARE COSTS',
+  title: 'How much does barber booking software really cost?',
+  lead: 'The price on a pricing page is rarely what leaves your account. Per-barber charges, marketplace commission, VAT and card fees stack up on top. Put in your shop’s numbers and see the monthly bill for Booksy, Fresha, Treatwell and seven more, side by side.',
+  fact: `Full KERSIVO is ${formatGbp(SAAS_MONTHLY_GBP)}/month per location, with every barber, your website and your own domain included.`,
+  factNote: `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
+  primaryTool: 'Work out my costs',
   builtBy:
     'Built by KERSIVO. Competitor pricing is based on official UK sources and checked regularly.',
+} as const;
+
+/** Hero visual: one worked example, straight from the engine. */
+export const COST_CALC_HERO_EXAMPLE = {
+  barbers: 5,
+  title: 'A five-chair shop, per month',
+  caption: 'Software and VAT, direct bookings only',
 } as const;
 
 export const COST_CALC_TRUST_SIGNALS: readonly string[] = [
@@ -543,3 +552,105 @@ export const METHODOLOGY_PRINCIPLES: readonly MarketplacePoint[] = [
     body: 'Pricing can change and every shop is different. Results are estimates to support a decision, not a quote from any provider.',
   },
 ];
+
+/* --------------------------- Three pricing models --------------------------- */
+
+export const PRICING_MODELS_HEADING = 'Fixed fee, per barber or commission: how booking software charges you';
+
+export const PRICING_MODELS_INTRO =
+  'Every booking platform bills you in one of three ways, and many mix them. Which one you are on decides what happens to your bill when you hire a barber or a marketplace sends you a new client.';
+
+export type PricingModel = {
+  id: 'flat' | 'per-barber' | 'commission';
+  label: string;
+  title: string;
+  body: string;
+  /** Who uses this model, from the verified facts above. */
+  examples: readonly string[];
+  watch: string;
+};
+
+export const PRICING_MODELS: readonly PricingModel[] = [
+  {
+    id: 'flat',
+    label: 'Fixed subscription',
+    title: 'One price for the shop',
+    body: 'A flat monthly fee per location, however many barbers are on the rota. Hire a fourth barber and the bill stays where it is.',
+    examples: [
+      `Full KERSIVO: ${KERSIVO_PRICE}/month per location, additional barbers included`,
+      `Setora: ${formatGbp(requireVerifiedSetoraFact('canonicalMonthlyGbp').value)}/month per location, unlimited staff`,
+      'Square Appointments: Free, Plus or Premium per location, unlimited staff calendars',
+    ],
+    watch: 'Check what the flat price includes. A website, a domain or deposits can be extras elsewhere.',
+  },
+  {
+    id: 'per-barber',
+    label: 'Per barber',
+    title: 'A charge for every chair',
+    body: 'A base plan, then a monthly charge for each extra user, team member or calendar. It looks cheap for one chair and climbs with every hire.',
+    examples: [
+      `Booksy: ${BOOKSY_BASE_PRICE_LABEL}, then ${BOOKSY_PER_ADDITIONAL_USER_LABEL}`,
+      `Fresha: ${FRESHA_TEAM_PRICE} per bookable team member/month + VAT on the Team plan`,
+      `Vagaro: +${formatGbp(requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value)}/month for each additional calendar`,
+    ],
+    watch: 'Count everyone who takes bookings, including part-timers and the Saturday barber.',
+  },
+  {
+    id: 'commission',
+    label: 'Commission',
+    title: 'A cut of new clients',
+    body: 'A one-off fee on a new client’s first visit when a marketplace sends them to you. You only pay it when the marketplace works, but you pay it every time it does.',
+    examples: [
+      `Treatwell: ${requireVerifiedTreatwellFact('newMarketplaceClientCommission').percent}% + VAT on eligible new marketplace bookings`,
+      `Fresha Marketplace: ${FRESHA_MARKETPLACE_PERCENT} of a brand-new client’s first appointment, minimum ${FRESHA_MARKETPLACE_MINIMUM}`,
+      `Booksy Boost (optional): ${BOOKSY_BOOST_PERCENT} of a qualifying new client’s first visit, minimum ${BOOKSY_BOOST_MINIMUM}`,
+    ],
+    watch: 'Nearcut Free for You moves the charge to your clients instead: they pay a booking fee on top of the service.',
+  },
+];
+
+export const TEAM_GROWTH_HEADING = 'Monthly cost as your team grows';
+export const TEAM_GROWTH_NOTE =
+  'Cash cost per month for one location with direct bookings only: no marketplace clients, add-ons or deposit processing, and not VAT registered. Platforms that need a shop-specific quote are left out rather than guessed. Nearcut Free for You and Square Free show no shop subscription, so they are not drawn.';
+export const TEAM_GROWTH_SLIDER_LABEL = 'Bookable barbers';
+
+/* ------------------------------ What KERSIVO gives you ------------------------------ */
+
+export const OUTCOMES_EYEBROW = 'FULL KERSIVO';
+export const OUTCOMES_HEADING = `What ${KERSIVO_PRICE} a month gets your shop`;
+export const OUTCOMES_INTRO =
+  'Price is half the comparison. The other half is what the money does for you once the software is running. Here is what Full KERSIVO puts to work for your shop, and what it doesn’t do.';
+
+export type Outcome = { id: string; title: string; body: string; link?: { href: string; label: string } };
+
+export const OUTCOMES: readonly Outcome[] = [
+  {
+    id: 'flat',
+    title: 'Hire without a bigger bill',
+    body: 'Your price is set per location, not per chair. Add a barber, open on Sundays, take on an apprentice: the subscription stays the same.',
+  },
+  {
+    id: 'commission',
+    title: 'Keep the full price of every new client',
+    body: `${KERSIVO_COMMISSION_CLAIM} No cut of a first visit, nothing on repeat bookings or retail sales. ${STRIPE_FEES_NOTE}`,
+  },
+  {
+    id: 'brand',
+    title: 'Your website, your domain, your clients',
+    body: 'A standard website tailored to your shop’s brand, one standard domain, hosting and SSL are included. Clients book you on your own site, under your name.',
+  },
+  {
+    id: 'deposits',
+    title: 'Deposits that protect your chair',
+    body: 'Take a booking deposit online through Stripe Checkout, so a no-show no longer costs you the whole slot.',
+    link: { href: '/barbershop-no-show-calculator', label: 'Work out what no-shows cost you' },
+  },
+  {
+    id: 'setup',
+    title: 'Live in a few days, no setup fee',
+    body: 'Typically ready in a few days once we receive all required information. Migration help is included and there is no separate setup fee.',
+  },
+];
+
+export const OUTCOMES_HONEST_TITLE = 'What KERSIVO doesn’t do';
+export const OUTCOMES_STARTER_NOTE = `Smaller shop? KERSIVO Starter is ${formatGbp(0)}/month for up to 4 bookable barbers.`;
