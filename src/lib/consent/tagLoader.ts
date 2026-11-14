@@ -1,4 +1,10 @@
 import type { ConsentPreferences } from './types';
+import {
+  applyInternalTrafficTag,
+  gaConfig,
+  isInternalTraffic,
+  readInternalTrafficCookie,
+} from '@/lib/analytics/internalTraffic';
 
 declare global {
   interface Window {
@@ -93,10 +99,16 @@ export async function syncTagsForConsent(
 
   window.gtag!('js', new Date());
 
+  // Consent given on this page: the inline bootstrap configured nothing yet, so mark internal
+  // traffic here too, or this page view and every ClientRouter page view after it go out untagged.
+  const internal = isInternalTraffic({
+    cookieValue: readInternalTrafficCookie(document.cookie),
+    hostname: window.location.hostname,
+  });
+  applyInternalTrafficTag(window.gtag!, internal);
+
   if (wantAnalytics && !window.__kersivoGa4Configured) {
-    window.gtag!('config', ids.gaMeasurementId, {
-      anonymize_ip: true,
-    });
+    window.gtag!('config', ids.gaMeasurementId, gaConfig({ internal }));
     window.__kersivoGa4Configured = true;
   }
 

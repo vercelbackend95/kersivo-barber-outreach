@@ -1,6 +1,8 @@
 /**
  * Client orchestrator for F01 SaaS purchase tracking on /setup/success.
- * Progressive per-channel fire, consent-aware, waits for late cookie banner accept.
+ * Sends the Google Ads purchase conversion (needs the browser's click ids); the GA4
+ * `saas_subscription_paid` key event is sent once by the Stripe webhook for live payments.
+ * Consent-aware, waits for late cookie banner accept.
  */
 
 import {
@@ -158,6 +160,8 @@ export function startSaasPurchaseTracking(
       },
       alreadyFired: already,
       abandonAds,
+      // GA4 saas_subscription_paid comes from the Stripe webhook (src/pages/api/shop/webhook.ts).
+      ga4FromServer: true,
     });
 
     if (result.firedGa4) markFired(input.transactionId, 'ga4');

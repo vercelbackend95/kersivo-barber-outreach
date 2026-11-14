@@ -16,6 +16,7 @@ import {
   withSaasShopCheckoutLock,
 } from './saasCheckoutGuard';
 import {
+  analyticsIdsForCheckout,
   buildSaasSubscriptionStripeMetadata,
   type SaasCheckoutSource,
 } from './saasSubscription';
@@ -423,6 +424,7 @@ export async function runAuthenticatedSaasCheckout(
         checkoutAttemptId,
         shopId,
         source: input.source,
+        ...analyticsIdsForCheckout(input.request),
       }),
       ...termsAcceptanceStripeMetadata(),
     };

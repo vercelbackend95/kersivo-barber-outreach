@@ -200,8 +200,8 @@ export const auth = betterAuth({
         before: async (user) => {
           await handleUserCreating(user);
         },
-        after: async (user) => {
-          await handleUserCreated(user);
+        after: async (user, context) => {
+          await handleUserCreated(user, context);
         },
       },
     },

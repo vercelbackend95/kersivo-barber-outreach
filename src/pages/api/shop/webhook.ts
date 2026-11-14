@@ -47,7 +47,11 @@ import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { markPreviewRequestConverted } from '../../../lib/freePreview/conversion';
 import { PREVIEW_GA_CLIENT_METADATA_KEY, PREVIEW_REQUEST_METADATA_KEY } from '../../../lib/freePreview/launchCheckout';
-import { sendServerAnalyticsEvent } from '../../../lib/analytics/serverEvents';
+import {
+  GA_CLIENT_ID_METADATA_KEY,
+  GA_SESSION_ID_METADATA_KEY,
+  sendServerAnalyticsEvent,
+} from '../../../lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '../../../lib/analytics/funnelEvents';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { isBookingCheckoutMetadataType } from '../../../lib/booking/bookingPaymentPolicy';
@@ -490,6 +494,7 @@ async function handleSaasSubscriptionCheckout(
   session: StripeSession,
   metadata: Record<string, string>,
   eventCreated: number,
+  livemode: boolean,
 ): Promise<Response> {
   if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
     console.error('[webhook] SaaS subscription session not paid', {
@@ -516,6 +521,9 @@ async function handleSaasSubscriptionCheckout(
       where: { checkoutAttemptId },
     });
   }
+
+  // GA4 counts the payment once, on the delivery that first activates the subscription.
+  const firstActivation = !record || record.status !== 'ACTIVE' || !record.activatedAt;
 
   if (!record) {
     if (!legacyPii) {
@@ -694,6 +702,23 @@ async function handleSaasSubscriptionCheckout(
       },
     });
     logSaasSubscriptionStage('marked_active', { sessionId, id: record.id });
+  }
+
+  // Source of truth for the GA4 key event: a paid, live-mode Checkout. Test-mode payments and
+  // internal devices (no GA client id stored at checkout) never reach the marketing property.
+  // The success page only sends the Google Ads conversion, so GA4 sees this event once.
+  if (firstActivation && livemode) {
+    await sendServerAnalyticsEvent({
+      name: 'saas_subscription_paid',
+      clientId: metadata[GA_CLIENT_ID_METADATA_KEY]?.trim() || null,
+      sessionId: metadata[GA_SESSION_ID_METADATA_KEY]?.trim() || null,
+      params: {
+        transaction_id: stripeSubscriptionId || sessionId,
+        value: monthlyPence / 100,
+        currency: currency.toUpperCase(),
+        event_source: 'stripe_webhook',
+      },
+    });
   }
 
   // Free preview launch (spec §7): only checkouts started from a preview carry previewRequestId.
@@ -1481,7 +1506,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === SAAS_SUBSCRIPTION_METADATA_TYPE) {
-      return await finalize(await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created));
+      return await finalize(await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created, Boolean(event.livemode)));
     }
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && isBookingCheckoutMetadataType(metadata.type)) {

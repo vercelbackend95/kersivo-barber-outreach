@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { analyticsClientIdFromRequest, sendServerAnalyticsEvent } from '@/lib/analytics/serverEvents';
+import {
+  GA_CLIENT_ID_METADATA_KEY,
+  analyticsClientIdFromRequest,
+  sendServerAnalyticsEvent,
+} from '@/lib/analytics/serverEvents';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { prisma } from '@/lib/db/client';
 import { validateDomainChoice } from '@/lib/domains/validateChoice';
@@ -16,7 +20,7 @@ import { ownerCanActOnPreview, resolvePreviewRequestByToken, type TokenPreviewRe
 export const PREVIEW_REQUEST_METADATA_KEY = 'previewRequestId';
 
 /** GA client id, present only with Analytics consent: lets the webhook report preview_converted. */
-export const PREVIEW_GA_CLIENT_METADATA_KEY = 'gaClientId';
+export const PREVIEW_GA_CLIENT_METADATA_KEY = GA_CLIENT_ID_METADATA_KEY;
 
 export const PREVIEW_DOMAIN_METADATA_KEY = 'preferredDomain';
 export const PREVIEW_DOMAIN_MODE_METADATA_KEY = 'domainMode';
