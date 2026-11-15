@@ -121,6 +121,7 @@ describe('marketing navigation config', () => {
     ]);
     expect(tools.sections.find((section) => section.id === 'templates')?.items.map((item) => item.href)).toEqual([
       '/barbershop-cancellation-policy-template',
+      '/barbershop-price-list-template',
     ]);
     const resourceHrefs = [...resources.featured, ...resources.sections.flatMap((section) => section.items)].map((item) => item.href);
     expect(resourceHrefs).not.toContain('/compare');

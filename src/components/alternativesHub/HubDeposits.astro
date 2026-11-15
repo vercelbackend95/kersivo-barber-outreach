@@ -1,0 +1,76 @@
+---
+import { DEPOSITS_NOTE, DEPOSIT_ROWS } from '@/lib/compare/depositsData';
+import '@/styles/components/data-report.css';
+---
+
+<section id="deposits" class="cb-section hub-deposits" aria-labelledby="hub-deposits-title">
+  <div class="alt-hub__container">
+    <header class="cb-section__head">
+      <p class="ks-eyebrow">No-shows</p>
+      <h2 id="hub-deposits-title" class="cb-section__title">Deposits and no-show protection, platform by platform</h2>
+      <p class="cb-section__lead">
+        A deposit is the simplest way to stop no-shows. Here is what each platform offers and what the card payment on a
+        deposit costs. To see whether a deposit pays off in your shop, try the
+        <a class="dr-link" href="/barbershop-no-show-calculator">no-show cost calculator</a>.
+      </p>
+    </header>
+
+    <div class="ks-glass-card dr-table-card hub-deposits__card">
+      <p class="dr-scroll-hint" aria-hidden="true">Swipe sideways to see every column →</p>
+      <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="hub-deposits-title">
+        <table class="dr-table dr-table--text">
+          <caption>Deposits and card processing</caption>
+          <thead>
+            <tr>
+              <th scope="col">Platform</th>
+              <th scope="col">Deposits and no-show rules</th>
+              <th scope="col">Card processing on the deposit</th>
+              <th scope="col">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DEPOSIT_ROWS.map((row) => (
+              <tr data-first-party={row.isFirstParty ? 'true' : undefined}>
+                <th scope="row">{row.name}</th>
+                <td>{row.deposits}</td>
+                <td>{row.processing}</td>
+                <td>
+                  {row.source ? (
+                    <>
+                      <a class="dr-link" href={row.source.url} rel="nofollow noopener" target="_blank">{row.source.label}</a>
+                      <span class="dr-table__sub">Checked {row.source.checked}</span>
+                    </>
+                  ) : (
+                    <a class="dr-link" href="/barbershop-online-booking">How KERSIVO deposits work</a>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="dr-note">{DEPOSITS_NOTE}</p>
+  </div>
+</section>
+
+<style>
+  .hub-deposits {
+    --dr-line: rgba(255, 255, 255, 0.07);
+    --dr-small: #8e8e92;
+  }
+
+  .hub-deposits :where(a, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  .hub-deposits__card {
+    margin-top: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .hub-deposits .dr-table {
+    min-width: 48rem;
+  }
+</style>

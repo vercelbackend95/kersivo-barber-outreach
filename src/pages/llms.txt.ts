@@ -38,6 +38,8 @@ export function buildLlmsTxt(siteUrl: string): string {
     '## Comparisons',
     link('/compare', 'Compare booking systems', '11 UK barber booking systems with sourced, dated prices'),
     link('/barber-software-cost-calculator', 'Cost calculator', 'monthly software and payment costs by team size'),
+    link('/barber-booking-fees-uk', 'Booking software fees report', 'dated UK fees report: monthly cost by team size, marketplace new-client fees and card fees for 10 systems'),
+    link('/booksy-vs-fresha', 'Booksy vs Fresha', 'neutral head-to-head for UK barbershops: cost by team size, commission and card fees'),
     link('/booksy-alternative', 'Booksy alternative', 'KERSIVO compared with Booksy'),
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),
     link('/treatwell-alternative', 'Treatwell alternative', 'KERSIVO compared with Treatwell'),
@@ -54,6 +56,11 @@ export function buildLlmsTxt(siteUrl: string): string {
       '/barbershop-cancellation-policy-template',
       'Cancellation policy template',
       'free UK barbershop cancellation policy template: notice period, deposit, no-show and lateness rules in website, short and one-line versions, with nothing stored',
+    ),
+    link(
+      '/barbershop-price-list-template',
+      'Price list template',
+      'free barber price list template: add services, prices and times, then print on A4 or copy as text for Instagram and Google, with nothing stored',
     ),
     link(
       '/barbershop-no-show-calculator',

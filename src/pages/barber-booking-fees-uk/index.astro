@@ -1,0 +1,378 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import {
+  CARD_VAT_LABEL,
+  FEES_REPORT_BREADCRUMB_NAME,
+  FEES_REPORT_CARD_NOTE,
+  FEES_REPORT_CARD_NOT_PUBLISHED,
+  FEES_REPORT_CARD_ROWS,
+  FEES_REPORT_CITATION,
+  FEES_REPORT_COST_NOTE,
+  FEES_REPORT_COST_ROWS,
+  FEES_REPORT_DESCRIPTION,
+  FEES_REPORT_DIRECT_ANSWER,
+  FEES_REPORT_EDITION,
+  FEES_REPORT_EXAMPLE_PAYMENT_GBP,
+  FEES_REPORT_EYEBROW,
+  FEES_REPORT_FAQ_ITEMS,
+  FEES_REPORT_FINDINGS,
+  FEES_REPORT_H1,
+  FEES_REPORT_LAST_UPDATED_ISO,
+  FEES_REPORT_LAST_UPDATED_LABEL,
+  FEES_REPORT_METHODOLOGY,
+  FEES_REPORT_NEW_CLIENT_NOTE,
+  FEES_REPORT_NEW_CLIENT_PRICES,
+  FEES_REPORT_NEW_CLIENT_ROWS,
+  FEES_REPORT_PAGE_PATH,
+  FEES_REPORT_SOURCES,
+  FEES_REPORT_TEAM_SIZES,
+  FEES_REPORT_TITLE,
+  buildFeesReportJsonLd,
+  formatCardRate,
+  formatReportGbp,
+} from '@/lib/seo/feesReport';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+
+const currentYear = new Date().getFullYear();
+const sizeLabel = (n: number) => (n === 1 ? 'Solo' : `${n} barbers`);
+const cell = (value: number | null) => (value === null ? 'Quote' : formatReportGbp(value));
+---
+
+<LandingLayout
+  title={FEES_REPORT_TITLE}
+  description={FEES_REPORT_DESCRIPTION}
+  canonicalPath={FEES_REPORT_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildFeesReportJsonLd()]}
+>
+  <main class="dr-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href="/compare">Compare</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{FEES_REPORT_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">{FEES_REPORT_EYEBROW}</p>
+        <h1 class="dr-hero__title">{FEES_REPORT_H1}</h1>
+        <p class="dr-hero__lead">{FEES_REPORT_DIRECT_ANSWER}</p>
+        <ul class="dr-hero__meta" aria-label="About this report">
+          <li>Updated <time datetime={FEES_REPORT_LAST_UPDATED_ISO}>{FEES_REPORT_LAST_UPDATED_LABEL}</time></li>
+          <li>{FEES_REPORT_COST_ROWS.length} booking systems</li>
+          <li>Official UK prices only</li>
+        </ul>
+        <div class="dr-hero__actions">
+          <a class="btn btn--secondary btn--md" href="#monthly-cost">See the tables</a>
+          <a class="btn btn--secondary btn--md" href="#cite">How to cite</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="dr-section" aria-labelledby="dr-findings-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Key findings</p>
+          <h2 id="dr-findings-title" class="dr-h2">Four things the prices show</h2>
+        </div>
+        <ul class="dr-findings">
+          {FEES_REPORT_FINDINGS.map((finding) => (
+            <li class="ks-glass-card ks-glass-card--accent dr-finding">
+              <p class="dr-finding__figure">{finding.figure}</p>
+              <p class="dr-finding__label">{finding.label}</p>
+              <p class="dr-finding__body">{finding.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section id="monthly-cost" class="dr-section" aria-labelledby="dr-cost-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Table 1</p>
+          <h2 id="dr-cost-title" class="dr-h2">Monthly cost by team size</h2>
+          <p class="dr-section__lead">
+            What each system costs a month before card fees, sorted from cheapest for the largest team. Calculated by the
+            <a class="dr-link" href="/barber-software-cost-calculator">barber software cost calculator</a>, where you can enter your own shop.
+          </p>
+        </div>
+        <div class="ks-glass-card dr-table-card">
+          <p class="dr-scroll-hint" aria-hidden="true">Swipe sideways to see every column →</p>
+          <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="dr-cost-title">
+            <table class="dr-table">
+              <caption>Per month, VAT included where added, direct bookings only</caption>
+              <thead>
+                <tr>
+                  <th scope="col">System</th>
+                  {FEES_REPORT_TEAM_SIZES.map((size) => <th scope="col">{sizeLabel(size)}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {FEES_REPORT_COST_ROWS.map((row) => (
+                  <tr data-first-party={row.providerId === 'kersivo' ? 'true' : undefined}>
+                    <th scope="row">{row.name}</th>
+                    {row.monthly.map((value) => (
+                      <td class={value === null ? 'dr-table__muted' : undefined}>{cell(value)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="dr-note">{FEES_REPORT_COST_NOTE}</p>
+      </div>
+    </section>
+
+    <section id="new-client-fees" class="dr-section" aria-labelledby="dr-newclient-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Table 2</p>
+          <h2 id="dr-newclient-title" class="dr-h2">Marketplace fees on a new client</h2>
+          <p class="dr-section__lead">
+            The one-off fee a marketplace charges when it brings a brand-new client, at three typical first-visit prices.
+          </p>
+        </div>
+        <div class="ks-glass-card dr-table-card">
+          <p class="dr-scroll-hint" aria-hidden="true">Swipe sideways to see every column →</p>
+          <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="dr-newclient-title">
+            <table class="dr-table">
+              <caption>Fee per new client, before VAT</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Platform and rate</th>
+                  {FEES_REPORT_NEW_CLIENT_PRICES.map((price) => <th scope="col">{formatReportGbp(price)} visit</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {FEES_REPORT_NEW_CLIENT_ROWS.map((row) => (
+                  <tr data-first-party={row.id === 'kersivo' ? 'true' : undefined}>
+                    <th scope="row">
+                      {row.name} · {row.rate}
+                      <span class="dr-table__sub">{row.when}</span>
+                    </th>
+                    {row.fees.map((fee) => <td>{formatReportGbp(fee)}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="dr-note">{FEES_REPORT_NEW_CLIENT_NOTE}</p>
+      </div>
+    </section>
+
+    <section id="card-fees" class="dr-section" aria-labelledby="dr-card-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Table 3</p>
+          <h2 id="dr-card-title" class="dr-h2">Card fees on online payments</h2>
+          <p class="dr-section__lead">
+            The published rate for a standard UK card paid online, such as a deposit, and what it comes to on a
+            {formatReportGbp(FEES_REPORT_EXAMPLE_PAYMENT_GBP)} payment.
+          </p>
+        </div>
+        <div class="ks-glass-card dr-table-card">
+          <p class="dr-scroll-hint" aria-hidden="true">Swipe sideways to see every column →</p>
+          <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="dr-card-title">
+            <table class="dr-table">
+              <caption>Standard UK card, online</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Platform</th>
+                  <th scope="col">Rate</th>
+                  <th scope="col">VAT</th>
+                  <th scope="col">On {formatReportGbp(FEES_REPORT_EXAMPLE_PAYMENT_GBP)}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {FEES_REPORT_CARD_ROWS.map((row) => (
+                  <tr data-first-party={row.id === 'kersivo' ? 'true' : undefined}>
+                    <th scope="row">
+                      {row.name}
+                      <span class="dr-table__sub">{row.channel}</span>
+                    </th>
+                    <td>{formatCardRate(row)}</td>
+                    <td>{CARD_VAT_LABEL[row.vat]}</td>
+                    <td>{formatReportGbp(row.feeOnExample)}</td>
+                  </tr>
+                ))}
+                {FEES_REPORT_CARD_NOT_PUBLISHED.map((name) => (
+                  <tr>
+                    <th scope="row">{name}</th>
+                    <td class="dr-table__muted" colspan="3">No UK rate published</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="dr-note">{FEES_REPORT_CARD_NOTE}</p>
+      </div>
+    </section>
+
+    <section class="dr-section" aria-labelledby="dr-meaning-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">For your shop</p>
+          <h2 id="dr-meaning-title" class="dr-h2">What the numbers mean</h2>
+        </div>
+        <div class="dr-split">
+          <div class="ks-glass-card dr-card">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Check first</p>
+            <h3>Questions to answer before you compare</h3>
+            <ul class="dr-list">
+              <li>How many barbers need their own bookable diary, today and in a year?</li>
+              <li>How many new clients a month really come from a marketplace, and how many find you on Google or Instagram?</li>
+              <li>Do you take deposits or full payment online, and on what share of bookings?</li>
+              <li>Do you need your own website and domain, or is a profile page enough?</li>
+            </ul>
+          </div>
+          <div class="ks-glass-card dr-card">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Rules of thumb</p>
+            <h3>How the pricing models play out</h3>
+            <ul class="dr-list">
+              <li>Solo or two chairs: per-barber plans and free plans are usually cheapest on subscription.</li>
+              <li>Growing team: per-location pricing stays flat while per-barber plans rise with every hire.</li>
+              <li>Relying on a marketplace for new clients: the new-client fee can outweigh the subscription.</li>
+              <li>Most clients are regulars: card fees and the subscription matter more than marketplace fees.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cite" class="dr-section" aria-labelledby="dr-method-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Method</p>
+          <h2 id="dr-method-title" class="dr-h2">How this report is made</h2>
+        </div>
+        <div class="dr-split">
+          <div class="ks-glass-card dr-card">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Methodology</p>
+            <h3>{FEES_REPORT_EDITION}</h3>
+            <ul class="dr-list">
+              {FEES_REPORT_METHODOLOGY.map((item) => <li>{item}</li>)}
+            </ul>
+          </div>
+          <div class="ks-glass-card ks-glass-card--accent dr-cite">
+            <p class="ks-eyebrow">Using these figures</p>
+            <p class="dr-section__lead">
+              Journalists, bloggers and other tools may quote this report. Please link to this page and check the provider’s
+              own page before you publish.
+            </p>
+            <blockquote id="dr-citation">{FEES_REPORT_CITATION}</blockquote>
+            <div class="dr-cite__actions">
+              <button type="button" class="btn btn--secondary btn--md" data-copy-citation>Copy citation</button>
+              <span class="dr-cite__status" role="status" aria-live="polite" data-copy-status></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dr-section" aria-labelledby="dr-related-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Go further</p>
+          <h2 id="dr-related-title" class="dr-h2">Work out your own costs</h2>
+        </div>
+        <ul class="dr-related">
+          <li>
+            <a href="/barber-software-cost-calculator">
+              <span class="dr-related__label">Barber software cost calculator</span>
+              <span class="dr-related__desc">Enter your team, bookings and prices to see your monthly total.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/booksy-vs-fresha">
+              <span class="dr-related__label">Booksy vs Fresha</span>
+              <span class="dr-related__desc">The two biggest platforms side by side for a UK barbershop.</span>
+            </a>
+          </li>
+          <li>
+            <a href="/compare">
+              <span class="dr-related__label">Compare 11 booking systems</span>
+              <span class="dr-related__desc">Features, ownership of client data and who each one suits.</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <Faq4
+        className="faq4--landing"
+        heading="Questions about booking software fees"
+        subHeading="Straight answers from the published prices in this report."
+        supportHeading="Want the numbers for your shop?"
+        supportText="The cost calculator uses the same prices and lets you change every input."
+        supportLinkLabel="Open the calculator"
+        supportLinkHref="/barber-software-cost-calculator"
+        faqs={[...FEES_REPORT_FAQ_ITEMS]}
+      />
+
+    <ComparisonFinalCta placement="fees_report" />
+
+    <section class="dr-section dr-end" aria-labelledby="dr-sources-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow ks-eyebrow--neutral">Sources</p>
+          <h2 id="dr-sources-title" class="dr-h2">Where every figure comes from</h2>
+        </div>
+        <ul class="dr-sources">
+          {FEES_REPORT_SOURCES.map((source) => (
+            <li>
+              <span>{source.provider}</span>
+              <a class="dr-link" href={source.url} rel="nofollow noopener" target="_blank">{source.label}</a>
+              <span class="dr-sources__date">Checked {source.checked}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="dr-note">
+          Booksy, Fresha, Treatwell, Vagaro, Timely, Setora, Square, Nearcut, Phorest and SQUIRE are trademarks of their
+          respective owners. KERSIVO is not affiliated with, endorsed by or sponsored by any of them.
+        </p>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  const bindCitation = () => {
+    const button = document.querySelector<HTMLButtonElement>('[data-copy-citation]');
+    const status = document.querySelector<HTMLElement>('[data-copy-status]');
+    const text = document.getElementById('dr-citation')?.textContent?.trim();
+    if (!button || !status || !text || button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        status.textContent = 'Citation copied.';
+      } catch {
+        status.textContent = 'Copy failed. Select the text above instead.';
+      }
+    });
+  };
+
+  bindCitation();
+  document.addEventListener('astro:page-load', bindCitation);
+</script>

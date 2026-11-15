@@ -10,8 +10,8 @@
  */
 
 /** Human-readable date the facts below were checked against official Fresha sources. */
-export const FRESHA_FACTS_CHECKED_DATE: string | null = '30 September 2026';
-export const FRESHA_FACTS_CHECKED_ISO: string | null = '2026-09-30';
+export const FRESHA_FACTS_CHECKED_DATE: string | null = '15 November 2026';
+export const FRESHA_FACTS_CHECKED_ISO: string | null = '2026-11-15';
 
 export type FreshaSourceId =
   | 'pricingUk'
@@ -128,7 +128,7 @@ export type VerifiedCommercialFact = {
 
 export type CommercialFact = UnresolvedCommercialFact | VerifiedCommercialFact;
 
-const CHECKED = '2026-09-30';
+const CHECKED = '2026-11-15';
 
 /** Fresha UK commercial terms. Only `verified` entries may be rendered. */
 export const FRESHA_UK_COMMERCIAL_FACTS = {
