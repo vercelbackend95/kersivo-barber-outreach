@@ -58,6 +58,11 @@ export function buildLlmsTxt(siteUrl: string): string {
       'free UK barbershop cancellation policy template: notice period, deposit, no-show and lateness rules in website, short and one-line versions, with nothing stored',
     ),
     link(
+      '/barbershop-price-list-template',
+      'Price list template',
+      'free barber price list template: add services, prices and times, then print on A4 or copy as text for Instagram and Google, with nothing stored',
+    ),
+    link(
       '/barbershop-no-show-calculator',
       'No-show cost calculator',
       'free barber no-show cost calculator: the yearly cost of missed appointments from your own numbers, and whether a deposit would pay for itself',

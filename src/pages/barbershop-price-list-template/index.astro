@@ -1,0 +1,245 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import {
+  PRICE_LIST_MAX_ITEMS,
+  PRICE_LIST_DURATION_OPTIONS,
+  PRICE_LIST_FOOTER_MAX,
+  PRICE_LIST_NAME_MAX,
+  PRICE_LIST_SHOP_MAX,
+  PRICE_LIST_SUGGESTED_SERVICES,
+  formatMinutes,
+} from '@/lib/priceList/priceListText';
+import {
+  PRICE_LIST_BREADCRUMB_NAME,
+  PRICE_LIST_DESCRIPTION,
+  PRICE_LIST_DIRECT_ANSWER,
+  PRICE_LIST_EYEBROW,
+  PRICE_LIST_FAQ_ITEMS,
+  PRICE_LIST_GUIDE,
+  PRICE_LIST_H1,
+  PRICE_LIST_LAST_UPDATED_ISO,
+  PRICE_LIST_LAST_UPDATED_LABEL,
+  PRICE_LIST_PAGE_PATH,
+  PRICE_LIST_RELATED_LINKS,
+  PRICE_LIST_TITLE,
+  PRICE_LIST_TRUST_SIGNALS,
+  buildPriceListJsonLd,
+} from '@/lib/seo/priceListTemplatePage';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+import '@/styles/components/price-list-template.css';
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={PRICE_LIST_TITLE}
+  description={PRICE_LIST_DESCRIPTION}
+  canonicalPath={PRICE_LIST_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildPriceListJsonLd()]}
+>
+  <main class="dr-page pl-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{PRICE_LIST_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">{PRICE_LIST_EYEBROW}</p>
+        <h1 class="dr-hero__title">{PRICE_LIST_H1}</h1>
+        <p class="dr-hero__lead">{PRICE_LIST_DIRECT_ANSWER}</p>
+        <ul class="dr-hero__meta" aria-label="About this template">
+          {PRICE_LIST_TRUST_SIGNALS.map((signal) => <li>{signal}</li>)}
+        </ul>
+        <p class="dr-note">
+          Updated <time datetime={PRICE_LIST_LAST_UPDATED_ISO}>{PRICE_LIST_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </header>
+
+    <section id="price-list-tool" class="dr-section" aria-labelledby="pl-tool-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Make your list</p>
+          <h2 id="pl-tool-title" class="dr-h2">Your services and prices</h2>
+          <p class="dr-section__lead">
+            The rows start with common barbershop services and no prices. Rename, remove or add rows (up to {PRICE_LIST_MAX_ITEMS}).
+          </p>
+        </div>
+
+        <div class="pl-tool">
+          <form id="pl-form" class="ks-glass-card pl-form" novalidate>
+            <div class="pl-field">
+              <label for="pl-shop">Shop name</label>
+              <input id="pl-shop" name="shop" type="text" maxlength={PRICE_LIST_SHOP_MAX} autocomplete="organization" placeholder="Your barbershop" />
+            </div>
+
+            <fieldset class="pl-rows-fieldset">
+              <legend>Services</legend>
+              <div class="pl-rows__head" aria-hidden="true">
+                <span>Service</span><span>Price (£)</span><span>Time</span><span></span>
+              </div>
+              <ol id="pl-rows" class="pl-rows">
+                {PRICE_LIST_SUGGESTED_SERVICES.map((service) => (
+                  <li class="pl-row" data-pl-row>
+                    <label class="pl-row__name">
+                      <span class="sr-only">Service name</span>
+                      <input data-pl-name type="text" value={service} maxlength={PRICE_LIST_NAME_MAX} />
+                    </label>
+                    <label class="pl-row__price">
+                      <span class="sr-only">Price in pounds for this service</span>
+                      <input data-pl-price type="text" inputmode="decimal" placeholder="£" />
+                    </label>
+                    <label class="pl-row__time">
+                      <span class="sr-only">Time for this service</span>
+                      <select data-pl-minutes>
+                        <option value="">—</option>
+                        {PRICE_LIST_DURATION_OPTIONS.map((m) => <option value={m}>{formatMinutes(m)}</option>)}
+                      </select>
+                    </label>
+                    <label class="pl-row__from">
+                      <input data-pl-from type="checkbox" />
+                      <span>“from”</span>
+                    </label>
+                    <button type="button" class="pl-row__remove" data-pl-remove aria-label="Remove this service">×</button>
+                  </li>
+                ))}
+              </ol>
+              <template id="pl-row-template">
+                <li class="pl-row" data-pl-row>
+                  <label class="pl-row__name">
+                    <span class="sr-only">Service name</span>
+                    <input data-pl-name type="text" maxlength={PRICE_LIST_NAME_MAX} placeholder="New service" />
+                  </label>
+                  <label class="pl-row__price">
+                    <span class="sr-only">Price in pounds for this service</span>
+                    <input data-pl-price type="text" inputmode="decimal" placeholder="£" />
+                  </label>
+                  <label class="pl-row__time">
+                    <span class="sr-only">Time for this service</span>
+                    <select data-pl-minutes>
+                      <option value="">—</option>
+                      {PRICE_LIST_DURATION_OPTIONS.map((m) => <option value={m}>{formatMinutes(m)}</option>)}
+                    </select>
+                  </label>
+                  <label class="pl-row__from">
+                    <input data-pl-from type="checkbox" />
+                    <span>“from”</span>
+                  </label>
+                  <button type="button" class="pl-row__remove" data-pl-remove aria-label="Remove this service">×</button>
+                </li>
+              </template>
+              <button id="pl-add" type="button" class="btn btn--secondary btn--md pl-add">Add a service</button>
+            </fieldset>
+
+            <label class="pl-check">
+              <input name="duration" type="checkbox" />
+              <span>Show times on the price list</span>
+            </label>
+
+            <div class="pl-field">
+              <label for="pl-footer">Line at the bottom (optional)</label>
+              <input id="pl-footer" name="footer" type="text" maxlength={PRICE_LIST_FOOTER_MAX} placeholder="For example: Book online at yourshop.co.uk" />
+            </div>
+          </form>
+
+          <div class="pl-output">
+            <div id="pl-sheet" class="pl-sheet" aria-labelledby="pl-sheet-label">
+              <p id="pl-sheet-label" class="sr-only">Price list preview</p>
+              <p class="pl-sheet__eyebrow" aria-hidden="true">Price list</p>
+              <h3 class="pl-sheet__title" data-pl-sheet-title>Your barbershop</h3>
+              <ul class="pl-sheet__list" data-pl-sheet-list>
+                {PRICE_LIST_SUGGESTED_SERVICES.map((service) => (
+                  <li class="pl-sheet__item">
+                    <span class="pl-sheet__name">{service}</span>
+                    <span class="pl-sheet__leader" aria-hidden="true"></span>
+                    <span class="pl-sheet__price" data-missing="true">£—</span>
+                  </li>
+                ))}
+              </ul>
+              <p class="pl-sheet__footer" data-pl-sheet-footer hidden></p>
+            </div>
+            <p id="pl-missing" class="pl-missing" role="status" aria-live="polite" hidden></p>
+            <div class="pl-actions">
+              <button id="pl-print" type="button" class="btn btn--primary btn--md">Print or save as PDF</button>
+              <button id="pl-copy" type="button" class="btn btn--secondary btn--md">Copy as text</button>
+              <span id="pl-status" class="dr-cite__status" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {PRICE_LIST_GUIDE.map((item, index) => (
+      <section class="dr-section" aria-labelledby={`pl-guide-${index}`}>
+        <div class="dr-shell">
+          <div class="dr-section__head">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Guide</p>
+            <h2 id={`pl-guide-${index}`} class="dr-h2">{item.heading}</h2>
+          </div>
+          <ul class="dr-list pl-guide-list">
+            {item.points.map((point) => <li>{point}</li>)}
+          </ul>
+        </div>
+      </section>
+    ))}
+
+    <section class="dr-section" aria-labelledby="pl-related-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Keep going</p>
+          <h2 id="pl-related-title" class="dr-h2">Related free tools</h2>
+        </div>
+        <ul class="dr-related">
+          {PRICE_LIST_RELATED_LINKS.map((link) => (
+            <li>
+              <a href={link.href}>
+                <span class="dr-related__label">{link.label}</span>
+                <span class="dr-related__desc">{link.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Price list questions"
+      subHeading="Printing, “from” prices, VAT and working out what to charge."
+      supportHeading="Want clients to book at these prices?"
+      supportText="Full KERSIVO puts your services and prices on your own website with online booking."
+      supportLinkLabel="See Full KERSIVO pricing"
+      supportLinkHref="/pricing#plan"
+      faqs={[...PRICE_LIST_FAQ_ITEMS]}
+    />
+
+    <ComparisonFinalCta placement="price_list_template" />
+
+    <div class="dr-end"></div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initPriceListTool } from '@/lib/priceList/initPriceListTool';
+  import { onPageReady } from '@/lib/navigation/pageReady';
+
+  onPageReady(initPriceListTool);
+</script>

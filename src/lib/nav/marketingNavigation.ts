@@ -110,7 +110,7 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     tabLabel: 'Tools',
     eyebrow: 'FREE TOOLS',
     heading: 'Run the numbers on your shop.',
-    description: 'Free calculators and a policy template for UK barbershops.',
+    description: 'Free calculators and templates for UK barbershops.',
     sections: [
       { id: 'calculators', label: 'Calculators' },
       { id: 'templates', label: 'Templates' },
@@ -403,6 +403,16 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     section: 'templates',
     icon: 'policy',
     keywords: ['deposit', 'no-show', 'late'],
+  },
+  {
+    id: 'resources-price-list',
+    label: 'Price list template',
+    description: 'Lay out your prices to print for the wall or copy for Instagram.',
+    href: '/barbershop-price-list-template',
+    group: 'tools',
+    section: 'templates',
+    icon: 'policy',
+    keywords: ['prices', 'menu', 'tariff', 'print'],
   },
   {
     id: 'resources-faq',

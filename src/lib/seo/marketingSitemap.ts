@@ -13,6 +13,7 @@ import { SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { ABOUT_PAGE_PATH } from './aboutPage';
 import { BOOKSY_VS_FRESHA_PAGE_PATH } from './booksyVsFresha';
 import { FEES_REPORT_PAGE_PATH } from './feesReport';
+import { PRICE_LIST_PAGE_PATH } from './priceListTemplatePage';
 import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
 import { NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
@@ -77,6 +78,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(FEES_REPORT_PAGE_PATH),
   staticPage(BOOKSY_VS_FRESHA_PAGE_PATH),
   staticPage(CANCELLATION_POLICY_PAGE_PATH),
+  staticPage(PRICE_LIST_PAGE_PATH),
   staticPage(NO_SHOW_CALCULATOR_PAGE_PATH),
   staticPage(CHAIR_RENT_CALCULATOR_PAGE_PATH),
   staticPage('/privacy'),
