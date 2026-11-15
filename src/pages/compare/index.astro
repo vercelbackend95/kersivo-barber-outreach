@@ -1,4 +1,5 @@
 ---
+import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -44,6 +45,7 @@ const currentYear = new Date().getFullYear();
 >
   <main class="alt-hub landing-overflow-guard">
     <HubHero />
+    <InShort />
     <HubAudience />
     <HubNewClientFees />
     <HubDuel />

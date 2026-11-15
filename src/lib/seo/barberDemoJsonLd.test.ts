@@ -50,7 +50,7 @@ describe('buildBarberDemoJsonLd', () => {
     expect(organization.name).toBe('KERSIVO');
     expect(organization.url).toBe(`${siteUrl}/`);
     expect(organization.description).toBe(
-      'Booking and management software built specifically for independent UK barbershops.',
+      'KERSIVO is booking and management software built specifically for independent UK barbershops.',
     );
     expect(organization.email).toBe('hello@kersivo.co.uk');
     expect(organization.areaServed).toEqual({

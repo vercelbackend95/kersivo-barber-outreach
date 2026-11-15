@@ -6,6 +6,8 @@ import EditorialIntro from '@/components/editorial/EditorialIntro.astro';
 import FinalCta from '@/components/FinalCta.astro';
 import InsightCards from '@/components/editorial/InsightCards.astro';
 import {
+  ABOUT_AT_A_GLANCE,
+  ABOUT_AT_A_GLANCE_TITLE,
   ABOUT_AUDIENCE,
   ABOUT_AUDIENCE_INTRO,
   ABOUT_ENTITY_DEFINITION,
@@ -28,6 +30,7 @@ import {
   ABOUT_WHY_TITLE,
   buildAboutBreadcrumbJsonLd,
   buildAboutPageJsonLd,
+  getAboutOfficialProfiles,
 } from '@/lib/seo/aboutPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
@@ -39,8 +42,10 @@ import {
 } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/fresha-alternative.css';
 import '@/styles/components/company-pages.css';
+import '@/styles/components/ks-glass-card.css';
 
 const currentYear = new Date().getFullYear();
+const officialProfiles = getAboutOfficialProfiles();
 ---
 
 <LandingLayout
@@ -190,6 +195,35 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
+    <section id="at-a-glance" class="fresha-alt__section" aria-labelledby="about-glance-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">ENTITY FACTS</p>
+          <h2 id="about-glance-title" class="fresha-alt__h2">{ABOUT_AT_A_GLANCE_TITLE}</h2>
+        </header>
+        <div class="about-glance ks-glass-card ks-glass-card--accent">
+          <dl class="about-glance__list">
+            {ABOUT_AT_A_GLANCE.map((fact) => (
+              <div class="about-glance__row">
+                <dt class="ks-eyebrow ks-eyebrow--neutral">{fact.label}</dt>
+                <dd>{fact.href ? <a href={fact.href}>{fact.value}</a> : fact.value}</dd>
+              </div>
+            ))}
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Official profiles</dt>
+              <dd>
+                <ul class="about-glance__profiles">
+                  {officialProfiles.map((profile) => (
+                    <li><a href={profile.href} rel="me noopener" target="_blank">{profile.label}</a></li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
     <FinalCta
       eyebrow="SEE IT FOR YOURSELF"
       heading="Explore the KERSIVO demo"
@@ -224,5 +258,65 @@ const currentYear = new Date().getFullYear();
 <style is:global>
   .landing-overflow-guard {
     overflow-x: clip;
+  }
+</style>
+
+<style>
+  .about-glance {
+    --ks-glass-pad: clamp(1.25rem, 3vw, 2rem);
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+    padding: 0.5rem var(--ks-glass-pad);
+  }
+
+  .about-glance__list {
+    margin: 0;
+  }
+
+  .about-glance__row {
+    display: grid;
+    grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: baseline;
+    padding-block: 1.05rem;
+  }
+
+  .about-glance__row + .about-glance__row {
+    border-top: 1px solid var(--ks-glass-line);
+  }
+
+  .about-glance__row dd {
+    margin: 0;
+    color: #e7e7e9;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .about-glance__row a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.3);
+    text-underline-offset: 0.2em;
+  }
+
+  .about-glance__row a:hover,
+  .about-glance__row a:focus-visible {
+    text-decoration-color: currentColor;
+  }
+
+  .about-glance__profiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (max-width: 40rem) {
+    .about-glance__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.6rem;
+    }
   }
 </style>

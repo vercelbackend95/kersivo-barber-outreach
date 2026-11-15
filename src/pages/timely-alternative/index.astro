@@ -1,4 +1,5 @@
 ---
+import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -37,6 +38,7 @@ const currentYear = new Date().getFullYear();
 <LandingLayout title={title} description={description} canonicalPath={path} jsonLd={ld}>
   <main class="ta landing-overflow-guard">
     <TimelyHero />
+    <InShort competitor="Timely" />
     <TimelyVerdict />
     <TimelyModel />
     <TimelyBuilder />

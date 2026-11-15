@@ -4,7 +4,14 @@ import { offer } from '@/content/offer';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { formatGbp } from '@/lib/seo/freshaFacts';
-import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
+import {
+  KERSIVO_ENTITY_CATEGORY,
+  KERSIVO_ENTITY_DESCRIPTION,
+  getKersivoOrganizationId,
+  getKersivoWebsiteId,
+} from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { ABOUT_BREADCRUMBS, buildBreadcrumbListJsonLd } from '@/lib/seo/breadcrumbs';
 
@@ -18,14 +25,14 @@ export const ABOUT_PAGE_DESCRIPTION =
 export const ABOUT_PAGE_H1 = 'About KERSIVO';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-10-27';
-export const ABOUT_PAGE_LAST_UPDATED_LABEL = '27 October 2026';
+export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-11-14';
+export const ABOUT_PAGE_LAST_UPDATED_LABEL = '14 November 2026';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
 /** Opening entity definition — must stay the first paragraph under the H1. */
 export const ABOUT_ENTITY_DEFINITION =
-  `KERSIVO is booking and management software built specifically for independent UK barbershops. Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders within a monthly allowance, reports and retail pickup. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders.`;
+  `${KERSIVO_ENTITY_DESCRIPTION} Full KERSIVO (£${SAAS_MONTHLY_GBP}/month per location) adds a branded website on the shop’s own domain, editable payment controls, SMS reminders within a monthly allowance, reports and retail pickup. KERSIVO Starter (£0/month) gives a shop online bookings paid through its own Stripe account, client, team and service management, and email reminders.`;
 
 export const ABOUT_WHAT_IT_IS_LEAD =
   'KERSIVO is one system for the public side and the daily running of a barbershop. Clients find the shop online, choose a service and barber, and book directly. The shop manages bookings, clients, barbers, services and working hours from one admin dashboard; Full KERSIVO adds retail orders.';
@@ -132,4 +139,26 @@ export function buildAboutPageJsonLd(): Record<string, unknown> {
 
 export function buildAboutBreadcrumbJsonLd(): Record<string, unknown> {
   return buildBreadcrumbListJsonLd(ABOUT_BREADCRUMBS);
+}
+
+/**
+ * "KERSIVO at a glance" entity block: the same facts, in the same words, as the Organization
+ * JSON-LD, /llms.txt and the off-site profiles listed in docs/seo/ai-visibility-playbook.md.
+ */
+export const ABOUT_AT_A_GLANCE_TITLE = 'KERSIVO at a glance';
+
+export const ABOUT_AT_A_GLANCE: readonly { label: string; value: string; href?: string }[] = [
+  { label: 'Name', value: 'KERSIVO' },
+  { label: 'What it is', value: KERSIVO_ENTITY_DESCRIPTION },
+  { label: 'Category', value: KERSIVO_ENTITY_CATEGORY },
+  { label: 'Who it is for', value: 'Independent barbershops in the United Kingdom, from a single chair to a full team at one location.' },
+  { label: 'Who it is not for', value: KERSIVO_NOT_FOR.charAt(0).toUpperCase() + KERSIVO_NOT_FOR.slice(1) },
+  { label: 'Plans', value: `Full KERSIVO ${PRICE}/month per location · KERSIVO Starter £0/month for up to 4 bookable barbers` },
+  { label: 'Commission', value: `${offer.fees.commission}. ${STRIPE_FEES_NOTE}` },
+  { label: 'Website', value: 'kersivo.co.uk', href: 'https://kersivo.co.uk/' },
+  { label: 'Contact', value: KERSIVO_CONTACT_EMAIL, href: `mailto:${KERSIVO_CONTACT_EMAIL}` },
+];
+
+export function getAboutOfficialProfiles(): readonly { label: string; href: string }[] {
+  return getFooterSocialLinks().map((link) => ({ label: link.name, href: link.href }));
 }

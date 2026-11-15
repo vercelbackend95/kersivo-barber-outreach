@@ -69,7 +69,7 @@ describe('global entity structured data', () => {
       name: 'KERSIVO',
       url: `${SITE}/`,
       email: 'hello@kersivo.co.uk',
-      description: 'Booking and management software built specifically for independent UK barbershops.',
+      description: 'KERSIVO is booking and management software built specifically for independent UK barbershops.',
     });
     expect(JSON.stringify(organization.areaServed)).toContain('GB');
     expect(website).toEqual({
