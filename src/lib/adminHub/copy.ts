@@ -230,6 +230,15 @@ export const ADMIN_HUB_CHANGES_WITH = 'With KERSIVO';
 export const ADMIN_HUB_CHANGES_DONE = 'Done';
 export const ADMIN_HUB_CHANGES_SEND_READY = "Send when you're ready";
 export const ADMIN_HUB_CHANGES_EMPTY = 'No changes yet';
+export const ADMIN_HUB_CHANGES_EMPTY_HINT =
+  'Spotted something on your preview? Use Suggest and tell us what to change.';
+export const ADMIN_HUB_CHANGES_FILTER = 'Filter changes';
+export const ADMIN_HUB_CHANGES_FILTER_EMPTY = 'Nothing here yet.';
+export const ADMIN_HUB_CHANGES_SHOW_ALL = 'Show all changes';
+export const ADMIN_HUB_CHANGES_READY = (drafts: number) =>
+  drafts === 1 ? '1 draft ready to send' : `${drafts} drafts ready to send`;
+export const ADMIN_HUB_CHANGES_NOTHING_TO_SEND = 'No drafts to send yet';
+export const ADMIN_HUB_WEBSITE_BOOKING_ADDRESS = 'Booking preview';
 
 export const ADMIN_HUB_LAUNCH_BUTTON = 'Launch this website';
 export const ADMIN_HUB_LAUNCH_PRICE = '£39/month';

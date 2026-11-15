@@ -11,6 +11,7 @@ import type { HubChangePublic } from '@/lib/freePreview/hubChanges.shared';
 import { previewBookingPresentation } from '@/lib/freePreview/previewBooking';
 import {
   ADMIN_HUB_BOOKING_EMPTY,
+  ADMIN_HUB_WEBSITE_BOOKING_ADDRESS,
   ADMIN_HUB_WEBSITE_DEVICE,
   ADMIN_HUB_WEBSITE_FULL_SCREEN,
   ADMIN_HUB_WEBSITE_PAGES,
@@ -70,6 +71,8 @@ export function AdminHubWebsite(props: {
   const [device, setDevice] = useState<PreviewDevice>('phone');
   const [ready, setReady] = useState(false);
   const [stageWidth, setStageWidth] = useState(0);
+  const [switching, setSwitching] = useState(false);
+  const switchTimer = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const hub = useHubChanges({
     token: props.token,
@@ -98,7 +101,20 @@ export function AdminHubWebsite(props: {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(
+    () => () => {
+      if (switchTimer.current !== null) window.clearTimeout(switchTimer.current);
+    },
+    [],
+  );
+
   function chooseDevice(next: PreviewDevice) {
+    if (next !== device) {
+      // The frame eases to its new size only for a deliberate switch, never while the window resizes.
+      setSwitching(true);
+      if (switchTimer.current !== null) window.clearTimeout(switchTimer.current);
+      switchTimer.current = window.setTimeout(() => setSwitching(false), 520);
+    }
     setDevice(next);
     writeStoredDevice(next);
   }
@@ -109,6 +125,14 @@ export function AdminHubWebsite(props: {
   const wrap = previewWrapperSize(device, stageWidth);
   const badge = previewScaleBadge(device, stageWidth);
   const openUrl = props.draft.sitePreviewUrl;
+  let address = ADMIN_HUB_WEBSITE_BOOKING_ADDRESS;
+  if (showWebsite && openUrl) {
+    try {
+      address = new URL(openUrl, 'https://kersivo.co.uk').host;
+    } catch {
+      address = openUrl;
+    }
+  }
   const previewTitle =
     props.view === 'booking' ? `Booking preview for ${props.shopName}` : `Website preview for ${props.shopName}`;
 
@@ -119,6 +143,7 @@ export function AdminHubWebsite(props: {
       data-device={device}
       data-view={props.view}
       data-ready={ready ? 'true' : 'false'}
+      data-switching={switching ? 'true' : undefined}
     >
       <AdminSectionHeader
         title={ADMIN_HUB_WEBSITE_TITLE}
@@ -167,6 +192,7 @@ export function AdminHubWebsite(props: {
         <SegmentedControl
           ariaLabel={ADMIN_HUB_WEBSITE_DEVICE}
           name="hub-website-device"
+          className="admin-hub-wtoolbar__device"
           value={device}
           onChange={chooseDevice}
           options={[
@@ -204,45 +230,62 @@ export function AdminHubWebsite(props: {
         ) : null}
       </div>
 
-      <div className={`admin-hub-stage admin-hub-stage--${device}`} ref={stageRef} data-testid="admin-hub-stage">
-        <div className="admin-hub-stage__fit" style={{ width: wrap.width || undefined, height: wrap.height || undefined }}>
-          <div
-            className="admin-hub-stage__frame"
-            style={{
-              width: frame.width,
-              height: frame.height,
-              transform: `scale(${scale})`,
-            }}
-          >
-            {showWebsite ? (
-              <iframe
-                className="admin-hub-stage__iframe"
-                src={openUrl ?? ''}
-                title={previewTitle}
-                referrerPolicy="no-referrer"
-              />
-            ) : props.draft.services.length && props.draft.barbers.length ? (
-              <div className="admin-hub-stage__booking">
-                <BookingFlow
-                  mode="create"
-                  publicDemoMode={true}
-                  services={props.draft.services}
-                  barbers={props.draft.barbers}
-                  initialServiceId={props.initialServiceId}
-                  initialBarberId={props.initialBarberId}
-                  openingHours={props.draft.hours}
-                  shopDetails={{
-                    timezone: props.draft.timezone,
-                    name: props.shopName,
-                    cancellationWindowHours: props.draft.cancellationWindowHours,
-                    rescheduleWindowHours: props.draft.rescheduleWindowHours,
-                  }}
-                  presentation={previewBookingPresentation(props.shopName)}
-                />
+      <div className={`admin-hub-stage admin-hub-stage--${device}`} data-testid="admin-hub-stage">
+        <div className="admin-hub-stage__measure" ref={stageRef}>
+          <div className="admin-hub-stage__device">
+            {device === 'desktop' ? (
+              <div className="admin-hub-stage__chrome" aria-hidden="true">
+                <span className="admin-hub-stage__dots">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="admin-hub-stage__address">
+                  <Lock width={10} height={10} strokeWidth={2} />
+                  <span>{address}</span>
+                </span>
               </div>
-            ) : (
-              <p className="admin-hub-stage__empty">{ADMIN_HUB_BOOKING_EMPTY}</p>
-            )}
+            ) : null}
+            <div className="admin-hub-stage__fit" style={{ width: wrap.width || undefined, height: wrap.height || undefined }}>
+              <div
+                className="admin-hub-stage__frame"
+                style={{
+                  width: frame.width,
+                  height: frame.height,
+                  transform: `scale(${scale})`,
+                }}
+              >
+                {showWebsite ? (
+                  <iframe
+                    className="admin-hub-stage__iframe"
+                    src={openUrl ?? ''}
+                    title={previewTitle}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : props.draft.services.length && props.draft.barbers.length ? (
+                  <div className="admin-hub-stage__booking">
+                    <BookingFlow
+                      mode="create"
+                      publicDemoMode={true}
+                      services={props.draft.services}
+                      barbers={props.draft.barbers}
+                      initialServiceId={props.initialServiceId}
+                      initialBarberId={props.initialBarberId}
+                      openingHours={props.draft.hours}
+                      shopDetails={{
+                        timezone: props.draft.timezone,
+                        name: props.shopName,
+                        cancellationWindowHours: props.draft.cancellationWindowHours,
+                        rescheduleWindowHours: props.draft.rescheduleWindowHours,
+                      }}
+                      presentation={previewBookingPresentation(props.shopName)}
+                    />
+                  </div>
+                ) : (
+                  <p className="admin-hub-stage__empty">{ADMIN_HUB_BOOKING_EMPTY}</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         {badge ? (

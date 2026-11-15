@@ -67,7 +67,8 @@ describe('preview hub paths', () => {
     expect(css).not.toContain('admin-hub-tabs');
     expect(css).not.toContain('admin-hub-unread');
     expect(css).not.toContain('admin-hub-composer-fake');
-    expect(css).not.toContain('admin-hub-chip--prog');
+    // In-progress changes have their own chip tone (AdminHubChanges changeTone).
+    expect(css).toContain('admin-hub-chip--prog');
     expect(css).not.toContain('admin-hub-skel--bar');
     expect(css).not.toContain('rgba(215, 38, 56');
     expect(css).not.toContain('#ff9aa4');
