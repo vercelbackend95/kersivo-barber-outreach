@@ -3,6 +3,7 @@ import PreviewTopBar from '@/components/freePreview/PreviewTopBar';
 import { AdminHubActivityFeed } from './AdminHubActivityFeed';
 import { AdminHubColoursTile } from './AdminHubColoursTile';
 import { AdminHubContentTile } from './AdminHubContentTile';
+import { AdminHubMotion } from './AdminHubMotion';
 import { AdminHubOverviewAnnouncer } from './AdminHubOverviewAnnouncer';
 import { AdminHubPreviewPhone } from './AdminHubPreviewPhone';
 import { ArrowUpRight, ListChecks, Smartphone, TrendingUp } from '@/components/lucide-react';
@@ -160,6 +161,11 @@ const terminal = isOverviewTerminal(state.stage);
               <TrendingUp width={15} height={15} strokeWidth={1.8} />
             </span>
             <h2 class="admin-hub-tile__title" id="admin-hub-progress-title">{ADMIN_HUB_TILE_PROGRESS}</h2>
+            {buildProgress ? (
+              <span class="admin-hub-progress__count" aria-hidden="true">
+                {buildProgress.stepOf}
+              </span>
+            ) : null}
           </div>
           {
             buildProgress ? (
@@ -270,15 +276,15 @@ const terminal = isOverviewTerminal(state.stage);
               </div>
               <div class="admin-hub-chstats">
                 <div class="admin-hub-chstat">
-                  <b>{changes.drafts}</b>
+                  <b data-hub-count data-zero={changes.drafts === 0 ? 'true' : undefined}>{changes.drafts}</b>
                   <span>{changes.labels.drafts}</span>
                 </div>
                 <div class="admin-hub-chstat">
-                  <b>{changes.withKersivo}</b>
+                  <b data-hub-count data-zero={changes.withKersivo === 0 ? 'true' : undefined}>{changes.withKersivo}</b>
                   <span>{changes.labels.withKersivo}</span>
                 </div>
                 <div class="admin-hub-chstat">
-                  <b>{changes.done}</b>
+                  <b data-hub-count data-zero={changes.done === 0 ? 'true' : undefined}>{changes.done}</b>
                   <span>{changes.labels.done}</span>
                 </div>
               </div>
@@ -334,4 +340,5 @@ const terminal = isOverviewTerminal(state.stage);
     )
   }
   {terminal ? null : <AdminHubOverviewAnnouncer client:load />}
+  {terminal ? null : <AdminHubMotion client:idle />}
 </article>

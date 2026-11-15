@@ -389,15 +389,15 @@ export const OVERVIEW_BENTO_AREAS = {
   mobile: ['progress', 'preview', 'content', 'changes', 'colours', 'activity'],
   tablet: [
     'progress progress progress progress progress progress',
-    'preview preview preview colours colours colours',
-    'changes changes changes changes changes changes',
+    'preview preview preview changes changes changes',
+    'colours colours colours colours colours colours',
     'content content content activity activity activity',
   ],
   desktop: [
     'progress progress progress progress progress progress progress progress preview preview preview preview',
-    'colours colours colours colours colours colours colours colours preview preview preview preview',
-    'changes changes changes changes changes changes changes changes changes changes changes changes',
-    'content content content content content content activity activity activity activity activity activity',
+    'changes changes changes changes changes changes changes changes preview preview preview preview',
+    'colours colours colours colours colours colours colours activity activity activity activity activity',
+    'content content content content content content content content content content content content',
   ],
 } as const;
 
@@ -406,13 +406,14 @@ export const OVERVIEW_BENTO_AREAS_NO_CHANGES = {
   mobile: ['progress', 'preview', 'content', 'colours', 'activity'],
   tablet: [
     'progress progress progress progress progress progress',
-    'preview preview preview colours colours colours',
-    'content content content activity activity activity',
+    'preview preview preview content content content',
+    'colours colours colours colours colours colours',
+    'activity activity activity activity activity activity',
   ],
   desktop: [
     'progress progress progress progress progress progress progress progress preview preview preview preview',
-    'colours colours colours colours colours colours colours colours preview preview preview preview',
-    'content content content content content content activity activity activity activity activity activity',
+    'content content content content content content content content preview preview preview preview',
+    'colours colours colours colours colours colours colours activity activity activity activity activity',
   ],
 } as const;
 
