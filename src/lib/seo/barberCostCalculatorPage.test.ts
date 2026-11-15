@@ -9,6 +9,9 @@ import {
   BARBER_COST_CALCULATOR_TITLE,
   COST_AT_A_GLANCE_MODELS,
   COST_CALC_HERO,
+  SCENARIOS_EARNINGS_LEAD,
+  SCENARIOS_EARNINGS_LINK_TEXT,
+  SCENARIOS_EARNINGS_PATH,
   SCENARIOS_NOTE,
   METHODOLOGY_INTRO,
   PAYMENTS_INTRO,
@@ -364,6 +367,14 @@ describe('barber software cost calculator content safety', () => {
     const scenarios = readFileSync(join(process.cwd(), 'src/components/costCalculator/CostScenarios.astro'), 'utf8');
     expect(scenarios).toContain('COST_SCENARIO_TABLES');
     expect(scenarios).not.toMatch(/£\d/);
+  });
+
+  it('links once from the worked examples to the owner earnings insight, without commercial wording', () => {
+    expect(SCENARIOS_EARNINGS_PATH).toBe('/insights/how-much-do-barbershop-owners-make-uk');
+    expect(`${SCENARIOS_EARNINGS_LEAD} ${SCENARIOS_EARNINGS_LINK_TEXT}`).not.toMatch(/£|free|preview|sign up|book a demo/i);
+    const scenarios = readFileSync(join(process.cwd(), 'src/components/costCalculator/CostScenarios.astro'), 'utf8');
+    expect(scenarios).toContain('SCENARIOS_EARNINGS_PATH');
+    expect(scenarios.match(/href=\{SCENARIOS_EARNINGS_PATH\}/g)).toHaveLength(1);
   });
 
   it('lists official sources with checked dates, including the deposit payment sources', () => {
