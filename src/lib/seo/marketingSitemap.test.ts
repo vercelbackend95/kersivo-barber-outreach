@@ -93,7 +93,7 @@ describe('marketing sitemap', () => {
     for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
       expect(byLoc[`https://kersivo.co.uk${path}`]).toBe('2026-10-28'); // last commit touching the page source
     }
-    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-10-27');
+    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-13');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-11-14');
@@ -154,7 +154,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain('<lastmod>2026-10-17</lastmod>');
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
-    expect(xml).toContain('<lastmod>2026-10-27</lastmod>');
+    expect(xml).toContain('<lastmod>2026-11-14</lastmod>');
     expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
     expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');

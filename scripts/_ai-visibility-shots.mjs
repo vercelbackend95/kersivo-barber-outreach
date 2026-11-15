@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const [baseUrl = 'http://localhost:4330', label = 'before'] = process.argv.slice(2);
 const outDir = process.env.SHOTS_DIR ?? 'C:/tmp/kersivo-shots/ai-visibility';
 mkdirSync(outDir, { recursive: true });
-const widths = [375, 1440];
+const widths = (process.env.WIDTHS ?? '375,1440').split(',').map(Number);
 const paths = [
   '/compare',
   '/booksy-alternative',

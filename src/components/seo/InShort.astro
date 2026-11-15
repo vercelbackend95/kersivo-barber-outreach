@@ -39,7 +39,7 @@ const answer = buildInShortAnswer(competitor);
     display: grid;
     grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
     gap: clamp(1.25rem, 3vw, 2.5rem);
-    width: min(94vw, 91.1rem);
+    width: min(calc(100% - 2rem), 72rem);
     margin-inline: auto;
     padding: var(--ks-glass-pad);
   }
@@ -75,7 +75,6 @@ const answer = buildInShortAnswer(competitor);
   @media (max-width: 48rem) {
     .in-short__inner {
       grid-template-columns: minmax(0, 1fr);
-      width: calc(100% - 2rem);
     }
   }
 </style>
