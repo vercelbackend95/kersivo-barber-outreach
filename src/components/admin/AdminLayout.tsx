@@ -32,6 +32,8 @@ import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
 import { AdminHubLaunchStatusBar } from '@/components/adminHub/AdminHubLaunchStatusBar';
 import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
+import { AdminHubTour } from '@/components/adminHub/tour/AdminHubTour';
+import { useHubLiveSetupJson } from '@/lib/adminHub/hubStore';
 import { ADMIN_HUB_NAV_GROUP, ADMIN_HUB_OPERATOR_BANNER, ADMIN_HUB_UNREAD_COUNT } from '@/lib/adminHub/copy';
 import {
   PREVIEW_HUB_PATHS,
@@ -476,26 +478,33 @@ export default function AdminLayout({
     image: null,
   };
   const setupStorageScope = hubProfileUser.email || hubProfileUser.name || shopName || 'hub';
+  // Team / Services / Products render this layout from the real admin panel: the setup card follows the hub store
+  // there too, so a step finished on those pages shows at once (the guided tour refreshes the store).
+  const liveSetupJson = useHubLiveSetupJson(isPreviewChrome);
+  const hubSetup = useMemo<SetupCardModel | null>(
+    () => (liveSetupJson === null ? previewSetup : (JSON.parse(liveSetupJson) as SetupCardModel | null)),
+    [liveSetupJson, previewSetup],
+  );
   const setupCard =
-    isPreviewChrome && previewSetup ? (
+    isPreviewChrome && hubSetup ? (
       <AdminHubSetupCard
         placement="sidebar"
-        card={previewSetup}
+        card={hubSetup}
         storageScope={setupStorageScope}
       />
     ) : null;
   const setupCardMobile =
-    isPreviewChrome && previewSetup ? (
+    isPreviewChrome && hubSetup ? (
       <AdminHubSetupCard
         placement="mobile"
-        card={previewSetup}
+        card={hubSetup}
         storageScope={setupStorageScope}
         onNavigate={() => setIsMobileMenuOpen(false)}
       />
     ) : null;
   const previewLaunchBar =
-    isPreviewChrome && previewSection === 'overview' && previewSetup && !setupCardAllDone(previewSetup) ? (
-      <AdminHubLaunchStatusBar card={previewSetup} onOpenMenu={() => setIsMobileMenuOpen(true)} />
+    isPreviewChrome && previewSection === 'overview' && hubSetup && !setupCardAllDone(hubSetup) ? (
+      <AdminHubLaunchStatusBar card={hubSetup} onOpenMenu={() => setIsMobileMenuOpen(true)} />
     ) : null;
   const headerExtension = mobileTopExtension ?? previewLaunchBar;
   const headerExtensionLabel = mobileTopExtension
@@ -880,7 +889,7 @@ export default function AdminLayout({
     mobileTopExtension,
     isPreviewChrome,
     previewSection,
-    previewSetup,
+    hubSetup,
     activeSectionLabel,
     previewUnderConstruction,
     publicActivityPaused,
@@ -978,6 +987,18 @@ export default function AdminLayout({
         className={`admin-shell${showcaseMode ? ' admin-shell--showcase' : ''}${isPreviewChrome ? ' admin-shell--preview' : ''}`}
         data-showcase={showcaseMode ? 'true' : undefined}
       >
+      {isPreviewChrome && !previewOperator ? (
+        <AdminHubTour
+          setup={hubSetup}
+          shopName={shopName?.trim() || null}
+          firstName={
+            hubProfileUser.name && hubProfileUser.name !== shopName ? hubProfileUser.name.trim().split(/\s+/)[0] : null
+          }
+          storageScope={setupStorageScope}
+          section={previewSection}
+          hidden={isMobileMenuOpen}
+        />
+      ) : null}
       <aside className="admin-sidebar" aria-label="Admin sections">
         <SidebarBrand
           logoUrl={isPublicDemo ? null : shopLogoUrl}

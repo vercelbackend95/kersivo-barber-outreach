@@ -1,6 +1,7 @@
 /* Hub content inside the real admin shell. Chrome lives in admin-shell / booking.css. */
 
 @import './segmented-control.css';
+@import './admin-hub-tour.css';
 
 .admin-hub-content {
   --admin-hub-muted-2: var(--muted);
