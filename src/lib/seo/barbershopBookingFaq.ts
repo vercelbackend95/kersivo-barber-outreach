@@ -1,6 +1,7 @@
 import { PREVIEW_TURNAROUND_TEXT_SHORT } from '@/lib/freePreview/config';
 import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { HOME_CHECKLIST_FAQ_ANSWER, HOME_CHECKLIST_FAQ_QUESTION } from '@/lib/seo/homeBookingChecklist';
 import { KERSIVO_CONTACT_EMAIL } from '@/lib/seo/footerSocialLinks';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -107,6 +108,10 @@ export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'Who pays the Stripe fees?',
     answer: 'Your shop does, through its own connected Stripe account, at the rates on your Stripe agreement. KERSIVO adds no commission on top.',
+  },
+  {
+    question: HOME_CHECKLIST_FAQ_QUESTION,
+    answer: HOME_CHECKLIST_FAQ_ANSWER,
   },
   {
     question: 'Can I switch from Booksy, Fresha or Treatwell without losing bookings?',

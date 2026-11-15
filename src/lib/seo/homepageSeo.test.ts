@@ -32,6 +32,7 @@ const NEW_FAQ_QUESTIONS = [
   'How much does Full KERSIVO cost a shop?',
   'When do I pay, and how long until my website is live?',
   'Can I cancel?',
+  'How do I choose a barber booking system in the UK?',
 ];
 
 /** Local .astro/.tsx components reachable from the homepage and its layout. */
@@ -107,7 +108,7 @@ describe('homepage SEO phase 1: headings', () => {
 
   it('keeps the chapter order and the barbershop software H2', () => {
     expect(homepage).toMatch(
-      /<HomeV2Journey \/>\s*<HomeV2Hero \/>\s*<HomeV2Booking \/>\s*<HomeV2System \/>\s*<HomeV2Included \/>\s*<HomeV2Price \/>\s*<HomeV2Steps \/>\s*<HomeV2Faq \/>/,
+      /<HomeV2Journey \/>\s*<HomeV2Hero \/>\s*<HomeV2Booking \/>\s*<HomeV2System \/>\s*<HomeV2Included \/>\s*<HomeV2Checklist \/>\s*<HomeV2Price \/>\s*<HomeV2Steps \/>\s*<HomeV2Faq \/>/,
     );
     expect(text(between(homeIncluded, '<h2 id="hv2-included-title"', '</h2>'))).toBe(
       'Clients book your shop, not a marketplace',

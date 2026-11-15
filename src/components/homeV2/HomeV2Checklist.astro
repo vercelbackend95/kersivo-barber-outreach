@@ -1,0 +1,75 @@
+---
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  HOME_CHECKLIST_ANSWER,
+  HOME_CHECKLIST_ANSWER_LABEL,
+  HOME_CHECKLIST_HEADING,
+  HOME_CHECKLIST_ITEMS,
+  HOME_CHECKLIST_LEAD,
+  HOME_CHECKLIST_LINKS,
+  HOME_CHECKLIST_SECTION_ID,
+} from '@/lib/seo/homeBookingChecklist';
+
+// With the free-preview flow off, /free-preview is not public, so pricing becomes the button.
+const freePreview = isFreePreviewFlowEnabled();
+---
+
+<section id={HOME_CHECKLIST_SECTION_ID} class="hv2-section hv2-check" aria-labelledby="hv2-check-title">
+  <div class="hv2-shell">
+    <header class="hv2-head hv2-check__head">
+      <h2 id="hv2-check-title" class="hv2-h2">{HOME_CHECKLIST_HEADING}</h2>
+      <p class="hv2-lead">{HOME_CHECKLIST_LEAD}</p>
+    </header>
+
+    <div class="hv2-check__sheet hv2-card">
+      <ol class="hv2-check__list" role="list">
+        {HOME_CHECKLIST_ITEMS.map((item) => (
+          <li class="hv2-check__item">
+            <svg class="hv2-check__box" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+              <rect x="1.5" y="1.5" width="21" height="21" rx="6" />
+              <path d="M7 12.4l3.4 3.4L17.2 8.6" pathLength="1" />
+            </svg>
+            <h3 class="hv2-check__q">{item.check}</h3>
+            <p class="hv2-check__why">{item.why}</p>
+          </li>
+        ))}
+      </ol>
+
+      <div class="hv2-check__answer">
+        <div class="hv2-check__answer-copy">
+          <h3 class="hv2-check__answer-label">{HOME_CHECKLIST_ANSWER_LABEL}</h3>
+          <p>{HOME_CHECKLIST_ANSWER}</p>
+        </div>
+        <div class="hv2-check__actions">
+          {freePreview ? (
+            <FullPlanCta part="primary" primaryClass="hv2-btn hv2-btn--primary" placement="home_checklist" />
+          ) : (
+            <a
+              href={HOME_CHECKLIST_LINKS.pricing.href}
+              class="btn btn--primary btn--lg hv2-btn hv2-btn--primary"
+              data-track="view_pricing_click"
+              data-track-placement="home_checklist"
+            >
+              {HOME_CHECKLIST_LINKS.pricing.label}
+            </a>
+          )}
+          <ul class="hv2-check__links" role="list">
+            <li>
+              <a href={HOME_CHECKLIST_LINKS.compare.href} data-track="compare_hub_click" data-track-placement="home_checklist">
+                {HOME_CHECKLIST_LINKS.compare.label}
+              </a>
+            </li>
+            {freePreview && (
+              <li>
+                <a href={HOME_CHECKLIST_LINKS.pricing.href} data-track="view_pricing_click" data-track-placement="home_checklist">
+                  {HOME_CHECKLIST_LINKS.pricing.label}
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
