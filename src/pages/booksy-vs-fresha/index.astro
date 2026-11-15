@@ -1,0 +1,227 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import {
+  BOOKSY_VS_FRESHA_BREADCRUMB_NAME,
+  BOOKSY_VS_FRESHA_DATA_CHECKED,
+  BOOKSY_VS_FRESHA_DESCRIPTION,
+  BOOKSY_VS_FRESHA_H1,
+  BOOKSY_VS_FRESHA_LAST_UPDATED_ISO,
+  BOOKSY_VS_FRESHA_LAST_UPDATED_LABEL,
+  BOOKSY_VS_FRESHA_PAGE_PATH,
+  BOOKSY_VS_FRESHA_TITLE,
+  BVF_CHOOSE_BOOKSY,
+  BVF_CHOOSE_FRESHA,
+  BVF_COST_NOTE,
+  BVF_COST_ROWS,
+  BVF_CROSSOVER_BARBERS,
+  BVF_DIRECT_ANSWER,
+  BVF_FAQ_ITEMS,
+  BVF_KERSIVO_LINE,
+  BVF_NEITHER,
+  BVF_ROWS,
+  BVF_SOURCES,
+  buildBooksyVsFreshaJsonLd,
+} from '@/lib/seo/booksyVsFresha';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+
+const currentYear = new Date().getFullYear();
+const money = (value: number) => (Number.isInteger(value) ? `£${value}` : `£${value.toFixed(2)}`);
+const cheaper = (row: (typeof BVF_COST_ROWS)[number]) => (row.booksy < row.fresha ? 'booksy' : 'fresha');
+---
+
+<LandingLayout
+  title={BOOKSY_VS_FRESHA_TITLE}
+  description={BOOKSY_VS_FRESHA_DESCRIPTION}
+  canonicalPath={BOOKSY_VS_FRESHA_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildBooksyVsFreshaJsonLd()]}
+>
+  <main class="dr-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href="/compare">Compare</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{BOOKSY_VS_FRESHA_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">Head to head · UK prices</p>
+        <h1 class="dr-hero__title">{BOOKSY_VS_FRESHA_H1}</h1>
+        <p class="dr-hero__lead">{BVF_DIRECT_ANSWER}</p>
+        <ul class="dr-hero__meta" aria-label="About this comparison">
+          <li>Updated <time datetime={BOOKSY_VS_FRESHA_LAST_UPDATED_ISO}>{BOOKSY_VS_FRESHA_LAST_UPDATED_LABEL}</time></li>
+          <li>Prices checked {BOOKSY_VS_FRESHA_DATA_CHECKED}</li>
+          <li>Written by KERSIVO, a third option</li>
+        </ul>
+      </div>
+    </header>
+
+    <section id="cost-by-team" class="dr-section" aria-labelledby="bvf-cost-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Monthly cost</p>
+          <h2 id="bvf-cost-title" class="dr-h2">What each costs as your team grows</h2>
+          <p class="dr-section__lead">
+            {BVF_CROSSOVER_BARBERS === null
+              ? 'Fresha’s per-person plan stays cheaper across the range shown.'
+              : `Fresha is cheaper for smaller teams. From ${BVF_CROSSOVER_BARBERS} barbers, Booksy’s base-plus-users pricing costs less.`}
+          </p>
+        </div>
+        <div class="ks-glass-card dr-table-card">
+          <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="bvf-cost-title">
+            <table class="dr-table dr-table--compact">
+              <caption>Subscription per month, inc. VAT. Lower of the two in bold.</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Bookable barbers</th>
+                  <th scope="col">Booksy</th>
+                  <th scope="col">Fresha</th>
+                  <th scope="col">Full KERSIVO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BVF_COST_ROWS.map((row) => (
+                  <tr>
+                    <th scope="row">{row.barbers}</th>
+                    <td data-lower={cheaper(row) === 'booksy' ? 'true' : undefined}>{money(row.booksy)}{cheaper(row) === 'booksy' && <span class="sr-only"> (lower)</span>}</td>
+                    <td data-lower={cheaper(row) === 'fresha' ? 'true' : undefined}>{money(row.fresha)}{cheaper(row) === 'fresha' && <span class="sr-only"> (lower)</span>}</td>
+                    <td class="dr-table__muted">{money(row.kersivo)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="dr-note">{BVF_COST_NOTE}</p>
+      </div>
+    </section>
+
+    <section id="side-by-side" class="dr-section" aria-labelledby="bvf-rows-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Side by side</p>
+          <h2 id="bvf-rows-title" class="dr-h2">Fees and features that differ</h2>
+        </div>
+        <div class="ks-glass-card dr-table-card">
+          <p class="dr-scroll-hint" aria-hidden="true">Swipe sideways to see every column →</p>
+          <div class="dr-table-scroll" tabindex="0" role="region" aria-labelledby="bvf-rows-title">
+            <table class="dr-table dr-table--text">
+              <caption>Booksy and Fresha, UK</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Topic</th>
+                  <th scope="col">Booksy</th>
+                  <th scope="col">Fresha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BVF_ROWS.map((row) => (
+                  <tr>
+                    <th scope="row">{row.topic}</th>
+                    <td>{row.booksy}</td>
+                    <td>{row.fresha}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="dr-note">
+          For every UK system side by side, see the <a class="dr-link" href="/barber-booking-fees-uk">booking software fees report</a>
+          or work out your own shop in the <a class="dr-link" href="/barber-software-cost-calculator">cost calculator</a>.
+        </p>
+      </div>
+    </section>
+
+    <section id="which-one" class="dr-section" aria-labelledby="bvf-choose-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Verdict</p>
+          <h2 id="bvf-choose-title" class="dr-h2">Which one suits your shop</h2>
+        </div>
+        <div class="dr-split">
+          <div class="ks-glass-card dr-card">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Booksy</p>
+            <h3>Booksy may suit you if…</h3>
+            <ul class="dr-list">{BVF_CHOOSE_BOOKSY.map((item) => <li>{item}</li>)}</ul>
+            <p class="dr-note"><a class="dr-link" href="/booksy-alternative">Leaving Booksy? What changes</a></p>
+          </div>
+          <div class="ks-glass-card dr-card">
+            <p class="ks-eyebrow ks-eyebrow--neutral">Fresha</p>
+            <h3>Fresha may suit you if…</h3>
+            <ul class="dr-list">{BVF_CHOOSE_FRESHA.map((item) => <li>{item}</li>)}</ul>
+            <p class="dr-note"><a class="dr-link" href="/fresha-alternative">Leaving Fresha? What changes</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="neither" class="dr-section" aria-labelledby="bvf-neither-title">
+      <div class="dr-shell">
+        <div class="ks-glass-card ks-glass-card--accent dr-card">
+          <p class="ks-eyebrow">A third option</p>
+          <h2 id="bvf-neither-title" class="dr-h2">When neither is the right fit</h2>
+          <div class="dr-split">
+            <ul class="dr-list">{BVF_NEITHER.map((item) => <li>{item}</li>)}</ul>
+            <div class="dr-prose">
+              <p>{BVF_KERSIVO_LINE}</p>
+              <p><a class="dr-link" href="/pricing#plan">See Full KERSIVO pricing</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Booksy vs Fresha: questions"
+      subHeading="Fees, commission and card rates, from each provider’s published UK prices."
+      supportHeading="Comparing more than two?"
+      supportText="The fees report puts 10 UK booking systems in one set of tables."
+      supportLinkLabel="Read the fees report"
+      supportLinkHref="/barber-booking-fees-uk"
+      faqs={[...BVF_FAQ_ITEMS]}
+    />
+
+    <ComparisonFinalCta placement="booksy_vs_fresha" />
+
+    <section class="dr-section dr-end" aria-labelledby="bvf-sources-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow ks-eyebrow--neutral">Sources</p>
+          <h2 id="bvf-sources-title" class="dr-h2">Where the figures come from</h2>
+        </div>
+        <ul class="dr-sources">
+          {BVF_SOURCES.map((source) => (
+            <li>
+              <span>{source.provider}</span>
+              <a class="dr-link" href={source.url} rel="nofollow noopener" target="_blank">{source.label}</a>
+              <span class="dr-sources__date">Checked {source.checked}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="dr-note">
+          Booksy and Fresha are trademarks of their respective owners. KERSIVO is not affiliated with, endorsed by or
+          sponsored by either. KERSIVO sells booking software, so this is not an independent review.
+        </p>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>

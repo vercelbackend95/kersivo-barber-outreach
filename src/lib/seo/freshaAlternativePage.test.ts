@@ -406,8 +406,8 @@ describe('fresha facts verification', () => {
 
   it('records a checked date only alongside official Fresha sources', () => {
     expect(FRESHA_SOURCES.length).toBeGreaterThan(0);
-    expect(FRESHA_FACTS_CHECKED_DATE).toBe('30 September 2026');
-    expect(FRESHA_FACTS_CHECKED_ISO).toBe('2026-09-30');
+    expect(FRESHA_FACTS_CHECKED_DATE).toBe('15 November 2026');
+    expect(FRESHA_FACTS_CHECKED_ISO).toBe('2026-11-15');
     for (const source of FRESHA_SOURCES) {
       expect(source.url).toMatch(/^https:\/\/www\.fresha\.com\//);
     }

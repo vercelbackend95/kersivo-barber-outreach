@@ -571,8 +571,8 @@ describe('booksy-alternative: visible breadcrumb and BreadcrumbList JSON-LD', ()
 
 describe('booksy-alternative: freshness, sources and sitemap', () => {
   it('uses the real verification and update dates, never build time', () => {
-    expect(BOOKSY_FACTS_CHECKED_DATE).toBe('2 October 2026');
-    expect(BOOKSY_FACTS_CHECKED_ISO).toBe('2026-10-02');
+    expect(BOOKSY_FACTS_CHECKED_DATE).toBe('15 November 2026');
+    expect(BOOKSY_FACTS_CHECKED_ISO).toBe('2026-11-15');
     expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-11-14');
     expect(BOOKSY_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('14 November 2026');
     for (const source of [faqSource, factsSource, ...bodySources]) {

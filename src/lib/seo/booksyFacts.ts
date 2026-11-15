@@ -11,8 +11,8 @@
 import { formatGbp, formatPercent } from '@/lib/seo/freshaFacts';
 
 /** Human-readable date the facts below were checked against official Booksy sources. */
-export const BOOKSY_FACTS_CHECKED_DATE = '2 October 2026';
-export const BOOKSY_FACTS_CHECKED_ISO = '2026-10-02';
+export const BOOKSY_FACTS_CHECKED_DATE = '15 November 2026';
+export const BOOKSY_FACTS_CHECKED_ISO = '2026-11-15';
 
 export type BooksySourceId =
   | 'pricingUk'

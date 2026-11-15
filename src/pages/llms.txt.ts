@@ -38,6 +38,8 @@ export function buildLlmsTxt(siteUrl: string): string {
     '## Comparisons',
     link('/compare', 'Compare booking systems', '11 UK barber booking systems with sourced, dated prices'),
     link('/barber-software-cost-calculator', 'Cost calculator', 'monthly software and payment costs by team size'),
+    link('/barber-booking-fees-uk', 'Booking software fees report', 'dated UK fees report: monthly cost by team size, marketplace new-client fees and card fees for 10 systems'),
+    link('/booksy-vs-fresha', 'Booksy vs Fresha', 'neutral head-to-head for UK barbershops: cost by team size, commission and card fees'),
     link('/booksy-alternative', 'Booksy alternative', 'KERSIVO compared with Booksy'),
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),
     link('/treatwell-alternative', 'Treatwell alternative', 'KERSIVO compared with Treatwell'),
