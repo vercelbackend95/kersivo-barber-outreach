@@ -1,8 +1,12 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, type ComponentType, type ReactNode, type SVGProps } from 'react';
 
 export type AdminHubAppChrome = {
   headerAction: ReactNode | null;
   footer: ReactNode | null;
+  /** Window bar overrides while the app shows one part of itself (Add to your website › Business details). */
+  title?: string;
+  crumb?: string;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 export const emptyAppChrome: AdminHubAppChrome = { headerAction: null, footer: null };
@@ -23,11 +27,11 @@ export function AppChromeProvider(props: {
 
 export function useAppChrome(chrome: AdminHubAppChrome) {
   const setChrome = useContext(AppChromeContext);
-  const { headerAction, footer } = chrome;
+  const { headerAction, footer, title, crumb, icon } = chrome;
   useEffect(() => {
-    setChrome({ headerAction, footer });
-    return () => setChrome(emptyAppChrome);
-  }, [footer, headerAction, setChrome]);
+    setChrome({ headerAction, footer, title, crumb, icon });
+  }, [crumb, footer, headerAction, icon, setChrome, title]);
+  useEffect(() => () => setChrome(emptyAppChrome), [setChrome]);
 }
 
 /**
