@@ -264,6 +264,15 @@ export function AppHost(props: {
     return () => document.removeEventListener('astro:before-preparation', onBeforePreparation);
   }, [guarded]);
 
+  // An app may rewrite its own ?item= (Add to your website's section switcher): keep the guard's URL current.
+  useEffect(() => {
+    const sync = () => {
+      hrefRef.current = window.location.href;
+    };
+    window.addEventListener(ADMIN_HUB_LOCATION_EVENT, sync);
+    return () => window.removeEventListener(ADMIN_HUB_LOCATION_EVENT, sync);
+  }, []);
+
   useEffect(() => {
     hrefRef.current = window.location.href;
     const onPop = () => {
@@ -387,7 +396,9 @@ export function AppHost(props: {
   );
   if (!app) return createPortal(<>{toastRegion}{null}</>, portalTarget);
   const meta = adminHubAppMeta(app);
-  const Icon = ICONS[resolveAdminHubApp(app)];
+  const Icon = chrome.icon ?? ICONS[resolveAdminHubApp(app)];
+  const title = chrome.title ?? meta.title;
+  const crumb = chrome.crumb ?? meta.crumb;
   const fullscreen = mode === 'fullscreen';
 
   return createPortal(
@@ -409,14 +420,15 @@ export function AppHost(props: {
       >
         {sheet && !fullscreen ? <span className="admin-hub-app__grab" aria-hidden="true" /> : null}
         <header className="admin-hub-app__bar">
-          <span className="admin-hub-app__icon" aria-hidden="true">
+          <span className="admin-hub-app__icon" aria-hidden="true" key={`icon-${title}`}>
             <Icon width={16} height={16} strokeWidth={1.8} />
           </span>
-          <div className="admin-hub-app__heading">
+          {/* Keyed: a new title (switching section inside an app) fades in instead of snapping. */}
+          <div className="admin-hub-app__heading" key={title}>
             <h2 className="admin-hub-app__title" id={titleId}>
-              {meta.title}
+              {title}
             </h2>
-            <p className="admin-hub-app__crumb">{meta.crumb}</p>
+            <p className="admin-hub-app__crumb">{crumb}</p>
           </div>
           {chrome.headerAction ? <div className="admin-hub-app__action">{chrome.headerAction}</div> : null}
           <button

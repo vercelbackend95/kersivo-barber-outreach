@@ -1,19 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Camera,
-  ChevronDown,
-  Clock,
-  ImagePlus,
-  NotebookPen,
-  Package,
-  Paperclip,
-  Plus,
-  Scissors,
-  StickyNote,
-  Store,
-  Users,
-} from '@/components/lucide-react';
+import { ChevronDown, Plus } from '@/components/lucide-react';
 import {
   ADMIN_HUB_ADD,
   ADMIN_HUB_ADD_MENU,
@@ -31,22 +18,12 @@ import AdminMobileFab from '@/components/admin/AdminMobileFab';
 import { ADMIN_MOBILE_CHROME_MAX_PX } from '@/components/admin/useAdminMobileNextAppointmentsChrome';
 import { useClientPortalTarget } from '@/lib/adminHub/hubOverlay';
 import { AdminHubSheet } from './AdminHubSheet';
+import { ADMIN_HUB_ADD_ITEM_ICONS } from './addItemIcons';
 
 const INLINE_SHEET_MQ = '(max-width: 640px)';
 const HEADER_SHEET_MQ = `(max-width: ${ADMIN_MOBILE_CHROME_MAX_PX}px)`;
 
-const ICONS: Record<AdminHubAddItemId, typeof Camera> = {
-  business: Store,
-  hours: Clock,
-  photos: Camera,
-  logo: ImagePlus,
-  text: NotebookPen,
-  'price-list': StickyNote,
-  other: Paperclip,
-  team: Users,
-  service: Scissors,
-  product: Package,
-};
+const ICONS = ADMIN_HUB_ADD_ITEM_ICONS;
 
 const PANEL_GAP = 8;
 const VIEWPORT_MARGIN = 12;

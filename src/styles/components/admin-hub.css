@@ -4266,7 +4266,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 .ks-setup-files {
   position: relative;
   display: grid;
-  gap: 8px;
+  gap: 20px;
   min-width: 0;
   padding: 16px;
   border-radius: 20px;
@@ -4300,13 +4300,45 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
     padding: 24px;
   }
 }
+/* Icon tile | title + description | status. */
 .ks-setup-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
   min-width: 0;
+}
+.ks-setup-card__heading {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 1px;
+}
+.ks-setup-card__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--fg);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(120% 120% at 30% 0%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 62%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+@media (max-width: 479px) {
+  .ks-setup-card__head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .ks-setup-card__head > .ks-setup-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+/* Programmatic focus target (deep links): the heading is not a control, so no ring. */
+.ks-setup-card__title:focus {
+  outline: none;
 }
 .ks-setup-card__title,
 .ks-setup-files__title {
@@ -4317,8 +4349,9 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   overflow-wrap: anywhere;
 }
 .ks-setup-card__desc {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 13.5px;
+  line-height: 1.45;
   color: var(--muted);
 }
 .ks-setup-card__error,
@@ -4380,7 +4413,7 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
 }
 /* Photos, logo and files: a heading over the existing upload cards (no card-in-card). */
 .ks-setup-files {
-  gap: 8px;
+  gap: 6px;
   padding: 8px 0 0;
   border: 0;
   border-radius: 0;
@@ -4444,6 +4477,298 @@ html.admin-app-scroll:has(.admin-hub-confirm-root) body {
   }
   .ks-savebar {
     animation: none;
+  }
+}
+
+/* ───────── Add to your website: one section at a time (Add menu), section switcher, form polish ───────── */
+/* One curve for the whole morph (window height, content, switcher pill): see useViewMorph. */
+.ks-setup {
+  --ks-morph-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  grid-template-columns: minmax(0, 1fr);
+}
+.ks-setup-files[hidden] {
+  display: none;
+}
+
+/* Section switcher: a segmented strip that stays at the top of the window while the sections scroll. */
+.ks-setup-nav {
+  position: sticky;
+  top: -22px;
+  z-index: 2;
+  min-width: 0;
+  margin: -22px -16px 0;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, #111112 0%, #111112 78%, rgba(17, 17, 18, 0) 100%);
+}
+.admin-hub-app--sheet .ks-setup-nav {
+  top: -16px;
+  margin-top: -16px;
+  padding-top: 10px;
+}
+.ks-setup-nav__list {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.ks-setup-nav__list::-webkit-scrollbar {
+  display: none;
+}
+.ks-setup-nav__pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 6px 16px -8px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+/* The brand's red hairline on the top edge, as on the premium cards. */
+.ks-setup-nav__pill::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 30%;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+.ks-setup-nav__list[data-ready] .ks-setup-nav__pill {
+  transition:
+    transform 340ms var(--ks-morph-ease),
+    width 340ms var(--ks-morph-ease);
+}
+.ks-setup-nav__item {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.ks-setup-nav__item svg {
+  flex-shrink: 0;
+  transition: color 160ms ease;
+}
+.ks-setup-nav__item:hover {
+  color: var(--fg);
+}
+.ks-setup-nav__item[aria-current='true'] {
+  color: var(--fg);
+}
+.ks-setup-nav__item[aria-current='true'] svg {
+  color: var(--accent);
+}
+.ks-setup-nav__item:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+.ks-setup-nav__done {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--success) 22%, transparent);
+}
+.admin-hub-app--sheet .ks-setup-nav__item {
+  min-height: 40px;
+}
+
+/* Photos, logo and file cards share the setup cards' premium surface and red top line. */
+.ks-setup-files .hub-card {
+  position: relative;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 40px -18px rgba(0, 0, 0, 0.9);
+}
+.ks-setup-files .hub-card::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  right: 40%;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .ks-setup-files .hub-card {
+    padding: 24px;
+  }
+  .ks-setup--focused .ks-setup-files .hub-card {
+    padding: 28px;
+  }
+}
+/* Deep-link focus lands on card headings (not controls): no ring. */
+.ks-setup h2[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* One section: a little more air inside the card. */
+@media (min-width: 640px) {
+  .ks-setup--focused .ks-setup-card {
+    padding: 28px;
+  }
+}
+
+/* Business details: Your shop / Address / Contact, divided by hairlines. */
+.ks-setup-groups {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.ks-setup-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ks-setup-group + .ks-setup-group {
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ks-setup-group__legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-hub-muted-2, var(--muted));
+}
+.ks-setup-group__legend + * {
+  clear: both;
+}
+.ks-setup .ks-setup-grid {
+  gap: 14px;
+}
+.ks-setup-stack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Fields: calmer labels, deeper wells, a brand-red focus ring. */
+.ks-setup .ks-setup-field {
+  gap: 6px;
+  align-content: start;
+}
+.ks-setup .field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+.ks-setup .field__hint {
+  margin: -2px 0 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--admin-hub-muted-2, var(--muted));
+}
+.ks-setup .input,
+.ks-setup .textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  font-size: 15px;
+}
+.ks-setup .input {
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+}
+.ks-setup .textarea {
+  min-height: 128px;
+  padding: 0.8rem 0.9rem;
+  line-height: 1.55;
+}
+.ks-setup .input:hover:not(:disabled):not([aria-invalid='true']),
+.ks-setup .textarea:hover:not(:disabled):not([aria-invalid='true']) {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.035);
+}
+.ks-setup .input:focus-visible,
+.ks-setup .textarea:focus-visible,
+.ks-setup .input:focus,
+.ks-setup .textarea:focus {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--accent) 75%, #fff 10%);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.ks-setup .input[aria-invalid='true'] {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+.ks-setup .input:disabled,
+.ks-setup .textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.ks-setup .ks-setup-count {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 639px) {
+  /* 16 px stops iOS zooming into the field. */
+  .ks-setup .input,
+  .ks-setup .textarea {
+    font-size: 16px;
+  }
+}
+
+/* Window bar: a new title (switching section) fades in rather than snapping. */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-hub-app__heading,
+  .admin-hub-app__icon {
+    animation: admin-hub-title-in 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+@keyframes admin-hub-title-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ks-setup-nav__list[data-ready] .ks-setup-nav__pill,
+  .ks-setup-nav__item,
+  .ks-setup-nav__item svg,
+  .ks-setup .input,
+  .ks-setup .textarea {
+    transition: none;
   }
 }
 

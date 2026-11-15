@@ -11,7 +11,7 @@ import type { AdminHubAddWebsiteItem } from '@/lib/adminHub/addMenu';
 import { showHubToast } from '@/lib/adminHub/hubToast';
 import { refreshHubState } from '@/lib/adminHub/hubStore';
 import { defaultOpeningWeek } from '@/lib/shopData/openingHours';
-import { WebsiteSetupFlow } from './WebsiteSetupFlow';
+import { WebsiteSetupFlow, type SetupView } from './WebsiteSetupFlow';
 
 vi.mock('@/lib/adminHub/hubToast', () => ({ showHubToast: vi.fn() }));
 vi.mock('@/lib/adminHub/liveState', () => ({ emitHubDataChanged: vi.fn() }));
@@ -53,15 +53,26 @@ let guard: boolean[] = [];
 function Harness({
   overrides = {},
   highlight = null,
+  initialView,
+  switcher = false,
 }: {
   overrides?: Partial<AdminHubAppContext>;
   highlight?: AdminHubAddWebsiteItem | null;
+  initialView?: SetupView;
+  switcher?: boolean;
 }) {
   const [chrome, setChrome] = useState<AdminHubAppChrome>(emptyAppChrome);
+  const [view, setView] = useState<SetupView | undefined>(initialView);
   return (
     <AppChromeProvider setChrome={setChrome} setLeaveGuard={(active) => guard.push(active)}>
-      <WebsiteSetupFlow ctx={ctx(overrides)} highlight={highlight} />
+      <WebsiteSetupFlow
+        ctx={ctx(overrides)}
+        highlight={highlight}
+        view={view}
+        onViewChange={switcher ? setView : undefined}
+      />
       <div data-testid="chrome-footer">{chrome.footer}</div>
+      <div data-testid="chrome-title">{chrome.title ?? ''}</div>
     </AppChromeProvider>
   );
 }
@@ -388,6 +399,58 @@ describe('WebsiteSetupFlow (Overview › Add to your website)', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  describe('one section at a time (Add menu items)', () => {
+    it('shows only the picked section, titles the window after it and keeps the uploads mounted but hidden', async () => {
+      render(<Harness initialView="business" switcher />);
+      await screen.findByLabelText('Barbershop name');
+      expect(sectionTitles()).toEqual(['Business details', undefined]);
+      expect(screen.queryByTestId('setup-hours')).toBeNull();
+      expect(screen.queryByTestId('text')).toBeNull();
+      expect(screen.queryByTestId('setup-progress')).toBeNull();
+      expect((screen.getByTestId('setup-files') as HTMLElement).hidden).toBe(true);
+      expect(screen.getByTestId('hub-your-shop-stub')).toBeTruthy();
+      expect(screen.getByTestId('chrome-title').textContent).toBe('Business details');
+    });
+
+    it('groups business fields under Your shop, Address and Contact, in the same order', async () => {
+      render(<Harness initialView="business" />);
+      await screen.findByLabelText('Barbershop name');
+      const legends = Array.from(screen.getByTestId('setup-business').querySelectorAll('legend')).map((l) => l.textContent);
+      expect(legends).toEqual(['Your shop', 'Address', 'Contact']);
+    });
+
+    it('switches section from the switcher, keeps unsaved edits and the save bar, and All shows everything', async () => {
+      render(<Harness initialView="business" switcher />);
+      fireEvent.change(await screen.findByLabelText('Phone'), { target: { value: '0113 000 0001' } });
+      const nav = within(screen.getByTestId('setup-nav'));
+      expect(nav.getByRole('button', { name: /Business/ }).getAttribute('aria-current')).toBe('true');
+
+      fireEvent.click(nav.getByRole('button', { name: /Hours/ }));
+      expect(screen.queryByTestId('setup-business')).toBeNull();
+      expect(screen.getByTestId('setup-hours')).toBeTruthy();
+      expect(screen.getByTestId('chrome-title').textContent).toBe('Opening hours');
+      expect(screen.getByTestId('setup-savebar')).toBeTruthy();
+
+      fireEvent.click(nav.getByRole('button', { name: /Photos/ }));
+      expect((screen.getByTestId('setup-files') as HTMLElement).hidden).toBe(false);
+      expect(screen.queryByTestId('setup-hours')).toBeNull();
+
+      fireEvent.click(nav.getByRole('button', { name: 'All sections' }));
+      expect(sectionTitles()).toEqual(['Business details', 'Opening hours', 'Website text', 'Photos, logo and files']);
+      expect((screen.getByLabelText('Phone') as HTMLInputElement).value).toBe('0113 000 0001');
+      expect(screen.getByTestId('chrome-title').textContent).toBe('');
+    });
+
+    it('lists only the sections the owner can edit (no uploads: no file sections)', async () => {
+      render(<Harness initialView="text" switcher overrides={{ canUpload: false }} />);
+      await screen.findByLabelText('About your shop');
+      const views = Array.from(screen.getByTestId('setup-nav').querySelectorAll('button')).map(
+        (b) => b.getAttribute('data-setup-view'),
+      );
+      expect(views).toEqual(['all', 'business', 'hours', 'text']);
     });
   });
 });

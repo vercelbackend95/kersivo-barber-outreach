@@ -280,8 +280,14 @@ export function HubYourShop(props: {
   highlight?: AdminHubAddWebsiteItem | null;
   /** When false, the page H1 is omitted (the app window already has a title). */
   chrome?: boolean;
+  /**
+   * Materials only: show just this card (Add menu › Shop photos opens on photos alone). `null` hides every card
+   * while staying mounted, so uploads and pending deletes made earlier in the window are kept.
+   */
+  only?: 'photos' | 'logo' | 'price-list' | 'other' | null;
 }) {
   const focus = props.focus;
+  const only = props.only;
   const chrome = props.chrome !== false && !focus;
   const showLogo = !focus || focus === 'logo' || focus === 'materials';
   const showPhotos = !focus || focus === 'photos' || focus === 'materials';
@@ -913,10 +919,10 @@ export function HubYourShop(props: {
 
       {focus === 'materials' ? (
         <div className="hub-materials">
-          {photosCard}
-          {logoCard}
-          {priceCard}
-          {otherCard}
+          {only === undefined || only === 'photos' ? photosCard : null}
+          {only === undefined || only === 'logo' ? logoCard : null}
+          {only === undefined || only === 'price-list' ? priceCard : null}
+          {only === undefined || only === 'other' ? otherCard : null}
         </div>
       ) : (
         <>
