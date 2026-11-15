@@ -2,7 +2,14 @@
 import { COST_SCENARIO_TABLES } from '@/lib/costCalculator/costScenarios';
 import { formatMoneyGbp } from '@/lib/costCalculator/money';
 import { barShare } from '@/lib/costCalculator/costVerdict';
-import { BARBER_COST_CALCULATOR_PAGE_PATH, SCENARIOS_INTRO, SCENARIOS_NOTE } from '@/lib/seo/barberCostCalculatorPage';
+import {
+  BARBER_COST_CALCULATOR_PAGE_PATH,
+  SCENARIOS_EARNINGS_LEAD,
+  SCENARIOS_EARNINGS_LINK_TEXT,
+  SCENARIOS_EARNINGS_PATH,
+  SCENARIOS_INTRO,
+  SCENARIOS_NOTE,
+} from '@/lib/seo/barberCostCalculatorPage';
 
 const displayName = (id: string, name: string) => (id === 'kersivo' ? 'Full KERSIVO' : name);
 const tables = COST_SCENARIO_TABLES.map((scenario) => {
@@ -85,5 +92,8 @@ const tables = COST_SCENARIO_TABLES.map((scenario) => {
     </ul>
 
     <p class="cost-calc__closing">{SCENARIOS_NOTE}</p>
+    <p class="cost-calc__crosslink">
+      {SCENARIOS_EARNINGS_LEAD} <a href={SCENARIOS_EARNINGS_PATH}>{SCENARIOS_EARNINGS_LINK_TEXT}</a>.
+    </p>
   </div>
 </section>

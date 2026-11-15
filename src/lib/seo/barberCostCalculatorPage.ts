@@ -513,6 +513,10 @@ export const PAYMENTS_POINTS: readonly MarketplacePoint[] = [
 export const SCENARIOS_INTRO =
   'Worked examples make the differences easier to see. Each table below is calculated by the same engine, official pricing and methodology as the interactive calculator, not estimated by hand.';
 
+export const SCENARIOS_EARNINGS_PATH = '/insights/how-much-do-barbershop-owners-make-uk';
+export const SCENARIOS_EARNINGS_LEAD = 'To see how software cost fits into what a chair earns, read';
+export const SCENARIOS_EARNINGS_LINK_TEXT = 'what a UK barbershop owner makes';
+
 export const SCENARIOS_NOTE =
   'Monthly cash cost for a shop that is not VAT registered and takes only direct bookings: no marketplace-acquired clients, no Booksy Boost, no optional add-ons and no deposit processing. Providers that need a shop-specific quote show Custom pricing. Nearcut shows its Free for You plan, whose client-paid booking charge is excluded from shop totals. KERSIVO figures are Full KERSIVO; Starter has no monthly fee for up to 4 bookable barbers. Change any of these inputs in the calculator above to model your own shop.';
 
