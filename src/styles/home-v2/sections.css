@@ -3086,3 +3086,161 @@ html:has(main.hv2) body {
     animation: none;
   }
 }
+
+/* ---------- Buyer checklist: one sheet of eight checks, then KERSIVO's own answers ---------- */
+.hv2-check__head {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.hv2-check__sheet {
+  padding: clamp(0.5rem, 1.6vw, 1rem) clamp(1.1rem, 2.6vw, 2.25rem) clamp(1.1rem, 2.6vw, 2.25rem);
+}
+
+.hv2-check__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hv2-check__item {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 0.9rem;
+  row-gap: 0.4rem;
+  align-content: start;
+  padding: clamp(1.1rem, 1.8vw, 1.5rem) 0;
+  border-bottom: 1px solid var(--hv2-line);
+}
+
+.hv2-check__box {
+  grid-row: span 2;
+  margin-top: 0.1rem;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hv2-check__box rect {
+  stroke: color-mix(in srgb, var(--hv2-sand) 45%, transparent);
+  fill: color-mix(in srgb, var(--hv2-sand) 7%, transparent);
+}
+
+.hv2-check__box path {
+  stroke: var(--hv2-sand);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+}
+
+.hv2 .hv2-check__q {
+  margin: 0;
+  color: var(--hv2-ink);
+  font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.hv2 .hv2-check__why {
+  grid-column: 2;
+  margin: 0;
+  max-width: 34rem;
+  color: var(--hv2-muted);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.hv2-check__answer {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: clamp(1.1rem, 2.2vw, 1.75rem);
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, var(--hv2-sand) 22%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--hv2-sand) 6%, transparent);
+}
+
+.hv2 .hv2-check__answer-label {
+  margin: 0 0 0.45rem;
+  color: var(--hv2-sand);
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.hv2 .hv2-check__answer-copy p {
+  margin: 0;
+  max-width: 44rem;
+  color: var(--hv2-ink);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.hv2-check__actions {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.hv2-check__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--hv2-muted);
+}
+
+.hv2 .hv2-check__links a {
+  display: inline-block;
+  padding: 0.6rem 0;
+}
+
+.hv2 .hv2-check a:focus-visible {
+  outline: 2px solid var(--hv2-sand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (min-width: 48rem) {
+  .hv2-check__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .hv2-check__answer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .hv2-check__links {
+    flex-direction: column;
+  }
+}
+
+/* Each tick draws itself as its row scrolls in. Without scroll timelines the ticks are simply drawn. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hv2-check__box path {
+      animation: hv2-check-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 35% entry 100%;
+    }
+  }
+}
+
+@keyframes hv2-check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
