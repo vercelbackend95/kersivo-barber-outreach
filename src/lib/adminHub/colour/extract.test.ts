@@ -74,3 +74,18 @@ describe('naming and quick picks', () => {
     expect(Ls[0]!).toBeGreaterThan(Ls.at(-1)!);
   });
 });
+
+describe('real logo colours', () => {
+  it('returns the flat logo colour, not a mean pulled by anti-aliased edges', () => {
+    const w = 20;
+    const h = 20;
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i += 1) {
+      // 70 % flat red, 15 % half-blended edge, 15 % white.
+      const [r, g, b] = i % 20 < 14 ? [200, 16, 46] : i % 20 < 17 ? [228, 136, 151] : [255, 255, 255];
+      data.set([r, g, b, 255], i * 4);
+    }
+    const swatches = extractPalette({ data, width: w, height: h });
+    expect(swatches.map((row) => row.hex)).toContain('#C8102E');
+  });
+});

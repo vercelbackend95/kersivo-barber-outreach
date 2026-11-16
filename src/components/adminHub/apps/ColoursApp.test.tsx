@@ -131,8 +131,10 @@ describe('ColoursApp', () => {
     expect(screen.getByText('Skin fade')).toBeTruthy();
     const contrast = screen.getAllByTestId('admin-hub-colours-contrast');
     expect(contrast).toHaveLength(1);
-    expect(contrast[0]!.textContent).toMatch(/Button text on accent — \d+\.\d:1 ✓/);
-    expect(contrast[0]!.textContent).toMatch(/Main colour on background — \d+\.\d:1 ✓/);
+    expect(contrast[0]!.querySelector('[data-line="button"]')!.getAttribute('data-pass')).toBe('true');
+    expect(contrast[0]!.querySelector('[data-line="main"]')!.getAttribute('data-pass')).toBe('true');
+    expect(contrast[0]!.textContent).toMatch(/Contrast \d+\.\d:1 · needs 4\.5:1/);
+    expect(screen.getByTestId('admin-hub-guide-verdict').textContent).toContain('Everything is easy to read');
   });
 
   it('assigns a clicked swatch to the selected role', () => {
@@ -144,18 +146,67 @@ describe('ColoursApp', () => {
 
   it('applies a typed hex as a manual colour', () => {
     render(<Harness />);
-    fireEvent.click(screen.getByRole('button', { name: '# Hex' }));
-    fireEvent.change(screen.getByLabelText('Hex'), { target: { value: '#22aa88' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Use' }));
+    const input = screen.getByLabelText('Hex');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: '#22aa88' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
     expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
   });
 
-  it('exposes slider valuetext in words and changes depth', async () => {
+  it('the colour area is a keyboard slider: valuetext in words, arrows go deeper, one undo step per gesture', async () => {
     render(<Harness />);
-    const depth = screen.getByRole('slider', { name: /Depth/i });
-    expect(depth.getAttribute('aria-valuetext')).toMatch(/^(Deeper|Lighter), \d+ %$/);
-    fireEvent.change(depth, { target: { value: '80' } });
-    await waitFor(() => expect(depth.getAttribute('aria-valuetext')).toMatch(/^Deeper, (79|80|81) %$/));
+    const area = screen.getByRole('slider', { name: 'Lightness and intensity' });
+    expect(area.getAttribute('aria-valuetext')).toMatch(/^\d+ % light, \d+ % vivid$/);
+    const before = Number(area.getAttribute('aria-valuenow'));
+    fireEvent.keyDown(area, { key: 'PageDown' });
+    fireEvent.keyDown(area, { key: 'ArrowDown' });
+    fireEvent.keyUp(area, { key: 'ArrowDown' });
+    await waitFor(() => expect(Number(area.getAttribute('aria-valuenow'))).toBeLessThan(before));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).not.toContain('#1F6F6B');
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Undo' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#1F6F6B');
+  });
+
+  it('the hue strip moves the colour to another hue and keeps its lightness', async () => {
+    render(<Harness />);
+    const hue = screen.getByRole('slider', { name: 'Hue' }) as HTMLInputElement;
+    expect(hue.getAttribute('aria-valuetext')).toMatch(/^Teal, \d+°$/);
+    fireEvent.pointerDown(hue);
+    fireEvent.change(hue, { target: { value: '25' } });
+    fireEvent.pointerUp(hue);
+    await waitFor(() => expect(screen.getByTestId('admin-hub-role-main').textContent).not.toContain('#1F6F6B'));
+    expect(screen.getByTestId('admin-hub-role-main').querySelector('.admin-hub-role__v')?.textContent).toMatch(/Red|Copper/);
+  });
+
+  it('shades, accent suggestions and classic pairs each set colours in one tap', () => {
+    render(<Harness />);
+    const shades = screen.getByRole('group', { name: 'Shades' });
+    const buttons = shades.querySelectorAll('button');
+    expect(buttons.length).toBe(7);
+    fireEvent.click(buttons[0]!);
+    expect(screen.getByTestId('admin-hub-role-main').textContent).not.toContain('#1F6F6B');
+
+    fireEvent.click(screen.getByTestId('admin-hub-role-accent'));
+    const suggest = screen.getByRole('group', { name: 'Goes with your main colour' });
+    const first = suggest.querySelector('button')!;
+    fireEvent.click(first);
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain(first.getAttribute('aria-label')!.split(' ').at(-1)!);
+
+    fireEvent.click(screen.getByTestId('admin-hub-pair-oxblood-brass'));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#7A1F2B');
+    expect(screen.getByTestId('admin-hub-role-accent').textContent).toContain('#C9A24A');
+    expect(screen.getByRole('button', { name: 'Light' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('admin-hub-pair-oxblood-brass').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('the preview can be seen as a colour-blind visitor or without colour', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Colour blind' }));
+    expect(document.querySelector('.admin-hub-colours__looks-preview')!.getAttribute('data-vision')).toBe('deuteranopia');
+    expect(document.getElementById('admin-hub-vision-deutan')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'No colour' }));
+    expect(document.querySelector('.admin-hub-colours__looks-preview')!.getAttribute('data-vision')).toBe('grey');
   });
 
   it('saves a draft without marking it sent', async () => {
@@ -355,8 +406,11 @@ describe('ColoursApp', () => {
     );
     const line = () => document.querySelector('[data-line="button"]')!;
     expect(line().getAttribute('data-pass')).toBe('false');
-    expect(line().textContent).toMatch(/^Button text on accent — \d\.\d:1 ✗/);
-    fireEvent.click(screen.getByRole('button', { name: 'Make accent deeper' }));
+    expect(line().textContent).toMatch(/Book button text/);
+    expect(line().textContent).toMatch(/Hard to read/);
+    expect(line().textContent).toMatch(/Contrast \d\.\d:1 · needs 4\.5:1/);
+    expect(screen.getByTestId('admin-hub-guide-verdict').textContent).toContain('1 thing to fix');
+    fireEvent.click(screen.getByRole('button', { name: /^Make accent (deeper|lighter)/ }));
     await waitFor(() => expect(line().getAttribute('data-pass')).toBe('true'));
     expect(document.querySelector('[data-line="main"]')!.getAttribute('data-pass')).toBe('true');
     expect(screen.queryByRole('button', { name: /^Make / })).toBeNull();
@@ -364,7 +418,9 @@ describe('ColoursApp', () => {
 
   it('locks controls when the stage cannot edit details', () => {
     render(<Harness overrides={{ canEditDetails: false }} />);
-    expect((screen.getByRole('slider', { name: /Depth/i }) as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByRole('slider', { name: 'Lightness and intensity' }).getAttribute('aria-disabled')).toBe('true');
+    expect((screen.getByRole('slider', { name: 'Hue' }) as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByLabelText('Hex') as HTMLInputElement).disabled).toBe(true);
     expect((screen.getAllByRole('button', { name: /Teal/i })[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -620,7 +676,7 @@ describe('ColoursApp (O5)', () => {
   it('one role control with pressed state (no tabs), Swap, No accent and the same-hex guard', () => {
     render(<Harness />);
     expect(document.querySelector('[role="tablist"], [role="tab"]')).toBeNull();
-    expect(screen.getAllByRole('group', { name: 'Colour to edit' })).toHaveLength(2);
+    expect(screen.getAllByRole('group', { name: 'Colour to edit' })).toHaveLength(1);
     expect(screen.getByTestId('admin-hub-role-main').getAttribute('aria-pressed')).toBe('true');
 
     fireEvent.click(screen.getByRole('button', { name: 'Swap main and accent' }));
@@ -639,7 +695,7 @@ describe('ColoursApp (O5)', () => {
     expect(document.querySelector('[data-line="main"]')).not.toBeNull();
   });
 
-  it('Undo reverts the last change only', () => {
+  it('Undo steps back one change at a time, also with Ctrl+Z', () => {
     render(<Harness />);
     const undo = screen.getByRole('button', { name: 'Undo' }) as HTMLButtonElement;
     expect(undo.disabled).toBe(true);
@@ -648,15 +704,17 @@ describe('ColoursApp (O5)', () => {
     fireEvent.click(undo);
     expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#1F6F6B');
     expect(screen.getByRole('button', { name: 'Light' }).getAttribute('aria-pressed')).toBe('true');
+    expect(undo.disabled).toBe(false);
+    fireEvent.keyDown(screen.getByTestId('admin-hub-role-main'), { key: 'z', ctrlKey: true });
+    expect(screen.getByRole('button', { name: 'Dark' }).getAttribute('aria-pressed')).toBe('true');
     expect(undo.disabled).toBe(true);
   });
 
-  it('hex box: prefilled, validated while typing, Enter applies, Esc closes and returns focus', async () => {
+  it('hex box: always visible, prefilled, validated while typing, Enter applies, Esc reverts', async () => {
     render(<Harness />);
-    const open = screen.getByRole('button', { name: '# Hex' });
-    fireEvent.click(open);
     const input = screen.getByLabelText('Hex') as HTMLInputElement;
     expect(input.value).toBe('#1F6F6B');
+    fireEvent.focus(input);
     fireEvent.change(input, { target: { value: '#12zz' } });
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(screen.getByText('Use 0–9 and A–F only, like #1F6F6B.')).toBeTruthy();
@@ -668,17 +726,15 @@ describe('ColoursApp (O5)', () => {
     fireEvent.change(input, { target: { value: '2a8' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
-    expect(screen.queryByLabelText('Hex')).toBeNull();
-    expect(document.activeElement).toBe(open);
+    await waitFor(() => expect(input.value).toBe('#22AA88'));
     expect(screen.getByTestId('admin-hub-swatch-22AA88')).toBeTruthy();
 
-    fireEvent.click(open);
-    const again = screen.getByLabelText('Hex');
+    fireEvent.change(input, { target: { value: '#ABC' } });
     const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
-    again.dispatchEvent(esc);
-    await waitFor(() => expect(screen.queryByLabelText('Hex')).toBeNull());
+    input.dispatchEvent(esc);
     expect(esc.defaultPrevented).toBe(true);
-    expect(document.activeElement).toBe(open);
+    await waitFor(() => expect(input.value).toBe('#22AA88'));
+    expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#22AA88');
   });
 
   it('labels the screen picker honestly where EyeDropper exists', () => {
@@ -688,19 +744,12 @@ describe('ColoursApp (O5)', () => {
     expect(screen.queryByText('Pick from a photo')).toBeNull();
   });
 
-  it('PageUp / PageDown move a slider by 10 %', async () => {
-    render(<Harness />);
-    const depth = screen.getByRole('slider', { name: 'Depth' }) as HTMLInputElement;
-    const start = Number(depth.value);
-    fireEvent.keyDown(depth, { key: 'PageUp' });
-    await waitFor(() => expect(Math.abs(Number(depth.value) - (start + 10))).toBeLessThanOrEqual(1));
-  });
-
-  it('vivid colours start at 100 % intensity and keep their chroma when touched', async () => {
+  it('vivid colours sit at the right edge of the area and stay put when picked again', async () => {
     render(<Harness overrides={{ details: { ...base(), brandPrimaryColour: '#FF0000', brandSecondaryColour: '#141414' } }} />);
-    const intensity = screen.getByRole('slider', { name: 'Intensity' }) as HTMLInputElement;
-    expect(Number(intensity.value)).toBeGreaterThanOrEqual(99);
-    fireEvent.change(intensity, { target: { value: '100' } });
+    const area = screen.getByRole('slider', { name: 'Lightness and intensity' });
+    expect(area.getAttribute('aria-valuetext')).toMatch(/, (99|100) % vivid$/);
+    fireEvent.keyDown(area, { key: 'End' });
+    fireEvent.keyUp(area, { key: 'End' });
     await new Promise((resolve) => setTimeout(resolve, 30));
     expect(screen.getByTestId('admin-hub-role-main').textContent).toContain('#FF0000');
   });

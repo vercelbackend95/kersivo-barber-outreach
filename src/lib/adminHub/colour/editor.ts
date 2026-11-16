@@ -119,15 +119,33 @@ export function clearAccent(state: ColourSnapshot): ColourSnapshot {
   return state.accent ? { ...state, accent: '' } : state;
 }
 
-/** One-level undo: remember the state before the last change. */
-export type UndoState = { current: ColourSnapshot; previous: ColourSnapshot | null };
+/** How many changes Undo can step back through. */
+export const UNDO_LIMIT = 30;
+
+/**
+ * Undo history. `previous` is the state Undo goes back to (null = nothing to undo); `past` holds the older ones.
+ * `past` is optional so a plain `{ current, previous }` still works.
+ */
+export type UndoState = { current: ColourSnapshot; previous: ColourSnapshot | null; past?: ColourSnapshot[] };
+
+function stack(undo: UndoState): ColourSnapshot[] {
+  if (undo.past) return undo.past;
+  return undo.previous ? [undo.previous] : [];
+}
 
 export function commitEdit(undo: UndoState, next: ColourSnapshot, before: ColourSnapshot = undo.current): UndoState {
-  if (same(before, next)) return { current: next, previous: undo.previous };
-  return { current: next, previous: before };
+  if (same(before, next)) return { ...undo, current: next };
+  const past = [...stack(undo), before].slice(-UNDO_LIMIT);
+  return { current: next, previous: before, past };
 }
 
 export function undoEdit(undo: UndoState): UndoState {
   if (!undo.previous) return undo;
-  return { current: undo.previous, previous: null };
+  const past = stack(undo).slice(0, -1);
+  return { current: undo.previous, previous: past.at(-1) ?? null, past };
+}
+
+/** Forget the history (after sending, or when the server state replaces the screen). */
+export function resetHistory(current: ColourSnapshot): UndoState {
+  return { current, previous: null, past: [] };
 }

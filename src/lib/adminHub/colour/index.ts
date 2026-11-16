@@ -85,3 +85,29 @@ export {
   undoEdit,
 } from './editor';
 export type { ColourSnapshot, EditResult, HexInputResult, UndoState } from './editor';
+export { resetHistory, UNDO_LIMIT } from './editor';
+export {
+  PICKER_DEFAULT_HUE,
+  PICKER_GREY_C,
+  hexAtPoint,
+  hueStripGradient,
+  hueSwatch,
+  oklchAtPoint,
+  paintPickerArea,
+  pickerPoint,
+  shadeSteps,
+  withHue,
+} from './picker';
+export type { PickerPoint } from './picker';
+export {
+  BARBERSHOP_PAIRS,
+  accentSuggestions,
+  buttonTextPasses,
+  contrastMeter,
+  hueName,
+  mainOnBackgroundPasses,
+  readabilityReport,
+  simulateVision,
+  visionMatrix,
+} from './guide';
+export type { AccentSuggestion, GuideCheck, GuideCheckId, GuideFix, GuideReport, VisionKind } from './guide';
