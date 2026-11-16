@@ -104,6 +104,11 @@ export const TOUR_COPY = {
   stepDone: (index: number, total: number) => `Step ${index} of ${total} done`,
   progress: (done: number, total: number) => `${done} of ${total} done`,
   nextUp: (label: string) => `Next: ${label}`,
+  barLabel: 'Website setup steps',
+  back: 'Back',
+  continue: 'Continue',
+  backTo: (label: string) => `Back to: ${label}`,
+  continueTo: (label: string) => `Continue to: ${label}`,
 } as const;
 
 /** What Full KERSIVO includes, for the finale. Wording from the approved plan scope (claimsPolicy). */
@@ -175,6 +180,26 @@ export function tourCurrentStep(model: TourModel, focus: TourStepId | null): Tou
   if (picked && !picked.done && !picked.locked) return picked;
   return model.steps.find((step) => step.id === model.nextId) ?? null;
 }
+
+/**
+ * The steps on either side of the one the owner is looking at, for the Back / Continue bar in its window.
+ * Back: the step before it (a locked one is passed over). Continue: the next step still to do after it, then
+ * from the start; none when nothing else is left to do.
+ */
+export function tourStepNeighbours(
+  model: TourModel,
+  id: TourStepId,
+): { back: TourStep | null; next: TourStep | null } {
+  const at = model.steps.findIndex((step) => step.id === id);
+  if (at < 0) return { back: null, next: null };
+  const back = model.steps.slice(0, at).reverse().find((step) => !step.locked) ?? null;
+  const open = (step: TourStep) => step.id !== id && !step.done && !step.locked;
+  const next = model.steps.slice(at + 1).find(open) ?? model.steps.slice(0, at).find(open) ?? null;
+  return { back, next };
+}
+
+/** Steps done inside the Add to your website window (?app=materials&item=…): they get the Back / Continue bar. */
+export const TOUR_WINDOW_STEPS: ReadonlySet<TourStepId> = new Set<TourStepId>(['logo', 'photos', 'hours']);
 
 // ---------------------------------------------------------------------------
 // What the browser remembers

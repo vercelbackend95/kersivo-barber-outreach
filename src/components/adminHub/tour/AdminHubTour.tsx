@@ -10,7 +10,9 @@ import {
   type ReactNode,
   type SVGProps,
 } from 'react';
+import { createPortal } from 'react-dom';
 import {
+  ArrowLeft,
   ArrowRight,
   Camera,
   Check,
@@ -34,12 +36,14 @@ import {
   TOUR_STEP_IDS,
   TOUR_RESTART_EVENT,
   TOUR_STEP_TARGET,
+  TOUR_WINDOW_STEPS,
   initialTourMemory,
   readTourMemory,
   restartTourMemory,
   tourAssetThumb,
   tourCurrentStep,
   tourModel,
+  tourStepNeighbours,
   tourSurface,
   tourUncelebrated,
   writeTourMemory,
@@ -62,6 +66,53 @@ const STEP_ICON: Record<TourStepId, ComponentType<SVGProps<SVGSVGElement>>> = {
 const REAL_ADMIN_SECTIONS = new Set<PreviewHubSection>(['team', 'services', 'products']);
 const REFRESH_DEBOUNCE_MS = 500;
 const SPARKS = [0, 45, 90, 135, 180, 225, 270, 315];
+
+/**
+ * The tour step shown in the open Add to your website window (?app=materials&item=logo|photos|hours) and the
+ * slot at the bottom of its body. The window mounts after the URL changes, so the slot is looked up a few times.
+ */
+function useWindowStep(active: boolean): { stepId: TourStepId | null; slot: HTMLElement | null } {
+  const [found, setFound] = useState<{ stepId: TourStepId | null; slot: HTMLElement | null }>({
+    stepId: null,
+    slot: null,
+  });
+  useEffect(() => {
+    if (!active) {
+      setFound({ stepId: null, slot: null });
+      return undefined;
+    }
+    let tries = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const look = () => {
+      timer = null;
+      const params = new URLSearchParams(window.location.search);
+      const item = params.get('app') === 'materials' ? params.get('item') : null;
+      const stepId = item && TOUR_WINDOW_STEPS.has(item as TourStepId) ? (item as TourStepId) : null;
+      const slot = stepId
+        ? document.querySelector<HTMLElement>('[data-testid="admin-hub-app"] [data-tour-slot]')
+        : null;
+      setFound((prev) => (prev.stepId === stepId && prev.slot === slot ? prev : { stepId, slot }));
+      if (stepId && (!slot || !slot.isConnected) && tries < 15) {
+        tries += 1;
+        timer = setTimeout(look, 200);
+      }
+    };
+    const restart = () => {
+      tries = 0;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(look, 30);
+    };
+    look();
+    window.addEventListener(ADMIN_HUB_LOCATION_EVENT, restart);
+    window.addEventListener('popstate', restart);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener(ADMIN_HUB_LOCATION_EVENT, restart);
+      window.removeEventListener('popstate', restart);
+    };
+  }, [active]);
+  return found.slot?.isConnected ? found : { stepId: found.stepId, slot: null };
+}
 
 function isNarrow(): boolean {
   return typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767px)').matches;
@@ -325,6 +376,9 @@ export function AdminHubTour(props: {
     }
   }, [surface]);
 
+  // Inside the window the guide's pill sits under the window: the window gets its own Back / Continue bar.
+  const windowStep = useWindowStep(Boolean(model && memory?.welcomed && !model.allDone));
+
   if (!model || !memory || surface === 'none') return null;
 
   const logoSrc = hub?.currentLogo?.src ?? null;
@@ -514,6 +568,48 @@ export function AdminHubTour(props: {
 
   const hiddenAttr = props.hidden ? { 'data-tour-hidden': '' } : {};
 
+  // ── Back / Continue at the bottom of the window (logo, photos, hours) ──
+  const barStep = windowStep.stepId ? (model.steps.find((step) => step.id === windowStep.stepId) ?? null) : null;
+  let bar: ReactNode = null;
+  if (barStep && windowStep.slot && (surface === 'dock' || surface === 'pill')) {
+    const { back, next } = tourStepNeighbours(model, barStep.id);
+    bar = createPortal(
+      <nav className="ks-tour-bar" aria-label={TOUR_COPY.barLabel} data-testid="admin-hub-tour-bar">
+        {back ? (
+          <a
+            className="btn btn--ghost btn--sm ks-tour-bar__back"
+            href={back.href}
+            aria-label={TOUR_COPY.backTo(back.copy.title)}
+            data-testid="admin-hub-tour-back"
+            onClick={() => startStep(back)}
+          >
+            <ArrowLeft width={15} height={15} aria-hidden="true" />
+            {TOUR_COPY.back}
+          </a>
+        ) : null}
+        <p className="ks-tour-bar__where">
+          <Segments model={model} currentId={barStep.id} />
+          <span>{TOUR_COPY.stepOf(barStep.index, model.total)}</span>
+        </p>
+        {next ? (
+          <a
+            className="btn btn--primary btn--sm ks-tour-cta ks-tour-bar__next"
+            href={next.href}
+            data-testid="admin-hub-tour-continue"
+            onClick={() => startStep(next)}
+          >
+            <span>
+              {TOUR_COPY.continue}
+              <span className="admin-hub-sr-only">: {next.copy.title}</span>
+            </span>
+            <ArrowRight width={15} height={15} aria-hidden="true" />
+          </a>
+        ) : null}
+      </nav>,
+      windowStep.slot,
+    );
+  }
+
   // ── A step was just completed ──────────────────────────────────────────
   if (surface === 'celebrate' && celebrateStep) {
     const next = current;
@@ -565,6 +661,8 @@ export function AdminHubTour(props: {
     const stepPath = current ? current.href.split('?')[0] : null;
     const onTask = Boolean(stepPath && stepPath !== PREVIEW_HUB_PATHS.overview && stepPath === window.location.pathname.replace(/\/+$/, ''));
     return (
+      <>
+      {bar}
       <button
         ref={pillRef}
         type="button"
@@ -584,12 +682,14 @@ export function AdminHubTour(props: {
         </span>
         <ChevronUp width={16} height={16} aria-hidden="true" />
       </button>
+      </>
     );
   }
 
   // ── The guide ──────────────────────────────────────────────────────────
   return (
     <>
+      {bar}
       <div className="ks-tour-scrim" aria-hidden="true" onClick={minimise} {...hiddenAttr} />
       <aside
         ref={dockRef}

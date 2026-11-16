@@ -11,6 +11,7 @@ import {
   restartTourMemory,
   tourCurrentStep,
   tourModel,
+  tourStepNeighbours,
   tourStorageKey,
   tourSurface,
   tourUncelebrated,
@@ -86,6 +87,29 @@ describe('tourCurrentStep', () => {
     // Locked or finished picks fall back to the next step.
     expect(tourCurrentStep(model, 'team')?.id).toBe('logo');
     expect(tourCurrentStep(tourModel(card({ assets: ['LOGO'] }))!, 'logo')?.id).toBe('photos');
+  });
+});
+
+describe('tourStepNeighbours', () => {
+  it('goes back one step and continues to the next step still to do', () => {
+    const model = tourModel(card({ assets: ['LOGO', 'SHOP_PHOTO'] }))!;
+    const photos = tourStepNeighbours(model, 'photos');
+    expect(photos.back?.id).toBe('logo');
+    expect(photos.next?.id).toBe('services');
+    expect(tourStepNeighbours(model, 'logo').back).toBeNull();
+  });
+
+  it('passes over a locked Team going back, and wraps round to what is left', () => {
+    const model = tourModel(card({ assets: ['LOGO'] }))!;
+    const hours = tourStepNeighbours(model, 'hours');
+    expect(hours.back?.id).toBe('services');
+    expect(hours.next?.id).toBe('photos');
+  });
+
+  it('offers no Continue when nothing else is left to do', () => {
+    const model = tourModel(card({ assets: ['LOGO'], counts: { activeServices: 1, activeBarbers: 1, openingHoursSaved: true } }))!;
+    expect(tourStepNeighbours(model, 'photos').next).toBeNull();
+    expect(tourStepNeighbours(model, 'photos').back?.id).toBe('logo');
   });
 });
 

@@ -451,6 +451,8 @@ export function AppHost(props: {
           ) : (
             <AppStatus state="loading" />
           )}
+          {/* The setup tour's Back / Continue bar (portalled in by AdminHubTour; empty otherwise). */}
+          <div className="admin-hub-app__tour" data-tour-slot="" />
         </div>
         {chrome.footer ? <div className="admin-hub-app__foot">{chrome.footer}</div> : null}
       </div>
