@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DomainSearcher, { type DomainDecisionMode } from '@/components/domains/DomainSearcher';
 import { normalizeAndValidateDomainInput } from '@/lib/domains/hostname';
 import {
@@ -23,7 +23,11 @@ export type PreviewTopBarProps = {
   websiteHref: string;
   bookingHref: string;
   /** `checkout` is the Overview subscribe button (hub). `checkout-outline` is the admin-hub header. Default keeps the existing preview bar. */
-  chrome?: 'full' | 'checkout' | 'checkout-outline';
+  chrome?: 'full' | 'checkout' | 'checkout-outline' | 'dialog';
+  /** `chrome: 'dialog'`: the checkout dialog alone, opened on mount (the setup card's Subscribe button). */
+  onDialogClose?: () => void;
+  /** The website is still being designed: the owner subscribes now and approves the site when it is ready. */
+  early?: boolean;
   /** When set (hub flag on), Request changes is a link to the Changes tab instead of the free-text dialog. */
   changesHref?: string;
   /** Inside /admin: '/api/admin-hub' for event, checkout and domain search (cookie session, no token). */
@@ -58,6 +62,17 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
   const ownerActionsDisabled = props.isOperator || props.converted;
   const chrome = props.chrome ?? 'full';
   const actionRoot = props.apiBase ?? `/api/free-preview/${encodeURIComponent(props.token)}`;
+  const launchTitle = props.early ? 'Subscribe to Full KERSIVO' : 'Launch this website';
+  const launchSummary = props.early
+    ? '£39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) · Cancel anytime. We keep designing your website, you review it, and nothing goes live until you approve it.'
+    : '£39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) · Cancel anytime. Nothing goes live until you approve it.';
+
+  // The setup card mounts the dialog on its own and opens it straight away.
+  useEffect(() => {
+    if (chrome !== 'dialog' || ownerActionsDisabled) return;
+    open('launch');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function open(next: Exclude<Panel, null>) {
     setError('');
@@ -194,16 +209,16 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
       ref={launchDialog}
       className="fp-dialog"
       aria-labelledby="fp-launch-title"
-      onClose={() => setPanel(null)}
+      onClose={() => {
+        setPanel(null);
+        props.onDialogClose?.();
+      }}
     >
       <form className="fp-dialog__body" onSubmit={startCheckout}>
         <h2 id="fp-launch-title" className="fp-dialog__title">
-          Launch this website
+          {launchTitle}
         </h2>
-        <p className="fp-dialog__summary">
-          £39/month per location · No setup fee · No VAT added · 0% KERSIVO commission (Stripe fees apply) ·
-          Cancel anytime. Nothing goes live until you approve it.
-        </p>
+        <p className="fp-dialog__summary">{launchSummary}</p>
         <label className="fp-dialog__label" htmlFor="fp-launch-name">
           Your name
         </label>
@@ -267,6 +282,8 @@ export default function PreviewTopBar(props: PreviewTopBarProps) {
       </form>
     </dialog>
   );
+
+  if (chrome === 'dialog') return launchDialogNode;
 
   if (chrome === 'checkout' || chrome === 'checkout-outline') {
     return (

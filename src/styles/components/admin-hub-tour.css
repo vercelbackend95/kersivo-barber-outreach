@@ -806,6 +806,22 @@ button.ks-tour-step__head:hover {
   padding-inline: 24px;
   font-size: 15px;
 }
+.ks-tour-finale__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.ks-tour-finale__subscribe {
+  min-height: 48px;
+  padding-inline: 22px;
+  font-size: 15px;
+}
+@media (max-width: 479px) {
+  .ks-tour-finale__buttons > * {
+    flex: 1 1 100%;
+  }
+}
 .ks-tour-finale__extras {
   margin: 0;
   color: var(--kt-dim);
@@ -1210,6 +1226,67 @@ button.ks-tour-step__head:hover {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+/* "Saved" toasts rise above the bar instead of covering it. */
+body:has(.ks-tour-bar) .admin-hub-toast {
+  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 479px) {
+  body:has(.ks-tour-bar--done) .admin-hub-toast {
+    bottom: calc(136px + env(safe-area-inset-bottom, 0px));
+  }
+}
+/* Moving on from a step that is not done yet: a quiet choice, not the main action. */
+.ks-tour-bar__skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--kt-dim);
+  text-decoration: none;
+}
+.ks-tour-bar__skip:hover {
+  color: var(--fg);
+}
+.ks-tour-bar__skip svg,
+.ks-tour-bar__next svg {
+  flex: none;
+  transition: transform 0.25s var(--kt-ease);
+}
+.ks-tour-bar__skip:hover svg,
+.ks-tour-bar__next:hover svg {
+  transform: translateX(3px);
+}
+/* The step was just finished in this window. */
+.ks-tour-bar--done {
+  justify-content: space-between;
+}
+.ks-tour-bar__done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.ks-tour-bar__done .ks-tour-seal {
+  width: 34px;
+  height: 34px;
+}
+.ks-tour-bar__done p {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  margin: 0;
+}
+.ks-tour-bar__done strong {
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+.ks-tour-bar__done span {
+  color: var(--kt-dim);
+  font-size: 12px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
 @media (max-width: 479px) {
   .ks-tour-bar__where .ks-tour-segs {
     display: none;
@@ -1220,6 +1297,13 @@ button.ks-tour-step__head:hover {
   }
   .ks-tour-bar__next {
     min-width: 0;
+  }
+  .ks-tour-bar--done {
+    flex-wrap: wrap;
+  }
+  .ks-tour-bar--done .ks-tour-bar__next {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 

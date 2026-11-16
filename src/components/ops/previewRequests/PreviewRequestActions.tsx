@@ -51,6 +51,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   NO_DRAFT_SHOP: 'Create or link a draft shop first.',
   INVALID_PREVIEW_URL: 'The website preview URL must be a valid https:// URL.',
   SITE_PREVIEW_MISSING: 'Set the website preview URL before sending.',
+  ALREADY_PAID: 'This owner has already subscribed, so the request cannot be rejected. Contact them and handle the subscription in Stripe.',
   PREVIEW_FLOW_DISABLED: 'FREE_PREVIEW_FLOW_ENABLED is off, so the preview link would 404. Nothing was sent.',
 };
 

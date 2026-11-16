@@ -8,6 +8,7 @@ import { suppressPendingPreviewFollowups } from './followups';
 import { isAnyHubEnabled } from './config';
 import { buildRejectedPreviewPaymentInternalEmail } from './emails';
 import { notifyOwnerSubscribed } from './hubLaunch';
+import { isEarlySubscribe } from './previewAccess';
 
 export type MarkConvertedResult = 'converted' | 'already_converted' | 'not_found' | 'rejected_paid';
 
@@ -29,10 +30,10 @@ export async function markPreviewRequestConverted(input: {
 
   const existing = await prisma.previewRequest.findFirst({
     where: { id: input.previewRequestId, draftShopId: input.draftShopId },
-    select: { status: true, shopName: true },
+    select: { status: true, shopName: true, convertedAt: true },
   });
   if (!existing) return 'not_found';
-  if (existing.status === 'CONVERTED') return 'already_converted';
+  if (existing.status === 'CONVERTED' || existing.convertedAt) return 'already_converted';
 
   if (existing.status === 'REJECTED') {
     await prisma.previewRequest.update({
@@ -66,10 +67,19 @@ export async function markPreviewRequestConverted(input: {
     return 'rejected_paid';
   }
 
+  // Paid before the preview was ready: the design carries on (status stays REQUESTED / IN_PROGRESS) and
+  // "Mark ready and send" then moves the request straight to CONVERTED (opsActions, mark_ready_and_send).
+  const early = isEarlySubscribe(existing);
+  const toStatus = early ? existing.status : 'CONVERTED';
   const updated = await prisma.previewRequest.updateMany({
-    where: { id: input.previewRequestId, draftShopId: input.draftShopId, status: { not: 'CONVERTED' } },
+    where: {
+      id: input.previewRequestId,
+      draftShopId: input.draftShopId,
+      status: { not: 'CONVERTED' },
+      convertedAt: null,
+    },
     data: {
-      status: 'CONVERTED',
+      ...(early ? {} : { status: 'CONVERTED' as const }),
       convertedAt: now,
       stripeCustomerId: input.stripeCustomerId,
       stripeSubscriptionId: input.stripeSubscriptionId,
@@ -81,8 +91,9 @@ export async function markPreviewRequestConverted(input: {
       data: {
         previewRequestId: input.previewRequestId,
         action: PREVIEW_REQUEST_ACTIONS.CONVERTED,
-        toStatus: 'CONVERTED',
-        meta: { stripeSessionId: input.stripeSessionId },
+        fromStatus: existing.status,
+        toStatus,
+        meta: { stripeSessionId: input.stripeSessionId, ...(early ? { beforePreview: true } : {}) },
       },
     });
     await suppressPendingPreviewFollowups(input.previewRequestId).catch((error) =>
@@ -112,9 +123,9 @@ export async function markPreviewRequestConverted(input: {
 
   const raced = await prisma.previewRequest.findFirst({
     where: { id: input.previewRequestId, draftShopId: input.draftShopId },
-    select: { status: true },
+    select: { status: true, convertedAt: true },
   });
-  return raced?.status === 'CONVERTED' ? 'already_converted' : 'not_found';
+  return raced?.status === 'CONVERTED' || raced?.convertedAt ? 'already_converted' : 'not_found';
 }
 
 export type AdoptDraftShopResult =

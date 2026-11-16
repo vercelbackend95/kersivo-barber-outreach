@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-type Row = { id: string; status: string; draftShopId: string | null; shopName: string; townCity: string };
+type Row = {
+  id: string;
+  status: string;
+  draftShopId: string | null;
+  shopName: string;
+  townCity: string;
+  convertedAt?: Date | null;
+};
 
 const state: { request: Row | null; shop: Record<string, unknown> | null } = { request: null, shop: null };
 const update = vi.fn();
@@ -74,6 +81,13 @@ describe('executePreviewRequestOpsAction', () => {
     update.mockReset();
     state.request!.status = 'CONVERTED';
     expect(await run({ action: 'reject' })).toMatchObject({ ok: false, code: 'INVALID_TRANSITION' });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('refuses to reject an owner who subscribed before the preview was ready', async () => {
+    state.request!.status = 'IN_PROGRESS';
+    state.request!.convertedAt = new Date();
+    expect(await run({ action: 'reject' })).toMatchObject({ ok: false, code: 'ALREADY_PAID' });
     expect(update).not.toHaveBeenCalled();
   });
 

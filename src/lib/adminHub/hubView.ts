@@ -20,7 +20,9 @@ import { parseAdminHubApp, type AdminHubAppId } from './apps';
 import { currentHubLogo, parseBrandSnapshotLogoAssetId } from './currentLogo';
 import { loadDraftShopSetupCounts } from './draftShopSetupCounts';
 import { previewHubSectionFromPath, type PreviewHubSection } from './previewHubPaths';
-import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel } from './setupCard';
+import { isSetupPhase2Stage, setupCardForStage, type SetupCardModel, type SetupSubscribe } from './setupCard';
+import { hostnameOf } from '@/lib/freePreview/hubPage';
+import { isEarlySubscribe, ownerCanSubscribe } from '@/lib/freePreview/previewAccess';
 
 export type AdminHubSection = PreviewHubSection;
 
@@ -56,6 +58,32 @@ function launchFlagsFrom(launchProgress: HubLaunchProgress | null) {
 }
 
 /**
+ * Subscribe from the setup card: while the owner can start the Full KERSIVO checkout (with the preview, or early
+ * while it is designed), or once they paid early. Never for operators.
+ */
+export function setupSubscribeFor(ctx: HubPageContext, now = new Date()): SetupSubscribe | null {
+  if (ctx.isOperator) return null;
+  const request = ctx.request;
+  const early = isEarlySubscribe(request);
+  const subscribed = Boolean(request.convertedAt) && early;
+  if (!subscribed && !ownerCanSubscribe(request, now)) return null;
+  return {
+    state: subscribed ? 'subscribed' : 'available',
+    early,
+    shopName: request.shopName,
+    townCity: request.townCity,
+    firstName: request.firstName,
+    checkoutEmail: request.email,
+    hasOwnDomain: request.hasOwnDomain ?? 'not_sure',
+    existingWebsiteHost: hostnameOf(request.websiteUrl),
+  };
+}
+
+function withSubscribe(ctx: HubPageContext, setup: SetupCardModel | null): SetupCardModel | null {
+  return setup && setup.phase === 1 ? { ...setup, subscribe: setupSubscribeFor(ctx) } : setup;
+}
+
+/**
  * The sidebar setup card on its own, for GET /state (the sidebar refreshes after a save without a reload).
  * Same inputs and rules as the page load below.
  */
@@ -68,13 +96,16 @@ export async function loadAdminHubSetupCard(
     loadDraftShopSetupCounts(ctx.request.draftShopId),
     isSetupPhase2Stage(stage) ? loadHubLaunchProgress(ctx.request.id) : Promise.resolve(null),
   ]);
-  return setupCardForStage({
-    stage,
-    assetKinds,
-    aboutText: ctx.request.aboutText,
-    shopCounts,
-    launch: launchFlagsFrom(launchProgress),
-  });
+  return withSubscribe(
+    ctx,
+    setupCardForStage({
+      stage,
+      assetKinds,
+      aboutText: ctx.request.aboutText,
+      shopCounts,
+      launch: launchFlagsFrom(launchProgress),
+    }),
+  );
 }
 
 export async function loadAdminHubView(
@@ -123,13 +154,16 @@ export async function loadAdminHubView(
     }) ?? null;
   const launchFlags = launchFlagsFrom(launchProgress);
 
-  const setup: SetupCardModel | null = setupCardForStage({
-    stage,
-    assetKinds: assets.map((asset) => asset.kind),
-    aboutText: ctx.request.aboutText,
-    shopCounts,
-    launch: launchFlags,
-  });
+  const setup: SetupCardModel | null = withSubscribe(
+    ctx,
+    setupCardForStage({
+      stage,
+      assetKinds: assets.map((asset) => asset.kind),
+      aboutText: ctx.request.aboutText,
+      shopCounts,
+      launch: launchFlags,
+    }),
+  );
 
   const overview = wantsOverview
     ? {

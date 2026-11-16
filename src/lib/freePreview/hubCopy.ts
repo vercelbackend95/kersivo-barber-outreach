@@ -491,6 +491,7 @@ export const HUB_LIVE_NEXT_DEPOSITS = 'Set deposits (optional)';
 export const HUB_LIVE_NEXT_RETAIL = 'Start selling products';
 export const HUB_LIVE_NEXT_HOURS = "Add your team's working hours";
 export const HUB_OPS_APPROVED_BADGE = 'Approved — ready to launch';
+export const HUB_OPS_PAID_EARLY_BADGE = 'Subscribed — preview not sent yet';
 export const HUB_OPS_DOMAIN_CONNECTED = 'Domain connected';
 export const HUB_OPS_SSL_ACTIVE = 'SSL active';
 export const HUB_OPS_MARK_LIVE = 'Mark live';

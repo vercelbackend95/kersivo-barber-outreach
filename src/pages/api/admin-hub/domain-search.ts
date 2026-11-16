@@ -6,7 +6,7 @@ import { searchDomains } from '@/lib/domains/search';
 import { hubJson, hubNotFoundJson, resolveHubApiContext } from '@/lib/freePreview/hubApi';
 import { isAdminHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { PREVIEW_DOMAIN_SEARCH_RATE } from '@/lib/freePreview/previewApi';
-import { ownerCanActOnPreview } from '@/lib/freePreview/previewAccess';
+import { ownerCanSubscribe } from '@/lib/freePreview/previewAccess';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 const bodySchema = z.object({
@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
   const ctxResult = await resolveHubApiContext({ request, source: { kind: 'cookie' }, mutation: true });
   if (!ctxResult.ok) return ctxResult.response;
   const preview = ctxResult.ctx.request;
-  if (!ownerCanActOnPreview(preview, new Date())) {
+  if (!ownerCanSubscribe(preview, new Date())) {
     return hubJson({ ok: false, error: 'This preview is no longer available.' }, 409);
   }
 

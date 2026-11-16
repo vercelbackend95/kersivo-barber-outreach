@@ -278,15 +278,246 @@
   color: color-mix(in srgb, #fff 70%, transparent);
   white-space: nowrap;
 }
-.admin-hub-setup__complete {
+/* ── Setup complete: what happens next, and Full KERSIVO now (starter glance card tokens) ── */
+.admin-hub-done {
+  --done-dim: #a4aab4;
+  --done-hair: rgba(255, 255, 255, 0.08);
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 15px 14px 14px;
+  border: 1px solid var(--done-hair);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 22px 44px -24px rgba(0, 0, 0, 0.9);
+  color: var(--fg);
+  overflow: hidden;
+}
+.admin-hub-done::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14px;
+  width: min(60%, 150px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+  pointer-events: none;
+}
+.admin-hub-done__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   margin: 0;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 12.5px;
+  color: var(--done-dim);
+  font-size: 10.5px;
   font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.admin-hub-done__eyebrow span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 22%, transparent);
+}
+.admin-hub-done__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.admin-hub-done__body {
+  margin: -4px 0 0;
+  color: var(--done-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.admin-hub-done__steps {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+/* The thread joining the three marks. */
+.admin-hub-done__steps::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 6.5px;
+  width: 1px;
+  background: var(--done-hair);
+}
+.admin-hub-done__steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--done-dim);
+  font-size: 12px;
   line-height: 1.3;
+}
+.admin-hub-done__steps li.is-done {
+  color: color-mix(in srgb, #fff 78%, transparent);
+}
+.admin-hub-done__steps li.is-now {
+  color: #fff;
+  font-weight: 600;
+}
+.admin-hub-done__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: #0b0b0c;
+  color: #fff;
+}
+.admin-hub-done__steps li.is-done .admin-hub-done__mark {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+}
+.admin-hub-done__steps li.is-now .admin-hub-done__mark {
+  border-color: var(--color-brand);
+}
+.admin-hub-done__steps li.is-now .admin-hub-done__mark::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  animation: admin-hub-done-beat 2.4s ease-in-out infinite;
+}
+@keyframes admin-hub-done-beat {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.admin-hub-done__offer {
+  display: grid;
+  gap: 9px;
+  margin-top: 2px;
+  padding: 11px 11px 12px;
+  border: 1px solid var(--done-hair);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.admin-hub-done__lead {
+  margin: 0;
+  color: var(--done-dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.admin-hub-done__lead strong {
+  color: #fff;
+  font-weight: 650;
+}
+.admin-hub-done__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin: 0;
+}
+.admin-hub-done__price strong {
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.admin-hub-done__price span {
+  color: var(--done-dim);
+  font-size: 11px;
+}
+.admin-hub-done__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+}
+.admin-hub-done__cta svg {
+  flex: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.admin-hub-done__cta:hover svg {
+  transform: translateX(3px);
+}
+.admin-hub-done__link {
+  justify-self: start;
+  color: var(--done-dim);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-underline-offset: 3px;
+}
+.admin-hub-done__link:hover {
+  color: #fff;
+  text-decoration-color: currentColor;
+}
+.admin-hub-done :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+/*
+ * In the desktop sidebar the card shares the height with the navigation: it keeps the status and the offer,
+ * and shows the explanation and the three steps only where the screen is tall enough (the Overview has the
+ * full build stepper). The phone menu drawer always shows everything.
+ */
+.admin-hub-setup--sidebar .admin-hub-done {
+  gap: 6px;
+  padding: 12px 12px 11px;
+}
+.admin-hub-setup--sidebar .admin-hub-done__body,
+.admin-hub-setup--sidebar .admin-hub-done__steps {
+  display: none;
+}
+.admin-hub-setup--sidebar .admin-hub-done__offer {
+  gap: 7px;
+  margin-top: 2px;
+  padding: 9px 0 0;
+  border: 0;
+  border-top: 1px solid var(--done-hair);
+  border-radius: 0;
+  background: none;
+}
+.admin-hub-setup--sidebar .admin-hub-done__price strong {
+  font-size: 17px;
+}
+.admin-hub-setup--sidebar .admin-hub-done__cta {
+  min-height: 36px;
+  padding-block: 6px;
+}
+.admin-hub-setup--sidebar .admin-hub-done--subscribed .admin-hub-done__body {
+  display: block;
+}
+@media (min-height: 1000px) {
+  .admin-hub-setup--sidebar .admin-hub-done__body {
+    display: block;
+  }
+  .admin-hub-setup--sidebar .admin-hub-done__steps {
+    display: grid;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-hub-done__steps li.is-now .admin-hub-done__mark::after,
+  .admin-hub-done__cta svg {
+    animation: none;
+    transition: none;
+  }
 }
 .admin-hub-setup--sidebar {
   margin: 0;

@@ -14,7 +14,7 @@ import { PREVIEW_REQUEST_ACTIONS } from './createPreviewRequest';
 import { currentBookingSystemLabel } from '@/lib/forms/currentBookingSystems';
 import { FREE_PREVIEW_BARBER_COUNTS, labelFor } from './intake';
 import { persistPreviewDomainChoice } from './persistPreviewDomain';
-import { ownerCanActOnPreview, resolvePreviewRequestByToken, type TokenPreviewRequest } from './previewAccess';
+import { ownerCanSubscribe, resolvePreviewRequestByToken, type TokenPreviewRequest } from './previewAccess';
 
 /** Stripe Checkout metadata key carrying the PreviewRequest id (shopId carries the draft shop). */
 export const PREVIEW_REQUEST_METADATA_KEY = 'previewRequestId';
@@ -73,10 +73,11 @@ export async function startPreviewLaunchCheckoutFor(input: {
   const now = input.now ?? new Date();
   const { preview } = input;
 
-  if (preview.status === 'CONVERTED') {
-    return json({ error: 'This website has already been launched.', code: 'ALREADY_CONVERTED', redirectTo: '/admin' }, 409);
+  // CONVERTED, or paid early while the website was still being designed.
+  if (preview.status === 'CONVERTED' || preview.convertedAt) {
+    return json({ error: "You're already subscribed to Full KERSIVO.", code: 'ALREADY_CONVERTED', redirectTo: '/admin' }, 409);
   }
-  if (!ownerCanActOnPreview(preview, now) || !preview.draftShopId) {
+  if (!ownerCanSubscribe(preview, now) || !preview.draftShopId) {
     return json({ error: 'This preview is no longer available.', code: 'PREVIEW_NOT_AVAILABLE' }, 409);
   }
 

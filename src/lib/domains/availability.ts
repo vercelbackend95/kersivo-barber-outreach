@@ -11,13 +11,9 @@ import {
 } from './tldPolicy';
 import type { DomainCandidate } from './suggest';
 
-export type DomainSuggestionResult = {
-  domain: string;
-  tld: string;
-  status: DomainAvailabilityStatus;
-  included: boolean;
-  pricePence: number | null;
-};
+import type { DomainSuggestionResult } from './selectable';
+
+export { canSelectForRegister, type DomainSuggestionResult } from './selectable';
 
 export type AvailabilityLookup = 'available' | 'taken' | 'unknown';
 
@@ -318,8 +314,3 @@ export async function checkAvailability(
   });
 }
 
-export function canSelectForRegister(result: DomainSuggestionResult): boolean {
-  if (isDisallowedKersivoRegisterTld(result.domain)) return false;
-  if (result.status === 'taken' || result.status === 'not_included') return false;
-  return result.included || (result.status === 'unknown' && isPrimarySuggestionTld(result.tld));
-}

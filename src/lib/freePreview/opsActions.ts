@@ -49,7 +49,9 @@ export type OpsActionErrorCode =
   | 'NO_DRAFT_SHOP'
   | 'INVALID_PREVIEW_URL'
   | 'SITE_PREVIEW_MISSING'
-  | 'PREVIEW_FLOW_DISABLED';
+  | 'PREVIEW_FLOW_DISABLED'
+  /** The owner subscribed before the preview was ready: the request can no longer be rejected here. */
+  | 'ALREADY_PAID';
 
 export type OpsActionResult =
   | { ok: true; status: PreviewRequestStatus; draftShopId: string | null; emailSent?: 'E3' | 'E4' }
@@ -148,6 +150,7 @@ export async function executePreviewRequestOpsAction(input: {
 
       case 'reject': {
         if (isFinal) return fail('INVALID_TRANSITION');
+        if (request.convertedAt) return fail('ALREADY_PAID');
         await tx.previewRequest.update({
           where: { id: request.id },
           data: {
