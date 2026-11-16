@@ -328,7 +328,7 @@ export function buildFeesReportJsonLd(): Record<string, unknown>[] {
       url,
       creator: organization,
       dateModified: FEES_REPORT_LAST_UPDATED_ISO,
-      spatialCoverage: { '@type': 'Country', name: 'United Kingdom' },
+      spatialCoverage: { '@type': 'Place', name: 'United Kingdom' },
       isAccessibleForFree: true,
       license: 'https://creativecommons.org/licenses/by/4.0/',
       citation: FEES_REPORT_CITATION,
