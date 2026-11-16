@@ -16,6 +16,7 @@ const ENTRIES = [
   'components/adminHub/AdminHubOverviewAnnouncer.tsx',
   'components/adminHub/AppHost.tsx',
   'components/adminHub/PreviewAdminChrome.tsx',
+  'components/adminHub/tour/AdminHubTour.tsx',
   'lib/adminHub/hubStore.ts',
 ].map((file) => join(srcRoot, file));
 const rel = (file: string) => relative(srcRoot, file).split(sep).join('/');

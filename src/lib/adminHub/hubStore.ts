@@ -270,3 +270,22 @@ export function __resetHubStoreForTests(options: { fetcher?: Fetcher; seed?: Adm
     setState(options.seed);
   }
 }
+
+const noopSubscribe = () => () => undefined;
+
+/**
+ * The sidebar setup card as live data, for chrome rendered outside the hub frame (Team / Services / Products
+ * render the real admin panel, whose card is otherwise the server's copy). Returns the JSON of the card, or null
+ * while the store has nothing; `enabled` false never touches the store (paid admin).
+ */
+export function useHubLiveSetupJson(enabled: boolean): string | null {
+  return useSyncExternalStore(
+    enabled ? subscribeHubState : noopSubscribe,
+    () => {
+      if (!enabled) return null;
+      const state = getHubState();
+      return state && state.setup !== undefined ? JSON.stringify(state.setup) : null;
+    },
+    () => null,
+  );
+}
