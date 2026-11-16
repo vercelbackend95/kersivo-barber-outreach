@@ -74,6 +74,8 @@ export const TOUR_COPY = {
   dockTitle: 'Website setup',
   minimise: 'Minimise setup guide',
   open: 'Open setup guide',
+  /** Account menu item that brings the guide back after it was closed. */
+  reopen: 'Show setup guide',
   locked: 'Add a service first',
   lockedWhy: 'Each barber is set up with the services they do, so add one service before your team.',
   done: 'Done',
@@ -266,6 +268,34 @@ export function tourSurface(model: TourModel, memory: TourMemory): TourSurface {
   if (!memory.welcomed) return 'welcome';
   if (fresh.length) return 'celebrate';
   return memory.open ? 'dock' : 'pill';
+}
+
+// ---------------------------------------------------------------------------
+// Opening the guide again
+// ---------------------------------------------------------------------------
+
+/** Fired by the account menu's "Show setup guide"; the mounted tour listens for it. */
+export const TOUR_RESTART_EVENT = 'ks:admin-hub-tour-restart';
+
+export function requestTourRestart(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(TOUR_RESTART_EVENT));
+}
+
+/**
+ * The owner asked to see the guide again after closing it. Steps still to do: the welcome comes back and leads
+ * into the guide. Everything done: the finale shows again. Steps already done are not celebrated again.
+ */
+export function restartTourMemory(model: TourModel, memory: TourMemory): TourMemory {
+  const done = model.steps.filter((step) => step.done).map((step) => step.id);
+  return {
+    ...memory,
+    welcomed: model.allDone,
+    finaleSeen: false,
+    open: false,
+    focus: null,
+    celebrated: [...new Set([...memory.celebrated, ...done])],
+  };
 }
 
 /** Thumbnail of an uploaded hub file (the same URL the sidebar logo uses). */
