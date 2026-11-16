@@ -32,9 +32,11 @@ import {
   TOUR_COPY,
   TOUR_OFFER_POINTS,
   TOUR_STEP_IDS,
+  TOUR_RESTART_EVENT,
   TOUR_STEP_TARGET,
   initialTourMemory,
   readTourMemory,
+  restartTourMemory,
   tourAssetThumb,
   tourCurrentStep,
   tourModel,
@@ -200,6 +202,23 @@ export function AdminHubTour(props: {
     },
     [storageScope],
   );
+
+  // "Show setup guide" in the account menu: bring the welcome (or the finale) back after the owner closed it.
+  useEffect(() => {
+    if (!hasModel) return undefined;
+    const restart = () => {
+      const current = modelRef.current;
+      if (!current) return;
+      setCelebrating(null);
+      setMemory((stored) => {
+        const next = restartTourMemory(current, stored ?? initialTourMemory(current));
+        writeTourMemory(next, storageScope);
+        return next;
+      });
+    };
+    window.addEventListener(TOUR_RESTART_EVENT, restart);
+    return () => window.removeEventListener(TOUR_RESTART_EVENT, restart);
+  }, [hasModel, storageScope]);
 
   // A step was finished since the last look: remember it straight away (a reload never celebrates twice) and
   // show the moment. The last step goes to the finale instead.

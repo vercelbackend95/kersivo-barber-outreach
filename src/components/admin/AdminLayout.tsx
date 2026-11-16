@@ -40,6 +40,7 @@ import {
   type PreviewHubSection,
 } from '@/lib/adminHub/previewHubPaths';
 import { SETUP_CARD_TITLE, setupCardAllDone, type SetupCardModel } from '@/lib/adminHub/setupCard';
+import { requestTourRestart, tourModel } from '@/lib/adminHub/tour';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
 import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
@@ -513,8 +514,15 @@ export default function AdminLayout({
       ? SETUP_CARD_TITLE
       : undefined;
 
+  // The guided tour runs for the owner on the phase-1 setup card; once closed, the account menu brings it back.
+  const tourAvailable = isPreviewChrome && !previewOperator && Boolean(tourModel(hubSetup));
   const accountFooter = isPreviewChrome ? (
-    <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="desktop" />
+    <AdminSidebarProfile
+      mode="hub"
+      user={hubProfileUser}
+      variant="desktop"
+      onShowTour={tourAvailable ? requestTourRestart : undefined}
+    />
   ) : isPublicDemo ? (
     <AdminSidebarProfile
       mode="guest"
@@ -557,7 +565,19 @@ export default function AdminLayout({
   );
 
   const accountFooterMobile = isPreviewChrome ? (
-    <AdminSidebarProfile mode="hub" user={hubProfileUser} variant="mobile" />
+    <AdminSidebarProfile
+      mode="hub"
+      user={hubProfileUser}
+      variant="mobile"
+      onShowTour={
+        tourAvailable
+          ? () => {
+              setIsMobileMenuOpen(false);
+              requestTourRestart();
+            }
+          : undefined
+      }
+    />
   ) : isPublicDemo ? (
     <AdminSidebarProfile
       mode="guest"

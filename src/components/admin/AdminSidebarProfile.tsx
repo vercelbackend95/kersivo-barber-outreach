@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AccountCircle, Ban, Calendar, Globe, Lock, LogOut, Package, Store } from '../lucide-react';
+import { AccountCircle, Ban, Calendar, Globe, Lock, LogOut, Package, Sparkles, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
 import type { KersivoProductState } from '@/lib/shop/kersivoAccess';
 import type { FullKersivoFeature } from '@/lib/admin/productLocks';
 import { ADMIN_HUB_LEAVE } from '@/lib/adminHub/copy';
 import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
+import { TOUR_COPY } from '@/lib/adminHub/tour';
 import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
 export type AdminProfileUser = {
@@ -42,6 +43,8 @@ type AdminSidebarProfileProps = {
   /** Plan-locked product state for real tenants (from the admin product gate); null otherwise. */
   productState?: KersivoProductState | null;
   onLockedFeature?: (feature: FullKersivoFeature) => void;
+  /** Preview hub: brings the guided setup tour back after the owner closed it. */
+  onShowTour?: () => void;
 };
 
 function openDemoAuthLock(showAuth = true) {
@@ -66,6 +69,7 @@ export default function AdminSidebarProfile({
   kersivoHomeHref = '/',
   productState = null,
   onLockedFeature,
+  onShowTour,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const isPreview = mode === 'preview';
@@ -529,12 +533,32 @@ export default function AdminSidebarProfile({
               )}
               <div className="admin-profile-menu__divider" aria-hidden="true" />
               {isHub ? (
+                <>
+                {onShowTour ? (
+                  <>
+                    <button
+                      type="button"
+                      className="admin-profile-menu__item"
+                      role="menuitem"
+                      data-testid="admin-hub-tour-reopen"
+                      onClick={() => {
+                        setOpen(false);
+                        onShowTour();
+                      }}
+                    >
+                      <Sparkles width={15} height={15} aria-hidden="true" />
+                      {TOUR_COPY.reopen}
+                    </button>
+                    <div className="admin-profile-menu__divider" aria-hidden="true" />
+                  </>
+                ) : null}
                 <form method="post" action={PREVIEW_HUB_PATHS.leave}>
                   <button type="submit" className="admin-profile-menu__item" role="menuitem">
                     <LogOut width={15} height={15} aria-hidden="true" />
                     {ADMIN_HUB_LEAVE}
                   </button>
                 </form>
+                </>
               ) : conversionAccountMenu ? (
                 <>
                   <a

@@ -8,6 +8,7 @@ import {
   TOUR_STEP_IDS,
   initialTourMemory,
   parseTourMemory,
+  restartTourMemory,
   tourCurrentStep,
   tourModel,
   tourStorageKey,
@@ -138,6 +139,31 @@ describe('tourSurface', () => {
     const done = tourModel(ALL_DONE)!;
     expect(tourSurface(done, memory({ celebrated: ['logo', 'photos', 'services', 'team'] }))).toBe('finale');
     expect(tourSurface(done, memory({ finaleSeen: true }))).toBe('none');
+  });
+});
+
+describe('restartTourMemory', () => {
+  it('brings the welcome back after the owner skipped or closed the guide', () => {
+    const model = tourModel(card({ assets: ['LOGO'] }))!;
+    const closed = memory({ welcomed: true, open: true, celebrated: ['logo'], focus: 'photos' });
+    expect(tourSurface(model, closed)).toBe('dock');
+    const next = restartTourMemory(model, closed);
+    expect(tourSurface(model, next)).toBe('welcome');
+    expect(next).toMatchObject({ open: false, focus: null, finaleSeen: false });
+  });
+
+  it('shows the finale again once everything is done', () => {
+    const done = tourModel(ALL_DONE)!;
+    const finished = memory({ finaleSeen: true, celebrated: [...TOUR_STEP_IDS] });
+    expect(tourSurface(done, finished)).toBe('none');
+    expect(tourSurface(done, restartTourMemory(done, finished))).toBe('finale');
+  });
+
+  it('does not celebrate steps that were already done', () => {
+    const model = tourModel(card({ assets: ['LOGO', 'SHOP_PHOTO'] }))!;
+    const next = restartTourMemory(model, memory({ celebrated: [] }));
+    expect(tourUncelebrated(model, next)).toEqual([]);
+    expect(tourSurface(model, { ...next, welcomed: true })).toBe('pill');
   });
 });
 
