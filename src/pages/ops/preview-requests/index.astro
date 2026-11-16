@@ -22,6 +22,7 @@ import {
   formatAge,
   hasNewHubFiles,
   isApprovedReadyToLaunch,
+  isPaidBeforePreview,
   openChangeCount,
   isOverDailyCap,
   listPreviewRequests,
@@ -29,7 +30,7 @@ import {
   previewRequestLinks,
   unreadOwnerMessageCount,
 } from '@/lib/freePreview/opsQueries';
-import { HUB_OPS_APPROVED_BADGE, HUB_OPS_NEW_FILES, HUB_OPS_OPEN_CHANGES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
+import { HUB_OPS_APPROVED_BADGE, HUB_OPS_NEW_FILES, HUB_OPS_PAID_EARLY_BADGE, HUB_OPS_OPEN_CHANGES, HUB_OPS_UNREAD_MESSAGES } from '@/lib/freePreview/hubCopy';
 import { isAdminHubEnabled, isPreviewHubEnabled } from '@/lib/freePreview/config';
 import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
 import { resolveOpsPageView } from '@/lib/ops/opsPageView';
@@ -197,6 +198,9 @@ function filterHref(status: string | null, sort = query.sort) {
                         {PREVIEW_STATUS_LABELS[request.status]}
                       </span>
                       {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
+                      {isPaidBeforePreview(request) ? (
+                        <span class="ops-pr__status ops-pr__status--approved">{HUB_OPS_PAID_EARLY_BADGE}</span>
+                      ) : null}
                       {hubEnabled && isApprovedReadyToLaunch(request) ? (
                         <span class="ops-pr__status ops-pr__status--approved">{HUB_OPS_APPROVED_BADGE}</span>
                       ) : null}
@@ -260,6 +264,9 @@ function filterHref(status: string | null, sort = query.sort) {
                           {PREVIEW_STATUS_LABELS[request.status]}
                         </span>
                         {isOverDailyCap(request) && <span class="ops-pr__status ops-pr__status--over-cap">Over daily cap</span>}
+                        {isPaidBeforePreview(request) ? (
+                          <span class="ops-pr__status ops-pr__status--approved">{HUB_OPS_PAID_EARLY_BADGE}</span>
+                        ) : null}
                         {hubEnabled && isApprovedReadyToLaunch(request) ? (
                           <span class="ops-pr__status ops-pr__status--approved">{HUB_OPS_APPROVED_BADGE}</span>
                         ) : null}

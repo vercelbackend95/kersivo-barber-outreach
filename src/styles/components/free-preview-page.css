@@ -1,4 +1,6 @@
 /* Private free website preview (/preview/{token}). */
+@import './free-preview-dialog.css';
+
 .fp-page {
   min-height: 100dvh;
   display: flex;
@@ -137,74 +139,6 @@
   padding: 8px 16px;
   font-size: 0.85rem;
   opacity: 0.8;
-}
-
-.fp-dialog {
-  /* The global reset zeroes margins; restore the native centring of a modal dialog. */
-  margin: auto;
-  width: min(640px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-  padding: 0;
-  background: #111;
-  color: inherit;
-}
-
-.fp-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.fp-dialog__body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px;
-}
-
-.fp-dialog__title {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.fp-dialog__label {
-  font-weight: 600;
-}
-
-.fp-dialog__textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.fp-dialog__hint {
-  margin: 0;
-  font-size: 0.8rem;
-  opacity: 0.75;
-}
-
-.fp-dialog__summary {
-  margin: 0;
-  line-height: 1.5;
-}
-
-.fp-dialog__check {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  font-size: 0.9rem;
-}
-
-.fp-dialog__error {
-  margin: 0;
-  color: #ff8a8a;
-}
-
-.fp-dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .fp-expired {

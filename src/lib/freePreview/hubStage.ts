@@ -178,9 +178,18 @@ export function ownerFacingStageLabel(state: HubState): string {
   return HUB_STAGE_PILL[state.stage];
 }
 
-export function hubHeaderKind(state: Extract<HubState, { kind: 'hub' }>): HubHeaderKind {
+export function hubHeaderKind(
+  state: Extract<HubState, { kind: 'hub' }>,
+  opts: { paidEarly?: boolean } = {},
+): HubHeaderKind {
+  if (opts.paidEarly && hubStagePaidEarly(state.stage)) return 'subscribed';
   if (state.stage === 'review') {
     return state.reviewSubstate === 'changes_sent' ? 'reviewChangesSent' : 'review';
   }
   return state.stage;
+}
+
+/** Stages in which an owner who already paid is still waiting for the preview (paying early keeps the status). */
+export function hubStagePaidEarly(stage: HubStage): boolean {
+  return stage === 'requested' || stage === 'designing';
 }

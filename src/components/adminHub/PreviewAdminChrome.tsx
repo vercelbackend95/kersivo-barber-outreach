@@ -7,6 +7,10 @@ import { useHubSelector } from '@/lib/adminHub/hubStore';
 import '@/styles/components/admin-hub.css';
 import '@/styles/components/preview-hub.css';
 import '@/styles/components/opening-hours-editor.css';
+// The Launch / Subscribe checkout dialog (Overview header, setup card) and its domain search.
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/domain-searcher.css';
+import '@/styles/components/free-preview-dialog.css';
 
 export function PreviewAdminChrome(props: {
   section: PreviewHubSection;

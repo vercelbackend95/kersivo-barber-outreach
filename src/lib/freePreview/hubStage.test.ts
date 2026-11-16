@@ -308,6 +308,22 @@ describe('hubHeaderKind', () => {
     expect(ready.kind === 'hub' && hubHeaderKind(ready)).toBe('review');
     expect(sent.kind === 'hub' && hubHeaderKind(sent)).toBe('reviewChangesSent');
   });
+
+  it('says subscribed when the owner paid before the preview was sent', () => {
+    const requested = resolveHubState({
+      request: request({ status: 'REQUESTED', expiresAt: FUTURE }),
+      isOperator: false,
+      now: NOW,
+    });
+    expect(requested.kind === 'hub' && hubHeaderKind(requested, { paidEarly: true })).toBe('subscribed');
+    expect(requested.kind === 'hub' && hubHeaderKind(requested)).toBe('requested');
+    const ready = resolveHubState({
+      request: request({ status: 'READY', previewReadyAt: READY_AT, expiresAt: FUTURE }),
+      isOperator: false,
+      now: NOW,
+    });
+    expect(ready.kind === 'hub' && hubHeaderKind(ready, { paidEarly: true })).toBe('review');
+  });
 });
 
 describe('flag-off page state is unchanged (GLOBAL RULE 2)', () => {

@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { normalizeAndValidateDomainInput } from '@/lib/domains/hostname';
-import { canSelectForRegister, type DomainSuggestionResult } from '@/lib/domains/availability';
+import { canSelectForRegister, type DomainSuggestionResult } from '@/lib/domains/selectable';
 import { suggestDomains, type DomainCandidate } from '@/lib/domains/suggest';
 import { DOMAIN_AUTH_TEXT } from '@/lib/pricing/claimsPolicy';
 

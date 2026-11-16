@@ -70,10 +70,29 @@ describe('markPreviewRequestConverted (webhook)', () => {
     db.previewRequest.updateMany.mockResolvedValueOnce({ count: 1 });
     expect(await markPreviewRequestConverted(input)).toBe('converted');
     expect(db.previewRequest.updateMany).toHaveBeenCalledWith({
-      where: { id: 'req_1', draftShopId: 'shop_draft', status: { not: 'CONVERTED' } },
+      where: { id: 'req_1', draftShopId: 'shop_draft', status: { not: 'CONVERTED' }, convertedAt: null },
       data: { status: 'CONVERTED', convertedAt: NOW, stripeCustomerId: 'cus_1', stripeSubscriptionId: 'sub_1' },
     });
     expect(db.previewRequestEvent.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('paid before the preview was ready: records the payment and keeps the design status', async () => {
+    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'IN_PROGRESS', shopName: 'Sharp Cuts', convertedAt: null });
+    db.previewRequest.updateMany.mockResolvedValueOnce({ count: 1 });
+    expect(await markPreviewRequestConverted(input)).toBe('converted');
+    expect(db.previewRequest.updateMany).toHaveBeenCalledWith({
+      where: { id: 'req_1', draftShopId: 'shop_draft', status: { not: 'CONVERTED' }, convertedAt: null },
+      data: { convertedAt: NOW, stripeCustomerId: 'cus_1', stripeSubscriptionId: 'sub_1' },
+    });
+    expect(db.previewRequestEvent.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ fromStatus: 'IN_PROGRESS', toStatus: 'IN_PROGRESS' }),
+    });
+  });
+
+  it('is idempotent for an early payment too', async () => {
+    db.previewRequest.findFirst.mockResolvedValueOnce({ status: 'REQUESTED', shopName: 'Sharp Cuts', convertedAt: NOW });
+    expect(await markPreviewRequestConverted(input)).toBe('already_converted');
+    expect(db.previewRequest.updateMany).not.toHaveBeenCalled();
   });
 
   it('is idempotent on redelivery: no second event', async () => {

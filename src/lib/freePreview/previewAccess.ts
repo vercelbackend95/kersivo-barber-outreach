@@ -92,6 +92,38 @@ export function ownerCanActOnPreview(
   );
 }
 
+/** Still being designed: an owner who does not want to wait for the preview may subscribe now. */
+export const OWNER_EARLY_SUBSCRIBE_STATUSES: readonly PreviewRequestStatus[] = ['REQUESTED', 'IN_PROGRESS'];
+
+/**
+ * The owner may start the Full KERSIVO checkout: with the preview in front of them (ownerCanActOnPreview), or
+ * early, while the website is still being designed (a draft shop must exist to hand over after payment). Paying
+ * early records convertedAt but keeps the design status, so ops still marks the preview ready and the owner
+ * still approves the website before it goes live (see markPreviewRequestConverted, mark_ready_and_send).
+ */
+export function ownerCanSubscribe(
+  request: {
+    status: PreviewRequestStatus;
+    expiresAt: Date | null;
+    draftShopId: string | null;
+    convertedAt?: Date | null;
+  },
+  now: Date,
+): boolean {
+  if (request.convertedAt) return false;
+  if (ownerCanActOnPreview(request, now)) return true;
+  return (
+    OWNER_EARLY_SUBSCRIBE_STATUSES.includes(request.status) &&
+    Boolean(request.draftShopId) &&
+    !isPreviewExpired(request, now)
+  );
+}
+
+/** Subscribing now means not waiting for the preview (the checkout copy says the design continues). */
+export function isEarlySubscribe(request: { status: PreviewRequestStatus }): boolean {
+  return OWNER_EARLY_SUBSCRIBE_STATUSES.includes(request.status);
+}
+
 export type PreviewPageState =
   | { kind: 'not_found' }
   | { kind: 'expired' }

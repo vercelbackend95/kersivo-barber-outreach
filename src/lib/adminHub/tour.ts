@@ -50,7 +50,7 @@ export const TOUR_STEP_COPY: Record<TourStepId, TourStepCopy> = {
     tip: 'One is enough to continue. Add the rest whenever you like.',
     action: 'Add service',
     doneTitle: 'First service saved',
-    doneText: 'Your booking menu has started. Next, add who does the cutting.',
+    doneText: 'Your booking menu has started, so clients can pick a cut and see the price.',
   },
   team: {
     title: 'Add your team',
@@ -86,6 +86,11 @@ export const TOUR_COPY = {
     shopName ? `Let's build ${shopName}'s website.` : "Let's build your website.",
   welcomeBody:
     'Five short steps give us what we need to design it. Everything saves as you go, so you can stop and pick it up later.',
+  /** The preview is already designed (review stage): the steps fill in what it is still missing. */
+  welcomeTitleReview: (shopName: string | null) =>
+    shopName ? `Let's finish ${shopName}'s website.` : "Let's finish your website.",
+  welcomeBodyReview:
+    'Your preview is ready. These steps add what it is still missing. Everything saves as you go, so you can stop and pick it up later.',
   welcomeFree: `Your preview is free. ${offer.plans.full} is ${offer.price.full} ${offer.price.fullQualifier} if you subscribe.`,
   welcomeStart: (label: string) => `Start: ${label.toLowerCase()}`,
   welcomeSkip: "I'll explore first",
@@ -96,8 +101,16 @@ export const TOUR_COPY = {
   finaleOfferTitle: 'When you go live',
   finaleBilling:
     'See your free preview first. If you subscribe, your first payment is taken at checkout, then monthly on the same day.',
+  finaleBillingEarly:
+    'Subscribe now, or see your free preview first. If you subscribe, your first payment is taken at checkout, then monthly on the same day.',
+  finaleBodyReview:
+    'Your preview has what it needs from you. Review it, ask for any changes, and nothing goes live until you approve it.',
   finaleNextLabel: 'What happens next',
   finaleNext: ['We design your website', 'You review it and ask for changes', 'You approve it, then it goes live'],
+  finaleNextReview: ['You review your website', 'You ask for any changes', 'You approve it, then it goes live'],
+  /** Owners who do not want to wait for the preview. */
+  finaleSubscribeEarly: 'Subscribe now',
+  finaleSubscribe: 'Launch this website',
   finaleClose: 'Back to my dashboard',
   finaleExtras: 'Optional extras',
   stepOf: (index: number, total: number) => `Step ${index} of ${total}`,
@@ -107,8 +120,9 @@ export const TOUR_COPY = {
   barLabel: 'Website setup steps',
   back: 'Back',
   continue: 'Continue',
+  /** The step in the window is not done yet: moving on skips it (it stays on the list). */
+  skip: 'Skip for now',
   backTo: (label: string) => `Back to: ${label}`,
-  continueTo: (label: string) => `Continue to: ${label}`,
 } as const;
 
 /** What Full KERSIVO includes, for the finale. Wording from the approved plan scope (claimsPolicy). */
@@ -141,6 +155,8 @@ export type TourModel = {
   allDone: boolean;
   /** First step the owner can do now. */
   nextId: TourStepId | null;
+  /** The preview is already designed: the copy talks about finishing it rather than building it. */
+  review: boolean;
 };
 
 /** The tour runs on the phase-1 card only ("Help us build your site"). */
@@ -171,13 +187,19 @@ export function tourModel(card: SetupCardModel | null | undefined): TourModel | 
     total: steps.length,
     allDone: done === steps.length,
     nextId: steps.find((step) => !step.done && !step.locked)?.id ?? null,
+    review: card.stage === 'review',
   };
 }
 
-/** The step the guide shows open: the owner's pick while it is still doable, otherwise the next one. */
+/**
+ * The step the guide shows open: the owner's pick while it is still doable. Once the pick is done the tour moves
+ * forward from it (the next step still to do after it, then from the start), so finishing step 3 leads to step 4
+ * rather than back to a step 2 the owner chose to skip. Otherwise the first step still to do.
+ */
 export function tourCurrentStep(model: TourModel, focus: TourStepId | null): TourStep | null {
   const picked = focus ? model.steps.find((step) => step.id === focus) : null;
   if (picked && !picked.done && !picked.locked) return picked;
+  if (picked?.done) return tourStepNeighbours(model, picked.id).next;
   return model.steps.find((step) => step.id === model.nextId) ?? null;
 }
 

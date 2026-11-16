@@ -52,6 +52,7 @@ import {
   type TourStep,
   type TourStepId,
 } from '@/lib/adminHub/tour';
+import { HubSubscribeButton } from '../HubSubscribeButton';
 import { SiteBlueprint, type BlueprintSlotState } from './SiteBlueprint';
 
 const STEP_ICON: Record<TourStepId, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -112,6 +113,52 @@ function useWindowStep(active: boolean): { stepId: TourStepId | null; slot: HTML
     };
   }, [active]);
   return found.slot?.isConnected ? found : { stepId: found.stepId, slot: null };
+}
+
+/**
+ * Another modal is open over the page: the Add to your website window ('window') or something else, such as the
+ * Add service / Add team member sheets ('other'). The guide never sits on top of them.
+ */
+type OpenModal = 'window' | 'other' | null;
+
+function readOpenModal(): OpenModal {
+  const open = [...document.querySelectorAll<HTMLElement>('[aria-modal="true"], dialog[open]')].filter(
+    // The tour's own dialogs, and the checkout opened from its finale, do not count.
+    (el) => !el.closest('.ks-tour-dialog') && el.isConnected && el.getClientRects().length > 0,
+  );
+  if (!open.length) return null;
+  return open.some((el) => el.matches('[data-testid="admin-hub-app"]')) ? 'window' : 'other';
+}
+
+function useOpenModal(active: boolean): OpenModal {
+  const [modal, setModal] = useState<OpenModal>(null);
+  useEffect(() => {
+    if (!active || typeof MutationObserver !== 'function') {
+      setModal(null);
+      return undefined;
+    }
+    let frame = 0;
+    const check = () => {
+      frame = 0;
+      setModal(readOpenModal());
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(check);
+    };
+    check();
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-modal', 'open', 'hidden', 'class'],
+    });
+    return () => {
+      observer.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [active]);
+  return modal;
 }
 
 function isNarrow(): boolean {
@@ -277,9 +324,11 @@ export function AdminHubTour(props: {
   useEffect(() => {
     if (!freshKey || !model || !memory) return;
     const fresh = freshKey.split(',') as TourStepId[];
-    update({ celebrated: [...memory.celebrated, ...fresh] });
+    const last = fresh[fresh.length - 1] ?? null;
+    // The tour carries on from the step just finished (see tourCurrentStep), wherever the owner finished it.
+    update({ celebrated: [...memory.celebrated, ...fresh], ...(memory.welcomed && last ? { focus: last } : {}) });
     if (!memory.welcomed || model.allDone) return;
-    setCelebrating(fresh[fresh.length - 1] ?? null);
+    setCelebrating(last);
     // A short tap on phones, only once the owner has touched the page (browsers block it otherwise).
     if (typeof navigator.vibrate === 'function' && navigator.userActivation?.hasBeenActive) navigator.vibrate(12);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -377,7 +426,31 @@ export function AdminHubTour(props: {
   }, [surface]);
 
   // Inside the window the guide's pill sits under the window: the window gets its own Back / Continue bar.
-  const windowStep = useWindowStep(Boolean(model && memory?.welcomed && !model.allDone));
+  const guideActive = Boolean(model && memory?.welcomed && !model.allDone);
+  const windowStep = useWindowStep(guideActive);
+  const openModal = useOpenModal(Boolean(model && memory) && baseSurface !== 'none');
+
+  // Switching tabs inside the window (Logo → Hours) makes that step the one the guide is on.
+  const windowStepId = windowStep.stepId;
+  useEffect(() => {
+    if (!windowStepId || !model || !memory || memory.focus === windowStepId) return;
+    const step = model.steps.find((entry) => entry.id === windowStepId);
+    if (step && !step.done && !step.locked) update({ focus: windowStepId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windowStepId]);
+
+  // A step finished inside the window is celebrated in the window's bar. Once the owner leaves that step (another
+  // tab, or the window closes) the moment is over: it is not shown again as a card on the page behind.
+  const barCelebrates = Boolean(celebrating && windowStep.slot && windowStepId === celebrating);
+  const shownInBar = useRef<TourStepId | null>(null);
+  useEffect(() => {
+    if (barCelebrates) {
+      shownInBar.current = celebrating;
+      return;
+    }
+    if (shownInBar.current && shownInBar.current === celebrating) setCelebrating(null);
+    shownInBar.current = null;
+  }, [barCelebrates, celebrating]);
 
   if (!model || !memory || surface === 'none') return null;
 
@@ -437,10 +510,10 @@ export function AdminHubTour(props: {
         <div className="ks-tour-welcome__copy">
           <p className="ks-tour-welcome__hello">{TOUR_COPY.welcomeGreeting(props.firstName ?? null)}</p>
           <h2 className="ks-tour-welcome__title" id={titleId} tabIndex={-1}>
-            {TOUR_COPY.welcomeTitle(props.shopName)}
+            {model.review ? TOUR_COPY.welcomeTitleReview(props.shopName) : TOUR_COPY.welcomeTitle(props.shopName)}
           </h2>
           <p className="ks-tour-welcome__body" id={bodyId}>
-            {TOUR_COPY.welcomeBody}
+            {model.review ? TOUR_COPY.welcomeBodyReview : TOUR_COPY.welcomeBody}
           </p>
           <ol className="ks-tour-route">
             {model.steps.map((step) => {
@@ -484,10 +557,13 @@ export function AdminHubTour(props: {
   }
 
   // ── Finale ─────────────────────────────────────────────────────────────
+  // It waits for a sheet that is still open (the "Added to booking team" confirmation), then takes the stage.
+  if (surface === 'finale' && openModal === 'other') return null;
   if (surface === 'finale') {
     const titleId = `${ids}-finale-title`;
     const bodyId = `${ids}-finale-body`;
     const close = () => update({ finaleSeen: true, open: false });
+    const subscribe = props.setup?.subscribe?.state === 'available' ? props.setup.subscribe : null;
     return (
       <TourDialog
         className="ks-tour-finale"
@@ -502,11 +578,11 @@ export function AdminHubTour(props: {
             {TOUR_COPY.finaleTitle}
           </h2>
           <p className="ks-tour-finale__body" id={bodyId}>
-            {TOUR_COPY.finaleBody(props.shopName)}
+            {model.review ? TOUR_COPY.finaleBodyReview : TOUR_COPY.finaleBody(props.shopName)}
           </p>
         </div>
         <ol className="ks-tour-next" aria-label={TOUR_COPY.finaleNextLabel}>
-          {TOUR_COPY.finaleNext.map((line, index) => (
+          {(model.review ? TOUR_COPY.finaleNextReview : TOUR_COPY.finaleNext).map((line, index) => (
             <li key={line} style={{ '--kt-i': index } as CSSProperties}>
               <span aria-hidden="true">{index + 1}</span>
               {line}
@@ -536,18 +612,32 @@ export function AdminHubTour(props: {
             <p className="ks-tour-offer__note">
               {offer.fees.commission}. {offer.fees.stripe} {offer.fees.setup}.
             </p>
-            <p className="ks-tour-offer__note">{TOUR_COPY.finaleBilling}</p>
+            <p className="ks-tour-offer__note">
+              {subscribe?.early ? TOUR_COPY.finaleBillingEarly : TOUR_COPY.finaleBilling}
+            </p>
           </section>
         </div>
         <div className="ks-tour-finale__actions">
-          <button
-            type="button"
-            className="btn btn--primary ks-tour-cta"
-            onClick={close}
-            data-testid="admin-hub-tour-finish"
-          >
-            {TOUR_COPY.finaleClose}
-          </button>
+          <div className="ks-tour-finale__buttons">
+            {/* A link, so the window or page the last step was done in closes too (opens in place on the Overview). */}
+            <a
+              className="btn btn--primary ks-tour-cta"
+              href={PREVIEW_HUB_PATHS.overview}
+              onClick={close}
+              data-testid="admin-hub-tour-finish"
+            >
+              {TOUR_COPY.finaleClose}
+            </a>
+            {subscribe ? (
+              <HubSubscribeButton
+                subscribe={subscribe}
+                className="btn btn--outline ks-tour-finale__subscribe"
+                testId="admin-hub-tour-subscribe"
+              >
+                {subscribe.early ? TOUR_COPY.finaleSubscribeEarly : TOUR_COPY.finaleSubscribe}
+              </HubSubscribeButton>
+            ) : null}
+          </div>
           {model.extras.length ? (
             <p className="ks-tour-finale__extras">
               {TOUR_COPY.finaleExtras}:{' '}
@@ -571,10 +661,41 @@ export function AdminHubTour(props: {
   // ── Back / Continue at the bottom of the window (logo, photos, hours) ──
   const barStep = windowStep.stepId ? (model.steps.find((step) => step.id === windowStep.stepId) ?? null) : null;
   let bar: ReactNode = null;
-  if (barStep && windowStep.slot && (surface === 'dock' || surface === 'pill')) {
+  if (barStep && windowStep.slot && barCelebrates && celebrateStep?.id === barStep.id) {
+    // The step was just finished in this window: the bar becomes the moment, and leads on.
+    const next = current;
+    bar = createPortal(
+      <nav
+        className="ks-tour-bar ks-tour-bar--done"
+        aria-label={TOUR_COPY.barLabel}
+        data-testid="admin-hub-tour-bar"
+        key={`done-${barStep.id}`}
+      >
+        <div className="ks-tour-bar__done" role="status">
+          <Seal />
+          <p>
+            <strong>{barStep.copy.doneTitle}</strong>
+            <span>{TOUR_COPY.stepDone(barStep.index, model.total)}</span>
+          </p>
+        </div>
+        {next ? (
+          <a
+            className="btn btn--primary btn--sm ks-tour-cta ks-tour-bar__next"
+            href={next.href}
+            data-testid="admin-hub-tour-next"
+            onClick={() => startStep(next)}
+          >
+            {TOUR_COPY.nextUp(next.copy.title)}
+            <ArrowRight width={15} height={15} aria-hidden="true" />
+          </a>
+        ) : null}
+      </nav>,
+      windowStep.slot,
+    );
+  } else if (barStep && windowStep.slot && (surface === 'dock' || surface === 'pill' || surface === 'celebrate')) {
     const { back, next } = tourStepNeighbours(model, barStep.id);
     bar = createPortal(
-      <nav className="ks-tour-bar" aria-label={TOUR_COPY.barLabel} data-testid="admin-hub-tour-bar">
+      <nav className="ks-tour-bar" aria-label={TOUR_COPY.barLabel} data-testid="admin-hub-tour-bar" key={`nav-${barStep.id}`}>
         {back ? (
           <a
             className="btn btn--ghost btn--sm ks-tour-bar__back"
@@ -593,13 +714,13 @@ export function AdminHubTour(props: {
         </p>
         {next ? (
           <a
-            className="btn btn--primary btn--sm ks-tour-cta ks-tour-bar__next"
+            className={`btn btn--sm ks-tour-bar__next ${barStep.done ? 'btn--primary ks-tour-cta' : 'btn--ghost ks-tour-bar__skip'}`}
             href={next.href}
             data-testid="admin-hub-tour-continue"
             onClick={() => startStep(next)}
           >
             <span>
-              {TOUR_COPY.continue}
+              {barStep.done ? TOUR_COPY.continue : TOUR_COPY.skip}
               <span className="admin-hub-sr-only">: {next.copy.title}</span>
             </span>
             <ArrowRight width={15} height={15} aria-hidden="true" />
@@ -610,8 +731,14 @@ export function AdminHubTour(props: {
     );
   }
 
+  // Another modal (a wizard sheet, or the window on a tab without a bar) is open: the guide waits underneath it
+  // and a step-done moment waits until it closes, so nothing covers the owner's work.
+  if (openModal === 'other' || (openModal === 'window' && !windowStep.slot)) {
+    return surface === 'celebrate' && !barCelebrates ? null : bar;
+  }
+
   // ── A step was just completed ──────────────────────────────────────────
-  if (surface === 'celebrate' && celebrateStep) {
+  if (surface === 'celebrate' && celebrateStep && !barCelebrates && openModal !== 'window') {
     const next = current;
     const dismiss = () => {
       setCelebrating(null);
@@ -628,7 +755,7 @@ export function AdminHubTour(props: {
         <div className="ks-tour-cheer__head" role="status">
           <Seal />
           <div>
-            <p className="ks-tour-cheer__count">{TOUR_COPY.stepDone(model.done, model.total)}</p>
+            <p className="ks-tour-cheer__count">{TOUR_COPY.stepDone(celebrateStep.index, model.total)}</p>
             <h2 className="ks-tour-cheer__title">{celebrateStep.copy.doneTitle}</h2>
           </div>
         </div>
@@ -656,7 +783,8 @@ export function AdminHubTour(props: {
   }
 
   // ── Minimised ──────────────────────────────────────────────────────────
-  if (surface === 'pill') {
+  // (A moment shown in the window's bar, or waiting for the window to close, keeps the pill under the window.)
+  if (surface === 'pill' || surface === 'celebrate') {
     // On the page where the current step is done (Services, Team), the pill also carries the step's tip.
     const stepPath = current ? current.href.split('?')[0] : null;
     const onTask = Boolean(stepPath && stepPath !== PREVIEW_HUB_PATHS.overview && stepPath === window.location.pathname.replace(/\/+$/, ''));

@@ -160,13 +160,17 @@ describe('startPreviewLaunchCheckout', () => {
     expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
   });
 
-  it('refuses expired, unsent, converted or already-owned previews without calling Stripe', async () => {
+  it('refuses expired, draftless, converted or already-owned previews without calling Stripe', async () => {
     resolvePreviewRequestByToken.mockResolvedValue({ ...ready, expiresAt: new Date('2026-10-31T00:00:00Z') });
     expect((await start()).status).toBe(409);
-    resolvePreviewRequestByToken.mockResolvedValue({ ...ready, status: 'IN_PROGRESS' });
+    // Still being designed but no draft shop yet: nothing to hand over after payment.
+    resolvePreviewRequestByToken.mockResolvedValue({ ...ready, status: 'IN_PROGRESS', draftShopId: null });
     expect((await start()).status).toBe(409);
     resolvePreviewRequestByToken.mockResolvedValue({ ...ready, status: 'CONVERTED' });
     expect(await (await start()).json()).toMatchObject({ code: 'ALREADY_CONVERTED', redirectTo: '/admin' });
+    // Paid early: the status is still IN_PROGRESS, convertedAt says it was paid.
+    resolvePreviewRequestByToken.mockResolvedValue({ ...ready, status: 'IN_PROGRESS', convertedAt: new Date() });
+    expect(await (await start()).json()).toMatchObject({ code: 'ALREADY_CONVERTED' });
     resolvePreviewRequestByToken.mockResolvedValue({ ...ready });
     findShop.mockResolvedValue({ ownerUserId: 'user_9' });
     expect((await start()).status).toBe(409);

@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { searchDomains } from '@/lib/domains/search';
 import { PREVIEW_DOMAIN_SEARCH_RATE, previewApiGuard, previewJson } from '@/lib/freePreview/previewApi';
-import { ownerCanActOnPreview, resolvePreviewRequestByToken } from '@/lib/freePreview/previewAccess';
+import { ownerCanSubscribe, resolvePreviewRequestByToken } from '@/lib/freePreview/previewAccess';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 const bodySchema = z.object({
@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const preview = await resolvePreviewRequestByToken(params.token ?? '');
   if (!preview) return previewJson({ ok: false, error: 'Not found.' }, 404);
-  if (!ownerCanActOnPreview(preview, new Date())) {
+  if (!ownerCanSubscribe(preview, new Date())) {
     return previewJson({ ok: false, error: 'This preview is no longer available.' }, 409);
   }
 

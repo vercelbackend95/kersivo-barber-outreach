@@ -43,6 +43,11 @@ export const HUB_HEADERS = {
     h1: "We've got your request",
     sub: "We'll start designing {shopName}'s website soon. Add anything that helps — it's all optional.",
   },
+  /** Paid before the preview was sent (still requested / designing). */
+  subscribed: {
+    h1: "You're subscribed",
+    sub: "Next we design {shopName}'s website, then you review it here. Nothing goes live until you approve it.",
+  },
   designing: {
     h1: "We're designing your website",
     sub: "Your preview is being built individually for {shopName}. We'll email you when it's ready.",
@@ -491,6 +496,7 @@ export const HUB_LIVE_NEXT_DEPOSITS = 'Set deposits (optional)';
 export const HUB_LIVE_NEXT_RETAIL = 'Start selling products';
 export const HUB_LIVE_NEXT_HOURS = "Add your team's working hours";
 export const HUB_OPS_APPROVED_BADGE = 'Approved — ready to launch';
+export const HUB_OPS_PAID_EARLY_BADGE = 'Subscribed — preview not sent yet';
 export const HUB_OPS_DOMAIN_CONNECTED = 'Domain connected';
 export const HUB_OPS_SSL_ACTIVE = 'SSL active';
 export const HUB_OPS_MARK_LIVE = 'Mark live';

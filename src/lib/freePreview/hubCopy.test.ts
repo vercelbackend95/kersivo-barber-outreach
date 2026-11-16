@@ -43,6 +43,10 @@ describe('hubCopy §9', () => {
       h1: "We've got your request",
       sub: "We'll start designing Sharp Cuts's website soon. Add anything that helps — it's all optional.",
     });
+    expect(hubHeaderCopy('subscribed', 'Sharp Cuts')).toEqual({
+      h1: "You're subscribed",
+      sub: "Next we design Sharp Cuts's website, then you review it here. Nothing goes live until you approve it.",
+    });
     expect(hubHeaderCopy('designing', 'Sharp Cuts').h1).toBe("We're designing your website");
     expect(hubHeaderCopy('review', 'Sharp Cuts').h1).toBe('Your preview is ready');
     expect(hubHeaderCopy('reviewChangesSent', 'Sharp Cuts').h1).toBe("We're updating your preview");
@@ -52,6 +56,7 @@ describe('hubCopy §9', () => {
     expect(hubHeaderCopy('expired', 'Sharp Cuts').h1).toBe('This preview has expired');
     expect(Object.keys(HUB_HEADERS)).toEqual([
       'requested',
+      'subscribed',
       'designing',
       'review',
       'reviewChangesSent',

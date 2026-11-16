@@ -16,6 +16,7 @@ vi.mock('@/lib/db/client', () => ({
 }));
 
 import {
+  ownerCanSubscribe,
   recordPreviewView,
   resolvePreviewPageState,
   resolvePreviewRequestByToken,
@@ -167,5 +168,28 @@ describe('view tracking', () => {
       where: { id: 'req_1' },
       data: { lastViewedAt: NOW, viewCount: { increment: 1 } },
     });
+  });
+});
+
+describe('ownerCanSubscribe', () => {
+  const now = new Date('2026-11-16T12:00:00Z');
+  const base = { expiresAt: null, draftShopId: 'shop_1', convertedAt: null };
+
+  it('lets the owner subscribe with the preview, or early while it is designed', () => {
+    for (const status of ['READY', 'CHANGES_REQUESTED', 'REQUESTED', 'IN_PROGRESS'] as const) {
+      expect(ownerCanSubscribe({ ...base, status }, now)).toBe(true);
+    }
+  });
+
+  it('needs a draft shop to hand over, and only once', () => {
+    expect(ownerCanSubscribe({ ...base, status: 'IN_PROGRESS', draftShopId: null }, now)).toBe(false);
+    expect(ownerCanSubscribe({ ...base, status: 'IN_PROGRESS', convertedAt: now }, now)).toBe(false);
+  });
+
+  it('never after the request ended', () => {
+    for (const status of ['CONVERTED', 'REJECTED', 'DECLINED', 'EXPIRED'] as const) {
+      expect(ownerCanSubscribe({ ...base, status }, now)).toBe(false);
+    }
+    expect(ownerCanSubscribe({ ...base, status: 'READY', expiresAt: new Date('2026-11-01T00:00:00Z') }, now)).toBe(false);
   });
 });

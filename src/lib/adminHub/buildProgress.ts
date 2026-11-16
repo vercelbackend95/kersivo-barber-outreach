@@ -7,6 +7,7 @@ import type { PreviewRequestStatus } from '@prisma/client';
 import type { HubStage } from '@/lib/freePreview/hubStage';
 import {
   ADMIN_HUB_BUILD_COPY,
+  ADMIN_HUB_BUILD_COPY_SUBSCRIBED,
   ADMIN_HUB_BUILD_STAGES,
   ADMIN_HUB_BUILD_STEP_OF,
   ADMIN_HUB_BUILD_STEP_SR,
@@ -93,7 +94,15 @@ export function websiteBuildProgress(stage: BuildProgressStageId): BuildProgress
   };
 }
 
-export function websiteBuildProgressFromHubStage(stage: HubStage): BuildProgress | null {
+export function websiteBuildProgressFromHubStage(
+  stage: HubStage,
+  opts: { paidEarly?: boolean } = {},
+): BuildProgress | null {
   const mapped = mapHubStageToBuildStage(stage);
-  return mapped ? websiteBuildProgress(mapped) : null;
+  if (!mapped) return null;
+  const progress = websiteBuildProgress(mapped);
+  // Paid early: the stage stays where the design really is; only the line under the bar says so.
+  return opts.paidEarly && (mapped === 'requested' || mapped === 'designing')
+    ? { ...progress, copy: ADMIN_HUB_BUILD_COPY_SUBSCRIBED(progress.copy) }
+    : progress;
 }

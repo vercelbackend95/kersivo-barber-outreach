@@ -70,10 +70,12 @@ const {
 } = Astro.props;
 
 const shopName = request.shopName;
-const header = hubHeaderCopy(hubHeaderKind(state), shopName);
+// Paid before the preview was sent: convertedAt is set while the status stays REQUESTED / IN_PROGRESS.
+const paidEarly = Boolean(request.convertedAt);
+const header = hubHeaderCopy(hubHeaderKind(state, { paidEarly }), shopName);
 const primary = overviewPrimary({ state });
 const showLaunch = overviewShowLaunch(state);
-const buildProgress = websiteBuildProgressFromHubStage(state.stage);
+const buildProgress = websiteBuildProgressFromHubStage(state.stage, { paidEarly });
 const previewLocked = overviewPreviewLocked(state.stage);
 const showChanges = overviewShowChangesTile({ stage: state.stage, hasWebsitePreview });
 const hrefs = overviewTileHrefs();

@@ -30,6 +30,38 @@ export const SETUP_COMPLETE_STORAGE_KEY = 'ks_admin_hub_setup_complete_at';
 export const SETUP_COMPLETE_VISIBLE_MS = 7 * 24 * 60 * 60 * 1000;
 export const SETUP_EXPAND_EVENT = 'ks-admin-hub-setup-expand';
 
+/** The sidebar card once every required step is done: what happens next, and Full KERSIVO for owners ready now. */
+export const SETUP_DONE_COPY = {
+  eyebrow: 'Setup complete',
+  subscribedEyebrow: 'Subscribed',
+  title: {
+    requested: "We'll start on your website soon",
+    designing: "We're designing your website",
+    review: 'Your preview is ready',
+    subscribed: "You're subscribed",
+  },
+  body: {
+    designing: "You've added everything we need. Your preview appears here for you to review.",
+    review: 'Review your website and ask for any changes. Nothing goes live until you approve it.',
+    subscribed: "Thanks. We're designing your website. You review it here, and nothing goes live until you approve it.",
+  },
+  steps: ['You add your details', 'We design your website', 'You review and approve'],
+  stepsLabel: 'What happens next',
+  offerLead: {
+    early: "Don't want to wait?",
+    review: 'Happy with it?',
+  },
+  offerText: {
+    early: 'Subscribe now. Nothing goes live until you approve it.',
+    review: 'Launch it with Full KERSIVO.',
+  },
+  priceNote: 'per location · no setup fee',
+  subscribe: 'Subscribe now',
+  launch: 'Launch this website',
+  review: 'Review your website',
+  checklist: 'Open your launch checklist',
+} as const;
+
 export function setupDoneStatus(done: number, total: number): string {
   return `${done} of ${total} done`;
 }
@@ -148,6 +180,20 @@ export type SetupItem = {
   detail?: string;
 };
 
+/** Full KERSIVO checkout offered from the setup card (phase 1). Client-safe: the owner's own request details. */
+export type SetupSubscribe = {
+  /** `subscribed`: the owner paid before the preview was ready; the website is still being designed. */
+  state: 'available' | 'subscribed';
+  /** The website is still being designed (requested / designing): subscribing now means not waiting for it. */
+  early: boolean;
+  shopName: string;
+  townCity: string;
+  firstName: string | null;
+  checkoutEmail: string;
+  hasOwnDomain: string;
+  existingWebsiteHost: string;
+};
+
 export type SetupCardModel = {
   phase: SetupCardPhase;
   status: string;
@@ -156,6 +202,9 @@ export type SetupCardModel = {
   done: number;
   total: number;
   nextId: SetupCardItemId | null;
+  /** Phase 1: where the website is (the setup tour and the complete card read it). */
+  stage?: HubStage;
+  subscribe?: SetupSubscribe | null;
 };
 
 const PHASE1_LABELS: Record<SetupItemId, string> = {
@@ -256,7 +305,7 @@ export function setupPhase1Items(input: {
     optional,
     detail: shopCountDetail(id, counts),
   }));
-  return pack(1, SETUP_PHASE1_TITLE, setupPhase1Status, items, { requiredOnly: true });
+  return { ...pack(1, SETUP_PHASE1_TITLE, setupPhase1Status, items, { requiredOnly: true }), stage: input.stage };
 }
 
 export function setupPhase2Items(input: {

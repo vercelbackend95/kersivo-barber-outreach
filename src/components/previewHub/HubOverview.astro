@@ -106,7 +106,7 @@ const LIVE_NEXT = [
   { href: '/admin?section=team', label: HUB_LIVE_NEXT_HOURS },
 ] as const;
 const shopName = request.shopName;
-const header = hubHeaderCopy(hubHeaderKind(state), shopName);
+const header = hubHeaderCopy(hubHeaderKind(state, { paidEarly: Boolean(request.convertedAt) }), shopName);
 const nowCopy = state.stage === 'review' && state.reviewSubstate === 'changes_sent' ? HUB_NOW.reviewChangesSent : HUB_NOW[state.stage];
 const nowNeed = state.stage === 'review' && state.reviewSubstate !== 'changes_sent' && reviewNeed ? reviewNeed : nowCopy.need;
 const primaryHref =

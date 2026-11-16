@@ -67,6 +67,7 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       opsLastSeenAt: true,
       launchApprovedAt: true,
       liveAt: true,
+      convertedAt: true,
       events: { where: { action: PREVIEW_REQUEST_ACTIONS.OVER_DAILY_CAP }, select: { action: true }, take: 1 },
       hubAssets: {
         where: { deletedAt: null },
@@ -84,6 +85,11 @@ export async function listPreviewRequests(query: PreviewRequestListQuery) {
       },
     },
   }).then((rows) => sortPreviewRequestsForOps(rows, query.sort));
+}
+
+/** Subscribed before the preview was ready: the website still has to be designed and sent. */
+export function isPaidBeforePreview(request: { status: string; convertedAt?: Date | null }): boolean {
+  return Boolean(request.convertedAt && request.status !== 'CONVERTED');
 }
 
 export function isApprovedReadyToLaunch(request: {
