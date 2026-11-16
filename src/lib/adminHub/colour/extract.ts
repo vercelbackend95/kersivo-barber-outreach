@@ -182,14 +182,56 @@ function clusterToSwatch(centre: OkLab, count: number, total: number): Extracted
   };
 }
 
+/** Snap to the real colour only when it is close to the cluster mean (never jump to another colour). */
+const SNAP_MAX_DE_OK = 0.08;
+
+/**
+ * A cluster's mean is pulled towards its neighbours by anti-aliased edges and gradients, so a flat logo red comes
+ * out a little muddy. Use the cluster's most common actual colour instead (5-bit buckets, then the bucket's mean).
+ */
+function snapToRealColours(samples: Sample[], centres: OkLab[]): OkLab[] {
+  const buckets = centres.map(() => new Map<number, { n: number; r: number; g: number; b: number }>());
+  for (const sample of samples) {
+    let best = 0;
+    let bestD = Infinity;
+    for (let c = 0; c < centres.length; c += 1) {
+      const d = deltaEok(sample.lab, centres[c]!);
+      if (d < bestD) {
+        bestD = d;
+        best = c;
+      }
+    }
+    const { r, g, b } = sample.rgb;
+    const key = (Math.round(r * 31) << 10) | (Math.round(g * 31) << 5) | Math.round(b * 31);
+    const map = buckets[best]!;
+    const row = map.get(key);
+    if (row) {
+      row.n += 1;
+      row.r += r;
+      row.g += g;
+      row.b += b;
+    } else {
+      map.set(key, { n: 1, r, g, b });
+    }
+  }
+  return centres.map((centre, i) => {
+    let top: { n: number; r: number; g: number; b: number } | null = null;
+    for (const row of buckets[i]!.values()) if (!top || row.n > top.n) top = row;
+    if (!top) return centre;
+    const lab = srgbToOklab({ r: top.r / top.n, g: top.g / top.n, b: top.b / top.n });
+    return deltaEok(lab, centre) <= SNAP_MAX_DE_OK ? lab : centre;
+  });
+}
+
 export function extractPalette(image: RgbaImage): ExtractedSwatch[] {
   const samples = collectSamples(image);
   if (samples.length === 0) return [];
   const clustered = runKmeans(samples, KMEANS_K, KMEANS_SEED);
   const merged = mergeClusters(clustered).sort((a, b) => b.count - a.count);
+  const snapped = snapToRealColours(samples, merged.map((row) => row.centre));
   const swatches: ExtractedSwatch[] = [];
-  for (const row of merged) {
-    const swatch = clusterToSwatch(row.centre, row.count, samples.length);
+  for (const [i, row] of merged.entries()) {
+    const swatch = clusterToSwatch(snapped[i]!, row.count, samples.length);
     if (swatches.some((existing) => existing.hex === swatch.hex)) continue;
     swatches.push(swatch);
     if (swatches.length >= MAX_SWATCHES) break;

@@ -8,6 +8,7 @@ import {
   setRoleColour,
   swapRoles,
   undoEdit,
+  UNDO_LIMIT,
   type ColourSnapshot,
   type UndoState,
 } from './editor';
@@ -90,15 +91,25 @@ describe('role edits', () => {
     });
   });
 
-  it('undoes the last change only', () => {
+  it('undoes changes one at a time, newest first, then stops', () => {
     let undo: UndoState = { current: base, previous: null };
     undo = commitEdit(undo, swapRoles(undo.current));
     undo = commitEdit(undo, clearAccent(undo.current));
     expect(undo.current.accent).toBe('');
     undo = undoEdit(undo);
     expect(undo.current).toEqual(swapRoles(base));
+    undo = undoEdit(undo);
+    expect(undo.current).toEqual(base);
     expect(undo.previous).toBeNull();
     expect(undoEdit(undo)).toBe(undo);
+  });
+
+  it('keeps at most UNDO_LIMIT steps', () => {
+    let undo: UndoState = { current: base, previous: null };
+    for (let i = 0; i < UNDO_LIMIT + 5; i += 1) {
+      undo = commitEdit(undo, { ...undo.current, main: `#${(0x100000 + i).toString(16).toUpperCase()}` });
+    }
+    expect(undo.past).toHaveLength(UNDO_LIMIT);
   });
 
   it('a slider drag commits once against the value at drag start', () => {

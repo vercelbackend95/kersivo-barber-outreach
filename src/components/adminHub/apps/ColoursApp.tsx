@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeftRight,
   Check,
   Copy,
   ImagePlus,
-  Pipette,
   RotateCcw,
   Send,
   Sparkles,
@@ -15,6 +14,8 @@ import { AdminHubConfirmDialog } from '@/components/adminHub/AdminHubConfirmDial
 import { useAppChrome } from './AppChrome';
 import { AppStatus } from './AppStatus';
 import type { AdminHubAppBodyProps } from './types';
+import { ColourPicker, type PickerPhase } from './colours/ColourPicker';
+import { ReadabilityGuide } from './colours/ReadabilityGuide';
 import {
   ADMIN_HUB_COLOURS_ACCENT,
   ADMIN_HUB_COLOURS_BG,
@@ -27,16 +28,10 @@ import {
   ADMIN_HUB_COLOURS_CONFIRM_BODY,
   ADMIN_HUB_COLOURS_CONFIRM_TITLE,
   ADMIN_HUB_COLOURS_CONFIRM_YES,
-  ADMIN_HUB_COLOURS_CONTRAST_BUTTON,
-  ADMIN_HUB_COLOURS_CONTRAST_LOW,
-  ADMIN_HUB_COLOURS_CONTRAST_MAIN,
-  ADMIN_HUB_COLOURS_CONTRAST_PASS,
   ADMIN_HUB_COLOURS_COPIED,
   ADMIN_HUB_COLOURS_COPY,
   ADMIN_HUB_COLOURS_COPY_HEX,
   ADMIN_HUB_COLOURS_DARK,
-  ADMIN_HUB_COLOURS_DEEPER,
-  ADMIN_HUB_COLOURS_DEPTH,
   ADMIN_HUB_COLOURS_DRAFT_TOAST,
   ADMIN_HUB_COLOURS_DRAFT_TOAST_FAILED,
   ADMIN_HUB_COLOURS_EMPTY,
@@ -46,34 +41,20 @@ import {
   ADMIN_HUB_COLOURS_FINE_TUNE_ACCENT,
   ADMIN_HUB_COLOURS_FINE_TUNE_MAIN,
   ADMIN_HUB_COLOURS_FOUND_IN,
-  ADMIN_HUB_COLOURS_GUIDE,
-  ADMIN_HUB_COLOURS_HEX,
-  ADMIN_HUB_COLOURS_HEX_ERROR_CHARS,
-  ADMIN_HUB_COLOURS_HEX_ERROR_LENGTH,
-  ADMIN_HUB_COLOURS_HEX_LABEL,
-  ADMIN_HUB_COLOURS_HEX_USE,
-  ADMIN_HUB_COLOURS_INTENSITY,
+  ADMIN_HUB_COLOURS_GUIDE_NOTE,
   ADMIN_HUB_COLOURS_LIGHT,
-  ADMIN_HUB_COLOURS_LIGHTER,
   ADMIN_HUB_COLOURS_LOCKED_NOTICE,
   ADMIN_HUB_COLOURS_LOOKS,
   ADMIN_HUB_COLOURS_MAIN,
-  ADMIN_HUB_COLOURS_MAIN_SEG,
-  ADMIN_HUB_COLOURS_MAKE_ACCENT_DEEPER,
-  ADMIN_HUB_COLOURS_MAKE_ACCENT_LIGHTER,
-  ADMIN_HUB_COLOURS_MAKE_MAIN_DEEPER,
-  ADMIN_HUB_COLOURS_MAKE_MAIN_LIGHTER,
   ADMIN_HUB_COLOURS_MESSAGE_US,
-  ADMIN_HUB_COLOURS_MUTED,
   ADMIN_HUB_COLOURS_NEW_LOGO,
   ADMIN_HUB_COLOURS_NO_ACCENT,
   ADMIN_HUB_COLOURS_NO_LOGO,
+  ADMIN_HUB_COLOURS_PAIR_LABEL,
+  ADMIN_HUB_COLOURS_PAIRS,
+  ADMIN_HUB_COLOURS_PAIRS_HINT,
   ADMIN_HUB_COLOURS_PALETTE,
   ADMIN_HUB_COLOURS_PICK_MAIN,
-  ADMIN_HUB_COLOURS_PICK_SCREEN,
-  ADMIN_HUB_COLOURS_QUICK,
-  ADMIN_HUB_COLOURS_QUICK_HINT,
-  ADMIN_HUB_COLOURS_READABILITY,
   ADMIN_HUB_COLOURS_RESET,
   ADMIN_HUB_COLOURS_ROLE_GROUP,
   ADMIN_HUB_COLOURS_SAME_HEX,
@@ -82,53 +63,54 @@ import {
   ADMIN_HUB_COLOURS_SEND,
   ADMIN_HUB_COLOURS_SENDING,
   ADMIN_HUB_COLOURS_SENT_ON,
-  ADMIN_HUB_COLOURS_SLIDER_WORDS,
   ADMIN_HUB_COLOURS_SOURCE_KERSIVO,
   ADMIN_HUB_COLOURS_SOURCE_LABEL,
   ADMIN_HUB_COLOURS_SOURCE_LOGO,
   ADMIN_HUB_COLOURS_SOURCE_MANUAL,
+  ADMIN_HUB_COLOURS_SUGGEST,
+  ADMIN_HUB_COLOURS_SUGGEST_HINT,
   ADMIN_HUB_COLOURS_SWAP,
   ADMIN_HUB_COLOURS_SWAP_LABEL,
   ADMIN_HUB_COLOURS_UNDO,
   ADMIN_HUB_COLOURS_UPLOAD,
-  ADMIN_HUB_COLOURS_VIVID,
+  ADMIN_HUB_COLOURS_VISION,
+  ADMIN_HUB_COLOURS_VISION_CB,
+  ADMIN_HUB_COLOURS_VISION_GREY,
+  ADMIN_HUB_COLOURS_VISION_NORMAL,
+  ADMIN_HUB_COLOURS_VISION_NOTE,
   ADMIN_HUB_COLOURS_YOUR_LOGO,
   formatBrandSubmittedDate,
 } from '@/lib/adminHub/copy';
 import { ADMIN_HUB_LINKS } from '@/lib/adminHub/links';
 import { adminHubMaterialsHref } from '@/lib/adminHub/addMenu';
 import {
+  BARBERSHOP_PAIRS,
+  PICKER_DEFAULT_HUE,
+  PICKER_GREY_C,
+  accentSuggestions,
   addToPalette,
   assignDefaultRoles,
-  chromaFromRelative,
   clearAccent,
   commitEdit,
-  depthGradient,
-  evaluateContrast,
-  formatContrastRatio,
-  hexToClampedOklch,
-  intensityGradient,
-  lightnessFromDepth,
-  lightnessSteps,
-  MAX_PALETTE,
-  mergePalette,
   distinctRoleNames,
+  hexToClampedOklch,
+  mergePalette,
+  MAX_PALETTE,
   normaliseHexColour,
-  oklchToHex,
   parseCssColour,
-  parseHexInput,
-  relativeChroma,
+  readabilityReport,
+  resetHistory,
   setRoleColour,
   siteBackgroundHex,
-  sliderDepth,
   swapRoles,
   swatchFromHex,
   undoEdit,
+  visionMatrix,
+  withHue,
   type BrandBackgroundTone,
   type BrandColoursSource,
   type ColourRole,
   type ColourSnapshot,
-  type ContrastCheck,
   type ExtractedSwatch,
   type UndoState,
 } from '@/lib/adminHub/colour';
@@ -143,7 +125,7 @@ import { showHubToast } from '@/lib/adminHub/hubToast';
 import { HUB_SAVE_FAILED, HUB_SAVED, HUB_SAVING } from '@/lib/freePreview/hubCopy';
 
 type SaveKind = 'idle' | 'saving' | 'saved' | 'error' | 'sent';
-type SliderKind = 'depth' | 'intensity';
+type Vision = 'normal' | 'deuteranopia' | 'grey';
 
 type BrandColoursResponse = {
   ok?: boolean;
@@ -158,8 +140,7 @@ type BrandColoursResponse = {
   };
 };
 
-/** Hue is kept per role when a colour gets close to grey, so the sliders never drift to another hue. */
-const HUE_LOCK_MIN_C = 0.02;
+const VISION_FILTER_ID = 'admin-hub-vision-deutan';
 
 function brandLockedSubmittedAt(status: number, body: BrandColoursResponse): string | null {
   if (status !== 409 || body.code !== 'BRAND_LOCKED') return null;
@@ -185,6 +166,12 @@ function scheduleFrame(callback: () => void): void {
   } else {
     setTimeout(callback, 0);
   }
+}
+
+/** The hue a role's colour sits on (null for greys and empty roles: they have no hue of their own). */
+function ownHue(hex: string): number | null {
+  const lch = hex ? hexToClampedOklch(hex) : null;
+  return lch && lch.C >= PICKER_GREY_C ? lch.h : null;
 }
 
 /** What "Save draft" writes; also the dirty check against the last saved version. */
@@ -239,7 +226,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   };
   const initialPaletteLogoId = ctx.details.brandPaletteLogoAssetId ?? null;
 
-  const [undo, setUndo] = useState<UndoState>({ current: initialColours, previous: null });
+  const [undo, setUndo] = useState<UndoState>(() => resetHistory(initialColours));
   const colours = undo.current;
   const { main: mainHex, accent: accentHex, tone, source } = colours;
   const [swatches, setSwatches] = useState<ExtractedSwatch[]>(() =>
@@ -258,32 +245,35 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   const [extracting, setExtracting] = useState(extractRun > 0);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [role, setRole] = useState<ColourRole>('main');
-  const [hexOpen, setHexOpen] = useState(false);
-  const [hexDraft, setHexDraft] = useState('');
-  const [hexSubmitted, setHexSubmitted] = useState(false);
+  // The hue each role's picker shows. Kept while a colour is grey or empty, so the area never jumps to red.
+  const [hues, setHues] = useState<Record<ColourRole, number>>(() => ({
+    main: ownHue(initialColours.main) ?? PICKER_DEFAULT_HUE,
+    accent: ownHue(initialColours.accent) ?? ownHue(initialColours.main) ?? PICKER_DEFAULT_HUE,
+  }));
+  const [vision, setVision] = useState<Vision>('normal');
   const [sameHex, setSameHex] = useState(false);
   const [save, setSave] = useState<SaveKind>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const touched = useRef(false);
-  const hexButtonRef = useRef<HTMLButtonElement>(null);
-  const hexInputRef = useRef<HTMLInputElement>(null);
-  const hueLock = useRef<Record<ColourRole, number | null>>({ main: null, accent: null });
-  const sliderStart = useRef<ColourSnapshot | null>(null);
-  const sliderPending = useRef<{ kind: SliderKind; value: number; role: ColourRole } | null>(null);
-  const sliderFrame = useRef(false);
+  const liveStart = useRef<ColourSnapshot | null>(null);
+  const livePending = useRef<{ role: ColourRole; hex: string } | null>(null);
+  const liveFrame = useRef(false);
 
   const key = draftKey(colours, swatches, paletteLogoId);
   const dirty = key !== savedKey;
   const latest = useRef({ colours, swatches, paletteLogoId, key, dirty, canEdit, save });
   latest.current = { colours, swatches, paletteLogoId, key, dirty, canEdit, save };
 
+  // A role's picker follows its colour's hue whenever the colour has one.
   useEffect(() => {
-    for (const id of ['main', 'accent'] as const) {
-      const lch = colours[id] ? hexToClampedOklch(colours[id]) : null;
-      if (lch && lch.C >= HUE_LOCK_MIN_C) hueLock.current[id] = lch.h;
-    }
-  }, [colours]);
+    setHues((prev) => {
+      const main = ownHue(colours.main);
+      const accent = ownHue(colours.accent);
+      const next = { main: main ?? prev.main, accent: accent ?? prev.accent };
+      return Math.abs(next.main - prev.main) < 0.5 && Math.abs(next.accent - prev.accent) < 0.5 ? prev : next;
+    });
+  }, [colours.main, colours.accent]);
 
   useEffect(() => {
     if (!extractRun || !logoUrl) {
@@ -346,21 +336,17 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
   );
 
   const selectedHex = role === 'main' ? mainHex : accentHex;
-  const selected = selectedHex ? hexToClampedOklch(selectedHex) : null;
-  const selectedHue = selected
-    ? selected.C < HUE_LOCK_MIN_C && hueLock.current[role] !== null
-      ? hueLock.current[role]!
-      : selected.h
-    : 0;
-  const contrast = evaluateContrast({ mainHex: mainHex || null, accentHex: accentHex || null, tone });
+  const report = useMemo(
+    () => readabilityReport({ mainHex: mainHex || null, accentHex: accentHex || null, tone }),
+    [mainHex, accentHex, tone],
+  );
   // Main / Accent never read the same for two different colours (e.g. "Dark copper" / "Copper").
   const roleNames = distinctRoleNames(mainHex || null, accentHex || null);
   const bw = Boolean(logoClusters && assignDefaultRoles(logoClusters).blackAndWhite && !mainHex);
-  const picks = selectedHex ? lightnessSteps(selectedHex) : [];
-  const depthPct = selected ? Math.round(sliderDepth(selected.L) * 100) : 50;
-  const intensityPct = selected ? Math.round(relativeChroma({ ...selected, h: selectedHue }) * 100) : 0;
-  const depthStops = selectedHex ? depthGradient(selectedHex) : null;
-  const intensityStops = selectedHex ? intensityGradient(selectedHex) : null;
+  const suggestions = useMemo(
+    () => (role === 'accent' && mainHex ? accentSuggestions({ mainHex, tone, exclude: [accentHex], limit: 5 }) : []),
+    [role, mainHex, accentHex, tone],
+  );
   const services = serviceRows(ctx);
   const shopLabel = ctx.shopName.trim() || 'Your shop';
   const eyedropper = hasEyedropper();
@@ -391,11 +377,11 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
     apply({ ...colours, main: roles.main?.hex ?? '', accent: roles.accent?.hex ?? '', source: 'LOGO' });
   };
 
-  const onUndo = () => {
+  const onUndo = useCallback(() => {
     setSameHex(false);
     touched.current = true;
     setUndo(undoEdit);
-  };
+  }, []);
 
   const onSwap = () => apply(swapRoles(colours));
   const onNoAccent = () => {
@@ -405,99 +391,95 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
   const onFix = (target: ColourRole, hex: string) => applyRoleHex(target, hex);
 
+  const onFixAll = () => {
+    const fix = report.fixAll;
+    if (!fix || !canEdit) return;
+    apply({ ...colours, main: fix.main ?? colours.main, accent: fix.accent ?? colours.accent });
+  };
+
+  const onPair = (pair: (typeof BARBERSHOP_PAIRS)[number]) => {
+    if (!canEdit) return;
+    apply({ ...colours, main: pair.main, accent: pair.accent, tone: pair.tone, source: 'MANUAL' });
+  };
+
   const findAgain = () => {
     touched.current = true;
     setExtractRun((n) => n + 1);
   };
 
-  // Sliders: OKLCH with hue locked; intensity is relative to the most vivid in-gamut chroma; rAF-throttled.
-  const flushSlider = () => {
-    sliderFrame.current = false;
-    const pending = sliderPending.current;
-    sliderPending.current = null;
+  // Ctrl / Cmd + Z inside the app undoes the last colour change (not while typing in the hex box).
+  useEffect(() => {
+    if (!canEdit) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.key.toLowerCase() !== 'z') return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (!target?.closest?.('[data-testid="admin-hub-colours"]')) return;
+      event.preventDefault();
+      onUndo();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [canEdit, onUndo]);
+
+  /* Live edits (picker drag, hue drag, arrow keys): painted every frame, one undo step per gesture. */
+  const flushLive = () => {
+    liveFrame.current = false;
+    const pending = livePending.current;
+    livePending.current = null;
     if (!pending) return;
-    const state = latest.current.colours;
-    const hex = state[pending.role];
-    const base = hex ? hexToClampedOklch(hex) : null;
-    if (!base) return;
-    const h = base.C < HUE_LOCK_MIN_C && hueLock.current[pending.role] !== null ? hueLock.current[pending.role]! : base.h;
-    let L = base.L;
-    let C: number;
-    if (pending.kind === 'depth') {
-      const intensity = relativeChroma({ ...base, h });
-      L = lightnessFromDepth(pending.value / 100);
-      C = chromaFromRelative(L, h, intensity);
-    } else {
-      C = chromaFromRelative(L, h, pending.value / 100);
-    }
-    const result = setRoleColour(state, pending.role, oklchToHex({ L, C, h }));
+    const result = setRoleColour(latest.current.colours, pending.role, pending.hex, 'MANUAL');
     setSameHex(result.note === 'same-hex');
     if (result.note) return;
     touched.current = true;
-    // Undo is committed once, when the drag / key press ends.
     setUndo((u) => ({ ...u, current: result.next }));
   };
 
-  const onSlider = (kind: SliderKind, value: number) => {
-    if (!canEdit || !selectedHex) return;
-    if (!sliderStart.current) sliderStart.current = colours;
-    sliderPending.current = { kind, value: Math.max(0, Math.min(100, value)), role };
-    if (sliderFrame.current) return;
-    sliderFrame.current = true;
-    scheduleFrame(flushSlider);
+  const queueLive = (target: ColourRole, hex: string) => {
+    livePending.current = { role: target, hex };
+    if (liveFrame.current) return;
+    liveFrame.current = true;
+    scheduleFrame(flushLive);
   };
 
-  const endSlider = () => {
-    const start = sliderStart.current;
+  const endLive = () => {
+    const start = liveStart.current;
     if (!start) return;
-    sliderStart.current = null;
-    scheduleFrame(() => setUndo((u) => commitEdit({ current: u.current, previous: u.previous }, u.current, start)));
+    liveStart.current = null;
+    // After the last queued frame lands, commit the whole gesture as one undo step.
+    scheduleFrame(() => scheduleFrame(() => setUndo((u) => commitEdit(u, u.current, start))));
   };
 
-  const onSliderKey = (kind: SliderKind, value: number) => (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'PageUp' || event.key === 'PageDown') {
-      event.preventDefault();
-      onSlider(kind, value + (event.key === 'PageUp' ? 10 : -10));
-    }
+  const onLive = (hex: string, phase: PickerPhase) => {
+    if (!canEdit) return;
+    if (phase === 'start' && !liveStart.current) liveStart.current = latest.current.colours;
+    if (phase !== 'end' || hex) queueLive(role, hex);
+    if (phase === 'end') endLive();
   };
 
-  // Hex box: prefilled with the selected role, validated while typing, Enter applies, Esc closes.
-  const hexCheck = parseHexInput(hexDraft, hexSubmitted);
-  const hexError = hexCheck.ok
-    ? null
-    : hexCheck.reason === 'chars'
-      ? ADMIN_HUB_COLOURS_HEX_ERROR_CHARS
-      : hexCheck.reason === 'length' || (hexSubmitted && hexCheck.reason === 'empty')
-        ? ADMIN_HUB_COLOURS_HEX_ERROR_LENGTH
-        : null;
-
-  const openHex = () => {
-    if (hexOpen) {
-      closeHex();
+  const onHue = (h: number, phase: PickerPhase) => {
+    if (!canEdit) return;
+    if (phase === 'start') {
+      if (!liveStart.current) liveStart.current = latest.current.colours;
       return;
     }
-    setHexDraft(selectedHex || '');
-    setHexSubmitted(false);
-    setHexOpen(true);
+    if (phase === 'end') {
+      endLive();
+      return;
+    }
+    setHues((prev) => ({ ...prev, [role]: h }));
+    const current = latest.current.colours[role];
+    const next = current ? withHue(current, h, hues[role]) : null;
+    if (next) {
+      if (!liveStart.current) liveStart.current = latest.current.colours;
+      queueLive(role, next);
+    }
   };
 
-  const closeHex = () => {
-    setHexOpen(false);
-    setHexSubmitted(false);
-    hexButtonRef.current?.focus();
-  };
-
-  useEffect(() => {
-    if (hexOpen) hexInputRef.current?.select();
-  }, [hexOpen]);
-
-  const onHexSubmit = () => {
-    setHexSubmitted(true);
-    const parsed = parseHexInput(hexDraft, true);
-    if (!parsed.ok) return;
-    if (!applyRoleHex(role, parsed.hex, 'MANUAL')) return;
-    setSwatches((rows) => addToPalette(rows, parsed.hex, [mainHex, accentHex, parsed.hex]));
-    closeHex();
+  const onPick = (hex: string, manual: boolean) => {
+    if (!canEdit) return;
+    if (!applyRoleHex(role, hex, 'MANUAL')) return;
+    if (manual) setSwatches((rows) => addToPalette(rows, hex, [mainHex, accentHex, hex]));
   };
 
   const pickFromScreen = async () => {
@@ -537,7 +519,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         const main = storedHex(body.details?.brandPrimaryColour);
         const accent = storedHex(body.details?.brandSecondaryColour);
         if (main || accent) {
-          setUndo((u) => ({ current: { ...u.current, main: main || u.current.main, accent: accent || u.current.accent }, previous: null }));
+          setUndo((u) => resetHistory({ ...u.current, main: main || u.current.main, accent: accent || u.current.accent }));
         }
         applyLocked(body.details?.brandColoursSentAt ?? fallbackAt);
       } catch {
@@ -570,7 +552,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         }
         if (!response.ok || !body.ok) throw new Error(body.error || HUB_SAVE_FAILED);
         if (send) {
-          setUndo((u) => ({ current: { ...u.current, source: sentSource }, previous: null }));
+          setUndo((u) => resetHistory({ ...u.current, source: sentSource }));
           applyLocked(body.colours?.brandColoursSentAt ?? new Date().toISOString());
           emitHubDataChanged('colours-sent');
         } else {
@@ -692,6 +674,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
 
   return (
     <div className="admin-hub-colours" data-testid="admin-hub-colours">
+      <VisionFilters />
       {logoUrl ? null : <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} />}
 
       <div className="admin-hub-colours__preview-first">
@@ -716,7 +699,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           ) : (
             <ColoursLogoPreview logoUrl={null} canUpload={ctx.canUpload} inPanel />
           )}
-          <p className="admin-hub-cp__label">
+          <p className="admin-hub-cp__label" id="admin-hub-colours-found">
             <Sparkles width={12} height={12} strokeWidth={1.8} aria-hidden="true" />
             {ADMIN_HUB_COLOURS_FOUND_IN}
           </p>
@@ -733,115 +716,74 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           ) : null}
           {!extracting && !swatches.length && !logoUrl ? <p className="admin-hub-colours__hint">{ADMIN_HUB_COLOURS_EMPTY}</p> : null}
           {bw ? <p className="admin-hub-colours__hint">{ADMIN_HUB_COLOURS_BW}</p> : null}
-          <div className="admin-hub-extract" aria-busy={extracting || undefined}>
-            {swatches.map((swatch) => {
-              const assigned =
-                swatch.hex === mainHex ? ADMIN_HUB_COLOURS_MAIN : swatch.hex === accentHex ? ADMIN_HUB_COLOURS_ACCENT : null;
-              return (
-                <button
-                  key={swatch.hex}
-                  type="button"
-                  className={`admin-hub-extract__row${assigned ? ' is-sel' : ''}`}
-                  data-testid={`admin-hub-swatch-${swatch.hex.replace('#', '')}`}
-                  onClick={() => onSwatch(swatch)}
-                  disabled={!canEdit}
-                >
-                  <span className="admin-hub-extract__chip" style={{ background: swatch.hex }} />
-                  <span>
-                    <span className="admin-hub-extract__name">
-                      {swatch.name} <span className="admin-hub-extract__hex">{swatch.hex}</span>
+          {swatches.length ? (
+            <div className="admin-hub-extract" aria-busy={extracting || undefined} role="group" aria-labelledby="admin-hub-colours-found">
+              {swatches.map((swatch) => {
+                const assigned =
+                  swatch.hex === mainHex ? ADMIN_HUB_COLOURS_MAIN : swatch.hex === accentHex ? ADMIN_HUB_COLOURS_ACCENT : null;
+                return (
+                  <button
+                    key={swatch.hex}
+                    type="button"
+                    className={`admin-hub-extract__row${assigned ? ' is-sel' : ''}`}
+                    data-testid={`admin-hub-swatch-${swatch.hex.replace('#', '')}`}
+                    onClick={() => onSwatch(swatch)}
+                    disabled={!canEdit}
+                    aria-label={assigned ? `${assigned}, ${swatch.name} ${swatch.hex}` : `${swatch.name} ${swatch.hex}`}
+                  >
+                    <span className="admin-hub-extract__chip" style={{ background: swatch.hex }} />
+                    <span className="admin-hub-extract__text">
+                      <span className="admin-hub-extract__name">
+                        {swatch.name} <span className="admin-hub-extract__hex">{swatch.hex}</span>
+                      </span>
+                      {swatch.share > 0 ? (
+                        <span className="admin-hub-share" aria-hidden="true">
+                          <span style={{ width: `${Math.max(4, Math.round(swatch.share * 100))}%` }} />
+                        </span>
+                      ) : null}
                     </span>
-                    <span className="admin-hub-share" aria-hidden="true">
-                      <span style={{ width: `${Math.round(swatch.share * 100)}%` }} />
-                    </span>
-                  </span>
-                  {assigned ? (
-                    <span className={`admin-hub-rolechip${assigned === ADMIN_HUB_COLOURS_ACCENT ? ' admin-hub-rolechip--2' : ''}`}>
-                      {assigned}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          <div className="admin-hub-swatch-row" role="group" aria-label={ADMIN_HUB_COLOURS_FOUND_IN}>
-            {swatches.map((swatch) => {
-              const label =
-                swatch.hex === mainHex ? ADMIN_HUB_COLOURS_MAIN : swatch.hex === accentHex ? ADMIN_HUB_COLOURS_ACCENT : swatch.name;
-              return (
-                <button
-                  key={`m-${swatch.hex}`}
-                  type="button"
-                  className={`admin-hub-swatch-row__item${swatch.hex === mainHex || swatch.hex === accentHex ? ' is-on' : ''}`}
-                  aria-label={label !== swatch.name ? `${label}, ${swatch.name} ${swatch.hex}` : `${swatch.name} ${swatch.hex}`}
-                  onClick={() => onSwatch(swatch)}
-                  disabled={!canEdit}
-                >
-                  <span style={{ background: swatch.hex }} />
-                  <small aria-hidden="true">{label}</small>
-                </button>
-              );
-            })}
-          </div>
-          <div className="admin-hub-colours__tools">
-            {eyedropper ? (
-              <button type="button" className="btn btn--outline btn--sm" onClick={() => void pickFromScreen()} disabled={!canEdit}>
-                <Pipette width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
-                {ADMIN_HUB_COLOURS_PICK_SCREEN}
-              </button>
-            ) : null}
-            <button
-              ref={hexButtonRef}
-              type="button"
-              className="btn btn--outline btn--sm"
-              onClick={openHex}
-              disabled={!canEdit}
-              aria-expanded={hexOpen}
-              aria-controls="admin-hub-colours-hex"
-            >
-              {ADMIN_HUB_COLOURS_HEX}
-            </button>
-          </div>
-          {hexOpen ? (
-            <div className="admin-hub-colours__hex" id="admin-hub-colours-hex">
-              <label>
-                {ADMIN_HUB_COLOURS_HEX_LABEL}
-                <input
-                  ref={hexInputRef}
-                  value={hexDraft}
-                  onChange={(event) => {
-                    setHexDraft(event.target.value);
-                    setHexSubmitted(false);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      onHexSubmit();
-                    } else if (event.key === 'Escape') {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      closeHex();
-                    }
-                  }}
-                  placeholder="#1F6F6B"
-                  spellCheck={false}
-                  autoComplete="off"
-                  maxLength={9}
-                  aria-invalid={hexError ? true : undefined}
-                  aria-describedby={hexError ? 'admin-hub-colours-hex-error' : undefined}
-                  disabled={!canEdit}
-                />
-              </label>
-              <button type="button" className="btn btn--outline btn--sm" onClick={onHexSubmit} disabled={!canEdit}>
-                {ADMIN_HUB_COLOURS_HEX_USE}
-              </button>
-              {hexError ? (
-                <p className="admin-hub-colours__field-error" id="admin-hub-colours-hex-error">
-                  {hexError}
-                </p>
-              ) : null}
+                    {assigned ? (
+                      <span className={`admin-hub-rolechip${assigned === ADMIN_HUB_COLOURS_ACCENT ? ' admin-hub-rolechip--2' : ''}`}>
+                        {assigned}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
             </div>
           ) : null}
+
+          <div className="admin-hub-pairs">
+            <p className="admin-hub-cp__label" id="admin-hub-colours-pairs">
+              {ADMIN_HUB_COLOURS_PAIRS}
+            </p>
+            <p className="admin-hub-colours__hint">{ADMIN_HUB_COLOURS_PAIRS_HINT}</p>
+            <div className="admin-hub-pairs__grid" role="group" aria-labelledby="admin-hub-colours-pairs">
+              {BARBERSHOP_PAIRS.map((pair) => {
+                const on = pair.main === mainHex && pair.accent === accentHex && pair.tone === tone;
+                return (
+                  <button
+                    key={pair.id}
+                    type="button"
+                    className={`admin-hub-pair${on ? ' is-on' : ''}`}
+                    onClick={() => onPair(pair)}
+                    disabled={!canEdit}
+                    aria-pressed={on}
+                    aria-label={ADMIN_HUB_COLOURS_PAIR_LABEL(pair.label, pair.tone === 'LIGHT' ? 'light' : 'dark')}
+                    data-testid={`admin-hub-pair-${pair.id}`}
+                  >
+                    <span className="admin-hub-pair__art" style={{ background: siteBackgroundHex(pair.tone, pair.main) }} aria-hidden="true">
+                      <i style={{ background: pair.main }} />
+                      <i style={{ background: pair.accent }} />
+                    </span>
+                    <span className="admin-hub-pair__name" aria-hidden="true">
+                      {pair.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         <section className="admin-hub-colours__edit">
@@ -860,7 +802,7 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
                   disabled={!canEdit}
                 >
                   <span className={`admin-hub-role__sw${hex ? '' : ' is-empty'}`} style={{ background: hex || undefined }} />
-                  <span>
+                  <span className="admin-hub-role__text">
                     <span className="admin-hub-role__k">{id === 'main' ? ADMIN_HUB_COLOURS_MAIN : ADMIN_HUB_COLOURS_ACCENT}</span>
                     <span className="admin-hub-role__v">{named}</span>
                   </span>
@@ -868,20 +810,6 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
                 </button>
               );
             })}
-          </div>
-          <div className="admin-hub-seg" role="group" aria-label={ADMIN_HUB_COLOURS_ROLE_GROUP}>
-            {(['main', 'accent'] as const).map((id) => (
-              <button
-                key={id}
-                type="button"
-                className={role === id ? 'is-on' : ''}
-                onClick={() => setRole(id)}
-                aria-pressed={role === id}
-                disabled={!canEdit}
-              >
-                {id === 'main' ? ADMIN_HUB_COLOURS_MAIN_SEG : ADMIN_HUB_COLOURS_ACCENT}
-              </button>
-            ))}
           </div>
           <div className="admin-hub-role-actions">
             <button
@@ -898,7 +826,13 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
               <X width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
               {ADMIN_HUB_COLOURS_NO_ACCENT}
             </button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={onUndo} disabled={!canEdit || !undo.previous}>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={onUndo}
+              disabled={!canEdit || !undo.previous}
+              aria-keyshortcuts="Control+Z Meta+Z"
+            >
               <Undo2 width={16} height={16} strokeWidth={1.8} aria-hidden="true" />
               {ADMIN_HUB_COLOURS_UNDO}
             </button>
@@ -908,94 +842,49 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
           </p>
           <div className="admin-hub-cp__panel admin-hub-tuner">
             <p className="admin-hub-cp__label">
+              <span className="admin-hub-tuner__dot" style={{ background: selectedHex || undefined }} aria-hidden="true" />
               {role === 'main' ? ADMIN_HUB_COLOURS_FINE_TUNE_MAIN : ADMIN_HUB_COLOURS_FINE_TUNE_ACCENT}
             </p>
-            <div className="admin-hub-slider">
-              <span className="admin-hub-slider__top" aria-hidden="true">
-                <span>{ADMIN_HUB_COLOURS_LIGHTER}</span>
-                <b>{ADMIN_HUB_COLOURS_DEPTH}</b>
-                <span>{ADMIN_HUB_COLOURS_DEEPER}</span>
-              </span>
-              <span
-                className="admin-hub-track"
-                style={{
-                  ['--admin-hub-thumb' as string]: selectedHex || 'var(--admin-hub-muted-2)',
-                  background: depthStops ? `linear-gradient(90deg, ${depthStops.lighter}, ${depthStops.mid}, ${depthStops.deeper})` : undefined,
-                }}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={depthPct}
-                  aria-label={ADMIN_HUB_COLOURS_DEPTH}
-                  aria-valuetext={ADMIN_HUB_COLOURS_SLIDER_WORDS.depth(depthPct)}
-                  disabled={!canEdit || !selectedHex}
-                  onChange={(event) => onSlider('depth', Number(event.target.value))}
-                  onKeyDown={onSliderKey('depth', depthPct)}
-                  onPointerUp={endSlider}
-                  onKeyUp={endSlider}
-                  onBlur={endSlider}
-                />
-              </span>
-            </div>
-            <div className="admin-hub-slider">
-              <span className="admin-hub-slider__top" aria-hidden="true">
-                <span>{ADMIN_HUB_COLOURS_MUTED}</span>
-                <b>{ADMIN_HUB_COLOURS_INTENSITY}</b>
-                <span>{ADMIN_HUB_COLOURS_VIVID}</span>
-              </span>
-              <span
-                className="admin-hub-track"
-                style={{
-                  ['--admin-hub-thumb' as string]: selectedHex || 'var(--admin-hub-muted-2)',
-                  background: intensityStops
-                    ? `linear-gradient(90deg, ${intensityStops.muted}, ${intensityStops.mid}, ${intensityStops.vivid})`
-                    : undefined,
-                }}
-              >
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={intensityPct}
-                  aria-label={ADMIN_HUB_COLOURS_INTENSITY}
-                  aria-valuetext={ADMIN_HUB_COLOURS_SLIDER_WORDS.intensity(intensityPct)}
-                  disabled={!canEdit || !selectedHex}
-                  onChange={(event) => onSlider('intensity', Number(event.target.value))}
-                  onKeyDown={onSliderKey('intensity', intensityPct)}
-                  onPointerUp={endSlider}
-                  onKeyUp={endSlider}
-                  onBlur={endSlider}
-                />
-              </span>
-            </div>
-            <div className="admin-hub-colours__quick">
-              <div className="admin-hub-slider__top">
-                <span>{ADMIN_HUB_COLOURS_QUICK}</span>
-                <span>{ADMIN_HUB_COLOURS_QUICK_HINT}</span>
+            <ColourPicker
+              role={role}
+              hex={selectedHex}
+              hue={hues[role]}
+              tone={tone}
+              disabled={!canEdit}
+              eyedropper={eyedropper}
+              onLive={onLive}
+              onPick={onPick}
+              onHue={onHue}
+              onEyedropper={() => void pickFromScreen()}
+            />
+            {suggestions.length ? (
+              <div className="admin-hub-suggest">
+                <p className="admin-hub-picker__k">
+                  <b id="admin-hub-colours-suggest">{ADMIN_HUB_COLOURS_SUGGEST}</b>
+                  <span>{ADMIN_HUB_COLOURS_SUGGEST_HINT}</span>
+                </p>
+                <div role="group" aria-labelledby="admin-hub-colours-suggest">
+                  {suggestions.map((row) => (
+                    <button
+                      key={row.hex}
+                      type="button"
+                      className="admin-hub-suggest__chip"
+                      onClick={() => applyRoleHex('accent', row.hex, 'MANUAL')}
+                      disabled={!canEdit}
+                      aria-label={`${row.name} ${row.hex}`}
+                      data-testid={`admin-hub-suggest-${row.hex.replace('#', '')}`}
+                    >
+                      <i style={{ background: row.hex }} aria-hidden="true" />
+                      <span aria-hidden="true">{row.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="admin-hub-variants">
-                {picks.map((hex) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    className={hex === selectedHex ? 'is-cur' : ''}
-                    style={{ background: hex }}
-                    aria-label={hex}
-                    aria-pressed={hex === selectedHex}
-                    disabled={!canEdit}
-                    onClick={() => applyRoleHex(role, hex)}
-                  />
-                ))}
-              </div>
-            </div>
+            ) : null}
             <div className="admin-hub-colours__tone">
-              <div className="admin-hub-slider__top">
-                <span id="admin-hub-colours-bg">{ADMIN_HUB_COLOURS_BG}</span>
-              </div>
+              <p className="admin-hub-picker__k" id="admin-hub-colours-bg">
+                {ADMIN_HUB_COLOURS_BG}
+              </p>
               <div className="admin-hub-tone" role="group" aria-labelledby="admin-hub-colours-bg">
                 {(['DARK', 'LIGHT'] as const).map((value) => (
                   <button
@@ -1016,12 +905,37 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         </section>
 
         <section className="admin-hub-colours__looks">
-          <p className="admin-hub-cp__label admin-hub-colours__looks-label">{ADMIN_HUB_COLOURS_LOOKS}</p>
-          <div className="admin-hub-colours__looks-preview">
-            <LivePreview shop={shopLabel} mainHex={mainHex} accentHex={accentHex} tone={tone} services={services} />
+          <div className="admin-hub-colours__looks-head">
+            <p className="admin-hub-cp__label admin-hub-colours__looks-label">{ADMIN_HUB_COLOURS_LOOKS}</p>
+            <div className="admin-hub-vision" role="group" aria-label={ADMIN_HUB_COLOURS_VISION}>
+              {(
+                [
+                  ['normal', ADMIN_HUB_COLOURS_VISION_NORMAL],
+                  ['deuteranopia', ADMIN_HUB_COLOURS_VISION_CB],
+                  ['grey', ADMIN_HUB_COLOURS_VISION_GREY],
+                ] as const
+              ).map(([value, label]) => (
+                <button key={value} type="button" className={vision === value ? 'is-on' : ''} aria-pressed={vision === value} onClick={() => setVision(value)}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-          <ContrastBlock contrast={contrast} canEdit={canEdit} onFix={onFix} />
-          <p className="admin-hub-colours__guide">{ADMIN_HUB_COLOURS_GUIDE}</p>
+          <div className="admin-hub-colours__looks-preview" data-vision={vision}>
+            <LivePreview shop={shopLabel} mainHex={mainHex} accentHex={accentHex} tone={tone} services={services} />
+            {vision !== 'normal' ? <p className="admin-hub-colours__hint admin-hub-vision__note">{ADMIN_HUB_COLOURS_VISION_NOTE[vision]}</p> : null}
+          </div>
+          <ReadabilityGuide
+            report={report}
+            tone={tone}
+            canEdit={canEdit}
+            hasMain={Boolean(mainHex)}
+            onFixColour={onFix}
+            onAccent={(hex) => applyRoleHex('accent', hex, 'MANUAL')}
+            onTone={(value) => apply({ ...colours, tone: value })}
+            onFixAll={onFixAll}
+          />
+          <p className="admin-hub-colours__guide">{ADMIN_HUB_COLOURS_GUIDE_NOTE}</p>
         </section>
       </div>
       {confirmOpen ? (
@@ -1045,6 +959,17 @@ export default function ColoursApp({ ctx }: AdminHubAppBodyProps) {
         </AdminHubConfirmDialog>
       ) : null}
     </div>
+  );
+}
+
+/** The colour-blind simulation used by the preview's "See it as" switch (feColorMatrix works in linear RGB). */
+function VisionFilters() {
+  return (
+    <svg className="admin-hub-vision__defs" aria-hidden="true" focusable="false" width="0" height="0">
+      <filter id={VISION_FILTER_ID} colorInterpolationFilters="linearRGB">
+        <feColorMatrix type="matrix" values={visionMatrix('deuteranopia')} />
+      </filter>
+    </svg>
   );
 }
 
@@ -1242,71 +1167,6 @@ function ColoursLogoPreview(props: {
   );
 }
 
-/** The one readability block: button text on accent, and Main on the website background. */
-function ContrastBlock(props: {
-  contrast: ContrastCheck;
-  canEdit: boolean;
-  onFix: (role: ColourRole, hex: string) => void;
-}) {
-  const lines = [
-    props.contrast.button
-      ? {
-          id: 'button',
-          role: 'accent' as const,
-          label: ADMIN_HUB_COLOURS_CONTRAST_BUTTON,
-          line: props.contrast.button,
-          fix:
-            props.contrast.button.fixLabel === 'lighter'
-              ? ADMIN_HUB_COLOURS_MAKE_ACCENT_LIGHTER
-              : ADMIN_HUB_COLOURS_MAKE_ACCENT_DEEPER,
-        }
-      : null,
-    props.contrast.main
-      ? {
-          id: 'main',
-          role: 'main' as const,
-          label: ADMIN_HUB_COLOURS_CONTRAST_MAIN,
-          line: props.contrast.main,
-          fix:
-            props.contrast.main.fixLabel === 'deeper' ? ADMIN_HUB_COLOURS_MAKE_MAIN_DEEPER : ADMIN_HUB_COLOURS_MAKE_MAIN_LIGHTER,
-        }
-      : null,
-  ].filter((row): row is NonNullable<typeof row> => Boolean(row));
-  if (!lines.length) return null;
-  return (
-    <div className="admin-hub-contrast" data-testid="admin-hub-colours-contrast">
-      <p className="admin-hub-cp__label">{ADMIN_HUB_COLOURS_READABILITY}</p>
-      <ul>
-        {lines.map((row) => (
-          <li
-            key={row.id}
-            className={`admin-hub-check ${row.line.pass ? 'admin-hub-check--ok' : 'admin-hub-check--warn'}`}
-            data-line={row.id}
-            data-pass={row.line.pass ? 'true' : 'false'}
-          >
-            <span>
-              {row.label} — {formatContrastRatio(row.line.ratio)} <span aria-hidden="true">{row.line.pass ? '✓' : '✗'}</span>
-              <span className="admin-hub-sr-only">
-                {' '}
-                {row.line.pass ? ADMIN_HUB_COLOURS_CONTRAST_PASS : ADMIN_HUB_COLOURS_CONTRAST_LOW}
-              </span>
-            </span>
-            {!row.line.pass && row.line.fixHex ? (
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm"
-                disabled={!props.canEdit}
-                onClick={() => props.onFix(row.role, row.line.fixHex!)}
-              >
-                {row.fix}
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function LivePreview(props: {
   shop: string;
