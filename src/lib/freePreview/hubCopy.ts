@@ -43,6 +43,11 @@ export const HUB_HEADERS = {
     h1: "We've got your request",
     sub: "We'll start designing {shopName}'s website soon. Add anything that helps — it's all optional.",
   },
+  /** Paid before the preview was sent (still requested / designing). */
+  subscribed: {
+    h1: "You're subscribed",
+    sub: "Next we design {shopName}'s website, then you review it here. Nothing goes live until you approve it.",
+  },
   designing: {
     h1: "We're designing your website",
     sub: "Your preview is being built individually for {shopName}. We'll email you when it's ready.",

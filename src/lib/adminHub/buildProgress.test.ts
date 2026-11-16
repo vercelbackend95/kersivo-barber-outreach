@@ -88,4 +88,10 @@ describe('websiteBuildProgress', () => {
     expect(websiteBuildProgressFromHubStage('review')?.stage).toBe('review');
     expect(websiteBuildProgressFromHubStage('expired')).toBeNull();
   });
+
+  it('keeps the real stage for an early subscriber and only changes the line', () => {
+    const early = websiteBuildProgressFromHubStage('designing', { paidEarly: true });
+    expect(early).toMatchObject({ stage: 'designing', stepOf: 'Step 2 of 5', copy: "Subscription active. We're building your website by hand." });
+    expect(websiteBuildProgressFromHubStage('launch', { paidEarly: true })?.copy).toBe(ADMIN_HUB_BUILD_COPY.launch);
+  });
 });

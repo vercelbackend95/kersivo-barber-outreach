@@ -63,6 +63,8 @@ export const ADMIN_HUB_BUILD_COPY = {
   launch: "We're connecting your domain and getting everything ready.",
   live: 'Your website is live.',
 } as const;
+/** Build tile line once the owner has subscribed before seeing the preview: the stage's own line, marked as paid. */
+export const ADMIN_HUB_BUILD_COPY_SUBSCRIBED = (stageCopy: string) => `Subscription active. ${stageCopy}`;
 export const ADMIN_HUB_BUILD_STEP_OF = (current: number, total: number) => `Step ${current} of ${total}`;
 export const ADMIN_HUB_BUILD_STEP_SR = (current: number, total: number, label: string) =>
   `Step ${current} of ${total}: ${label}`;
