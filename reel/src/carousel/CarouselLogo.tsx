@@ -20,12 +20,11 @@ export const CarouselLogo: React.FC = () => {
       }}
     >
       <Img
-        src={staticFile('logo_nobg.png')}
+        src={staticFile('kersivo-mark-reversed.svg')}
         style={{
           width: 56,
           height: 56,
           objectFit: 'contain',
-          filter: 'brightness(1.1)',
         }}
       />
       <span

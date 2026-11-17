@@ -72,7 +72,7 @@ describe('marketing navbar markup', () => {
 
   it('shows the brand as the logo mark only, with an accessible name', () => {
     expect(navbar).toContain('aria-label="KERSIVO home"');
-    expect(navbar).toContain('src="/images/brand/logo-mark-nav-36.webp"');
+    expect(navbar).toContain('src="/images/brand/kersivo-mark-reversed.svg"');
     expect(navbar).not.toContain('mnav__wordmark');
   });
 
