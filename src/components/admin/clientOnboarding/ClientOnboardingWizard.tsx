@@ -294,7 +294,7 @@ export default function ClientOnboardingWizard() {
           <div className="admin-onboarding__brand">
             <img
               className="admin-onboarding__logo"
-              src="/brand/kersivo-mark.svg"
+              src="/images/brand/kersivo-mark-reversed.svg"
               alt=""
               width={36}
               height={36}
@@ -325,7 +325,7 @@ export default function ClientOnboardingWizard() {
           <div className="admin-onboarding__brand">
             <img
               className="admin-onboarding__logo"
-              src="/brand/kersivo-mark.svg"
+              src="/images/brand/kersivo-mark-reversed.svg"
               alt=""
               width={36}
               height={36}

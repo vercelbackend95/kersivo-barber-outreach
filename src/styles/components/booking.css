@@ -3832,6 +3832,13 @@ button.admin-sidebar-brand--button:focus-visible {
   display: block;
 }
 
+/* Default KERSIVO mark: its pieces run to the artwork edge, so inset it to
+   keep the monogram's rounded corners from clipping them. */
+.admin-sidebar-monogram:not(.admin-sidebar-monogram--custom) .admin-sidebar-logo-img {
+  box-sizing: border-box;
+  padding: 10%;
+}
+
 .admin-sidebar-brand-text {
   display: flex;
   flex-direction: column;

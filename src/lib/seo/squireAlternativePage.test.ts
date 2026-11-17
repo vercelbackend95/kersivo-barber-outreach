@@ -146,7 +146,7 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
  });
  it('uses the exact same KERSIVO comparison logo as Booksy',()=>{
    const booksyComparison = read('../../components/booksyAlternative/BooksyCompare.astro');
-   const logo = '<img src="/images/brand/kersivo-mark.png" alt="" width="72" height="72" loading="lazy" decoding="async" />';
+   const logo = '<img src="/images/brand/kersivo-mark-reversed.svg" alt="" width="72" height="72" loading="lazy" decoding="async" />';
    expect(compare).toContain(logo);
    expect(booksyComparison).toContain(logo);
    expect(compare).not.toContain('src="/images/logo-kersivo.png"');

@@ -63,7 +63,7 @@ describe('Setora Alternative landing page', () => {
     expect(costs).toContain('no VAT currently added');
     expect(facts).toContain('vatCurrentlyAdded');
     expect(compare).toContain('data-setora-comparison');
-    expect(compare).toContain('src="/images/brand/kersivo-mark.png"');
+    expect(compare).toContain('src="/images/brand/kersivo-mark-reversed.svg"');
     const iconGenerator = read('../../../scripts/generate-favicons.mjs');
     expect(iconGenerator).toContain('kersivo-mark.png');
     expect(compare).not.toMatch(/>\s*fresha\s*<\/span>/i);

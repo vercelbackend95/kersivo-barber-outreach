@@ -175,7 +175,7 @@ const previewRealMenuGroups = menuGroups
   }))
   .filter((group) => group.items.length > 0);
 
-const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
+const DEFAULT_SIDEBAR_LOGO = '/images/brand/kersivo-mark-reversed.svg';
 
 function SidebarBrand({
   logoUrl = null,

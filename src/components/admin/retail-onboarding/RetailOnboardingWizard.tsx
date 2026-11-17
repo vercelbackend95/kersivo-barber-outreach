@@ -225,7 +225,7 @@ export default function RetailOnboardingWizard() {
       <div className={shellClass}>
         <header className="admin-onboarding__header">
           <div className="admin-onboarding__brand">
-            <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+            <img className="admin-onboarding__logo" src="/images/brand/kersivo-mark-reversed.svg" alt="" />
             <span className="admin-onboarding__brand-name">Kersivo</span>
           </div>
         </header>
@@ -283,7 +283,7 @@ export default function RetailOnboardingWizard() {
     <div className={shellClass}>
       <header className="admin-onboarding__header">
         <div className="admin-onboarding__brand">
-          <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+          <img className="admin-onboarding__logo" src="/images/brand/kersivo-mark-reversed.svg" alt="" />
           <span className="admin-onboarding__brand-name">Kersivo</span>
         </div>
         {setupProgressVisible ? (

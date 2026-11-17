@@ -7,23 +7,40 @@ import { buildKersivoOrganizationNode } from './kersivoEntityJsonLd';
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(path.join(ROOT, p), 'utf8');
+const FORBIDDEN_IN_FLAT_ART = /<(text|image|linearGradient|radialGradient|filter)\b/;
 
 describe('KERSIVO approved brand identity', () => {
-  it('derives icons from the EXACT user-approved transparent logo, without other artwork', async () => {
-    const file = readFileSync(path.join(ROOT, 'public/images/logo_nobg.png'));
-    expect(createHash('sha256').update(file).digest('hex')).toBe(
-      'ff609090e93b767632163a03cf149eaf29709eca31fe9e792b346f4eb5359555',
+  it('derives every icon from the approved flat vector mark (2026)', async () => {
+    // Line endings normalised so the pin holds on Windows checkouts too.
+    const svg = read('public/images/brand/kersivo-mark.svg').replace(/\r\n/g, '\n');
+    expect(createHash('sha256').update(svg).digest('hex')).toBe(
+      'c6dd806ad401005dd57df43384ce86c6b40d72c029eb91e9f3254cf0b64df13c',
     );
-    const image = await sharp(file).metadata();
-    expect([image.width, image.height, image.hasAlpha]).toEqual([796, 555, true]);
+    // Flat artwork only: two colours, no raster, gradient or filter.
+    expect(svg).toContain('#0b0d10');
+    expect(svg).toContain('#d72638');
+    expect(svg).not.toMatch(FORBIDDEN_IN_FLAT_ART);
     const generator = read('scripts/generate-favicons.mjs');
-    expect(generator).toContain("images', 'logo_nobg.png");
-    expect(generator).toContain("images', 'favicon.png");
-    expect(generator).toContain('faviconMaster = await sharp(sourcePixels)');
-    expect(generator).not.toContain('background: BACKGROUND');
-    expect(generator).toContain('left: 230, top: 4, width: 337, height: 371');
+    expect(generator).toContain("'images', 'brand', 'kersivo-mark.svg'");
+    expect(generator).not.toContain('logo_nobg.png');
     expect(generator).toContain('KERSIVO');
-    expect(generator).toContain("fs.writeFile(path.join(publicDir, 'images', 'logo-kersivo.png'), original)");
+    // Legacy stacked lockup URL keeps its size, now with the new artwork.
+    const legacy = await sharp(readFileSync(path.join(ROOT, 'public/images/logo_nobg.png'))).metadata();
+    expect([legacy.width, legacy.height, legacy.hasAlpha]).toEqual([796, 555, true]);
+  });
+
+  it('ships mono, reversed and lockup vector versions of the mark', () => {
+    for (const file of [
+      'kersivo-mark-black.svg', 'kersivo-mark-white.svg', 'kersivo-mark-reversed.svg',
+      'kersivo-lockup-horizontal.svg', 'kersivo-lockup-horizontal-reversed.svg',
+      'kersivo-lockup-stacked.svg', 'kersivo-lockup-stacked-reversed.svg',
+    ]) {
+      const svg = read(`public/images/brand/${file}`);
+      expect(svg, file).toContain('<title>KERSIVO</title>');
+      expect(svg, file).not.toMatch(FORBIDDEN_IN_FLAT_ART);
+    }
+    expect(read('public/images/brand/kersivo-mark-black.svg')).not.toContain('#d72638');
+    expect(read('public/images/brand/kersivo-mark-white.svg')).not.toContain('#d72638');
   });
 
   it('generates all favicon formats before the Astro build on every environment', () => {
@@ -44,11 +61,11 @@ describe('KERSIVO approved brand identity', () => {
 
   it('selects versioned real-colour icons for browser, Google and Apple', () => {
     const favicon = read('src/components/seo/FaviconLinks.astro');
-    expect(favicon).toContain('favicon.ico?v=3');
-    expect(favicon).toContain('favicon.svg?v=3');
-    expect(favicon).toContain('favicon-48x48.png?v=3');
-    expect(favicon).toContain('favicon-96x96.png?v=3');
-    expect(favicon).toContain('apple-touch-icon.png?v=3');
+    expect(favicon).toContain('favicon.ico?v=4');
+    expect(favicon).toContain('favicon.svg?v=4');
+    expect(favicon).toContain('favicon-48x48.png?v=4');
+    expect(favicon).toContain('favicon-96x96.png?v=4');
+    expect(favicon).toContain('apple-touch-icon.png?v=4');
     for (const layout of ['MainLayout', 'LandingLayout', 'MinimalLayout', 'DemoLayout']) {
       expect(read(`src/layouts/${layout}.astro`)).toContain('<FaviconLinks />');
     }
@@ -56,13 +73,13 @@ describe('KERSIVO approved brand identity', () => {
     expect(manifest.icons.map((x: { sizes: string }) => x.sizes)).toEqual(['192x192', '512x512']);
   });
 
-  it('uses the exact transparent K-only crop in Booksy and Fresha comparison panels', () => {
+  it('uses the reversed vector mark in Booksy and Fresha comparison panels', () => {
     for (const p of [
       'src/components/booksyAlternative/BooksyCompare.astro',
       'src/components/freshaAlternative/FreshaCompare.astro',
     ]) {
       const source = read(p);
-      expect(source).toContain('src="/images/brand/kersivo-mark.png"');
+      expect(source).toContain('src="/images/brand/kersivo-mark-reversed.svg"');
       expect(source).not.toContain('src="/images/logo-kersivo.png"');
     }
   });
@@ -75,8 +92,8 @@ describe('KERSIVO approved brand identity', () => {
       width: 512,
       height: 512,
     });
-    expect(read('scripts/generate-favicons.mjs')).toContain("const CANVAS = 512;");
+    expect(read('scripts/generate-favicons.mjs')).toContain('const CANVAS = 512;');
     expect(read('src/components/navigation/marketing/MarketingNavbar.astro'))
-      .toContain('src="/images/brand/logo-mark-nav-36.webp"');
+      .toContain('src="/images/brand/kersivo-mark-reversed.svg"');
   });
 });

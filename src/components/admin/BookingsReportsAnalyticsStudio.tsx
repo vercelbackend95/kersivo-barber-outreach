@@ -86,7 +86,7 @@ const REPORTS_CHART_METRIC_OPTIONS = [
   { value: 'cancelRate' as const, label: 'Cancel %' },
 ];
 
-const KERSIVO_LOGO_SRC = '/images/logo-kersivo-dynamic.svg';
+const KERSIVO_LOGO_SRC = '/images/brand/kersivo-mark-reversed.svg';
 
 function formatPricePence(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);

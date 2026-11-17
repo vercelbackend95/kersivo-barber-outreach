@@ -1,11 +1,14 @@
 /**
  * Build the KERSIVO icon set only from user-approved artwork.
  *
- * COMPARISON SOURCE: public/images/logo_nobg.png (existing full brand logo)
- * FAVICON SOURCE: public/images/favicon.png (new transparent standalone K)
+ * SOURCE: public/images/brand/kersivo-mark.svg — the approved 2026 flat
+ * vector K (four pieces on one 45° grid, near-black #0b0d10 + brand red
+ * #d72638). Every icon below is rasterised from that SVG; nothing is redrawn,
+ * recoloured by hand or cropped from older raster artwork.
  *
- * The two sources serve different purposes. Favicon pixels are never drawn,
- * recoloured or placed on an opaque background.
+ * Transparent canvas throughout, except apple-touch-icon.png: iOS fills
+ * transparency with black, which would hide the near-black pieces, so that one
+ * icon sits on white.
  *
  * Invoked in the Vercel build plan before Astro, and manually via:
  *   npm run generate:favicons
@@ -18,20 +21,26 @@ import sharp from 'sharp';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicDir = path.join(root, 'public');
-const source = path.join(publicDir, 'images', 'logo_nobg.png');
+const source = path.join(publicDir, 'images', 'brand', 'kersivo-mark.svg');
 const markPath = path.join(publicDir, 'images', 'brand', 'kersivo-mark.png');
-const faviconSource = path.join(publicDir, 'images', 'favicon.png');
 
-// Pixel-aligned crop of the K only. Original wordmark begins at y≈442.
-const K_CROP = { left: 230, top: 4, width: 337, height: 371 };
+const INK = '#0b0d10';
 const CANVAS = 512;
-const MARK_SIZE = 456; // comfortable margin at favicon sizes
-// Transparent canvas throughout. Do not add a dark square behind the K.
+const MARK_SIZE = 456; // comfortable margin for the 512px JSON-LD / directory mark
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 };
 
-const resizeOptions = {
-  fit: 'contain',
-  background: { r: 0, g: 0, b: 0, alpha: 0 },
-};
+/** Rasterise the SVG so that the mark fits `box`×`box`, centred on a `size` canvas. */
+export async function renderMark(svg, size, box = size, background = TRANSPARENT) {
+  const pixels = await sharp(Buffer.from(svg), { density: Math.min(2400, Math.max(72, (72 * box * 2) / 520)) })
+    .resize(box, box, { fit: 'contain', background: TRANSPARENT, kernel: 'lanczos3' })
+    .png()
+    .toBuffer();
+  const pad = Math.round((size - box) / 2);
+  return sharp({ create: { width: size, height: size, channels: 4, background } })
+    .composite([{ input: pixels, left: pad, top: pad }])
+    .png()
+    .toBuffer();
+}
 
 /** Pack PNG data into an ICO containing 16, 32 and 48px entries. */
 function pngsToIco(images) {
@@ -53,93 +62,57 @@ function pngsToIco(images) {
   return Buffer.concat([header, ...images.map(x => x.png)]);
 }
 
+/**
+ * favicon.svg: the same vector, with a square viewBox and the near-black
+ * pieces switching to white when the browser UI is dark.
+ */
+function adaptiveFaviconSvg(svg) {
+  const vb = svg.match(/viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) ([\d.]+)"/);
+  if (!vb) throw new Error('kersivo-mark.svg has no viewBox.');
+  const [x, y, w, h] = vb.slice(1).map(Number);
+  const side = Math.max(w, h);
+  const square = `${x - (side - w) / 2} ${y - (side - h) / 2} ${side} ${side}`;
+  const paths = svg.match(/<path [^>]*\/>/g) ?? [];
+  const body = paths
+    .map(p => p.replace(`fill="${INK}"`, 'class="k-ink"'))
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${square}"><style>.k-ink{fill:${INK}}@media (prefers-color-scheme:dark){.k-ink{fill:#ffffff}}</style>${body}</svg>\n`;
+}
+
 export async function generateKersivoBrandIcons() {
-  const original = await fs.readFile(source);
+  const svg = await fs.readFile(source, 'utf8');
   // SHA-256 fingerprint protects against unintentionally swapping the approved source.
-  const fingerprint = createHash('sha256').update(original).digest('hex');
-  const meta = await sharp(original).metadata();
-  if (meta.width !== 796 || meta.height !== 555 || meta.hasAlpha !== true) {
-    throw new Error('KERSIVO logo_nobg.png has unexpected dimensions/transparency. Review K crop before generating icons.');
+  const fingerprint = createHash('sha256').update(svg).digest('hex');
+  if (!svg.includes(INK) || !svg.includes('#d72638') || /<(image|linearGradient|radialGradient|filter)\b/.test(svg)) {
+    throw new Error('kersivo-mark.svg must be the flat two-colour KERSIVO mark (no images, gradients or filters).');
   }
 
-  // Extract *exact original pixels* of the coloured K, omitting only the text.
-  const k = await sharp(original).extract(K_CROP).png().toBuffer();
-
-  // Transparent square K used in Comparison: same design, no backdrop or wordmark.
-  const paddedK = await sharp(k).resize(MARK_SIZE, MARK_SIZE, resizeOptions).png().toBuffer();
-  const pad = (CANVAS - MARK_SIZE) / 2;
-  const transparentMark = await sharp({
-    create: { width: CANVAS, height: CANVAS, channels: 4, background: '#00000000' },
-  }).composite([{ input: paddedK, left: pad, top: pad }]).png().toBuffer();
-
-  // The new favicon source was approved separately by the founder: it is an
-  // isolated K with alpha, already supplied at public/images/favicon.png.
-  // Never regenerate it from the older wordmark or place it in a dark box.
-  let sourcePixels;
-  try {
-    sourcePixels = await fs.readFile(faviconSource);
-  } catch (error) {
-    if (error && error.code === 'ENOENT') {
-      throw new Error(
-        'Missing public/images/favicon.png. Add and commit the approved transparent K asset before building.',
-      );
-    }
-    throw error;
+  // Small sizes fill the canvas edge to edge; larger ones keep a margin.
+  const iconBox = { 16: 16, 32: 32, 48: 48, 96: 88, 192: 172, 512: 456 };
+  const icons = new Map();
+  for (const [size, box] of Object.entries(iconBox)) {
+    icons.set(Number(size), await renderMark(svg, Number(size), box));
   }
-
-  const iconMeta = await sharp(sourcePixels).metadata();
-  if (
-    iconMeta.format !== 'png' ||
-    !iconMeta.hasAlpha ||
-    Math.min(iconMeta.width ?? 0, iconMeta.height ?? 0) < 96
-  ) {
-    throw new Error(
-      'public/images/favicon.png must be a transparent PNG with both dimensions at least 96px.',
-    );
-  }
-
-  // Prevent accidentally publishing a square background again.
-  const corner = await sharp(sourcePixels)
-    .ensureAlpha()
-    .extract({ left: 0, top: 0, width: 1, height: 1 })
-    .raw()
-    .toBuffer();
-  if (corner[3] !== 0) {
-    throw new Error('public/images/favicon.png has an opaque top-left corner; remove its background.');
-  }
-
-  const faviconMaster = await sharp(sourcePixels)
-    .resize(CANVAS, CANVAS, resizeOptions)
-    .png()
-    .toBuffer();
-
-  const sizes = [16, 32, 48, 96, 180, 192, 512];
-  const icons = new Map(await Promise.all(sizes.map(async size => [
-    size, await sharp(faviconMaster).resize(size, size, { kernel: 'lanczos3' }).png().toBuffer(),
-  ])));
 
   const ico = pngsToIco([16, 32, 48].map(size => ({ size, png: icons.get(size) })));
-  // Self-contained SVG (no cross-file mask, no CSS colour forcing).
-  // Embeds an image resampled solely from the user's original letter K.
-  const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><image width="96" height="96" href="data:image/png;base64,${icons.get(96).toString('base64')}"/></svg>\n`;
+  const transparentMark = await renderMark(svg, CANVAS, MARK_SIZE);
+  const appleTouch = await renderMark(svg, 180, 128, { r: 255, g: 255, b: 255, alpha: 1 });
 
   await fs.mkdir(path.dirname(markPath), { recursive: true });
   await Promise.all([
+    // Organization JSON-LD logo (Google uses this URL): keep the filename.
     fs.writeFile(markPath, transparentMark),
-    // Backward-compatible URLs: replace the retired white artwork, not the approved source.
-    fs.writeFile(path.join(publicDir, 'images', 'logo-kersivo.png'), original),
-    fs.writeFile(path.join(publicDir, 'reel-assets', 'logo.png'), original),
     fs.writeFile(path.join(publicDir, 'favicon.ico'), ico),
-    fs.writeFile(path.join(publicDir, 'favicon.svg'), faviconSvg),
+    fs.writeFile(path.join(publicDir, 'favicon.svg'), adaptiveFaviconSvg(svg)),
     fs.writeFile(path.join(publicDir, 'favicon-32x32.png'), icons.get(32)),
     fs.writeFile(path.join(publicDir, 'favicon-48x48.png'), icons.get(48)),
     fs.writeFile(path.join(publicDir, 'favicon-96x96.png'), icons.get(96)),
     fs.writeFile(path.join(publicDir, 'favicon-192x192.png'), icons.get(192)),
     fs.writeFile(path.join(publicDir, 'favicon-512x512.png'), icons.get(512)),
-    fs.writeFile(path.join(publicDir, 'apple-touch-icon.png'), icons.get(180)),
+    fs.writeFile(path.join(publicDir, 'apple-touch-icon.png'), appleTouch),
   ]);
 
-  console.log(`[brand] Generated transparent K favicon from public/images/favicon.png; comparison remains based on logo_nobg.png (sha256:${fingerprint.slice(0, 12)}…)`);
+  console.log(`[brand] Generated KERSIVO icons from images/brand/kersivo-mark.svg (sha256:${fingerprint.slice(0, 12)}…)`);
 }
 
 const calledDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
