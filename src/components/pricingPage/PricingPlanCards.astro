@@ -5,6 +5,7 @@
  */
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { PRICING_BILLING_COLUMNS, PRICING_FACTS_STRIPE_NOTE, PRICING_PLAN_CARDS, PRICING_PLAN_LEAD } from '@/lib/pricing/pricingPlans';
+import { FREE_PREVIEW_BILLING_CLAIM } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 interface Props {
@@ -151,7 +152,7 @@ const perBarber = (SAAS_MONTHLY_GBP / DEFAULT_BARBERS).toFixed(2);
       {PRICING_BILLING_COLUMNS.map((column) => (
         <li class="pr-billing__item pr-reveal">
           <h3 class="pr-billing__title">{column.title}</h3>
-          <p class="pr-body">{column.body}</p>
+          <p class="pr-body">{freePreview && column.id === 'billing' ? FREE_PREVIEW_BILLING_CLAIM : column.body}</p>
         </li>
       ))}
     </ul>

@@ -229,6 +229,74 @@
   border: 0;
 }
 
+/* Phones: the first-layer banner must not cover the hero. The title stays in the accessibility tree
+   (it labels the dialog) but is hidden visually, the policy link runs on from the body text, and
+   "Manage preferences" becomes a text button on the same row as the two equal-weight choices. */
+@media (max-width: 39.99rem) {
+  .cookie-consent__banner-inner {
+    display: block;
+    padding: 0.5rem 0.6rem 0.35rem;
+    /* Body and policy run inline, so the block's own line box sets their line spacing. */
+    font-size: 0.6875rem;
+    line-height: 1.3;
+  }
+
+  .cookie-consent__banner .cookie-consent__title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .cookie-consent__banner .cookie-consent__body,
+  .cookie-consent__banner .cookie-consent__policy {
+    display: inline;
+  }
+
+  .cookie-consent__banner .cookie-consent__policy::before {
+    content: ' ';
+  }
+
+  .cookie-consent__banner .cookie-consent__actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: center;
+    margin-top: 0.45rem;
+  }
+
+  .cookie-consent__banner .cookie-consent__btn--accept,
+  .cookie-consent__banner .cookie-consent__btn--reject {
+    min-height: 40px;
+    padding-inline: 0.35rem;
+    white-space: normal;
+    line-height: 1.15;
+  }
+
+  .cookie-consent__banner .cookie-consent__btn--manage {
+    grid-column: auto;
+    width: auto;
+    max-width: 5.75rem;
+    min-height: 40px;
+    padding-inline: 0.25rem;
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+    background: none;
+    border-color: transparent;
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cookie-consent__banner .cookie-consent__btn--manage:hover {
+    color: var(--fg);
+  }
+}
+
 @media (min-width: 40rem) {
   .cookie-consent__banner {
     padding: 1rem;

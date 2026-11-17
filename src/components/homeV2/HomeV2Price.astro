@@ -3,6 +3,7 @@ import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { offer } from '@/content/offer';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import {
+  FREE_PREVIEW_BILLING_CLAIM,
   KERSIVO_COMMISSION_WITH_STRIPE,
   PLAN_SCOPE_HIGHLIGHTS,
   PLAN_SCOPE_PILLS,
@@ -18,15 +19,27 @@ import {
 
 const freePreview = isFreePreviewFlowEnabled();
 const MAX_BARBERS = 10;
-const DEFAULT_BARBERS = 5;
+const DEFAULT_BARBERS = 4;
 
 const money = (amount: number) => (Number.isInteger(amount) ? `£${amount}` : `£${amount.toFixed(2)}`);
 
+const barbers = (count: number) => `${count} ${count === 1 ? 'barber' : 'barbers'}`;
+
 const rows = Array.from({ length: MAX_BARBERS }, (_, index) => {
   const estimate = estimateBooksyMonthlySubscription(index + 1);
-  // Difference against the Booksy price before VAT, the more conservative of the two figures.
-  const less = Math.max(0, estimate.exVatGbp - SAAS_MONTHLY_GBP);
-  return { users: estimate.users, ex: money(estimate.exVatGbp), inc: money(estimate.incVatGbp), incValue: estimate.incVatGbp, less: money(less) };
+  // KERSIVO adds no VAT, so the like-for-like bill is Booksy including VAT. The before-VAT gap is
+  // shown next to it for shops that can reclaim VAT.
+  const less = Math.max(0, estimate.incVatGbp - SAAS_MONTHLY_GBP);
+  const lessExVat = Math.max(0, estimate.exVatGbp - SAAS_MONTHLY_GBP);
+  return {
+    users: estimate.users,
+    label: barbers(estimate.users),
+    ex: money(estimate.exVatGbp),
+    inc: money(estimate.incVatGbp),
+    incValue: estimate.incVatGbp,
+    less: money(less),
+    lessExVat: money(lessExVat),
+  };
 });
 const scaleMax = rows[rows.length - 1].incValue;
 const initial = rows[DEFAULT_BARBERS - 1];
@@ -53,7 +66,7 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
           <li>{offer.fees.setup}</li>
           <li>No VAT added</li>
           <li>{KERSIVO_COMMISSION_WITH_STRIPE}</li>
-          <li>{offer.billing.cycle}</li>
+          <li>{freePreview ? FREE_PREVIEW_BILLING_CLAIM : offer.billing.cycle}</li>
         </ul>
         <div class="hv2-plan__actions">
           {freePreview ? (
@@ -119,18 +132,18 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
             <span class="hv2-compare__bar hv2-compare__bar--kersivo" style={`--w: ${pct(SAAS_MONTHLY_GBP)}`} aria-hidden="true"></span>
           </div>
           <div class="hv2-compare__row">
-            <p class="hv2-compare__name">Booksy subscription, <span data-hv2-compare-users>{initial.users}</span> users</p>
+            <p class="hv2-compare__name">Booksy subscription for <span data-hv2-compare-users>{initial.label}</span></p>
             <p class="hv2-compare__value">
-              <strong data-hv2-compare-ex>{initial.ex}/month + VAT</strong>
-              <span>(<span data-hv2-compare-inc>{initial.inc}</span> including VAT)</span>
+              <strong><span data-hv2-compare-inc>{initial.inc}</span>/month including VAT</strong>
+              <span>(<span data-hv2-compare-ex>{initial.ex}</span> + VAT)</span>
             </p>
             <span class="hv2-compare__bar" style={`--w: ${pct(initial.incValue)}`} aria-hidden="true" data-hv2-compare-bar></span>
           </div>
         </div>
         <p class="hv2-compare__less">
-          <span>With <span data-hv2-compare-team>{initial.users} barbers</span> you pay</span>
+          <span>With <span data-hv2-compare-team>{initial.label}</span> you pay</span>
           <strong data-hv2-compare-less>{initial.less}</strong>
-          <span>a month less than the Booksy subscription before VAT, and the gap grows with every barber you add.</span>
+          <span>a month less than the Booksy subscription including VAT (<span data-hv2-compare-less-ex>{initial.lessExVat}</span> less before VAT), and the gap grows with every barber you add.</span>
         </p>
         <p id="hv2-compare-source" class="hv2-compare__source">
           Booksy lists {money(BOOKSY_BASE_PRICE_GBP)}/month plus {money(BOOKSY_ADDITIONAL_USER_GBP)} for each additional user, before VAT. Prices checked {BOOKSY_FACTS_CHECKED_DATE} on <a href={BOOKSY_SOURCE_PRICING}>Booksy's UK pricing page</a>. Card processing fees apply on both. <a href="/barber-software-cost-calculator">Compare the full cost</a>
@@ -141,7 +154,7 @@ const pct = (value: number) => `${((value / scaleMax) * 100).toFixed(2)}%`;
         <script
           type="application/json"
           data-hv2-compare-data
-          set:html={JSON.stringify(rows.map(({ users, ex, inc, incValue, less }) => ({ users, ex, inc, less, w: pct(incValue) })))}
+          set:html={JSON.stringify(rows.map(({ users, label, ex, inc, incValue, less, lessExVat }) => ({ users, label, ex, inc, less, lessExVat, w: pct(incValue) })))}
         />
       </div>
     </div>
