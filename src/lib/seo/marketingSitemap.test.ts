@@ -91,11 +91,11 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-29');
     // Same constant as the homepage WebPage dateModified.
     expect(byLoc['https://kersivo.co.uk/']).toBe(HOMEPAGE_LAST_UPDATED_ISO);
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-10-28');
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-11-14'); // rebuilt 14 Nov 2026
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-11-14');
-    for (const path of ['/barbershop-websites', '/barbershop-website-design', '/barbershop-online-booking']) {
-      expect(byLoc[`https://kersivo.co.uk${path}`]).toBe('2026-10-28'); // last commit touching the page source
-    }
+    expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-13'); // rebuilt 13 Nov 2026
+    expect(byLoc['https://kersivo.co.uk/barbershop-website-design']).toBe('2026-11-14'); // rebuilt 14 Nov 2026
+    expect(byLoc['https://kersivo.co.uk/barbershop-online-booking']).toBe('2026-10-28'); // last commit touching the page source
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-13');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-14');

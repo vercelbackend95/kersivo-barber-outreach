@@ -20,7 +20,7 @@ import { FREE_PREVIEW_PAGE_LAST_UPDATED_ISO } from './freePreviewPage';
 import { FREE_PREVIEW_PAGE_PATH } from '@/lib/freePreview/config';
 import { NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO, NEARCUT_ALTERNATIVE_PAGE_PATH } from './nearcutAlternativeFaq';
 import { PHOREST_ALTERNATIVE_LAST_UPDATED_ISO, PHOREST_ALTERNATIVE_PAGE_PATH } from './phorestAlternativeFaq';
-import { PRICING_PAGE_LAST_UPDATED_ISO, PRICING_PAGE_PATH } from './pricingPage';
+import { PRICING_PAGE_CONTENT_MODIFIED_ISO, PRICING_PAGE_PATH } from './pricingPage';
 import { SETORA_ALTERNATIVE_LAST_UPDATED_ISO, SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { SQUARE_ALTERNATIVE_LAST_UPDATED_ISO, SQUARE_ALTERNATIVE_PAGE_PATH } from './squareAlternativeFaq';
 import { SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO, SQUIRE_ALTERNATIVE_PAGE_PATH } from './squireAlternativeFaq';
@@ -39,15 +39,18 @@ import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } fro
  * meaningfully changes. Never derive it from build, deploy or file-system times.
  * Insights articles/archives are dated from the Insights registry (updatedDate ?? publishedDate).
  */
-/** Seeded from `git log -1 --format=%cs -- <page source>` on 28 October 2026. */
-export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-10-28';
-export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-10-28';
+/**
+ * Seeded from `git log -1 --format=%cs -- <page source>` on 28 October 2026, then updated by hand
+ * when a page was rebuilt: /barbershop-websites on 13 Nov 2026, /barbershop-website-design on 14 Nov 2026.
+ */
+export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-11-13';
+export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-11-14';
 export const BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO = '2026-10-28';
 
 export const STATIC_PAGE_LAST_MODIFIED: Readonly<Record<string, string>> = {
   /** Same constant as the homepage WebPage dateModified. */
   '/': HOMEPAGE_LAST_UPDATED_ISO,
-  [PRICING_PAGE_PATH]: PRICING_PAGE_LAST_UPDATED_ISO,
+  [PRICING_PAGE_PATH]: PRICING_PAGE_CONTENT_MODIFIED_ISO,
   [STARTER_PAGE_PATH]: STARTER_PAGE_LAST_UPDATED_ISO,
   [BARBERSHOP_WEBSITES_PAGE_PATH]: BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO,
   [BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH]: BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO,

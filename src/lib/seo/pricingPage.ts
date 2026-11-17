@@ -21,6 +21,12 @@ export const PRICING_PAGE_H1 = 'KERSIVO pricing for independent barbershops';
 
 export const PRICING_PAGE_LAST_UPDATED_ISO = '2026-10-28';
 export const PRICING_PAGE_LAST_UPDATED_LABEL = '28 October 2026';
+/**
+ * When the /pricing page content last changed (rebuild on 14 Nov 2026). Used for the sitemap
+ * <lastmod> and WebPage dateModified. PRICING_PAGE_LAST_UPDATED_ISO stays the "terms as of"
+ * date shown in the comparison hub, because KERSIVO's prices and terms did not change.
+ */
+export const PRICING_PAGE_CONTENT_MODIFIED_ISO = '2026-11-14';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
@@ -170,7 +176,7 @@ export function buildPricingWebPageJsonLd(): Record<string, unknown> {
     name: PRICING_PAGE_TITLE,
     description: PRICING_PAGE_DESCRIPTION,
     inLanguage: 'en-GB',
-    dateModified: PRICING_PAGE_LAST_UPDATED_ISO,
+    dateModified: PRICING_PAGE_CONTENT_MODIFIED_ISO,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
     about: { '@id': getKersivoOrganizationId(siteUrl) },
