@@ -166,9 +166,9 @@ describe('Owner-intent bridges', () => {
     }
   });
 
-  it('points the owner-earnings article at booking costs by team size', () => {
+  it('points the owner-earnings article at the free preview', () => {
     const next = getInsightsCommercialNext('how-much-do-barbershop-owners-make-uk');
-    expect(next?.href).toBe('/compare#cost-by-team-size');
+    expect(next?.href).toBe('/free-preview');
     expect(next?.note).toMatch(/£39\/month per location/);
     expect(next?.note).toMatch(/0% KERSIVO commission[^]*Stripe[^.]*fees/);
     expect(getInsightsRelatedLinks('how-much-do-barbershop-owners-make-uk').filter((l) => l.kind !== 'article')).toEqual([]);
