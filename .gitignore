@@ -43,3 +43,9 @@ scripts/preview-hub/.qa-emails.json
 calibration-output/
 
 sionToken
+
+# Local scratch (not part of KERSIVO)
+scripts/_*
+.preview-hub-pgdata*/
+design-concepts/
+.impeccable/
