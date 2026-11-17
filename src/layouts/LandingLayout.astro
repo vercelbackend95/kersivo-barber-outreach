@@ -89,6 +89,15 @@ const jsonLdBlocks = jsonLd
     </style>
     {/* fallback="none": browsers without view transitions keep normal page loads, so the veil can never stick. */}
     <ClientRouter fallback="none" />
+    {/* Vercel Web Analytics: cookieless page-view counts (no cookies or device storage, so it runs
+        without consent). Marketing layout only, so private /preview/{token} and admin URLs are never
+        sent. The script is served by Vercel at /_vercel/insights once Web Analytics is enabled. */}
+    {import.meta.env.PROD && (
+      <>
+        <script is:inline>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+        <script is:inline defer src="/_vercel/insights/script.js"></script>
+      </>
+    )}
     <slot name="head" />
   </head>
   <body>

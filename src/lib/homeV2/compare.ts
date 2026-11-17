@@ -1,4 +1,4 @@
-type CompareRow = { users: number; ex: string; inc: string; less: string; w: string };
+type CompareRow = { users: number; label: string; ex: string; inc: string; less: string; lessExVat: string; w: string };
 
 /** Barber-count slider: swaps in the server-computed Booksy estimate for the chosen team size. */
 export function createCompare(root: HTMLElement): (() => void) | null {
@@ -20,6 +20,7 @@ export function createCompare(root: HTMLElement): (() => void) | null {
   const bar = root.querySelector<HTMLElement>('[data-hv2-compare-bar]');
   const team = root.querySelector<HTMLElement>('[data-hv2-compare-team]');
   const less = root.querySelector<HTMLElement>('[data-hv2-compare-less]');
+  const lessEx = root.querySelector<HTMLElement>('[data-hv2-compare-less-ex]');
   const seats = Array.from(root.querySelectorAll<HTMLElement>('[data-hv2-compare-seats] > li'));
 
   const update = () => {
@@ -31,11 +32,12 @@ export function createCompare(root: HTMLElement): (() => void) | null {
     range.style.setProperty('--fill', `${((value - min) / (max - min)) * 100}%`);
     range.setAttribute('aria-valuetext', `${value} ${value === 1 ? 'barber' : 'barbers'}`);
     if (count) count.textContent = String(value);
-    if (users) users.textContent = String(row.users);
-    if (ex) ex.textContent = `${row.ex}/month + VAT`;
+    if (users) users.textContent = row.label;
+    if (ex) ex.textContent = row.ex;
     if (inc) inc.textContent = row.inc;
     if (bar) bar.style.setProperty('--w', row.w);
-    if (team) team.textContent = `${value} ${value === 1 ? 'barber' : 'barbers'}`;
+    if (team) team.textContent = row.label;
+    if (lessEx) lessEx.textContent = row.lessExVat;
     if (less && less.textContent !== row.less) {
       less.textContent = row.less;
       // Restart the small pop on the figure each time it changes.

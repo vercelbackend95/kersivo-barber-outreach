@@ -320,8 +320,9 @@ function bindPrice(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Documen
     }, 'top 82%');
   }
 
-  // Team-size comparison follows the scroll: the shop grows from one barber to ten while the card
-  // passes through the screen, and the KERSIVO line stays put. Once the visitor uses the slider, it is theirs.
+  // Team-size comparison follows the scroll: the shop grows from the default team size (never fewer
+  // barbers than the server-rendered value) to ten while the card passes through the screen, and the
+  // KERSIVO line stays put. Once the visitor uses the slider, it is theirs.
   const compare = root.querySelector<HTMLElement>('[data-hv2-compare]');
   const range = compare?.querySelector<HTMLInputElement>('[data-hv2-compare-range]');
   let touched = false;
@@ -334,9 +335,9 @@ function bindPrice(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Documen
   if (compare && range) {
     range.addEventListener('pointerdown', touch);
     range.addEventListener('keydown', touch);
-    const min = Number(range.min) || 1;
+    const min = Number(range.value) || Number(range.min) || 1;
     const max = Number(range.max) || 10;
-    let last = Number(range.value);
+    let last = min;
     const follow = (progress: number) => {
       if (touched) return;
       const value = Math.round(min + progress * (max - min));
