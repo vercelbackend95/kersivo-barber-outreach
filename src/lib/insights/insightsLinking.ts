@@ -325,9 +325,9 @@ const COMMERCIAL: Record<string, InsightsCommercialNext> = {
     note: `Starter takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment on every public booking; on Full KERSIVO the shop chooses Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment. ${STRIPE_FEES_NOTE} Your cancellation policy is still yours to set.`,
   },
   [INSIGHTS_OWNER_EARNINGS.slug]: {
-    href: '/compare#cost-by-team-size',
-    label: 'Compare what UK booking platforms cost for a team your size',
-    note: `Card processing and booking costs are one of the three lines behind the profit gap above. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
+    href: '/free-preview',
+    label: 'Own a shop? See your own booking website first: get a free preview',
+    note: `Card processing and booking costs are one of the three lines behind the profit gap above. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location, and the preview is free: no card, no call. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   },
   [INSIGHTS_WALK_INS.slug]: {
     href: '/barbershop-websites',
