@@ -1070,6 +1070,14 @@ button.adt-avatar:focus-visible {
   min-width: 0;
 }
 
+/* The hook above out-ranks the narrow-container card layout: restore it on phones so
+   order rows do not keep the desktop columns and clip the Collect / Take payment button. */
+@container adt (max-width: 44rem) {
+  .adt .admin-orders-grid-item {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
 .adt .admin-orders-grid-actions,
 .adt .admin-orders-grid-item--expanded .admin-orders-grid-actions {
   grid-column: auto;

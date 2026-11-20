@@ -589,6 +589,8 @@
     width: 100%;
     height: auto;
     max-height: 94dvh;
+    /* The drag handle is a grid item on phones: keep header rows fixed so only the body scrolls. */
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     border-left: 0;
     border-top: 1px solid var(--sf-cart-border);
     border-radius: var(--sf-cart-sheet-radius) var(--sf-cart-sheet-radius) 0 0;
@@ -637,4 +639,78 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
+}
+
+/* Pay-at-collection details step (shop takes payment in store). */
+.sf-cart-details {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.5rem 0.1rem 0.75rem;
+}
+
+.sf-cart-details-title {
+  margin: 0;
+  font-family: var(--sf-cart-font-heading);
+  font-size: clamp(1.6rem, 4.5vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.sf-cart-details-title:focus {
+  outline: none;
+}
+
+.sf-cart-details-title:focus-visible {
+  outline: 2px solid var(--sf-cart-accent);
+  outline-offset: 4px;
+}
+
+.sf-cart-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.sf-cart-field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sf-cart-text);
+}
+
+.sf-cart-field-optional {
+  font-weight: 400;
+  color: var(--sf-cart-muted);
+}
+
+.sf-cart-field input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--sf-cart-border);
+  border-radius: var(--sf-cart-radius);
+  background: var(--sf-cart-surface);
+  color: var(--sf-cart-text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.sf-cart-field input:focus-visible {
+  outline: 2px solid var(--sf-cart-accent);
+  outline-offset: 1px;
+  border-color: var(--sf-cart-accent);
+}
+
+.sf-cart-field input[aria-invalid='true'] {
+  border-color: var(--danger, #ef4444);
+}
+
+.sf-cart-field input:disabled {
+  opacity: 0.6;
+}
+
+/* Reserved confirmation sits in the flexible row: keep its content at the top. */
+.sf-cart-success[data-sf-cart-reserved] {
+  align-content: start;
 }

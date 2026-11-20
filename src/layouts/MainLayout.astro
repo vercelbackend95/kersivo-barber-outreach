@@ -46,6 +46,8 @@ interface Props extends PageSeo {
   brandLogoUrl?: string | null;
   /** Empty-bag explore link. */
   exploreHref?: string;
+  /** Tenant shop retail payment setting; PAY_AT_COLLECTION makes the bag reserve instead of opening Stripe. */
+  retailPaymentMode?: 'FULL_UPFRONT' | 'PAY_AT_COLLECTION';
   /**
    * When false, omit the entire KERSIVO marketing analytics bootstrap:
    * GoogleAnalytics / Ads tags, CookieConsent (which can load gtag on accept),
@@ -74,6 +76,7 @@ const {
   shopName,
   brandLogoUrl = null,
   exploreHref,
+  retailPaymentMode,
   enableAnalytics = true,
 } = Astro.props;
 
@@ -86,7 +89,11 @@ const jsonLdBlocks = jsonLd
 const cartNamespace = shopId ? { shopId } : null;
 const cartShopName = shopName?.trim() || (publicDemoMode ? 'KERSIVO' : 'Shop');
 const cartExploreHref = exploreHref ?? (shopId ? `/shop/${shopId}` : '/shop');
-const cartCheckout = publicDemoMode ? { type: 'publicDemo' as const } : { type: 'live' as const };
+const cartCheckout = publicDemoMode
+  ? { type: 'publicDemo' as const }
+  : retailPaymentMode
+    ? { type: 'live' as const, paymentMode: retailPaymentMode }
+    : { type: 'live' as const };
 const currentPath = Astro.url.pathname;
 const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' && !publicDemoMode;
 ---

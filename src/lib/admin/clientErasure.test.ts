@@ -616,7 +616,7 @@ describe('eraseClientPersonalDataInTransaction', () => {
     });
     expect(orderUpdate).toHaveBeenCalledWith({
       where: { id: 'ord-1' },
-      data: { customerEmail: erasedOrderEmailPlaceholder('ord-1') },
+      data: { customerEmail: erasedOrderEmailPlaceholder('ord-1'), customerName: null, customerPhone: null },
     });
 
     expect(clientDelete).toHaveBeenCalledWith({ where: { id: 'client-1' } });
@@ -748,7 +748,7 @@ describe('eraseClientPersonalDataInTransaction', () => {
     });
     expect(orderUpdate).toHaveBeenCalledWith({
       where: { id: 'ord-cased' },
-      data: { customerEmail: erasedOrderEmailPlaceholder('ord-cased') },
+      data: { customerEmail: erasedOrderEmailPlaceholder('ord-cased'), customerName: null, customerPhone: null },
     });
     expect(emailOutboundDeleteMany).toHaveBeenCalledWith({
       where: {

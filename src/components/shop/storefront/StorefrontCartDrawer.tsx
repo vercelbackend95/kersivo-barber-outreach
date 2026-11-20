@@ -19,11 +19,13 @@ import { formatStorefrontPrice, type StorefrontPriceFormat } from '@/lib/shop/st
 import type { StorefrontImageFallback } from '@/lib/shop/storefrontTheme';
 import ProductMediaFallback from '@/components/shop/storefront/ProductMediaFallback';
 import {
+  ReservationDetailsRequiredError,
   emptyBagCheckoutMessage,
   isHrefCheckout,
   makeCheckoutIdempotencyKey,
   submitStorefrontCheckout,
   type DemoOrderSnapshot,
+  type ReservationResult,
   type StorefrontCheckoutConfig,
   type TestOrderResult,
 } from '@/lib/shop/storefrontCheckout';
@@ -111,6 +113,31 @@ function primaryCheckoutLabel(mode: StorefrontCartMode, loading: boolean) {
   return 'CONTINUE TO CHECKOUT';
 }
 
+type ReservationField = 'customerName' | 'customerEmail' | 'customerPhone';
+
+type ReservationDraft = {
+  name: string;
+  email: string;
+  phone: string;
+};
+
+const EMPTY_RESERVATION_DRAFT: ReservationDraft = { name: '', email: '', phone: '' };
+
+/** Client-side mirror of normalizeReservationContact (the API re-validates). */
+function validateReservationDraft(draft: ReservationDraft): { field: ReservationField; error: string } | null {
+  if (!draft.name.trim()) {
+    return { field: 'customerName', error: 'Enter your name so the shop knows who is collecting.' };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) {
+    return { field: 'customerEmail', error: 'Enter a valid email address for your confirmation.' };
+  }
+  const phone = draft.phone.trim();
+  if (phone && !/^\+?[0-9 ()-]{7,}$/.test(phone)) {
+    return { field: 'customerPhone', error: 'Enter a valid phone number, or leave it blank.' };
+  }
+  return null;
+}
+
 export default function StorefrontCartDrawer({
   mode,
   shopId,
@@ -126,6 +153,14 @@ export default function StorefrontCartDrawer({
   const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const titleId = useId();
   const successTitleId = useId();
+  const reserveFormId = useId();
+  const reserveFieldIds = {
+    customerName: useId(),
+    customerEmail: useId(),
+    customerPhone: useId(),
+  };
+  const reserveErrorId = useId();
+  const reserveHeadingRef = useRef<HTMLHeadingElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -146,11 +181,35 @@ export default function StorefrontCartDrawer({
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [testOrderSuccess, setTestOrderSuccess] = useState<TestOrderResult | null>(null);
   const [demoOrderSuccess, setDemoOrderSuccess] = useState<DemoOrderSnapshot | null>(null);
+  // Pay-at-collection: the shop takes payment in store, so the bag asks for contact details instead
+  // of opening Stripe. The page passes the shop setting; the API can also switch us into it.
+  const [payAtCollection, setPayAtCollection] = useState(
+    checkout.type === 'live' && checkout.paymentMode === 'PAY_AT_COLLECTION',
+  );
+  const [detailsStep, setDetailsStep] = useState(false);
+  const [reservationDraft, setReservationDraft] = useState<ReservationDraft>(EMPTY_RESERVATION_DRAFT);
+  const [reservationInvalidField, setReservationInvalidField] = useState<ReservationField | null>(null);
+  const [reservationSuccess, setReservationSuccess] = useState<ReservationResult | null>(null);
 
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
   const price = (pence: number) => formatStorefrontPrice(pence, priceFormat);
   const showDemoNotice = mode === 'demo' || mode === 'publicDemo';
   const hrefCheckout = isHrefCheckout(checkout);
+  const reserveMode = checkout.type === 'live' && payAtCollection;
+
+  useEffect(() => {
+    if (checkout.type === 'live' && checkout.paymentMode) {
+      setPayAtCollection(checkout.paymentMode === 'PAY_AT_COLLECTION');
+    }
+  }, [checkout]);
+
+  useEffect(() => {
+    if (items.length === 0) setDetailsStep(false);
+  }, [items.length]);
+
+  useEffect(() => {
+    if (detailsStep) reserveHeadingRef.current?.focus();
+  }, [detailsStep]);
 
   useEffect(() => {
     setHydrated(true);
@@ -215,6 +274,7 @@ export default function StorefrontCartDrawer({
       setCheckoutError(null);
       setTestOrderSuccess(null);
       setDemoOrderSuccess(null);
+      setReservationSuccess(null);
       demoCompleteLockRef.current = false;
       setLiveMessage(`${product.name} added to bag.`);
       setAddedToast({ name: product.name });
@@ -356,11 +416,71 @@ export default function StorefrontCartDrawer({
     if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current);
   };
 
+  const onReserve = async () => {
+    if (checkout.type !== 'live') return;
+    setCheckoutError(null);
+    if (items.length === 0) {
+      setCheckoutError(emptyBagCheckoutMessage(checkout));
+      return;
+    }
+    const invalid = validateReservationDraft(reservationDraft);
+    if (invalid) {
+      setReservationInvalidField(invalid.field);
+      setCheckoutError(invalid.error);
+      document.getElementById(reserveFieldIds[invalid.field])?.focus();
+      return;
+    }
+    setReservationInvalidField(null);
+    setCheckoutLoading(true);
+    try {
+      const result = await submitStorefrontCheckout({
+        checkout,
+        shopId,
+        items,
+        subtotalPence,
+        formatPrice: price,
+        customer: {
+          name: reservationDraft.name.trim(),
+          email: reservationDraft.email.trim(),
+          phone: reservationDraft.phone.trim(),
+        },
+      });
+      if (result.kind === 'reserved') {
+        clear();
+        setDetailsStep(false);
+        setReservationDraft(EMPTY_RESERVATION_DRAFT);
+        setReservationSuccess(result.reservation);
+        setLiveMessage(`Order ${result.reservation.reference} reserved.`);
+        setCheckoutLoading(false);
+        return;
+      }
+      if (result.kind === 'redirect') {
+        // The shop switched back to card payment upfront since this page loaded.
+        window.location.href = result.url;
+        return;
+      }
+      setCheckoutLoading(false);
+    } catch (error) {
+      if (error instanceof ReservationDetailsRequiredError) {
+        const field = error.field as ReservationField | null;
+        setReservationInvalidField(field);
+        if (field) document.getElementById(reserveFieldIds[field])?.focus();
+      }
+      setCheckoutError(error instanceof Error ? error.message : 'Unable to reserve your order.');
+      setCheckoutLoading(false);
+    }
+  };
+
   const onCheckout = async () => {
     if (isHrefCheckout(checkout)) return;
     setCheckoutError(null);
     if (items.length === 0) {
       setCheckoutError(emptyBagCheckoutMessage(checkout));
+      return;
+    }
+
+    if (reserveMode) {
+      setDetailsStep(true);
       return;
     }
 
@@ -399,9 +519,21 @@ export default function StorefrontCartDrawer({
         return;
       }
 
-      window.location.href = result.url;
+      if (result.kind === 'redirect') {
+        window.location.href = result.url;
+        return;
+      }
+      setCheckoutLoading(false);
     } catch (error) {
       demoCompleteLockRef.current = false;
+      if (error instanceof ReservationDetailsRequiredError) {
+        // The shop takes payment at collection: switch the bag to the details step.
+        setPayAtCollection(true);
+        setDetailsStep(true);
+        setCheckoutError(null);
+        setCheckoutLoading(false);
+        return;
+      }
       setCheckoutError(error instanceof Error ? error.message : 'Unable to start checkout.');
       setCheckoutLoading(false);
     }
@@ -455,7 +587,57 @@ export default function StorefrontCartDrawer({
               </button>
             </header>
 
-            {demoOrderSuccess ? (
+            {reservationSuccess ? (
+              <section
+                className="sf-cart-success"
+                aria-labelledby={successTitleId}
+                aria-live="polite"
+                data-sf-cart-reserved
+              >
+                <p className="sf-cart-kicker">RESERVED · PAY IN SHOP</p>
+                <h3 id={successTitleId} className="sf-cart-success-title">
+                  Order reserved
+                </h3>
+                <p className="sf-cart-notice">
+                  Nothing has been paid yet. You pay at {shopName} when you collect. We have emailed your
+                  confirmation to {reservationSuccess.customerEmail}.
+                </p>
+                <dl className="sf-cart-success-list">
+                  <div>
+                    <dt>Pickup reference</dt>
+                    <dd>
+                      <code>{reservationSuccess.reference}</code>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Items</dt>
+                    <dd>
+                      {reservationSuccess.items.map((item) => (
+                        <span key={`${item.name}-${item.quantity}`} className="sf-cart-success-item">
+                          {item.name} × {item.quantity}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>To pay on collection</dt>
+                    <dd>{price(reservationSuccess.totalPence)}</dd>
+                  </div>
+                </dl>
+                <div className="sf-cart-cta-row">
+                  <button
+                    type="button"
+                    className="sf-cart-cta sf-cart-cta--primary"
+                    onClick={() => {
+                      setReservationSuccess(null);
+                      closeCart();
+                    }}
+                  >
+                    Keep browsing shop
+                  </button>
+                </div>
+              </section>
+            ) : demoOrderSuccess ? (
               <section className="sf-cart-success" aria-labelledby={successTitleId} aria-live="polite">
                 <p className="sf-cart-kicker">DEMO</p>
                 <h3 id={successTitleId} className="sf-cart-success-title">
@@ -568,6 +750,86 @@ export default function StorefrontCartDrawer({
                         </div>
                       </article>
                     </div>
+                  ) : detailsStep && reserveMode && items.length > 0 ? (
+                    <form
+                      id={reserveFormId}
+                      className="sf-cart-details"
+                      noValidate
+                      aria-describedby={checkoutError ? reserveErrorId : undefined}
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void onReserve();
+                      }}
+                      data-sf-cart-details
+                    >
+                      <h3 ref={reserveHeadingRef} tabIndex={-1} className="sf-cart-details-title">
+                        Your details
+                      </h3>
+                      <p className="sf-cart-notice">
+                        {shopName} takes payment when you collect. Add your details so they know the order
+                        is yours.
+                      </p>
+                      <div className="sf-cart-field">
+                        <label htmlFor={reserveFieldIds.customerName}>Full name</label>
+                        <input
+                          id={reserveFieldIds.customerName}
+                          name="customerName"
+                          type="text"
+                          autoComplete="name"
+                          required
+                          maxLength={120}
+                          value={reservationDraft.name}
+                          aria-invalid={reservationInvalidField === 'customerName' ? 'true' : undefined}
+                          aria-describedby={reservationInvalidField === 'customerName' ? reserveErrorId : undefined}
+                          disabled={checkoutLoading}
+                          onChange={(event) => {
+                            const name = event.target.value;
+                            setReservationDraft((draft) => ({ ...draft, name }));
+                          }}
+                        />
+                      </div>
+                      <div className="sf-cart-field">
+                        <label htmlFor={reserveFieldIds.customerEmail}>Email</label>
+                        <input
+                          id={reserveFieldIds.customerEmail}
+                          name="customerEmail"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          required
+                          maxLength={254}
+                          value={reservationDraft.email}
+                          aria-invalid={reservationInvalidField === 'customerEmail' ? 'true' : undefined}
+                          aria-describedby={reservationInvalidField === 'customerEmail' ? reserveErrorId : undefined}
+                          disabled={checkoutLoading}
+                          onChange={(event) => {
+                            const email = event.target.value;
+                            setReservationDraft((draft) => ({ ...draft, email }));
+                          }}
+                        />
+                      </div>
+                      <div className="sf-cart-field">
+                        <label htmlFor={reserveFieldIds.customerPhone}>
+                          Phone <span className="sf-cart-field-optional">(optional)</span>
+                        </label>
+                        <input
+                          id={reserveFieldIds.customerPhone}
+                          name="customerPhone"
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          maxLength={32}
+                          value={reservationDraft.phone}
+                          aria-invalid={reservationInvalidField === 'customerPhone' ? 'true' : undefined}
+                          aria-describedby={reservationInvalidField === 'customerPhone' ? reserveErrorId : undefined}
+                          disabled={checkoutLoading}
+                          onChange={(event) => {
+                            const phone = event.target.value;
+                            setReservationDraft((draft) => ({ ...draft, phone }));
+                          }}
+                        />
+                      </div>
+                    </form>
                   ) : items.length === 0 ? (
                     <div className="sf-cart-empty">
                       <h3 className="sf-cart-empty-title">YOUR BAG IS EMPTY</h3>
@@ -651,13 +913,19 @@ export default function StorefrontCartDrawer({
                       <span>Subtotal</span>
                       <span>{price(subtotalPence)}</span>
                     </p>
-                    <p className="sf-cart-note">Ready for collection after confirmation.</p>
+                    <p className="sf-cart-note">
+                      {reserveMode
+                        ? 'Nothing to pay now. You pay in the shop when you collect.'
+                        : 'Ready for collection after confirmation.'}
+                    </p>
                     {checkoutError ? (
-                      <div className="sf-cart-error" role="alert">
+                      <div className="sf-cart-error" role="alert" id={reserveErrorId}>
                         <p>{checkoutError}</p>
-                        <button type="button" className="sf-cart-error-retry" onClick={() => void onCheckout()}>
-                          Try again
-                        </button>
+                        {detailsStep && reserveMode ? null : (
+                          <button type="button" className="sf-cart-error-retry" onClick={() => void onCheckout()}>
+                            Try again
+                          </button>
+                        )}
                       </div>
                     ) : null}
 
@@ -670,8 +938,33 @@ export default function StorefrontCartDrawer({
                         >
                           CONTINUE TO CHECKOUT
                         </a>
+                      ) : detailsStep && reserveMode ? (
+                        // Distinct keys: React must not reuse the Continue <button> as this submit button,
+                        // or the same click would submit the form before the client has typed anything.
+                        <button
+                          key="reserve-submit"
+                          type="submit"
+                          form={reserveFormId}
+                          className="sf-cart-cta sf-cart-cta--primary"
+                          disabled={checkoutLoading || items.length === 0}
+                          aria-busy={checkoutLoading}
+                          data-sf-cart-reserve
+                        >
+                          {checkoutLoading ? 'Reserving…' : 'RESERVE · PAY WHEN COLLECTING'}
+                        </button>
+                      ) : reserveMode ? (
+                        <button
+                          key="reserve-continue"
+                          type="button"
+                          className="sf-cart-cta sf-cart-cta--primary"
+                          onClick={() => void onCheckout()}
+                          disabled={checkoutLoading || items.length === 0}
+                        >
+                          CONTINUE · PAY WHEN COLLECTING
+                        </button>
                       ) : (
                         <button
+                          key="checkout"
                           type="button"
                           className="sf-cart-cta sf-cart-cta--primary"
                           onClick={() => void onCheckout()}
@@ -681,13 +974,28 @@ export default function StorefrontCartDrawer({
                           {primaryCheckoutLabel(mode, checkoutLoading)}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="sf-cart-cta sf-cart-cta--quiet"
-                        onClick={() => closeCart()}
-                      >
-                        Continue shopping
-                      </button>
+                      {detailsStep && reserveMode ? (
+                        <button
+                          type="button"
+                          className="sf-cart-cta sf-cart-cta--quiet"
+                          onClick={() => {
+                            setDetailsStep(false);
+                            setCheckoutError(null);
+                            setReservationInvalidField(null);
+                          }}
+                          disabled={checkoutLoading}
+                        >
+                          Back to bag
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="sf-cart-cta sf-cart-cta--quiet"
+                          onClick={() => closeCart()}
+                        >
+                          Continue shopping
+                        </button>
+                      )}
                     </div>
                   </section>
                 ) : null}

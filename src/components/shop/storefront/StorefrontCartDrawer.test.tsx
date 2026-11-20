@@ -331,3 +331,137 @@ describe('StorefrontCartDrawer BLACKLINE href checkout', () => {
     expect(screen.getAllByText('£19').length).toBeGreaterThan(0);
   });
 });
+
+describe('StorefrontCartDrawer live pay at collection', () => {
+  const fetchSpy = vi.fn();
+  const locationHrefSetter = vi.fn();
+
+  beforeEach(() => {
+    fetchSpy.mockReset();
+    locationHrefSetter.mockReset();
+    vi.stubGlobal('fetch', fetchSpy);
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        ...window.location,
+        get href() {
+          return 'http://localhost/shop/shop_1';
+        },
+        set href(value: string) {
+          locationHrefSetter(value);
+        },
+      },
+    });
+    bindCartNamespace({ shopId: 'shop_1' });
+    clear();
+    addItem({ productId: 'prod_1', name: 'Matte Pomade', pricePence: 1800, quantity: 2 });
+    openCart();
+  });
+
+  afterEach(() => {
+    cleanup();
+    closeCart();
+    clear();
+    bindCartNamespace();
+    vi.unstubAllGlobals();
+  });
+
+  function renderLive(paymentMode?: 'FULL_UPFRONT' | 'PAY_AT_COLLECTION') {
+    render(
+      <StorefrontCartDrawer
+        mode="production"
+        shopId="shop_1"
+        shopName="Fade Room"
+        themeId="kersivo"
+        priceFormat="gbp"
+        exploreHref="/shop/shop_1"
+        checkout={paymentMode ? { type: 'live', paymentMode } : { type: 'live' }}
+      />,
+    );
+  }
+
+  it('asks for details, reserves without Stripe and shows the pickup reference', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        kind: 'reserved',
+        paymentMode: 'PAY_AT_COLLECTION',
+        orderId: 'ord_res',
+        reference: 'KRV-RESV01',
+        totalPence: 3600,
+        customerEmail: 'sam@example.com',
+        items: [{ name: 'Matte Pomade', quantity: 2, lineTotalPence: 3600 }],
+      }),
+    });
+    renderLive('PAY_AT_COLLECTION');
+
+    expect(screen.getByText('Nothing to pay now. You pay in the shop when you collect.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'CONTINUE · PAY WHEN COLLECTING' }));
+    expect(fetchSpy).not.toHaveBeenCalled();
+    // The Continue click must not also submit the details form that replaces it.
+    expect(screen.getByLabelText('Full name')).toBeTruthy();
+    expect(screen.queryByRole('alert')).toBeNull();
+
+    // Client-side validation blocks an empty name.
+    fireEvent.click(screen.getByRole('button', { name: 'RESERVE · PAY WHEN COLLECTING' }));
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toContain('Enter your name');
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Sam Client' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'sam@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'RESERVE · PAY WHEN COLLECTING' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Order reserved')).toBeTruthy();
+    });
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/public/shop/shop_1/checkout');
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      items: [{ productId: 'prod_1', quantity: 2 }],
+      customerName: 'Sam Client',
+      customerEmail: 'sam@example.com',
+    });
+    expect(screen.getByText('KRV-RESV01')).toBeTruthy();
+    expect(screen.getByText('To pay on collection')).toBeTruthy();
+    expect(locationHrefSetter).not.toHaveBeenCalled();
+    expect(getSnapshot().items).toHaveLength(0);
+  });
+
+  it('switches to the details step when the API says the shop takes payment at collection', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: 'Enter your name so the shop knows who is collecting.',
+        code: 'customer_details_required',
+        field: 'customerName',
+        paymentMode: 'PAY_AT_COLLECTION',
+      }),
+    });
+    renderLive();
+
+    fireEvent.click(screen.getByRole('button', { name: 'CONTINUE TO CHECKOUT' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Full name')).toBeTruthy();
+    });
+    expect(screen.getByRole('button', { name: 'RESERVE · PAY WHEN COLLECTING' })).toBeTruthy();
+    expect(locationHrefSetter).not.toHaveBeenCalled();
+  });
+
+  it('keeps the Stripe redirect for full payment upfront', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => ({ kind: 'redirect', url: 'https://checkout.stripe.test/cs_1' }),
+    });
+    renderLive('FULL_UPFRONT');
+
+    fireEvent.click(screen.getByRole('button', { name: 'CONTINUE TO CHECKOUT' }));
+
+    await waitFor(() => {
+      expect(locationHrefSetter).toHaveBeenCalledWith('https://checkout.stripe.test/cs_1');
+    });
+    expect(screen.queryByLabelText('Full name')).toBeNull();
+  });
+});

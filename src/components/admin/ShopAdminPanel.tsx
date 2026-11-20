@@ -80,7 +80,7 @@ type OrderListItem = {
   customerName?: string | null;
 
   customerEmail: string;
-  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED' | 'RESERVED_UNPAID';
   totalPence: number;
   currency: string;
   createdAt: string;
@@ -95,7 +95,7 @@ type OrderDetail = {
   customerName?: string | null;
 
   customerEmail: string;
-  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED' | 'RESERVED_UNPAID';
   totalPence: number;
   currency: string;
   createdAt: string;
@@ -973,7 +973,9 @@ export default function ShopAdminPanel({
 
   const ordersSafe = orders ?? [];
   const paidOrdersCount = useMemo(
-    () => ordersSafe.filter((order) => order.status === 'PAID').length,
+    // "To collect" includes pay-at-collection reservations (RESERVED_UNPAID) waiting at the counter.
+    () =>
+      ordersSafe.filter((order) => order.status === 'PAID' || order.status === 'RESERVED_UNPAID').length,
     [ordersSafe],
   );
   const collectedOrdersCount = useMemo(
@@ -1460,17 +1462,20 @@ export default function ShopAdminPanel({
     setSuccess(null);
   }
 
-  async function markCollected(orderId: string) {
+  async function markCollected(orderId: string, options?: { paymentTakenInShop?: boolean }) {
     setError(null);
     setSuccess(null);
+    const paymentTakenInShop = options?.paymentTakenInShop === true;
     try {
       await adminFetchJson<{ order?: OrderDetail }>(`/api/admin/shop/orders/${orderId}/collect`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(paymentTakenInShop ? { paymentTakenInShop: true } : {}),
         errorMessage: 'Unable to mark order as collected.',
       });
       await fetchOrders();
       await fetchOrderDetails(orderId);
-      setSuccess('Order marked as collected.');
+      setSuccess(paymentTakenInShop ? 'Order marked as paid and collected.' : 'Order marked as collected.');
       if (
         walkthroughOrderId === orderId &&
         !isRetailWalkthroughCompleteDismissed(orderId) &&
@@ -1959,7 +1964,7 @@ export default function ShopAdminPanel({
             onToggleExpand={toggleOrderExpand}
             orderDetailsById={orderDetailsById}
             orderDetailsLoadingId={orderDetailsLoadingId}
-            onMarkCollected={(orderId) => void markCollected(orderId)}
+            onMarkCollected={(orderId, options) => void markCollected(orderId, options)}
             onLoadOrderDetails={(orderId) => void fetchOrderDetails(orderId)}
             highlightedOrderId={highlightedOrderId}
             walkthroughOrderId={walkthroughOrderId}

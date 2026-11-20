@@ -123,10 +123,21 @@ enum EmailOutboundStatus {
 }
 
 enum OrderStatus {
+  /// Stripe Checkout started but not paid (includes abandoned checkouts). Hidden from admin Orders.
   PENDING_PAYMENT
   PAID
   READY_FOR_PICKUP
   COLLECTED
+  /// Pay-at-collection reservation: placed online, nothing paid yet; the client pays in the shop.
+  RESERVED_UNPAID
+}
+
+/// How public retail (shop) orders are paid. Rules in src/lib/shop/retailPaymentMode.ts.
+enum RetailPaymentMode {
+  /// Stripe Checkout on the shop's Connect account before the order is confirmed.
+  FULL_UPFRONT
+  /// Order is reserved online and paid in the shop when the client collects it.
+  PAY_AT_COLLECTION
 }
 
 enum ProductCategory {
@@ -288,6 +299,8 @@ model ShopSettings {
   bookingPaymentMode                 BookingPaymentMode              @default(NONE)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
   retailEnabled                      Boolean                         @default(false)
+  /// Owner choice for public retail orders: pay upfront by card, or reserve and pay at collection.
+  retailPaymentMode                  RetailPaymentMode               @default(FULL_UPFRONT)
   /// Current Stripe Connect account used for NEW payments. Historical payment rows snapshot their own account id.
   stripeConnectAccountId             String?
   /// Legacy Express accounts remain supported for historical compatibility; new public onboarding targets Standard.
@@ -1079,6 +1092,9 @@ model Order {
   id                     String      @id @default(cuid())
   shopId                 String
   customerEmail          String
+  /// Contact details captured by pay-at-collection reservations (Stripe orders leave these null).
+  customerName           String?
+  customerPhone          String?
   status                 OrderStatus @default(PAID)
   currency               String      @default("gbp")
   totalPence             Int

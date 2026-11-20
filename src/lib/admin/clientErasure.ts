@@ -433,7 +433,12 @@ export async function eraseClientPersonalDataInTransaction(
   for (const order of matchedOrders) {
     await tx.order.update({
       where: { id: order.id },
-      data: { customerEmail: erasedOrderEmailPlaceholder(order.id) },
+      // Pay-at-collection reservations also carry the typed name/phone — erase those too.
+      data: {
+        customerEmail: erasedOrderEmailPlaceholder(order.id),
+        customerName: null,
+        customerPhone: null,
+      },
     });
   }
 

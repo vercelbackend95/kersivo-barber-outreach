@@ -82,6 +82,7 @@ function formatOrderStatus(status: string): string {
   if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
   if (status === 'PAID') return 'Paid';
   if (status === 'COLLECTED') return 'Collected';
+  if (status === 'RESERVED_UNPAID') return 'To collect · Pay in shop';
   return status;
 }
 

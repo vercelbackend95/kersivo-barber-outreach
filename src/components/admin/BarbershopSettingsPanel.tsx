@@ -14,6 +14,11 @@ import {
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import {
+  RETAIL_PAYMENT_MODE_OPTIONS,
+  resolveRetailPaymentMode,
+  type RetailPaymentModeValue,
+} from '@/lib/shop/retailPaymentMode';
+import {
   isOpeningWeekValid,
   openingRowsFromWeek,
   openingWeekFromRows,
@@ -199,6 +204,7 @@ export default function BarbershopSettingsPanel({
   const [depositsError, setDepositsError] = useState('');
   const [depositsMessage, setDepositsMessage] = useState('');
   const [retailEnabled, setRetailEnabled] = useState(false);
+  const [retailPaymentMode, setRetailPaymentMode] = useState<RetailPaymentModeValue>('FULL_UPFRONT');
   const [retailSellReady, setRetailSellReady] = useState(false);
   const [retailGateReason, setRetailGateReason] = useState<string | null>(null);
   const [publicShopUrl, setPublicShopUrl] = useState<string | null>(null);
@@ -548,12 +554,14 @@ export default function BarbershopSettingsPanel({
       const retailPayload = (await retailResponse.json().catch(() => null)) as {
         error?: string;
         retailEnabled?: boolean;
+        retailPaymentMode?: string;
         sellReady?: boolean;
         publicShopUrl?: string;
         gate?: { ok?: boolean; reason?: string };
       } | null;
       if (retailResponse.ok) {
         setRetailEnabled(Boolean(retailPayload?.retailEnabled));
+        setRetailPaymentMode(resolveRetailPaymentMode(retailPayload?.retailPaymentMode));
         setRetailSellReady(Boolean(retailPayload?.sellReady));
         setPublicShopUrl(
           typeof retailPayload?.publicShopUrl === 'string' ? retailPayload.publicShopUrl : null,
@@ -1361,7 +1369,9 @@ export default function BarbershopSettingsPanel({
                       setRetailGateReason(payload?.gate?.ok ? null : payload?.gate?.reason ?? null);
                       setRetailMessage(
                         payload?.retailEnabled
-                          ? 'Public retail checkout is on — customers pay your Stripe account.'
+                          ? retailPaymentMode === 'PAY_AT_COLLECTION'
+                            ? 'Public retail checkout is on — clients reserve online and pay in the shop.'
+                            : 'Public retail checkout is on — customers pay your Stripe account.'
                           : 'Public retail checkout turned off.',
                       );
                       await loadDeposits();
@@ -1379,6 +1389,73 @@ export default function BarbershopSettingsPanel({
                   {!canManagePayouts ? ' (owner only)' : ''}
                 </span>
               </label>
+              ) : null}
+              {depositsPaid ? (
+                <fieldset
+                  className="field admin-barbershop-settings__retail-payment"
+                  disabled={retailBusy || depositsBusy || !canManagePayouts}
+                  data-retail-payment-mode={retailPaymentMode}
+                >
+                  <legend className="admin-barbershop-settings__retail-payment-legend">
+                    How clients pay for shop orders
+                    {!canManagePayouts ? ' (owner only)' : ''}
+                  </legend>
+                  {RETAIL_PAYMENT_MODE_OPTIONS.map((option) => {
+                    const checked = option.mode === retailPaymentMode;
+                    const descriptionId = `bbs-retail-payment-${option.mode.toLowerCase()}-desc`;
+                    return (
+                      <label key={option.mode} className="admin-barbershop-settings__retail-payment-option">
+                        <input
+                          type="radio"
+                          name="bbs-retail-payment-mode"
+                          value={option.mode}
+                          checked={checked}
+                          aria-describedby={descriptionId}
+                          onChange={async () => {
+                            if (checked) return;
+                            setRetailBusy(true);
+                            setRetailError('');
+                            setRetailMessage('');
+                            try {
+                              const response = await fetch('/api/admin/barbershop-settings/retail', {
+                                method: 'PATCH',
+                                credentials: 'include',
+                                headers: { 'content-type': 'application/json' },
+                                body: JSON.stringify({ retailPaymentMode: option.mode }),
+                              });
+                              const payload = (await response.json().catch(() => null)) as {
+                                error?: string;
+                                retailPaymentMode?: string;
+                              } | null;
+                              if (!response.ok) {
+                                throw new Error(payload?.error || 'Could not update how clients pay.');
+                              }
+                              const nextMode = resolveRetailPaymentMode(payload?.retailPaymentMode);
+                              setRetailPaymentMode(nextMode);
+                              setRetailMessage(
+                                nextMode === 'PAY_AT_COLLECTION'
+                                  ? 'Shop orders are now reserved online and paid in the shop on collection.'
+                                  : 'Shop orders are now paid in full by card when the client orders.',
+                              );
+                            } catch (error) {
+                              setRetailError(
+                                error instanceof Error ? error.message : 'Could not update how clients pay.',
+                              );
+                            } finally {
+                              setRetailBusy(false);
+                            }
+                          }}
+                        />
+                        <span className="admin-barbershop-settings__retail-payment-copy">
+                          <span className="admin-barbershop-settings__retail-payment-label">{option.label}</span>
+                          <span id={descriptionId} className="admin-barbershop-settings__retail-payment-desc">
+                            {option.description}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
               ) : null}
               {depositsPaid && retailGateReason && !retailSellReady ? (
                 <p className="admin-barbershop-settings__card-copy" role="status">
