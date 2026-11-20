@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/gallery.css">
   <link rel="stylesheet" href="css/brass-frame.css">
   <link rel="stylesheet" href="css/book-sheet.css">
+  <link rel="stylesheet" href="css/kersivo-bar.css">
 </head>
 <body class="gallery-page">
   <!-- Gallery page. Kind: place (barbershop). Same system as index.html, team.html, services.html:
@@ -35,6 +36,20 @@
        Interior photographs are the shop's own. Haircut and beard photographs are AI STAND-INS (generated with Porter):
        replace with the shop's own work, same crops. -->
   <a class="skip" href="#main">Skip to content</a>
+
+  <aside class="kd-bar" data-kersivo-bar aria-label="KERSIVO live demo">
+    <div class="kd-bar__inner">
+      <p class="kd-bar__copy">
+        <span class="kd-bar__eyebrow">KERSIVO live demo</span>
+        <span class="kd-bar__text">Heritage Grooming is a fictional shop. Book a chair or reserve a product, then see it in the owner dashboard.</span>
+      </p>
+      <nav class="kd-bar__actions" aria-label="KERSIVO demo">
+        <a class="kd-bar__link kd-bar__link--primary" href="/demo/heritage-grooming/admin?section=bookings_dashboard"><span class="kd-bar__full">Owner dashboard</span><span class="kd-bar__short">Dashboard</span></a>
+        <a class="kd-bar__link kd-bar__link--quiet" href="/"><span class="kd-bar__full">Back to KERSIVO</span><span class="kd-bar__short">KERSIVO</span></a>
+      </nav>
+    </div>
+  </aside>
+  <script src="js/kersivo-bar.js"></script>
 
   <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
 

@@ -317,6 +317,9 @@ form.addEventListener('submit', async (e) => {
   const n = count(), sum = total();
   const res = await BAG.submit({ name, phone, day: day.toISOString(), lines: bag.map((l) => ({ ...l })), total: sum });
   if (!res.ok) { error('day', res.message || 'That did not go through. Please try again, or call in at the shop.'); return; }
+  // KERSIVO demo: the confirmation links straight to this reservation on the owner dashboard.
+  const dash = $('[data-kersivo-dashboard]');
+  if (dash && res.dashboardHref) dash.href = res.dashboardHref;
   $('[data-done-title]').textContent = `Held for ${DAY[day.getDay()]} ${day.getDate()} ${MONTH[day.getMonth()]}`;
   $('[data-done-body]').textContent = `We will put your ${items(n)} (${money(sum)}) behind the counter with ${name.split(' ')[0]} on the bag. Pay when you collect, by card or cash.`;
   view('done');

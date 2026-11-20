@@ -21,6 +21,12 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 const SOURCE = 'blackline-demo-session';
 const TZ = 'Europe/London';
 const SITE_ROOT = '/demo/heritage-grooming/';
+const ADMIN = '/demo/heritage-grooming/admin';
+
+// Deep links the owner dashboard understands: it opens the right day or order and highlights the visitor's row.
+function dashboardLink(params) {
+  return `${ADMIN}?${new URLSearchParams(params).toString()}`;
+}
 const NO_EMAIL = 'No email given';
 
 const barberId = (siteId) => `hg-barber-${siteId}`;
@@ -148,7 +154,13 @@ export async function saveBooking(payload) {
     source: SOURCE,
   };
   write(BOOKINGS_KEY, [...read(BOOKINGS_KEY), row]);
-  return { demo: true, kersivo: true, reference: row.reference, barber: chosen.name };
+  return {
+    demo: true,
+    kersivo: true,
+    reference: row.reference,
+    barber: chosen.name,
+    dashboardHref: dashboardLink({ section: 'bookings_dashboard', bookingId: row.id, bookingDate: row.date, demoJourney: 'booking' }),
+  };
 }
 
 /* ───────────── shop reservations ───────────── */
@@ -191,5 +203,12 @@ export function saveOrder(order) {
     source: SOURCE,
   };
   write(ORDERS_KEY, [...read(ORDERS_KEY), row]);
-  return { ok: true, preview: true, kersivo: true, reference: row.reference, order };
+  return {
+    ok: true,
+    preview: true,
+    kersivo: true,
+    reference: row.reference,
+    order,
+    dashboardHref: dashboardLink({ section: 'shop_orders', order: row.id, demoJourney: 'retail' }),
+  };
 }

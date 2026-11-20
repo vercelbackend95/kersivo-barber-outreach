@@ -30,9 +30,24 @@
   <script type="importmap">
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }
   </script>
+  <link rel="stylesheet" href="css/kersivo-bar.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
+
+  <aside class="kd-bar" data-kersivo-bar aria-label="KERSIVO live demo">
+    <div class="kd-bar__inner">
+      <p class="kd-bar__copy">
+        <span class="kd-bar__eyebrow">KERSIVO live demo</span>
+        <span class="kd-bar__text">Heritage Grooming is a fictional shop. Book a chair or reserve a product, then see it in the owner dashboard.</span>
+      </p>
+      <nav class="kd-bar__actions" aria-label="KERSIVO demo">
+        <a class="kd-bar__link kd-bar__link--primary" href="/demo/heritage-grooming/admin?section=bookings_dashboard"><span class="kd-bar__full">Owner dashboard</span><span class="kd-bar__short">Dashboard</span></a>
+        <a class="kd-bar__link kd-bar__link--quiet" href="/"><span class="kd-bar__full">Back to KERSIVO</span><span class="kd-bar__short">KERSIVO</span></a>
+      </nav>
+    </div>
+  </aside>
+  <script src="js/kersivo-bar.js"></script>
 
   <!-- Intro curtain: the seal, then the hero develops out of the dark -->
   <div class="loader" aria-hidden="true">
@@ -388,8 +403,8 @@
               <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
               <h3 class="done__title" data-done-title></h3>
               <p class="done__body" data-done-body></p>
-              <p class="done__demo">Preview mode: online booking is not switched on yet, so nothing has been sent or stored.</p>
-              <button type="button" class="btn btn--line" data-restart><span>Book another chair</span></button>
+              <p class="done__demo">KERSIVO demo: nothing is sent to the shop. Your booking stays in this browser for 24 hours, so you can find it in the owner dashboard.</p>
+              <a class="btn btn--line" href="/demo/heritage-grooming/admin?section=bookings_dashboard" data-kersivo-dashboard><span>See your booking in the dashboard</span></a>
             </div>
 
             <div class="book__nav" data-booknav>

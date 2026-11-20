@@ -75,10 +75,10 @@ dlg.innerHTML = `
             <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
             <h3 class="done__title" data-done-title></h3>
             <p class="done__body" data-done-body></p>
-            <p class="done__demo">Preview mode: online booking is not switched on yet, so nothing has been sent or stored.</p>
+            <p class="done__demo">KERSIVO demo: nothing is sent to the shop. Your booking stays in this browser for 24 hours, so you can find it in the owner dashboard.</p>
             <div class="bsheet__after">
               <button type="button" class="btn btn--brass" data-sheet-close><span>Back to the page</span></button>
-              <button type="button" class="link link--btn" data-restart>Book another chair</button>
+              <a class="link link--btn" href="/demo/heritage-grooming/admin?section=bookings_dashboard" data-kersivo-dashboard>See your booking in the dashboard</a>
             </div>
           </div>
 

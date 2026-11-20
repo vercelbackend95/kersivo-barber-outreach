@@ -302,7 +302,10 @@ function init(root, { global = true, ns = '', host = root.closest('.book') ?? do
     };
     nextBtn.disabled = true; nextLabel.textContent = 'Sending';
     try {
-      await BOOKING.submit(payload);
+      const res = await BOOKING.submit(payload);
+      // KERSIVO demo: the confirmation links straight to this booking on the owner dashboard.
+      const dash = $('[data-kersivo-dashboard]');
+      if (dash && res?.dashboardHref) dash.href = res.dashboardHref;
       window.dispatchEvent(new CustomEvent('heritage:booking', { detail: payload }));
       onChange?.(state);
       $('[data-done-title]').textContent = `${fmtDay.format(state.date)}, ${state.time}`;
@@ -333,7 +336,7 @@ function init(root, { global = true, ns = '', host = root.closest('.book') ?? do
     $$('.field__error').forEach((e) => { e.textContent = ''; });
     go(1, { focus: false });
   }
-  $('[data-restart]').addEventListener('click', () => { reset(); newFocus(); });
+  $('[data-restart]')?.addEventListener('click', () => { reset(); newFocus(); });
   function newFocus() { steps[0].querySelector('input')?.focus({ preventScroll: true }); }
 
   render();
@@ -348,7 +351,7 @@ function init(root, { global = true, ns = '', host = root.closest('.book') ?? do
 
   // "Book with …" on the team page: preselect the barber; back to step 1 if no service is chosen yet
   document.addEventListener('booking:barber', (e) => {
-    if (state.step === 4) $('[data-restart]').click();
+    if (state.step === 4) reset();
     pickBarber(e.detail?.id ?? '');
     if (!state.service && state.step !== 1) go(1, { focus: false });
   });

@@ -1,0 +1,65 @@
+/* KERSIVO live-demo bar. KERSIVO's own chrome, not part of the Heritage Grooming design:
+   it sits above the site in the page flow and scrolls away with it (js/kersivo-bar.js keeps the
+   fixed Heritage nav just below it until then). Tokens follow the KERSIVO marketing site. */
+
+.kd-bar {
+  --kd-red: #d72638;
+  --kd-text: #f4f2ee;
+  --kd-muted: rgba(244, 242, 238, .66);
+  --kd-line: rgba(255, 255, 255, .08);
+  position: relative; z-index: 121;
+  background: linear-gradient(180deg, #0d0d0e, #080809);
+  color: var(--kd-text);
+  border-bottom: 1px solid var(--kd-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 13px; line-height: 1.35; letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+}
+.kd-bar__inner {
+  display: flex; align-items: center; gap: 16px;
+  max-width: 1440px; margin: 0 auto;
+  padding: 6px max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left));
+  min-height: 52px;
+}
+.kd-bar__copy { display: flex; align-items: baseline; gap: 12px; min-width: 0; flex: 1; }
+.kd-bar__eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.kd-bar__eyebrow::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--kd-red);
+  box-shadow: 0 0 0 3px rgba(215, 38, 56, .18);
+}
+.kd-bar__text { color: var(--kd-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kd-bar__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.kd-bar__link {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 0 14px; border-radius: 999px;
+  color: var(--kd-text); text-decoration: none;
+  font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease;
+}
+.kd-bar__link--primary { border: 1px solid rgba(255, 255, 255, .18); }
+.kd-bar__link--primary:hover { border-color: var(--kd-red); background: rgba(215, 38, 56, .12); }
+.kd-bar__link--quiet { color: var(--kd-muted); }
+.kd-bar__link--quiet:hover { color: var(--kd-text); }
+.kd-bar__link:focus-visible { outline: 2px solid var(--kd-text); outline-offset: 2px; }
+.kd-bar__short { display: none; }
+
+@media (max-width: 760px) {
+  .kd-bar__text { display: none; }
+}
+@media (max-width: 430px) {
+  .kd-bar__inner { gap: 8px; }
+  .kd-bar__eyebrow { letter-spacing: .1em; }
+  .kd-bar__link { padding: 0 10px; letter-spacing: .08em; }
+  .kd-bar__full { display: none; }
+  .kd-bar__short { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kd-bar__link { transition: none; }
+}
+
+/* The Heritage nav is fixed at the top; while the bar is on screen it sits just under it. */
+.nav { top: var(--kd-offset, 0px); }

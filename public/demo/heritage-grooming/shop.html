@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/brass-frame.css">
   <link rel="stylesheet" href="css/book-sheet.css">
 
+  <link rel="stylesheet" href="css/kersivo-bar.css">
 </head>
 <body class="shop-page">
   <!-- Products (shop.html). Kind: place (barbershop); this is its goods page. Same system as services.html and team.html:
@@ -37,6 +38,20 @@
        brands are fictitious and names, sizes, prices and scents are ASSUMED (data-assumed).
        The bag reserves for collection; nothing is sent until the shop's till or web shop is connected (js/shop.js → BAG.submit). -->
   <a class="skip" href="#main">Skip to content</a>
+
+  <aside class="kd-bar" data-kersivo-bar aria-label="KERSIVO live demo">
+    <div class="kd-bar__inner">
+      <p class="kd-bar__copy">
+        <span class="kd-bar__eyebrow">KERSIVO live demo</span>
+        <span class="kd-bar__text">Heritage Grooming is a fictional shop. Book a chair or reserve a product, then see it in the owner dashboard.</span>
+      </p>
+      <nav class="kd-bar__actions" aria-label="KERSIVO demo">
+        <a class="kd-bar__link kd-bar__link--primary" href="/demo/heritage-grooming/admin?section=bookings_dashboard"><span class="kd-bar__full">Owner dashboard</span><span class="kd-bar__short">Dashboard</span></a>
+        <a class="kd-bar__link kd-bar__link--quiet" href="/"><span class="kd-bar__full">Back to KERSIVO</span><span class="kd-bar__short">KERSIVO</span></a>
+      </nav>
+    </div>
+  </aside>
+  <script src="js/kersivo-bar.js"></script>
 
   <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
 
@@ -1090,8 +1105,8 @@
         <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
         <h3 class="done__title" data-done-title></h3>
         <p class="done__body" data-done-body></p>
-        <p class="done__demo">Preview mode: reservations are not switched on yet, so nothing has been sent or stored.</p>
-        <a class="btn btn--line" href="#range" data-bag-close data-bag-reset><span>Back to the shelf</span></a>
+        <p class="done__demo">KERSIVO demo: nothing is sent to the shop. Your reservation stays in this browser for 24 hours, so you can find it in the owner dashboard.</p>
+        <a class="btn btn--line" href="/demo/heritage-grooming/admin?section=shop_orders" data-bag-close data-bag-reset data-kersivo-dashboard><span>See your order in the dashboard</span></a>
       </div>
     </div>
   </dialog>
