@@ -1,0 +1,208 @@
+/* ──────────────────────────────────────────────────────────
+   Heritage Grooming · The work (gallery.html)
+   Builds on css/style.css (tokens, type, buttons, nav, footer) and css/team.css (the brass
+   mirror frame, chips, the stage index). Every photograph here hangs in the same mirror:
+   .gframe__glass takes the team page's brass rim recipe.
+   ────────────────────────────────────────────────────────── */
+
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* ── the mirror, shared with team.css ─────────────────── */
+.gframe__glass {
+  --rim: clamp(4px, .4vw, 6px); --mr: clamp(14px, 1.5vw, 22px);
+  position: relative; isolation: isolate; overflow: hidden; display: block;
+  border-radius: var(--mr); background: #070b0b;
+  box-shadow: 0 0 0 .5px rgba(20, 12, 2, .7), 0 2px 3px rgba(0, 0, 0, .45), 0 22px 34px -16px rgba(0, 0, 0, .8);
+}
+.gframe__glass::before, .gframe__glass::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.gframe__glass::before {
+  z-index: 2;
+  background:
+    radial-gradient(ellipse 15% 6.5% at 50% 5.5%, rgba(255, 226, 160, .3), rgba(255, 196, 112, .1) 45%, transparent 75%),
+    linear-gradient(116deg, transparent 26%, rgba(255, 244, 222, .05) 36%, transparent 47%);
+  box-shadow:
+    inset 0 0 0 calc(var(--rim) * .1)  #3a2a10,
+    inset 0 0 0 calc(var(--rim) * .26) #f1cf86,
+    inset 0 0 0 calc(var(--rim) * .44) #d3a456,
+    inset 0 0 0 calc(var(--rim) * .6)  #a8803c,
+    inset 0 0 0 calc(var(--rim) * .72) #24180a,
+    inset 0 0 0 calc(var(--rim) * .86) #d2a95c,
+    inset 0 0 0 var(--rim)             #6e5226,
+    inset 0 0 0 calc(var(--rim) + 1px) rgba(4, 4, 2, .9),
+    inset 0 calc(var(--rim) * 1.6) calc(var(--rim) * 3.2) calc(var(--rim) * -.4) rgba(0, 0, 0, .5),
+    inset 0 0 calc(var(--rim) * 5) rgba(0, 0, 0, .35);
+}
+.gframe__glass::after {
+  z-index: 3; padding: calc(var(--rim) * .88);
+  background:
+    linear-gradient(180deg, rgba(255, 232, 180, .32) 0%, rgba(255, 226, 170, .08) 9%, transparent 22%, transparent 70%, rgba(0, 0, 0, .3) 100%),
+    conic-gradient(from 0deg,
+      rgba(255, 236, 196, .4) 0deg, rgba(255, 236, 196, .55) 24deg, rgba(255, 244, 214, .35) 40deg,
+      rgba(70, 48, 16, .25) 70deg, rgba(40, 26, 6, .45) 120deg, rgba(40, 26, 6, .55) 165deg,
+      rgba(255, 236, 190, .3) 180deg,
+      rgba(40, 26, 6, .55) 195deg, rgba(40, 26, 6, .45) 240deg, rgba(70, 48, 16, .25) 290deg,
+      rgba(255, 244, 214, .35) 320deg, rgba(255, 236, 196, .55) 336deg, rgba(255, 236, 196, .4) 360deg);
+  mix-blend-mode: overlay;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  transition: filter .5s ease;
+}
+.gframe__glass img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: scale .9s var(--ease-out), filter .6s ease; }
+/* the stand-in photographs come from different cameras and rooms: one warm, quiet grade makes them a set */
+.gframe__glass img.is-stand { filter: saturate(.62) sepia(.18) contrast(1.05) brightness(.96); }
+
+/* ── hero ─────────────────────────────────────────────── */
+main > .ghero { background: var(--ink); }
+.ghero__inner {
+  min-height: 100svh; display: flex; flex-direction: column;
+  padding: calc(var(--nav-h) + clamp(24px, 4vh, 56px)) 0 26px;
+}
+.ghero__head {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: end;
+  gap: 24px clamp(32px, 5vw, 96px);
+}
+.ghero__title { font: 400 clamp(2.9rem, 6.2vw, 6.6rem)/.98 var(--serif); letter-spacing: -.02em; max-width: 14ch; text-wrap: balance; }
+.ghero__title em { font-style: normal; color: var(--brass); }
+.ghero__side { display: grid; gap: 26px; justify-items: start; padding-bottom: .4em; }
+.ghero__lede { font-size: clamp(1.0625rem, 1.2vw, 1.1875rem); line-height: 1.55; color: #d9d3c5; max-width: 42ch; }
+.ghero__actions { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+
+.ghero__wall {
+  flex: 1; min-height: clamp(240px, 36svh, 520px);
+  display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: clamp(14px, 2vw, 32px);
+  margin-top: clamp(28px, 5vh, 64px);
+}
+.gframe { position: relative; display: flex; min-height: 0; }
+.gframe .gframe__glass { flex: 1; transition: translate .5s var(--ease-out); }
+.ghero__facts { margin-top: clamp(22px, 3.4vh, 40px); }
+
+@media (hover: hover) and (pointer: fine) {
+  a.gframe:hover .gframe__glass, .tile__link:hover .gframe__glass { translate: 0 -2px; }
+  a.gframe:hover .gframe__glass::after, .tile__link:hover .gframe__glass::after { filter: brightness(1.25); }
+  a.gframe:hover img, .tile__link:hover img { scale: 1.03; }
+  a.gframe:hover img.is-stand, .tile__link:hover img.is-stand { filter: saturate(.85) sepia(.1) contrast(1.04); }
+}
+a.gframe:active .gframe__glass, .tile__link:active .gframe__glass { scale: .99; }
+
+/* ── the lookbook ─────────────────────────────────────── */
+main > .book-of-work { background: var(--ink); padding-block: var(--section); }
+.work__head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: end; gap: 24px clamp(32px, 5vw, 96px); margin-bottom: clamp(32px, 4vw, 56px); }
+.work__tools { display: grid; gap: 18px; justify-items: start; }
+.work__note { color: var(--muted); max-width: 46ch; }
+
+.book-of-work .chip { color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+.book-of-work .chip[aria-pressed="true"] { background: var(--brass); color: var(--ink); box-shadow: none; }
+.chip sup { font-size: .6875rem; vertical-align: super; margin-left: 2px; opacity: .7; font-variant-numeric: tabular-nums; }
+@media (hover: hover) and (pointer: fine) { .book-of-work .chip[aria-pressed="false"]:hover { box-shadow: inset 0 0 0 1px var(--brass); color: var(--brass-hi); } }
+
+/* twelve columns: a tall frame takes three, a wide one six, so every row is one height */
+.work { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-flow: dense; gap: clamp(16px, 2vw, 30px); }
+.tile { grid-column: span 3; min-width: 0; }
+.tile--wide { grid-column: span 6; }
+.tile__link { display: block; height: 100%; }
+.tile .gframe__glass { aspect-ratio: 2 / 3; }
+.tile--wide .gframe__glass { aspect-ratio: auto; height: 100%; }
+.tile.is-hidden { display: none; }
+
+/* ── close: the paper ground, as on the other pages ───── */
+main > .ask { background: var(--paper); color: var(--ink); }
+.ask :focus-visible { outline-color: var(--walnut); }
+.ask__inner { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: clamp(36px, 6vh, 72px); padding-block: var(--section); }
+.ask__title { font: 400 clamp(3rem, 7.6vw, 8.5rem)/.96 var(--serif); letter-spacing: -.025em; max-width: 15ch; text-wrap: balance; }
+.ask__title em { font-style: normal; color: var(--walnut); }
+.ask__row { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px 64px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--line-ink); }
+.ask__text { max-width: 52ch; color: var(--ink-muted); font-size: clamp(1.0625rem, 1.2vw, 1.1875rem); }
+.ask__actions { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.btn--ink { --btn-bg: var(--ink); --btn-fg: var(--cream); --btn-fill: var(--walnut); }
+@media (hover: hover) and (pointer: fine) { .ask .link:hover { color: var(--walnut); } }
+
+/* ── the viewer ───────────────────────────────────────── */
+.viewer {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: rgba(10, 16, 15, .97); color: var(--text);
+  overscroll-behavior: contain;
+}
+.viewer::backdrop { background: rgba(6, 10, 10, .6); }
+.viewer[open] { display: block; }
+.viewer__inner {
+  height: 100%; display: grid; grid-template-columns: minmax(0, 7fr) minmax(320px, 4fr);
+  gap: clamp(28px, 4vw, 72px); align-items: center;
+  width: min(100% - 2 * var(--gutter), 1480px); margin-inline: auto; padding-block: clamp(72px, 9vh, 104px) clamp(32px, 6vh, 64px);
+}
+.viewer__stage { margin: 0; height: 100%; min-height: 0; display: grid; place-items: center; }
+.viewer__glass { --rim: clamp(6px, .5vw, 8px); --mr: clamp(20px, 2vw, 30px); max-width: 100%; max-height: 100%; width: auto; }
+.viewer__glass img { transition: none; }
+.viewer__glass img + img { z-index: 1; }
+.viewer__panel { display: grid; gap: clamp(24px, 4vh, 44px); align-content: center; }
+.viewer__count { font: 500 .8125rem/1 var(--sans); letter-spacing: .14em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.viewer__count b { color: var(--brass); font-weight: 500; }
+.viewer__text { display: grid; gap: 22px; justify-items: start; }
+.viewer__name { font: 400 clamp(2.4rem, 4vw, 4.4rem)/.98 var(--serif); letter-spacing: -.02em; max-width: 12ch; }
+.viewer__ask { display: grid; gap: 8px; max-width: 40ch; color: #d9d3c5; font-size: clamp(1rem, 1.15vw, 1.125rem); }
+.viewer__ask > span:first-child, .viewer__facts dt { font: 500 .6875rem/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.viewer__facts { display: grid; grid-template-columns: repeat(2, minmax(0, auto)); gap: 18px clamp(24px, 3vw, 48px); padding-top: 18px; border-top: 1px solid var(--line); width: 100%; }
+.viewer__facts dt { margin-bottom: 8px; }
+.viewer__facts dd { font: 400 1.125rem/1.2 var(--serif-text); color: var(--cream); }
+.viewer__nav { display: flex; gap: 12px; }
+.viewer__step {
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1px var(--line); color: var(--text);
+  transition: box-shadow .3s ease, color .3s ease, scale .16s var(--ease-out);
+}
+.viewer__step .arrow { width: 20px; height: 20px; transition: transform .45s var(--ease-out); }
+.viewer__step:active { scale: .94; }
+.viewer__close { position: absolute; top: clamp(16px, 3vh, 28px); right: var(--gutter); width: 52px; height: 52px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow .3s ease, rotate .5s var(--ease-out), scale .16s var(--ease-out); }
+.viewer__close span { position: absolute; left: 15px; right: 15px; top: 50%; height: 1.5px; background: var(--text); }
+.viewer__close span:first-child { rotate: 45deg; }
+.viewer__close span:last-child { rotate: -45deg; }
+.viewer__close:active { scale: .94; }
+@media (hover: hover) and (pointer: fine) {
+  .viewer__step:hover { box-shadow: inset 0 0 0 1px var(--brass); color: var(--brass-hi); }
+  [data-viewer-prev]:hover .arrow { transform: translateX(-4px); }
+  [data-viewer-next]:hover .arrow { transform: translateX(4px); }
+  .viewer__close:hover { box-shadow: inset 0 0 0 1px var(--brass); rotate: 90deg; }
+}
+.viewer-open { overflow: hidden; }
+
+/* the frame that flies from a tile into the viewer (and back) */
+.flyer { position: fixed; z-index: 1000; pointer-events: none; margin: 0; }
+
+/* ── responsive ──────────────────────────────────────── */
+@media (max-width: 1099px) {
+  .tile { grid-column: span 6; }
+  .tile--wide { grid-column: span 12; }
+  .tile--wide .gframe__glass { aspect-ratio: 3 / 2; height: auto; }
+}
+@media (max-width: 899px) {
+  .ghero__head, .work__head { grid-template-columns: 1fr; }
+  .ghero__wall { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); flex: none; min-height: 0; }
+  .ghero__wall .gframe__glass { aspect-ratio: auto; height: clamp(220px, 46vw, 420px); }
+  /* the photograph gets a height of its own (a 1fr row only got what the text left over, and the glass spilled
+     over the text); the viewer scrolls when the two together are taller than the screen */
+  .viewer__inner { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; align-content: start; gap: 22px; padding-block: 76px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+  .viewer__stage { height: clamp(240px, 52svh, 600px); }
+  .viewer__panel { gap: 18px; }
+  .viewer__name { font-size: clamp(2rem, 8vw, 3rem); }
+  .viewer__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 599px) {
+  .ghero__actions, .ask__actions { flex-direction: column; align-items: stretch; gap: 14px; width: 100%; }
+  .ghero__actions .link, .ask__actions .link { align-self: flex-start; }
+  .ghero__wall { grid-template-columns: 1fr; }
+  .ghero__wall .gframe--tall { display: none; }
+  .ghero__wall .gframe__glass { height: 56vw; }
+  .work { gap: 14px; }
+  .viewer__book { width: 100%; }
+  .viewer__stage { height: clamp(220px, 46svh, 420px); }
+}
+/* phones on their side: photograph and text side by side, the text scrolls on its own */
+@media (max-width: 899px) and (max-height: 540px) and (min-width: 560px) {
+  .viewer__inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-rows: minmax(0, 1fr); align-items: stretch; gap: 28px; padding-block: 72px 16px; overflow: hidden; }
+  .viewer__stage { height: 100%; }
+  .viewer__panel { min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; padding-bottom: 8px; }
+  .viewer__close { top: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gframe__glass, .gframe__glass img, .viewer__step, .viewer__close { transition-duration: .01ms !important; }
+}

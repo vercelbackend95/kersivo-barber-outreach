@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en" class="no-js" data-type="place">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pomade, clay and beard oil · Heritage Grooming</title>
+  <meta name="description" content="The pomades, clays, sprays and beard oils we use in the chairs at Heritage Grooming. Reserve online and pay when you collect them at the counter.">
+  <meta name="page-type" content="place">
+  <meta name="site-kind" content="other">
+  <meta name="page-kind" content="place">
+  <meta name="theme-color" content="#0f1716">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pomade, clay and beard oil · Heritage Grooming">
+  <meta property="og:description" content="Forty-one products from the makers we stock, from £7. Reserve online, collect at the counter.">
+  <meta property="og:image" content="assets/img/share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+
+  <script>document.documentElement.className = 'js';</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/shop.css">
+  <link rel="stylesheet" href="css/brass-frame.css">
+  <link rel="stylesheet" href="css/book-sheet.css">
+
+</head>
+<body class="shop-page">
+  <!-- Products (shop.html). Kind: place (barbershop); this is its goods page. Same system as services.html and team.html:
+       palette, Caslon + Hanken, brass buttons, calm motion (one-time entrances, scroll-scrubbed moment, click-driven changes; nothing loops).
+       Moments: the hero bento (hair as the big tile whose kind chips swap its window and price; beard, shave, skin as wide tiles whose next product wipes up on hover; the brass pomade tile answers the picker's first question; a search over every product lands on the card; plain photos cropped by the windows, lifted open once on load) and the counter (#counter: pinned, the scroll
+       slides a row of product photos along inside one brass mirror, one per chapter; plain photos, no WebGL, no cut-out:
+       each photo is shown exactly as generated). Only the makers' products with a photo are on sale (js/shop-data.js);
+       brands are fictitious and names, sizes, prices and scents are ASSUMED (data-assumed).
+       The bag reserves for collection; nothing is sent until the shop's till or web shop is connected (js/shop.js → BAG.submit). -->
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+  <header class="nav" data-nav>
+    <div class="nav__bar wrap">
+      <a class="brand" href="index.html" aria-label="Heritage Grooming, home">
+        <img src="assets/img/seal-64.webp" srcset="assets/img/seal-64.webp 1x, assets/img/seal-128.webp 2x, assets/img/seal-192.webp 3x" width="48" height="48" alt="">
+        <span class="brand__name">Heritage <i>Grooming</i></span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a class="nav__link" href="index.html#shop">The shop</a>
+        <a class="nav__link" href="services.html">Services</a>
+        <a class="nav__link is-here" href="shop.html" aria-current="page">Products</a>
+        <a class="nav__link" href="team.html">The barbers</a>
+        <a class="nav__link" href="gallery.html">The work</a>
+        <a class="nav__link" href="index.html#visit">A visit</a>
+        <a class="nav__link" href="index.html#find">Find us</a>
+      </nav>
+      <button class="bagbtn" type="button" data-bag-open aria-haspopup="dialog" aria-label="Open your bag, empty">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>
+        <b class="bagbtn__count" data-bag-count>0</b>
+      </button>
+      <a class="btn btn--brass nav__cta" href="services.html#book" data-magnetic><span>Book a chair</span></a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <i class="nav__progress" aria-hidden="true"></i>
+  </header>
+
+  <div class="menu" id="menu" data-lenis-prevent hidden>
+    <nav class="menu__links wrap" aria-label="Mobile">
+      <a href="index.html#shop"><small>01</small>The shop</a>
+      <a href="services.html"><small>02</small>Services</a>
+      <a href="shop.html" aria-current="page"><small>03</small>Products</a>
+      <a href="team.html"><small>04</small>The barbers</a>
+      <a href="gallery.html"><small>05</small>The work</a>
+      <a href="index.html#visit"><small>06</small>A visit</a>
+      <a href="index.html#find"><small>07</small>Find us</a>
+      <a class="btn btn--brass" href="services.html#book"><span>Book a chair</span></a>
+    </nav>
+  </div>
+
+  <main id="main">
+
+    <!-- ───────────── HERO: the shelf ───────────── -->
+    <section class="phero" id="top" data-enter>
+      <div class="wrap phero__inner">
+        <div class="phero__head">
+          <h1 class="phero__title">Pomade, clay and beard oil, <em>off our shelf.</em></h1>
+          <div class="phero__side">
+            <p class="phero__lede">Forty-one products, the same ones we use in the chairs, from the makers we stock. Reserve them here and pay at the counter when you collect, <span data-assumed>from £7</span>.</p>
+          </div>
+        </div>
+
+        <ul class="bento" aria-label="The shelves">
+<!--BOARD-->
+          <li class="bento__cell bento__cell--hair">
+            <article class="tile tile--hair" data-tile="hair" aria-labelledby="tile-hair">
+              <a class="tile__window" href="#range" data-filter-go="hair" tabindex="-1" aria-hidden="true" data-cursor="Show">
+                <img class="tile__img is-on" data-kind-img="pomade" src="assets/img/featured/oakmoss-firm-pomade.webp" width="717" height="960" alt="" decoding="async">
+                <img class="tile__img" data-kind-img="clay" src="assets/img/featured/kestrel-matte-clay.webp" width="717" height="960" alt="" decoding="async">
+                <img class="tile__img" data-kind-img="spray" src="assets/img/featured/halden-sea-salt-spray.webp" width="717" height="960" alt="" decoding="async">
+                <img class="tile__img" data-kind-img="shampoo" src="assets/img/featured/old-quarry-shampoo.webp" width="717" height="960" alt="" decoding="async">
+                <img class="tile__img" data-kind-img="comb" src="assets/img/featured/wren-pocket-comb.webp" width="717" height="960" alt="" decoding="async">
+              </a>
+              <div class="tile__plate">
+                <p class="tile__no"><small>01</small><span>13 <i class="tile__of">of 41 </i>products</span></p>
+                <p class="tile__from" data-assumed>from <i data-count="12" data-from="12">£12</i></p>
+                <p class="tile__name" id="tile-hair">Hair</p>
+                <div class="tile__kinds" role="group" aria-label="Hair products by kind">
+                  <a class="kind" href="#range" data-filter-go="hair" data-kind="pomade" data-from="17" aria-label="Pomade, 3 products, from £17">Pomade<small>3</small></a>
+                  <a class="kind" href="#range" data-filter-go="hair" data-kind="clay" data-from="14" aria-label="Clay, 3 products, from £14">Clay<small>3</small></a>
+                  <a class="kind" href="#range" data-filter-go="hair" data-kind="spray" data-from="16" aria-label="Spray, 2 products, from £16">Spray<small>2</small></a>
+                  <a class="kind" href="#range" data-filter-go="hair" data-kind="shampoo" data-from="15" aria-label="Shampoo, 3 products, from £15">Shampoo<small>3</small></a>
+                  <a class="kind" href="#range" data-filter-go="hair" data-kind="comb" data-from="12" aria-label="Combs, 2 products, from £12">Combs<small>2</small></a>
+                </div>
+                <a class="btn btn--brass tile__all" href="#range" data-filter-go="hair" data-magnetic><span>Browse all 13</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              </div>
+            </article>
+          </li>
+          <li class="bento__cell bento__cell--rest">
+            <ul class="bento__rest" aria-label="More shelves">
+              <li class="bento__cell">
+                <a class="tile tile--shelf" href="#range" data-filter-go="beard" data-tile="beard" data-cursor="Show">
+                  <span class="tile__text">
+                    <small class="tile__no">02 · 9 products</small>
+                    <b class="tile__name">Beard</b>
+                    <span class="tile__line">oil, balm, wash, comb</span>
+                    <span class="tile__foot"><span class="tile__from" data-assumed>from <i data-count="11">£11</i></span><span class="tile__go" aria-hidden="true"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+                  </span>
+                  <span class="tile__window" aria-hidden="true"><img class="tile__img is-on" src="assets/img/featured/barrow-beard-oil.webp" width="717" height="960" alt="" decoding="async"><img class="tile__img" src="assets/img/featured/ashgrove-beard-balm.webp" width="717" height="960" alt="" decoding="async"></span>
+                </a>
+              </li>
+              <li class="bento__cell">
+                <a class="tile tile--shelf" href="#range" data-filter-go="shave" data-tile="shave" data-cursor="Show">
+                  <span class="tile__text">
+                    <small class="tile__no">03 · 10 products</small>
+                    <b class="tile__name">Shave</b>
+                    <span class="tile__line">soap, razor, brush, balm</span>
+                    <span class="tile__foot"><span class="tile__from" data-assumed>from <i data-count="8">£8</i></span><span class="tile__go" aria-hidden="true"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+                  </span>
+                  <span class="tile__window" aria-hidden="true"><img class="tile__img is-on" src="assets/img/featured/thornbury-safety-razor.webp" width="717" height="960" alt="" decoding="async"><img class="tile__img" src="assets/img/featured/copperleaf-shaving-soap.webp" width="717" height="960" alt="" decoding="async"></span>
+                </a>
+              </li>
+              <li class="bento__cell">
+                <a class="tile tile--shelf" href="#range" data-filter-go="skin" data-tile="skin" data-cursor="Show">
+                  <span class="tile__text">
+                    <small class="tile__no">04 · 9 products</small>
+                    <b class="tile__name">Skin</b>
+                    <span class="tile__line">wash, mask, moisturiser</span>
+                    <span class="tile__foot"><span class="tile__from" data-assumed>from <i data-count="7">£7</i></span><span class="tile__go" aria-hidden="true"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+                  </span>
+                  <span class="tile__window" aria-hidden="true"><img class="tile__img is-on" src="assets/img/featured/harbour-lane-moisturiser.webp" width="717" height="960" alt="" decoding="async"><img class="tile__img" src="assets/img/featured/bramble-clay-mask.webp" width="717" height="960" alt="" decoding="async"></span>
+                </a>
+              </li>
+              <li class="bento__cell bento__cell--ask">
+                <aside class="tile tile--ask" aria-labelledby="tile-ask">
+                  <small class="tile__no">Not sure? · Two questions</small>
+                  <p class="tile__ask" id="tile-ask">Which pomade for my hair?</p>
+                  <p class="tile__q" id="tile-ask-q">How long is it on top?</p>
+                  <div class="tile__opts" role="group" aria-labelledby="tile-ask-q">
+                    <a class="opt-go" href="#match" data-length="short">Short</a>
+                    <a class="opt-go" href="#match" data-length="medium">Medium</a>
+                    <a class="opt-go" href="#match" data-length="long">Long</a>
+                  </div>
+                </aside>
+              </li>
+            </ul>
+          </li>
+<!--/BOARD-->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────── ON THE COUNTER: six products, one at a time, turning every 6 s (moment) ───────────── -->
+    <section class="counter" id="counter" aria-labelledby="counter-title" aria-roledescription="carousel">
+      <div class="counter__pin">
+        <div class="wrap counter__grid">
+          <header class="counter__head">
+            <h2 class="counter__title" id="counter-title">Six products, <em>up close</em></h2>
+            <ol class="counter__index" aria-label="Show a product">
+<!--INDEX-->
+              <li><button type="button" class="pidx" data-goto="0"><small>01</small>Firm Pomade</button></li>
+              <li><button type="button" class="pidx" data-goto="1"><small>02</small>Matte Clay</button></li>
+              <li><button type="button" class="pidx" data-goto="2"><small>03</small>Fibre Paste</button></li>
+              <li><button type="button" class="pidx" data-goto="3"><small>04</small>Sea Salt Spray</button></li>
+              <li><button type="button" class="pidx" data-goto="4"><small>05</small>Beard Oil</button></li>
+              <li><button type="button" class="pidx" data-goto="5"><small>06</small>Beard Balm</button></li>
+<!--/INDEX-->
+            </ol>
+          </header>
+
+          <div class="counter__stage" aria-hidden="true">
+            <p class="counter__hint"><svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>Swipe for the next</p>
+          </div>
+
+          <!-- the rotation's controls: where we are, the 6 s timer filling under it, back / pause / forward -->
+          <div class="counter__ctl" hidden>
+            <p class="counter__count" aria-hidden="true"><b>01</b><i><u></u></i><span>06</span></p>
+          </div>
+
+          <div class="counter__items">
+<!--ITEMS-->
+            <article class="item" id="p-oakmoss-firm-pomade" data-item="oakmoss-firm-pomade">
+              <figure class="item__photo"><img src="assets/img/featured/oakmoss-firm-pomade.webp" width="717" height="960" alt="Oakmoss &amp; Iron Firm Pomade, 100 ml" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Hair · Oakmoss &amp; Iron</p>
+                <h3 class="item__name">Firm Pomade</h3>
+                <p class="item__desc">Water-based, so it rinses out with plain water. Holds a side parting or a slick-back from the morning to the evening.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Hold</dt><dd><span class="pips" role="img" aria-label="4 out of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Shine</dt><dd><span class="pips" role="img" aria-label="3 out of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Vetiver and tobacco leaf</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>100 ml</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-cuts">Haircut</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£18</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="oakmoss-firm-pomade"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=oakmoss-firm-pomade" data-pdp="oakmoss-firm-pomade">Full details</a>
+              </div>
+            </article>
+
+            <article class="item" id="p-kestrel-matte-clay" data-item="kestrel-matte-clay">
+              <figure class="item__photo"><img src="assets/img/featured/kestrel-matte-clay.webp" width="717" height="960" alt="Kestrel Supply Co. Matte Clay, 75 g" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Hair · Kestrel Supply Co.</p>
+                <h3 class="item__name">Matte Clay</h3>
+                <p class="item__desc">Kaolin clay for texture that looks like nothing is in it. The one we use on short crops and messy fringes.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Hold</dt><dd><span class="pips" role="img" aria-label="5 out of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></dd></div>
+                  <div class="spec"><dt>Shine</dt><dd><span class="pips" role="img" aria-label="1 out of 5"><i class="on"></i><i></i><i></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Cedar and sage</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>75 g</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-cuts">Skin fade</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£19</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="kestrel-matte-clay"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=kestrel-matte-clay" data-pdp="kestrel-matte-clay">Full details</a>
+              </div>
+            </article>
+
+            <article class="item" id="p-corvid-fibre-paste" data-item="corvid-fibre-paste">
+              <figure class="item__photo"><img src="assets/img/featured/corvid-fibre-paste.webp" width="717" height="960" alt="Corvid &amp; Co. Fibre Paste, 85 g" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Hair · Corvid &amp; Co.</p>
+                <h3 class="item__name">Fibre Paste</h3>
+                <p class="item__desc">A stretchy paste that works through longer hair and can be restyled with the fingers through the day.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Hold</dt><dd><span class="pips" role="img" aria-label="3 out of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Shine</dt><dd><span class="pips" role="img" aria-label="2 out of 5"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Neroli and green tea</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>85 g</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-cuts">Haircut</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£17</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="corvid-fibre-paste"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=corvid-fibre-paste" data-pdp="corvid-fibre-paste">Full details</a>
+              </div>
+            </article>
+
+            <article class="item" id="p-halden-sea-salt-spray" data-item="halden-sea-salt-spray">
+              <figure class="item__photo"><img src="assets/img/featured/halden-sea-salt-spray.webp" width="717" height="960" alt="Halden Brothers Sea Salt Spray, 200 ml" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Hair · Halden Brothers</p>
+                <h3 class="item__name">Sea Salt Spray</h3>
+                <p class="item__desc">A few sprays into damp hair before the dryer. Gives fine hair body and a loose, worn-in texture.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Hold</dt><dd><span class="pips" role="img" aria-label="2 out of 5"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Shine</dt><dd><span class="pips" role="img" aria-label="1 out of 5"><i class="on"></i><i></i><i></i><i></i><i></i></span></dd></div>
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Sea salt and citrus</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>200 ml</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-cuts">Haircut</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£16</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="halden-sea-salt-spray"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=halden-sea-salt-spray" data-pdp="halden-sea-salt-spray">Full details</a>
+              </div>
+            </article>
+
+            <article class="item" id="p-barrow-beard-oil" data-item="barrow-beard-oil">
+              <figure class="item__photo"><img src="assets/img/featured/barrow-beard-oil.webp" width="717" height="960" alt="Barrow &amp; Pike Beard Oil, 30 ml" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Beard · Barrow &amp; Pike</p>
+                <h3 class="item__name">Beard Oil</h3>
+                <p class="item__desc">Three drops a day softens the beard and stops the itch on the skin underneath. What we finish every beard trim with.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Cedarwood and bergamot</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>30 ml</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-beards">Beard trim</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£20</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="barrow-beard-oil"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=barrow-beard-oil" data-pdp="barrow-beard-oil">Full details</a>
+              </div>
+            </article>
+
+            <article class="item" id="p-ashgrove-beard-balm" data-item="ashgrove-beard-balm">
+              <figure class="item__photo"><img src="assets/img/featured/ashgrove-beard-balm.webp" width="717" height="960" alt="Ashgrove Beard Balm, 60 ml" loading="lazy" decoding="async"></figure>
+              <div class="item__text">
+                <p class="item__cat">Beard · Ashgrove</p>
+                <h3 class="item__name">Beard Balm</h3>
+                <p class="item__desc">Holds stray hairs in place and shapes the moustache. Warm a little between the fingers first.</p>
+                <dl class="item__specs">
+                  <div class="spec"><dt>Scent</dt><dd data-assumed>Sandalwood</dd></div>
+                  <div class="spec"><dt>Size</dt><dd data-assumed>60 ml</dd></div>
+                  <div class="spec"><dt>In the chair</dt><dd><a class="link" href="services.html#ch-beards">Beard and hot towel</a></dd></div>
+                </dl>
+                <div class="item__buy">
+                  <p class="item__price" data-assumed>£18</p>
+                  <button type="button" class="btn btn--brass btn--lg" data-add="ashgrove-beard-balm"><span>Add to bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <a class="link item__more" href="?product=ashgrove-beard-balm" data-pdp="ashgrove-beard-balm">Full details</a>
+              </div>
+            </article>
+<!--/ITEMS-->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── THE WHOLE SHELF: filter (Flip) ───────────── -->
+    <section class="range" id="range" aria-labelledby="range-title">
+      <div class="wrap">
+        <header class="range__head">
+          <h2 class="h2" id="range-title" data-lines>All forty-one <em>products</em></h2>
+          <div class="filters" role="group" aria-label="Show products for">
+<!--FILTERS-->
+            <button type="button" class="chip is-on" data-filter="all" aria-pressed="true">All<small>41</small></button>
+            <button type="button" class="chip" data-filter="hair" aria-pressed="false">Hair<small>13</small></button>
+            <button type="button" class="chip" data-filter="beard" aria-pressed="false">Beard<small>9</small></button>
+            <button type="button" class="chip" data-filter="shave" aria-pressed="false">Shave<small>10</small></button>
+            <button type="button" class="chip" data-filter="skin" aria-pressed="false">Skin<small>9</small></button>
+<!--/FILTERS-->
+          </div>
+        </header>
+        <ul class="cards">
+<!--CARDS-->
+          <li class="card card--maker" data-cat="hair" data-kind="pomade" data-flip-id="oakmoss-firm-pomade">
+            <div class="card__media"><img src="assets/img/featured/oakmoss-firm-pomade.webp" width="720" height="960" alt="Oakmoss &amp; Iron Firm Pomade, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Oakmoss &amp; Iron</p>
+              <p class="card__name"><a class="card__link" href="?product=oakmoss-firm-pomade" data-pdp="oakmoss-firm-pomade" data-cursor="View">Firm Pomade</a></p>
+              <p class="card__line">Firm hold, low shine</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£18 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="oakmoss-firm-pomade" aria-label="Add Oakmoss &amp; Iron Firm Pomade to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="clay" data-flip-id="kestrel-matte-clay">
+            <div class="card__media"><img src="assets/img/featured/kestrel-matte-clay.webp" width="720" height="960" alt="Kestrel Supply Co. Matte Clay, 75 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Kestrel Supply Co.</p>
+              <p class="card__name"><a class="card__link" href="?product=kestrel-matte-clay" data-pdp="kestrel-matte-clay" data-cursor="View">Matte Clay</a></p>
+              <p class="card__line">Strong hold, matte finish</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£19 <small>75 g</small></p>
+                <button type="button" class="card__add" data-add="kestrel-matte-clay" aria-label="Add Kestrel Supply Co. Matte Clay to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="clay" data-flip-id="corvid-fibre-paste">
+            <div class="card__media"><img src="assets/img/featured/corvid-fibre-paste.webp" width="720" height="960" alt="Corvid &amp; Co. Fibre Paste, 85 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Corvid &amp; Co.</p>
+              <p class="card__name"><a class="card__link" href="?product=corvid-fibre-paste" data-pdp="corvid-fibre-paste" data-cursor="View">Fibre Paste</a></p>
+              <p class="card__line">Pliable hold, natural finish</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£17 <small>85 g</small></p>
+                <button type="button" class="card__add" data-add="corvid-fibre-paste" aria-label="Add Corvid &amp; Co. Fibre Paste to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="spray" data-flip-id="halden-sea-salt-spray">
+            <div class="card__media"><img src="assets/img/featured/halden-sea-salt-spray.webp" width="720" height="960" alt="Halden Brothers Sea Salt Spray, 200 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Halden Brothers</p>
+              <p class="card__name"><a class="card__link" href="?product=halden-sea-salt-spray" data-pdp="halden-sea-salt-spray" data-cursor="View">Sea Salt Spray</a></p>
+              <p class="card__line">Texture and volume</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£16 <small>200 ml</small></p>
+                <button type="button" class="card__add" data-add="halden-sea-salt-spray" aria-label="Add Halden Brothers Sea Salt Spray to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="clay" data-flip-id="hollowmere-texture-powder">
+            <div class="card__media"><img src="assets/img/featured/hollowmere-texture-powder.webp" width="720" height="960" alt="Hollowmere Texture Powder, 20 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Hollowmere</p>
+              <p class="card__name"><a class="card__link" href="?product=hollowmere-texture-powder" data-pdp="hollowmere-texture-powder" data-cursor="View">Texture Powder</a></p>
+              <p class="card__line">Lift at the root</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£14 <small>20 g</small></p>
+                <button type="button" class="card__add" data-add="hollowmere-texture-powder" aria-label="Add Hollowmere Texture Powder to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="spray" data-flip-id="saltmarsh-hair-tonic">
+            <div class="card__media"><img src="assets/img/featured/saltmarsh-hair-tonic.webp" width="720" height="960" alt="Saltmarsh Hair Tonic, 250 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Saltmarsh</p>
+              <p class="card__name"><a class="card__link" href="?product=saltmarsh-hair-tonic" data-pdp="saltmarsh-hair-tonic" data-cursor="View">Hair Tonic</a></p>
+              <p class="card__line">Daily tonic for the scalp</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£21 <small>250 ml</small></p>
+                <button type="button" class="card__add" data-add="saltmarsh-hair-tonic" aria-label="Add Saltmarsh Hair Tonic to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="shampoo" data-flip-id="old-quarry-shampoo">
+            <div class="card__media"><img src="assets/img/featured/old-quarry-shampoo.webp" width="720" height="960" alt="Old Quarry Daily Shampoo, 300 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Old Quarry</p>
+              <p class="card__name"><a class="card__link" href="?product=old-quarry-shampoo" data-pdp="old-quarry-shampoo" data-cursor="View">Daily Shampoo</a></p>
+              <p class="card__line">Gentle everyday wash</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£15 <small>300 ml</small></p>
+                <button type="button" class="card__add" data-add="old-quarry-shampoo" aria-label="Add Old Quarry Daily Shampoo to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="shampoo" data-flip-id="fenwick-conditioner">
+            <div class="card__media"><img src="assets/img/featured/fenwick-conditioner.webp" width="720" height="960" alt="Fenwick &amp; Vale Conditioner, 300 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Fenwick &amp; Vale</p>
+              <p class="card__name"><a class="card__link" href="?product=fenwick-conditioner" data-pdp="fenwick-conditioner" data-cursor="View">Conditioner</a></p>
+              <p class="card__line">Softens without weight</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£15 <small>300 ml</small></p>
+                <button type="button" class="card__add" data-add="fenwick-conditioner" aria-label="Add Fenwick &amp; Vale Conditioner to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="barrow-beard-oil">
+            <div class="card__media"><img src="assets/img/featured/barrow-beard-oil.webp" width="720" height="960" alt="Barrow &amp; Pike Beard Oil, 30 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Barrow &amp; Pike</p>
+              <p class="card__name"><a class="card__link" href="?product=barrow-beard-oil" data-pdp="barrow-beard-oil" data-cursor="View">Beard Oil</a></p>
+              <p class="card__line">Softens the beard and the skin</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£20 <small>30 ml</small></p>
+                <button type="button" class="card__add" data-add="barrow-beard-oil" aria-label="Add Barrow &amp; Pike Beard Oil to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="ashgrove-beard-balm">
+            <div class="card__media"><img src="assets/img/featured/ashgrove-beard-balm.webp" width="720" height="960" alt="Ashgrove Beard Balm, 60 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Ashgrove</p>
+              <p class="card__name"><a class="card__link" href="?product=ashgrove-beard-balm" data-pdp="ashgrove-beard-balm" data-cursor="View">Beard Balm</a></p>
+              <p class="card__line">Shapes and conditions</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£18 <small>60 ml</small></p>
+                <button type="button" class="card__add" data-add="ashgrove-beard-balm" aria-label="Add Ashgrove Beard Balm to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="pomade" data-flip-id="blackthorn-styling-cream">
+            <div class="card__media"><img src="assets/img/featured/blackthorn-styling-cream.webp" width="720" height="960" alt="Blackthorn Styling Cream, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Blackthorn</p>
+              <p class="card__name"><a class="card__link" href="?product=blackthorn-styling-cream" data-pdp="blackthorn-styling-cream" data-cursor="View">Styling Cream</a></p>
+              <p class="card__line">Light hold, soft shine</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£17 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="blackthorn-styling-cream" aria-label="Add Blackthorn Styling Cream to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="comb" data-flip-id="wren-pocket-comb">
+            <div class="card__media"><img src="assets/img/featured/wren-pocket-comb.webp" width="720" height="960" alt="Wren &amp; Hollis Pocket Comb, Acetate" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Wren &amp; Hollis</p>
+              <p class="card__name"><a class="card__link" href="?product=wren-pocket-comb" data-pdp="wren-pocket-comb" data-cursor="View">Pocket Comb</a></p>
+              <p class="card__line">Hand-cut, fits a shirt pocket</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£12 <small>Acetate</small></p>
+                <button type="button" class="card__add" data-add="wren-pocket-comb" aria-label="Add Wren &amp; Hollis Pocket Comb to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="comb" data-flip-id="ashby-hair-brush">
+            <div class="card__media"><img src="assets/img/featured/ashby-hair-brush.webp" width="720" height="960" alt="Ashby Boar Bristle Brush, Beech" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Ashby</p>
+              <p class="card__name"><a class="card__link" href="?product=ashby-hair-brush" data-pdp="ashby-hair-brush" data-cursor="View">Boar Bristle Brush</a></p>
+              <p class="card__line">Smooths and spreads product</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£26 <small>Beech</small></p>
+                <button type="button" class="card__add" data-add="ashby-hair-brush" aria-label="Add Ashby Boar Bristle Brush to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="pomade" data-flip-id="harrow-oil-pomade">
+            <div class="card__media"><img src="assets/img/featured/harrow-oil-pomade.webp" width="720" height="960" alt="Harrow Oil Pomade, 100 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Harrow</p>
+              <p class="card__name"><a class="card__link" href="?product=harrow-oil-pomade" data-pdp="harrow-oil-pomade" data-cursor="View">Oil Pomade</a></p>
+              <p class="card__line">Medium hold, high shine</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£18 <small>100 g</small></p>
+                <button type="button" class="card__add" data-add="harrow-oil-pomade" aria-label="Add Harrow Oil Pomade to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="hair" data-kind="shampoo" data-flip-id="ashdown-thickening-shampoo">
+            <div class="card__media"><img src="assets/img/featured/ashdown-thickening-shampoo.webp" width="720" height="960" alt="Ashdown Thickening Shampoo, 250 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Hair · Ashdown</p>
+              <p class="card__name"><a class="card__link" href="?product=ashdown-thickening-shampoo" data-pdp="ashdown-thickening-shampoo" data-cursor="View">Thickening Shampoo</a></p>
+              <p class="card__line">Body for fine hair</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£17 <small>250 ml</small></p>
+                <button type="button" class="card__add" data-add="ashdown-thickening-shampoo" aria-label="Add Ashdown Thickening Shampoo to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="tanners-moustache-wax">
+            <div class="card__media"><img src="assets/img/featured/tanners-moustache-wax.webp" width="720" height="960" alt="Tanner's Row Moustache Wax, 15 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Tanner's Row</p>
+              <p class="card__name"><a class="card__link" href="?product=tanners-moustache-wax" data-pdp="tanners-moustache-wax" data-cursor="View">Moustache Wax</a></p>
+              <p class="card__line">Holds a curl all day</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£11 <small>15 g</small></p>
+                <button type="button" class="card__add" data-add="tanners-moustache-wax" aria-label="Add Tanner's Row Moustache Wax to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="merrow-beard-wash">
+            <div class="card__media"><img src="assets/img/featured/merrow-beard-wash.webp" width="720" height="960" alt="Merrow Beard Wash, 150 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Merrow</p>
+              <p class="card__name"><a class="card__link" href="?product=merrow-beard-wash" data-pdp="merrow-beard-wash" data-cursor="View">Beard Wash</a></p>
+              <p class="card__line">Cleans without drying</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£16 <small>150 ml</small></p>
+                <button type="button" class="card__add" data-add="merrow-beard-wash" aria-label="Add Merrow Beard Wash to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="hartwell-beard-comb">
+            <div class="card__media"><img src="assets/img/featured/hartwell-beard-comb.webp" width="720" height="960" alt="Hartwell Beard Comb, Pearwood" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Hartwell</p>
+              <p class="card__name"><a class="card__link" href="?product=hartwell-beard-comb" data-pdp="hartwell-beard-comb" data-cursor="View">Beard Comb</a></p>
+              <p class="card__line">Fine and wide teeth</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£14 <small>Pearwood</small></p>
+                <button type="button" class="card__add" data-add="hartwell-beard-comb" aria-label="Add Hartwell Beard Comb to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="oxley-beard-brush">
+            <div class="card__media"><img src="assets/img/featured/oxley-beard-brush.webp" width="720" height="960" alt="Oxley Beard Brush, Walnut" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Oxley</p>
+              <p class="card__name"><a class="card__link" href="?product=oxley-beard-brush" data-pdp="oxley-beard-brush" data-cursor="View">Beard Brush</a></p>
+              <p class="card__line">Trains the beard into shape</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£22 <small>Walnut</small></p>
+                <button type="button" class="card__add" data-add="oxley-beard-brush" aria-label="Add Oxley Beard Brush to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="ferris-beard-conditioner">
+            <div class="card__media"><img src="assets/img/featured/ferris-beard-conditioner.webp" width="720" height="960" alt="Ferris Beard Conditioner, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Ferris</p>
+              <p class="card__name"><a class="card__link" href="?product=ferris-beard-conditioner" data-pdp="ferris-beard-conditioner" data-cursor="View">Beard Conditioner</a></p>
+              <p class="card__line">Leave-in, softens coarse hair</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£18 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="ferris-beard-conditioner" aria-label="Add Ferris Beard Conditioner to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="linden-beard-butter">
+            <div class="card__media"><img src="assets/img/featured/linden-beard-butter.webp" width="720" height="960" alt="Linden Beard Butter, 50 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Linden</p>
+              <p class="card__name"><a class="card__link" href="?product=linden-beard-butter" data-pdp="linden-beard-butter" data-cursor="View">Beard Butter</a></p>
+              <p class="card__line">Shea and cocoa, light hold</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£15 <small>50 g</small></p>
+                <button type="button" class="card__add" data-add="linden-beard-butter" aria-label="Add Linden Beard Butter to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="beard" data-flip-id="sheffield-beard-scissors">
+            <div class="card__media"><img src="assets/img/featured/sheffield-beard-scissors.webp" width="720" height="960" alt="Sheffield Beard Scissors, Steel" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Beard · Sheffield</p>
+              <p class="card__name"><a class="card__link" href="?product=sheffield-beard-scissors" data-pdp="sheffield-beard-scissors" data-cursor="View">Beard Scissors</a></p>
+              <p class="card__line">Short blades for the moustache</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£28 <small>Steel</small></p>
+                <button type="button" class="card__add" data-add="sheffield-beard-scissors" aria-label="Add Sheffield Beard Scissors to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="copperleaf-shaving-soap">
+            <div class="card__media"><img src="assets/img/featured/copperleaf-shaving-soap.webp" width="720" height="960" alt="Copperleaf Shaving Soap, 110 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Copperleaf</p>
+              <p class="card__name"><a class="card__link" href="?product=copperleaf-shaving-soap" data-pdp="copperleaf-shaving-soap" data-cursor="View">Shaving Soap</a></p>
+              <p class="card__line">Rich lather in a walnut bowl</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£22 <small>110 g</small></p>
+                <button type="button" class="card__add" data-add="copperleaf-shaving-soap" aria-label="Add Copperleaf Shaving Soap to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="northwick-shaving-cream">
+            <div class="card__media"><img src="assets/img/featured/northwick-shaving-cream.webp" width="720" height="960" alt="Northwick Shaving Cream, 150 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Northwick</p>
+              <p class="card__name"><a class="card__link" href="?product=northwick-shaving-cream" data-pdp="northwick-shaving-cream" data-cursor="View">Shaving Cream</a></p>
+              <p class="card__line">Cushioning for a close shave</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£19 <small>150 ml</small></p>
+                <button type="button" class="card__add" data-add="northwick-shaving-cream" aria-label="Add Northwick Shaving Cream to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="ludlow-pre-shave-oil">
+            <div class="card__media"><img src="assets/img/featured/ludlow-pre-shave-oil.webp" width="720" height="960" alt="Ludlow Pre-shave Oil, 50 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Ludlow</p>
+              <p class="card__name"><a class="card__link" href="?product=ludlow-pre-shave-oil" data-pdp="ludlow-pre-shave-oil" data-cursor="View">Pre-shave Oil</a></p>
+              <p class="card__line">Softens stubble before the blade</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£17 <small>50 ml</small></p>
+                <button type="button" class="card__add" data-add="ludlow-pre-shave-oil" aria-label="Add Ludlow Pre-shave Oil to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="greyfriars-aftershave">
+            <div class="card__media"><img src="assets/img/featured/greyfriars-aftershave.webp" width="720" height="960" alt="Greyfriars Aftershave Tonic, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Greyfriars</p>
+              <p class="card__name"><a class="card__link" href="?product=greyfriars-aftershave" data-pdp="greyfriars-aftershave" data-cursor="View">Aftershave Tonic</a></p>
+              <p class="card__line">Cools and closes the skin</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£24 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="greyfriars-aftershave" aria-label="Add Greyfriars Aftershave Tonic to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="aldridge-post-shave-balm">
+            <div class="card__media"><img src="assets/img/featured/aldridge-post-shave-balm.webp" width="720" height="960" alt="Aldridge Post-shave Balm, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Aldridge</p>
+              <p class="card__name"><a class="card__link" href="?product=aldridge-post-shave-balm" data-pdp="aldridge-post-shave-balm" data-cursor="View">Post-shave Balm</a></p>
+              <p class="card__line">Calms razor burn</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£21 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="aldridge-post-shave-balm" aria-label="Add Aldridge Post-shave Balm to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="kerne-alum-block">
+            <div class="card__media"><img src="assets/img/featured/kerne-alum-block.webp" width="720" height="960" alt="Kerne Alum Block, 75 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Kerne</p>
+              <p class="card__name"><a class="card__link" href="?product=kerne-alum-block" data-pdp="kerne-alum-block" data-cursor="View">Alum Block</a></p>
+              <p class="card__line">Stops nicks, tones the skin</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£10 <small>75 g</small></p>
+                <button type="button" class="card__add" data-add="kerne-alum-block" aria-label="Add Kerne Alum Block to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="kingsley-razor-blades">
+            <div class="card__media"><img src="assets/img/featured/kingsley-razor-blades.webp" width="720" height="960" alt="Kingsley Razor Blades, 10 blades" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Kingsley</p>
+              <p class="card__name"><a class="card__link" href="?product=kingsley-razor-blades" data-pdp="kingsley-razor-blades" data-cursor="View">Razor Blades</a></p>
+              <p class="card__line">Double-edge refills</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£8 <small>10 blades</small></p>
+                <button type="button" class="card__add" data-add="kingsley-razor-blades" aria-label="Add Kingsley Razor Blades to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="brackley-shaving-stand">
+            <div class="card__media"><img src="assets/img/featured/brackley-shaving-stand.webp" width="720" height="960" alt="Brackley Shaving Stand, Brass" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Brackley</p>
+              <p class="card__name"><a class="card__link" href="?product=brackley-shaving-stand" data-pdp="brackley-shaving-stand" data-cursor="View">Shaving Stand</a></p>
+              <p class="card__line">Dries the brush, holds the razor</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£24 <small>Brass</small></p>
+                <button type="button" class="card__add" data-add="brackley-shaving-stand" aria-label="Add Brackley Shaving Stand to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="pemberton-shaving-brush">
+            <div class="card__media"><img src="assets/img/featured/pemberton-shaving-brush.webp" width="720" height="960" alt="Pemberton Badger Brush, Rosewood" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Pemberton</p>
+              <p class="card__name"><a class="card__link" href="?product=pemberton-shaving-brush" data-pdp="pemberton-shaving-brush" data-cursor="View">Badger Brush</a></p>
+              <p class="card__line">Whips soap into lather</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£38 <small>Rosewood</small></p>
+                <button type="button" class="card__add" data-add="pemberton-shaving-brush" aria-label="Add Pemberton Badger Brush to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="shave" data-flip-id="thornbury-safety-razor">
+            <div class="card__media"><img src="assets/img/featured/thornbury-safety-razor.webp" width="720" height="960" alt="Thornbury Safety Razor, Brass" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Shave · Thornbury</p>
+              <p class="card__name"><a class="card__link" href="?product=thornbury-safety-razor" data-pdp="thornbury-safety-razor" data-cursor="View">Safety Razor</a></p>
+              <p class="card__line">Double-edge, built to last</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£45 <small>Brass</small></p>
+                <button type="button" class="card__add" data-add="thornbury-safety-razor" aria-label="Add Thornbury Safety Razor to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="ravensworth-face-wash">
+            <div class="card__media"><img src="assets/img/featured/ravensworth-face-wash.webp" width="720" height="960" alt="Ravensworth Face Wash, 150 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Ravensworth</p>
+              <p class="card__name"><a class="card__link" href="?product=ravensworth-face-wash" data-pdp="ravensworth-face-wash" data-cursor="View">Face Wash</a></p>
+              <p class="card__line">Daily wash for every skin</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£16 <small>150 ml</small></p>
+                <button type="button" class="card__add" data-add="ravensworth-face-wash" aria-label="Add Ravensworth Face Wash to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="elmstead-face-scrub">
+            <div class="card__media"><img src="assets/img/featured/elmstead-face-scrub.webp" width="720" height="960" alt="Elmstead Charcoal Scrub, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Elmstead</p>
+              <p class="card__name"><a class="card__link" href="?product=elmstead-face-scrub" data-pdp="elmstead-face-scrub" data-cursor="View">Charcoal Scrub</a></p>
+              <p class="card__line">Clears ingrown hairs</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£14 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="elmstead-face-scrub" aria-label="Add Elmstead Charcoal Scrub to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="bramble-clay-mask">
+            <div class="card__media"><img src="assets/img/featured/bramble-clay-mask.webp" width="720" height="960" alt="Bramble Clay Mask, 100 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Bramble</p>
+              <p class="card__name"><a class="card__link" href="?product=bramble-clay-mask" data-pdp="bramble-clay-mask" data-cursor="View">Clay Mask</a></p>
+              <p class="card__line">Weekly deep clean</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£22 <small>100 ml</small></p>
+                <button type="button" class="card__add" data-add="bramble-clay-mask" aria-label="Add Bramble Clay Mask to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="harbour-lane-moisturiser">
+            <div class="card__media"><img src="assets/img/featured/harbour-lane-moisturiser.webp" width="720" height="960" alt="Harbour Lane Daily Moisturiser, 75 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Harbour Lane</p>
+              <p class="card__name"><a class="card__link" href="?product=harbour-lane-moisturiser" data-pdp="harbour-lane-moisturiser" data-cursor="View">Daily Moisturiser</a></p>
+              <p class="card__line">Light, absorbs fast</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£20 <small>75 ml</small></p>
+                <button type="button" class="card__add" data-add="harbour-lane-moisturiser" aria-label="Add Harbour Lane Daily Moisturiser to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="cobbold-lip-balm">
+            <div class="card__media"><img src="assets/img/featured/cobbold-lip-balm.webp" width="720" height="960" alt="Cobbold Lip Balm, 15 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Cobbold</p>
+              <p class="card__name"><a class="card__link" href="?product=cobbold-lip-balm" data-pdp="cobbold-lip-balm" data-cursor="View">Lip Balm</a></p>
+              <p class="card__line">Beeswax for wind and cold</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£7 <small>15 ml</small></p>
+                <button type="button" class="card__add" data-add="cobbold-lip-balm" aria-label="Add Cobbold Lip Balm to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="saltash-body-wash">
+            <div class="card__media"><img src="assets/img/featured/saltash-body-wash.webp" width="720" height="960" alt="Saltash Body Wash, 250 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Saltash</p>
+              <p class="card__name"><a class="card__link" href="?product=saltash-body-wash" data-pdp="saltash-body-wash" data-cursor="View">Body Wash</a></p>
+              <p class="card__line">Cedar and sea salt</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£14 <small>250 ml</small></p>
+                <button type="button" class="card__add" data-add="saltash-body-wash" aria-label="Add Saltash Body Wash to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="grantley-eye-balm">
+            <div class="card__media"><img src="assets/img/featured/grantley-eye-balm.webp" width="720" height="960" alt="Grantley Eye Balm, 15 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Grantley</p>
+              <p class="card__name"><a class="card__link" href="?product=grantley-eye-balm" data-pdp="grantley-eye-balm" data-cursor="View">Eye Balm</a></p>
+              <p class="card__line">Cools tired eyes</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£19 <small>15 ml</small></p>
+                <button type="button" class="card__add" data-add="grantley-eye-balm" aria-label="Add Grantley Eye Balm to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="westerly-bar-soap">
+            <div class="card__media"><img src="assets/img/featured/westerly-bar-soap.webp" width="720" height="960" alt="Westerly Bar Soap, 150 g" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Westerly</p>
+              <p class="card__name"><a class="card__link" href="?product=westerly-bar-soap" data-pdp="westerly-bar-soap" data-cursor="View">Bar Soap</a></p>
+              <p class="card__line">Oatmeal, made by hand</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£9 <small>150 g</small></p>
+                <button type="button" class="card__add" data-add="westerly-bar-soap" aria-label="Add Westerly Bar Soap to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+          <li class="card card--maker" data-cat="skin" data-flip-id="marlowe-cologne">
+            <div class="card__media"><img src="assets/img/featured/marlowe-cologne.webp" width="720" height="960" alt="Marlowe Eau de Cologne, 50 ml" loading="lazy" decoding="async"></div>
+            <div class="card__body">
+              <p class="card__cat">Skin · Marlowe</p>
+              <p class="card__name"><a class="card__link" href="?product=marlowe-cologne" data-pdp="marlowe-cologne" data-cursor="View">Eau de Cologne</a></p>
+              <p class="card__line">Vetiver, bergamot and oak</p>
+              <div class="card__foot">
+                <p class="card__price" data-assumed>£32 <small>50 ml</small></p>
+                <button type="button" class="card__add" data-add="marlowe-cologne" aria-label="Add Marlowe Eau de Cologne to the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+              </div>
+            </div>
+          </li>
+<!--/CARDS-->
+        </ul>
+        <p class="range__empty" data-range-empty hidden>This shelf is on its way: we are photographing it now. Ask at the counter in the meantime.</p>
+      </div>
+    </section>
+
+    <!-- ───────────── WHICH POMADE: two questions, one answer ───────────── -->
+    <section class="match" id="match" aria-labelledby="match-title">
+      <div class="wrap match__grid">
+        <div class="match__ask">
+          <h2 class="h2" id="match-title" data-lines>Which pomade <em>for your hair</em></h2>
+          <p class="match__lede">Two questions. The answer is what we would reach for if you were in the chair today.</p>
+
+          <fieldset class="ask">
+            <legend class="ask__q">How long is it on top?</legend>
+            <div class="ask__opts">
+              <label class="opt"><input type="radio" name="length" value="short" checked><span>Short<small>clipper to 5 cm</small></span></label>
+              <label class="opt"><input type="radio" name="length" value="medium"><span>Medium<small>5 to 10 cm</small></span></label>
+              <label class="opt"><input type="radio" name="length" value="long"><span>Long<small>past the ears</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="ask">
+            <legend class="ask__q">What finish do you want?</legend>
+            <div class="ask__opts">
+              <label class="opt"><input type="radio" name="finish" value="matte" checked><span>Matte<small>looks like nothing</small></span></label>
+              <label class="opt"><input type="radio" name="finish" value="natural"><span>Natural<small>a soft sheen</small></span></label>
+              <label class="opt"><input type="radio" name="finish" value="shine"><span>Shine<small>combed and glossy</small></span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="match__answer">
+          <div class="match__chart">
+            <svg viewBox="0 0 400 400" class="chart" role="group" aria-label="Every styler on the shelf by hold and shine. Pick one to see it.">
+              <g class="chart__grid" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="360"/><line x1="40" y1="360" x2="380" y2="360"/>
+                <line x1="40" y1="292" x2="380" y2="292"/><line x1="40" y1="224" x2="380" y2="224"/><line x1="40" y1="156" x2="380" y2="156"/><line x1="40" y1="88" x2="380" y2="88"/>
+                <line x1="108" y1="20" x2="108" y2="360"/><line x1="176" y1="20" x2="176" y2="360"/><line x1="244" y1="20" x2="244" y2="360"/><line x1="312" y1="20" x2="312" y2="360"/>
+              </g>
+              <text aria-hidden="true" class="chart__axis" x="40" y="388">Shine</text>
+              <text aria-hidden="true" class="chart__axis" x="380" y="388" text-anchor="end">more</text>
+              <text aria-hidden="true" class="chart__axis" x="22" y="360" transform="rotate(-90 22 360)">Hold</text>
+              <text aria-hidden="true" class="chart__axis" x="22" y="20" transform="rotate(-90 22 20)" text-anchor="end">more</text>
+              <g class="chart__dots" data-dots>
+<!--DOTS-->
+                <g class="chart__dot" data-dot="oakmoss-firm-pomade" transform="translate(244 88)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="kestrel-matte-clay" transform="translate(74 20)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="corvid-fibre-paste" transform="translate(176 156)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="halden-sea-salt-spray" transform="translate(108 258)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="hollowmere-texture-powder" transform="translate(53.6 224)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="blackthorn-styling-cream" transform="translate(210 224)"><circle r="7"/></g>
+                <g class="chart__dot" data-dot="harrow-oil-pomade" transform="translate(346 156)"><circle r="7"/></g>
+<!--/DOTS-->
+              </g>
+              <g class="chart__you" data-you aria-hidden="true"><circle r="22"/><circle r="4"/></g>
+              <!-- one name at a time: the match, or the dot under the pointer / keyboard (shop.js) -->
+              <g class="chart__tag" data-tag aria-hidden="true"><line/><rect rx="5"/><text/></g>
+            </svg>
+          </div>
+          <div class="pick-result" aria-live="polite" data-result>
+<!--RESULT-->
+            <figure class="pick-result__photo"><img src="assets/img/featured/kestrel-matte-clay.webp" width="717" height="960" alt="Kestrel Supply Co. Matte Clay, 75 g" loading="lazy" decoding="async"></figure>
+            <div class="pick-result__text">
+              <p class="pick-result__for" data-result-for>For short hair, matte</p>
+              <p class="pick-result__name" data-result-name>Kestrel Supply Co. Matte Clay</p>
+              <p class="pick-result__why" data-result-why>The most hold on the shelf with no shine at all: it keeps a short crop textured and looks like nothing is in it.</p>
+              <p class="pick-result__alt" data-result-alt hidden></p>
+              <div class="pick-result__buy"><span class="pick-result__price" data-result-price data-assumed>£19</span><button type="button" class="btn btn--line" data-add="kestrel-matte-clay" data-result-add><span>Add to bag</span></button></div>
+            </div>
+<!--/RESULT-->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── COLLECT AT THE COUNTER ───────────── -->
+    <section class="collect" id="collect" aria-labelledby="collect-title">
+      <div class="wrap collect__grid">
+        <div class="collect__text">
+          <h2 class="h2" id="collect-title" data-lines>Reserve now, <em>collect at the counter</em></h2>
+          <dl class="facts">
+            <div><dt>We hold it for</dt><dd data-assumed>7 days</dd></div>
+            <div><dt>You pay</dt><dd>At the counter, by card or cash</dd></div>
+            <div><dt>With a cut or a shave</dt><dd data-assumed>10% off anything you take home that day</dd></div>
+            <div><dt>Not sure what to buy</dt><dd>Ask your barber to show you in the chair</dd></div>
+          </dl>
+          <div class="collect__actions">
+            <button type="button" class="btn btn--brass btn--lg" data-bag-open data-magnetic><span>Open your bag</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <a class="link" href="services.html#book">Book a chair</a>
+          </div>
+        </div>
+        <figure class="collect__photo mirror">
+          <picture><source srcset="assets/img/shelf-960.webp 960w, assets/img/shelf-1600.webp 1600w, assets/img/shelf.webp 2560w" sizes="100vw" type="image/webp"><img src="assets/img/shelf.jpg" width="1024" height="1024" loading="lazy" alt="Black bottles and tins on brass shelves against the walnut wall, a shaving brush and a wooden box on the lower shelf"></picture>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__top">
+      <img class="footer__seal" src="assets/img/seal.webp" width="660" height="660" loading="lazy" alt="Heritage Grooming seal: a comb and a straight razor crossed on a shield">
+      <nav class="footer__links" aria-label="Footer">
+        <a class="link" href="index.html#shop">The shop</a>
+        <a class="link" href="services.html">Services</a>
+        <a class="link" href="shop.html">Products</a>
+        <a class="link" href="team.html">The barbers</a>
+        <a class="link" href="gallery.html">The work</a>
+        <a class="link" href="index.html#visit">A visit</a>
+        <a class="link" href="index.html#find">Find us</a>
+        <a class="link" href="index.html#contact">Contact</a>
+      </nav>
+      <a class="btn btn--brass btn--lg" href="services.html#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <!-- the shop's facts, then the fascia. ASSUMED: address, hours, phone and email are stand-ins (hours: house.js HOURS) -->
+    <div class="wrap footer__info">
+      <section class="footer__col" aria-labelledby="ft-visit">
+        <h2 class="footer__label" id="ft-visit">Visit</h2>
+        <address class="footer__text" data-assumed>14 Chapel Street<br>Old Town</address>
+        <a class="link" href="index.html#find">How to find us</a>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-hours">
+        <h2 class="footer__label" id="ft-hours">Hours</h2>
+        <dl class="footer__hours" data-assumed>
+          <div><dt>Tuesday to Friday</dt><dd>9:00 – 19:00</dd></div>
+          <div><dt>Saturday</dt><dd>9:00 – 17:00</dd></div>
+          <div><dt>Sunday and Monday</dt><dd>Closed</dd></div>
+        </dl>
+        <p class="footer__status" data-open-status>Open Tuesday to Saturday</p>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-call">
+        <h2 class="footer__label" id="ft-call">Call or write</h2>
+        <a class="footer__text footer__tel" href="tel:+440000000000" data-assumed>+44 0000 000 000</a>
+        <a class="link" href="mailto:hello@heritagegrooming.example" data-assumed>hello@heritagegrooming.example</a>
+      </section>
+    </div>
+    <div class="wrap">
+      <div class="footer__sign" aria-hidden="true">
+        <span class="footer__rule"></span>
+        <p class="footer__word">Heritage Grooming</p>
+        <span class="footer__rule"></span>
+        <p class="footer__strap"><span>Barbers</span><span>Chapel Street · Old Town</span><span>Est. 2020</span></p>
+      </div>
+    </div>
+    <div class="wrap footer__legal">
+      <span>© 2026 Heritage Grooming</span>
+      <a class="link" href="#top">Back to top</a>
+    </div>
+  </footer>
+
+  <!-- ───────────── THE PRODUCT SHEET (js/shop.js fills it from js/shop-data.js + js/shop-details.js) ───────────── -->
+  <dialog class="pdp" aria-labelledby="pdp-name" aria-describedby="pdp-desc" data-lenis-prevent>
+    <div class="pdp__bar">
+      <p class="pdp__crumb"><span data-pdp-crumb>Hair</span><span class="pdp__pos" data-pdp-pos aria-hidden="true"></span></p>
+      <div class="pdp__tools">
+        <button type="button" class="pdp__icon" data-pdp-step="-1" aria-label="Previous product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" class="pdp__icon" data-pdp-step="1" aria-label="Next product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button type="button" class="pdp__icon pdp__close" data-pdp-close aria-label="Close the product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+    </div>
+
+    <div class="pdp__scroll" data-pdp-scroll>
+      <div class="pdp__body">
+        <figure class="pdp__photo"><img data-pdp-img src="assets/img/featured/pending.svg" width="717" height="960" alt=""></figure>
+
+        <div class="pdp__info">
+          <div class="pdp__head" data-pdp-part>
+            <p class="pdp__maker" data-pdp-maker></p>
+            <h2 class="pdp__name" id="pdp-name" data-pdp-name></h2>
+            <p class="pdp__line" data-pdp-line></p>
+          </div>
+
+          <p class="pdp__price" data-pdp-part><span data-pdp-price data-assumed></span><small data-pdp-size data-assumed></small></p>
+
+          <p class="pdp__desc" id="pdp-desc" data-pdp-desc data-pdp-part data-assumed></p>
+
+          <div class="pdp__buy" data-pdp-part>
+            <span class="qty__ctl pdp__qty" role="group" aria-label="Quantity">
+              <button type="button" data-pdp-qty="-1" aria-label="One fewer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg></button>
+              <output data-pdp-count aria-live="polite" aria-label="Quantity">1</output>
+              <button type="button" data-pdp-qty="1" aria-label="One more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg></button>
+            </span>
+            <button type="button" class="btn btn--brass btn--lg pdp__add" data-pdp-add><span>Add to bag</span><b class="pdp__add-sum" data-pdp-sum data-assumed></b></button>
+          </div>
+          <p class="pdp__inbag" data-pdp-inbag hidden><span data-pdp-inbag-text></span><button type="button" class="link link--btn" data-pdp-bag>View bag</button></p>
+
+          <dl class="pdp__specs" data-pdp-specs data-pdp-part></dl>
+
+          <div class="pdp__use" data-pdp-part>
+            <h3 class="pdp__sub">How to use</h3>
+            <p data-pdp-use data-assumed></p>
+          </div>
+
+          <ul class="pdp__promise" data-pdp-part>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span>Reserve here, pay at the counter by card or cash</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/></svg><span>We text you when it is ready to collect</span></li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Open Tuesday to Saturday</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <section class="pdp__more" aria-labelledby="pdp-more-title">
+        <h3 class="pdp__sub" id="pdp-more-title">From the same shelf</h3>
+        <ul class="pdp__related" data-pdp-related></ul>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- ───────────── THE BAG ───────────── -->
+  <dialog class="bag" aria-labelledby="bag-title" data-lenis-prevent>
+    <div class="bag__panel">
+      <header class="bag__head">
+        <h2 class="bag__title" id="bag-title">Your bag</h2>
+        <button type="button" class="bag__close" data-bag-close aria-label="Close the bag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </header>
+
+      <div class="bag__view" data-view="list">
+        <ul class="bag__list" data-bag-list></ul>
+        <div class="bag__empty" data-bag-empty>
+          <p>Nothing in the bag yet. Everything on the shelf can be reserved here and paid for when you collect it.</p>
+          <a class="btn btn--line" href="#range" data-bag-close><span>Browse the shelf</span></a>
+        </div>
+        <div class="bag__foot" data-bag-foot>
+          <p class="bag__total"><span>To pay when you collect</span><b data-bag-total>£0</b></p>
+          <button type="button" class="btn btn--brass btn--lg" data-bag-next><span>Reserve for collection</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+
+      <form class="bag__view bag__form" data-view="form" hidden novalidate>
+        <p class="bag__sub">Who is collecting?</p>
+        <div class="fields">
+          <label class="field field--wide"><span class="field__label">Name</span>
+            <input type="text" name="name" autocomplete="name" required>
+            <span class="field__error" data-error-for="name"></span></label>
+          <label class="field field--wide"><span class="field__label">Mobile number <small>we text you when it is ready</small></span>
+            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required>
+            <span class="field__error" data-error-for="phone"></span></label>
+        </div>
+        <p class="bag__sub" id="day-label">When will you come in?</p>
+        <div class="bag__days" role="radiogroup" aria-labelledby="day-label" data-bag-days></div>
+        <span class="field__error" data-error-for="day"></span>
+        <div class="bag__foot">
+          <p class="bag__total"><span data-bag-count-line>0 items</span><b data-bag-total>£0</b></p>
+          <div class="bag__nav">
+            <button type="button" class="link link--btn" data-bag-back>Back to the bag</button>
+            <button type="submit" class="btn btn--brass btn--lg"><span>Reserve</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </div>
+      </form>
+
+      <div class="bag__view bag__done" data-view="done" hidden tabindex="-1">
+        <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
+        <h3 class="done__title" data-done-title></h3>
+        <p class="done__body" data-done-body></p>
+        <p class="done__demo">Preview mode: reservations are not switched on yet, so nothing has been sent or stored.</p>
+        <a class="btn btn--line" href="#range" data-bag-close data-bag-reset><span>Back to the shelf</span></a>
+      </div>
+    </div>
+  </dialog>
+
+  <p class="sr-only" aria-live="polite" data-announce></p>
+  <button type="button" class="bagbar btn btn--brass" data-bag-open><span data-bagbar-label>Your bag</span></button>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script type="module" src="js/shop.js"></script>
+  <script type="module" src="js/book-sheet.js"></script>
+</body>
+</html>

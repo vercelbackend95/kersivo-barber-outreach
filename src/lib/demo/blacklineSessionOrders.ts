@@ -1,9 +1,15 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { isBlacklineAdminDemoPathname } from '@/lib/admin/demoConfig';
+import { isBrandedAdminDemoPathname } from '@/lib/admin/demoConfig';
 import {
   createCollisionResistantId,
   makeBlacklineDemoReference,
 } from '@/lib/demo/blacklineSessionBookings';
+import {
+  HERITAGE_DEMO_ORDERS_KEY,
+  HERITAGE_RETAIL_JOURNEY_KEY,
+  currentBrandedDemoTenant,
+  demoTenantStorage,
+} from './demoTenantStore';
 
 export const BLACKLINE_SESSION_ORDERS_KEY = 'kersivo.blackline.session-orders.v1';
 export const BLACKLINE_RETAIL_JOURNEY_KEY = 'kersivo.blackline.retail-journey.v1';
@@ -128,12 +134,16 @@ export type BlacklineConfirmationSnapshot = {
 };
 
 function getSessionStorage(): Storage | null {
-  try {
-    if (typeof globalThis === 'undefined' || !('sessionStorage' in globalThis)) return null;
-    return globalThis.sessionStorage;
-  } catch {
-    return null;
-  }
+  return demoTenantStorage();
+}
+
+/** CUTSTATE keeps its keys; the Heritage Grooming demo has its own (see demoTenantStore). */
+function sessionOrdersKey(): string {
+  return currentBrandedDemoTenant() === 'heritage' ? HERITAGE_DEMO_ORDERS_KEY : BLACKLINE_SESSION_ORDERS_KEY;
+}
+
+function retailJourneyKey(): string {
+  return currentBrandedDemoTenant() === 'heritage' ? HERITAGE_RETAIL_JOURNEY_KEY : BLACKLINE_RETAIL_JOURNEY_KEY;
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -192,7 +202,7 @@ function readRawList(): unknown[] {
   const storage = getSessionStorage();
   if (!storage) return [];
   try {
-    const raw = storage.getItem(BLACKLINE_SESSION_ORDERS_KEY);
+    const raw = storage.getItem(sessionOrdersKey());
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -205,7 +215,7 @@ function writeList(rows: BlacklineSessionOrder[]): void {
   const storage = getSessionStorage();
   if (!storage) return;
   try {
-    storage.setItem(BLACKLINE_SESSION_ORDERS_KEY, JSON.stringify(rows));
+    storage.setItem(sessionOrdersKey(), JSON.stringify(rows));
   } catch {
     // Quota or private-mode — ignore; the in-memory caller still has the record.
   }
@@ -507,12 +517,12 @@ export function getBlacklineRetailJourney(now = new Date()): BlacklineRetailJour
   const storage = getSessionStorage();
   if (!storage) return null;
   try {
-    const raw = storage.getItem(BLACKLINE_RETAIL_JOURNEY_KEY);
+    const raw = storage.getItem(retailJourneyKey());
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!isRetailJourney(parsed)) return null;
     if (!isBlacklineSessionOrderId(parsed.orderId, now)) {
-      storage.removeItem(BLACKLINE_RETAIL_JOURNEY_KEY);
+      storage.removeItem(retailJourneyKey());
       return null;
     }
     return parsed;
@@ -525,7 +535,7 @@ function writeRetailJourney(journey: BlacklineRetailJourney): void {
   const storage = getSessionStorage();
   if (!storage) return;
   try {
-    storage.setItem(BLACKLINE_RETAIL_JOURNEY_KEY, JSON.stringify(journey));
+    storage.setItem(retailJourneyKey(), JSON.stringify(journey));
   } catch {
     // ignore
   }
@@ -572,7 +582,7 @@ export function isPermittedBlacklineSessionOrderCollect(
 ): boolean {
   const pagePath =
     locationPathname ?? (typeof window !== 'undefined' ? window.location.pathname : '');
-  if (!isBlacklineAdminDemoPathname(pagePath)) return false;
+  if (!isBrandedAdminDemoPathname(pagePath)) return false;
   const orderId = parseBlacklineSessionOrderCollectPath(pathname, method);
   if (!orderId) return false;
   return isBlacklineSessionOrderId(orderId, now);

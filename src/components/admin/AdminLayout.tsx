@@ -30,6 +30,7 @@ import BlacklineConversionCard from './BlacklineConversionCard';
 import { useAdminProductLocks } from './FullKersivoUpgradeDialog';
 import { lockedFeatureForSection } from '@/lib/admin/productLocks';
 import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
+import HeritageWordmark from '@/components/demo/HeritageWordmark';
 import { AdminHubLaunchStatusBar } from '@/components/adminHub/AdminHubLaunchStatusBar';
 import { AdminHubSetupCard } from '@/components/adminHub/AdminHubSetupCard';
 import { AdminHubTour } from '@/components/adminHub/tour/AdminHubTour';
@@ -43,7 +44,7 @@ import { SETUP_CARD_TITLE, setupCardAllDone, type SetupCardModel } from '@/lib/a
 import { requestTourRestart, tourModel } from '@/lib/adminHub/tour';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
-import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
+import { getPublicAdminDemoCapabilities, isBrandedDemoTenant, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
 import {
   dismissPreviewSubscribeBanner,
   isPreviewSubscribeBannerVisible,
@@ -183,6 +184,7 @@ function SidebarBrand({
   statusSlot = null,
   onOpenSettings = null,
   blackline = false,
+  wordmark = 'cutstate',
   wordmarkSize = 'default',
   showPlatformAttribution = false,
 }: {
@@ -191,6 +193,8 @@ function SidebarBrand({
   statusSlot?: React.ReactNode;
   onOpenSettings?: (() => void) | null;
   blackline?: boolean;
+  /** Which branded demo shop's lockup to show when `blackline` is set. */
+  wordmark?: 'cutstate' | 'heritage';
   wordmarkSize?: BlacklineWordmarkSize;
   showPlatformAttribution?: boolean;
 }) {
@@ -204,7 +208,11 @@ function SidebarBrand({
 
   const inner = blackline ? (
     <>
-      <BlacklineWordmark size={wordmarkSize} />
+      {wordmark === 'heritage' ? (
+        <HeritageWordmark size={wordmarkSize} />
+      ) : (
+        <BlacklineWordmark size={wordmarkSize} />
+      )}
       {showPlatformAttribution || statusSlot ? (
         <div className="admin-sidebar-brand-text">
           {statusSlot}
@@ -237,7 +245,9 @@ function SidebarBrand({
     </>
   );
 
-  const brandClassName = `admin-sidebar-brand${blackline ? ' admin-sidebar-brand--blackline' : ''}`;
+  const brandClassName = `admin-sidebar-brand${blackline ? ' admin-sidebar-brand--blackline' : ''}${
+    blackline && wordmark === 'heritage' ? ' admin-sidebar-brand--heritage' : ''
+  }`;
 
   if (onOpenSettings) {
     return (
@@ -325,7 +335,9 @@ export default function AdminLayout({
   const lastPublishedDemoBannerHPxRef = useRef<number | null>(null);
   const prevActiveSectionRef = useRef(activeSection);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
-  const isBlacklineDemo = demoTenant === 'blackline';
+  /** CUTSTATE or Heritage Grooming: branded demo chrome (shop lockup, conversion card). */
+  const isBlacklineDemo = isBrandedDemoTenant(demoTenant);
+  const brandWordmark = demoTenant === 'heritage' ? 'heritage' : 'cutstate';
   const demoCapabilities = getPublicAdminDemoCapabilities(demoTenant);
   const brandShopName = isBlacklineDemo ? shopName : isPublicDemo ? null : shopName;
 
@@ -531,6 +543,7 @@ export default function AdminLayout({
       conversionAccountMenu={demoCapabilities.conversionAccountMenu}
       createShopHref={demoCapabilities.createShopHref}
       previewWebsiteHref={demoCapabilities.previewWebsiteHref}
+      previewWebsiteLabel={demoCapabilities.previewWebsiteLabel}
       kersivoHomeHref={demoCapabilities.kersivoHomeHref}
       user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
     />
@@ -586,6 +599,7 @@ export default function AdminLayout({
       conversionAccountMenu={demoCapabilities.conversionAccountMenu}
       createShopHref={demoCapabilities.createShopHref}
       previewWebsiteHref={demoCapabilities.previewWebsiteHref}
+      previewWebsiteLabel={demoCapabilities.previewWebsiteLabel}
       kersivoHomeHref={demoCapabilities.kersivoHomeHref}
       user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
     />
@@ -949,6 +963,7 @@ export default function AdminLayout({
               logoUrl={isPublicDemo ? null : shopLogoUrl}
               shopName={brandShopName}
               blackline={isBlacklineDemo}
+              wordmark={brandWordmark}
               wordmarkSize="compact"
               showPlatformAttribution={isBlacklineDemo}
               statusSlot={
@@ -1024,6 +1039,7 @@ export default function AdminLayout({
           logoUrl={isPublicDemo ? null : shopLogoUrl}
           shopName={brandShopName}
           blackline={isBlacklineDemo}
+          wordmark={brandWordmark}
           wordmarkSize="default"
           showPlatformAttribution={isBlacklineDemo}
           onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
@@ -1101,6 +1117,7 @@ export default function AdminLayout({
                 logoUrl={isPublicDemo ? null : shopLogoUrl}
                 shopName={brandShopName}
                 blackline={isBlacklineDemo}
+                wordmark={brandWordmark}
                 wordmarkSize="compact"
                 onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
               />
@@ -1136,7 +1153,7 @@ export default function AdminLayout({
           </header>
         </div>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
-        {isPublicDemo ? <DemoActionLock variant={isBlacklineDemo ? 'blackline' : 'generic'} /> : null}
+        {isPublicDemo ? <DemoActionLock variant={demoTenant === 'heritage' ? 'heritage' : isBlacklineDemo ? 'blackline' : 'generic'} /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>
             {persistentAdminChrome}

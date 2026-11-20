@@ -1,0 +1,164 @@
+/* ──────────────────────────────────────────────────────────
+   Reviews ("from the chair"), home page.
+   Base: a swipe rail of review cards with a counter and previous / next (phones, tablets,
+   reduced motion, no JS).
+   .reviews--stage (≥1100px with motion, added by main.js): one compact row — the score, one
+   review at a time, and a small arched mirror. Previous / next change the review; the mirror
+   steams up and is wiped clean between them (three.js, gl.js createMirror). Nothing is driven
+   by the scroll. Paper ground, walnut accents, as Services.
+   ────────────────────────────────────────────────────────── */
+
+main > .reviews { background: var(--paper); color: var(--ink); padding-block: clamp(72px, 9vw, 136px); }
+.reviews :focus-visible { outline-color: var(--walnut); }
+.reviews .h2 em { color: var(--walnut); }
+.reviews .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) { .reviews .link:hover { color: var(--walnut); } }
+
+.reviews__grid {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 56px) clamp(20px, 3vw, 48px); align-items: end;
+}
+.reviews__head { grid-column: 1 / span 7; }
+.score { grid-column: 8 / -1; }
+.reviews__list, .reviews__nav { grid-column: 1 / -1; }
+.reviews__mirror { display: none; }
+
+/* ── stars: one mask, filled by --fill (0…1) ── */
+.stars { display: inline-flex; gap: 3px; color: var(--walnut); }
+.stars i {
+  --fill: 1;
+  width: 14px; height: 14px; display: block;
+  background: linear-gradient(90deg, currentColor calc(var(--fill) * 100%), rgba(15, 23, 22, .16) 0);
+  -webkit-mask: var(--star) center / contain no-repeat; mask: var(--star) center / contain no-repeat;
+  --star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5L7 14.3 1.7 9.3l7.2-.9z'/%3E%3C/svg%3E");
+}
+.stars--lg { gap: 5px; }
+.stars--lg i { width: 22px; height: 22px; }
+
+/* ── the score ── */
+.score { display: flex; align-items: flex-end; gap: clamp(20px, 2.4vw, 36px); }
+.score__num { display: grid; gap: 10px; font: 400 clamp(5rem, 8.4vw, 8.5rem)/.8 var(--serif); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.score__num small { font: 500 .75rem/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--ink-muted); }
+.score__side { flex: 1; display: grid; gap: 10px; min-width: 0; }
+.score__from { font-size: .9375rem; color: var(--ink-muted); }
+.score__bars { display: grid; gap: 5px; margin-top: 4px; }
+.score__bars > div { display: grid; grid-template-columns: 4.2rem minmax(0, 1fr); align-items: center; gap: 12px; font-size: .8125rem; color: var(--ink-muted); }
+.score__bars dd { display: grid; grid-template-columns: minmax(0, 1fr) 2.6rem; align-items: center; gap: 10px; }
+.score__bars dd i { height: 3px; border-radius: 2px; background: rgba(15, 23, 22, .1); position: relative; overflow: hidden; }
+.score__bars dd i::after { content: ""; position: absolute; inset: 0; background: var(--walnut); transform: scaleX(calc(var(--v) * var(--grow, 1))); transform-origin: 0 50%; }
+.score__bars dd span { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── the rail of cards (base) ── */
+.reviews__list {
+  display: grid; grid-auto-flow: column; grid-auto-columns: min(82vw, 400px); gap: clamp(16px, 2vw, 28px);
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory;
+  padding: 14px 12px 22px; margin: -14px -12px -22px;           /* room for the mirror outline and focus rings */
+  scrollbar-width: none;
+}
+.reviews__list::-webkit-scrollbar { display: none; }
+.review { scroll-snap-align: start; display: flex; flex-direction: column; gap: 22px; }
+.review__photo {
+  margin: 0; aspect-ratio: 4 / 4.4; overflow: hidden;
+  border-radius: 999px 999px var(--radius-mirror) var(--radius-mirror);
+  outline: 1px solid rgba(123, 74, 41, .35); outline-offset: 8px; background: #d8ceb8;
+}
+.review__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; transition: transform .8s var(--ease-out); }
+.review__quote { margin: 0; flex: 1; }
+.review__quote p { font: 400 clamp(1.25rem, 1.7vw, 1.5rem)/1.34 var(--serif-text); letter-spacing: -.005em; text-wrap: pretty; }
+.review__quote p::before { content: "\201C"; color: var(--walnut); }
+.review__quote p::after { content: "\201D"; color: var(--walnut); }
+
+.review__cite { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-areas: "init who stars" "init book book"; gap: 4px 14px; align-items: center; padding-top: 18px; border-top: 1px solid var(--line-ink); }
+.review__initial {
+  grid-area: init; align-self: start; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--walnut); color: var(--walnut); font: 400 1.375rem/1 var(--serif);
+}
+.review__who { grid-area: who; display: grid; gap: 2px; min-width: 0; }
+.review__who b { font-weight: 600; font-size: 1rem; }
+.review__who span { font-size: .875rem; color: var(--ink-muted); }
+.review__cite .stars { grid-area: stars; align-self: start; padding-top: 4px; }
+.review__book { grid-area: book; justify-self: start; margin-top: 6px; min-height: 44px; display: inline-flex; align-items: center; }
+
+/* ── the counter, and previous / next ── */
+.reviews__nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.reviews__count {
+  display: flex; align-items: center; gap: 14px;
+  font: 500 .8125rem/1 var(--sans); letter-spacing: .16em; color: var(--ink-muted); font-variant-numeric: tabular-nums;
+}
+.reviews__count b { color: var(--walnut); font-weight: 500; display: inline-block; min-width: 2ch; }
+.reviews__count i { width: clamp(48px, 6vw, 96px); height: 1px; background: var(--line-ink); }
+.reviews__count u { display: block; height: 100%; background: var(--walnut); transform: scaleX(.2); transform-origin: 0 50%; transition: transform .6s var(--ease-out); }
+
+.reviews__step { display: flex; gap: 10px; flex: none; }
+.rstep {
+  display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(123, 74, 41, .5); color: var(--ink); position: relative; overflow: hidden; isolation: isolate;
+  transition: color .3s ease, scale .16s var(--ease-out), opacity .3s ease;
+}
+.rstep::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--walnut); transform: scale(0); transition: transform .45s var(--ease-out); }
+.rstep .arrow { width: 20px; height: 20px; transition: transform .45s var(--ease-out); }
+.rstep:active { scale: .94; }
+.rstep:disabled { opacity: .3; cursor: default; }
+@media (hover: hover) and (pointer: fine) {
+  .rstep:not(:disabled):hover { color: var(--cream); }
+  .rstep:not(:disabled):hover::before { transform: none; }
+  .rstep[data-review-step="1"]:not(:disabled):hover .arrow { transform: translateX(3px); }
+  .rstep[data-review-step="-1"]:not(:disabled):hover .arrow { transform: translateX(-3px); }
+  .review:hover .review__photo img { transform: scale(1.03); }
+}
+
+/* ───────────── compact stage (≥1100px, with motion) ───────────── */
+.reviews--stage .reviews__grid {
+  width: min(100% - 2 * var(--gutter), 1320px);
+  grid-template-columns: minmax(0, 3.4fr) minmax(0, 6fr) minmax(0, 2.6fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas: "head head head" "score stage mirror" "score nav mirror";
+  column-gap: clamp(36px, 4.4vw, 72px); row-gap: clamp(20px, 2.6vw, 32px); align-items: start;
+}
+.reviews--stage .reviews__head { grid-area: head; }
+
+.reviews--stage .score { grid-area: score; flex-direction: column; align-items: flex-start; gap: 20px; padding-top: 6px; }
+.reviews--stage .score__num { font-size: clamp(4.5rem, 6.4vw, 6.5rem); }
+.reviews--stage .score__side { width: 100%; }
+
+.reviews--stage .reviews__list {
+  grid-area: stage; display: grid; grid-auto-flow: row; grid-auto-columns: auto;
+  overflow: visible; padding: 0; margin: 0; scroll-snap-type: none;
+}
+/* every card sits in the same cell, so the stage is as tall as the longest review and never jumps */
+.reviews--stage .review { grid-area: 1 / 1; visibility: hidden; justify-content: space-between; gap: 28px; }
+.reviews--stage .review.is-active { visibility: visible; }
+.reviews--stage .review__photo { display: none; }
+.reviews--stage .review__quote p { font: 400 clamp(1.625rem, 2.15vw, 2.25rem)/1.22 var(--serif); letter-spacing: -.012em; }
+.reviews--stage .review__quote p::before { margin-left: -.4em; }
+
+.reviews--stage .reviews__nav { grid-area: nav; }
+
+.reviews--stage .reviews__mirror {
+  grid-area: mirror; display: block; position: relative; overflow: hidden; align-self: start;
+  aspect-ratio: 4 / 5; max-height: 420px; width: 100%; margin-top: 6px;
+  border-radius: 999px 999px var(--radius-mirror) var(--radius-mirror);
+  outline: 1px solid rgba(123, 74, 41, .35); outline-offset: 8px; background: #d8ceb8;
+}
+.reviews__mirror img, .reviews__gl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.reviews__mirror img { object-fit: cover; opacity: 0; }
+.reviews__mirror img:first-child { opacity: 1; }
+.reviews__gl { display: none; }
+.reviews.is-gl .reviews__gl { display: block; }
+.reviews.is-gl .reviews__mirror img { visibility: hidden; }
+
+/* ── smaller screens (rail) ── */
+@media (max-width: 1099px) {
+  .reviews__head { grid-column: 1 / -1; }
+  .score { grid-column: 1 / -1; max-width: 560px; }
+}
+@media (max-width: 599px) {
+  .score { flex-direction: column; align-items: flex-start; gap: 18px; }
+  .score__side { width: 100%; }
+  .review__cite { grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "init who" "init stars" "init book"; }
+  .review__initial { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rstep, .rstep::before, .rstep .arrow, .reviews__count u, .review__photo img { transition-duration: .01ms !important; }
+}

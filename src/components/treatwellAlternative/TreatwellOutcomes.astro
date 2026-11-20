@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { TW_OUTCOMES_LEAD, TW_OUTCOMES_TITLE } from '@/lib/seo/treatwellAlternativeContent';
@@ -59,7 +60,7 @@ import { TW_OUTCOMES_LEAD, TW_OUTCOMES_TITLE } from '@/lib/seo/treatwellAlternat
         </div>
       </article>
 
-      <a class="tw-card tw-tile tw-tile--demo" href="/demo" data-track="view_live_demo_click" data-track-placement="treatwell_outcomes">
+      <a class="tw-card tw-tile tw-tile--demo" href={KERSIVO_LIVE_DEMO_HREF} data-track="view_live_demo_click" data-track-placement="treatwell_outcomes">
         <span class="tw-eyebrow">Live demo</span>
         <span class="tw-tile__demo-title">Book a cut at the demo barbershop, then open the owner dashboard behind it.</span>
         <span class="tw-tile__demo-cta">Open the live demo <span aria-hidden="true">→</span></span>

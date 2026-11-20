@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en" class="no-js" data-type="place">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>The work · Heritage Grooming</title>
+  <meta name="description" content="Haircuts, skin fades and beard work from the chairs at Heritage Grooming. Point at the cut you want and book it.">
+  <meta name="page-type" content="place">
+  <meta name="site-kind" content="other">
+  <meta name="page-kind" content="place">
+  <meta name="theme-color" content="#0f1716">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The work · Heritage Grooming">
+  <meta property="og:description" content="Cuts, fades and beards from the chairs.">
+  <meta property="og:image" content="assets/img/share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+
+  <script>document.documentElement.className = 'js';</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/team.css">
+  <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/brass-frame.css">
+  <link rel="stylesheet" href="css/book-sheet.css">
+</head>
+<body class="gallery-page">
+  <!-- Gallery page. Kind: place (barbershop). Same system as index.html, team.html, services.html:
+       palette, Caslon + Hanken, brass buttons, brass-rimmed mirror frames.
+       Moment: the lookbook (#work: GSAP Flip filter, and a Flip hand-off from a frame into the viewer).
+       Interior photographs are the shop's own. Haircut and beard photographs are AI STAND-INS (generated with Porter):
+       replace with the shop's own work, same crops. -->
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+  <header class="nav" data-nav>
+    <div class="nav__bar wrap">
+      <a class="brand" href="index.html" aria-label="Heritage Grooming, home">
+        <img src="assets/img/seal-64.webp" srcset="assets/img/seal-64.webp 1x, assets/img/seal-128.webp 2x, assets/img/seal-192.webp 3x" width="48" height="48" alt="">
+        <span class="brand__name">Heritage <i>Grooming</i></span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a class="nav__link" href="index.html#shop">The shop</a>
+        <a class="nav__link" href="services.html">Services</a>
+        <a class="nav__link" href="shop.html">Products</a>
+        <a class="nav__link" href="team.html">The barbers</a>
+        <a class="nav__link is-here" href="gallery.html" aria-current="page">The work</a>
+        <a class="nav__link" href="index.html#visit">A visit</a>
+        <a class="nav__link" href="index.html#find">Find us</a>
+      </nav>
+      <a class="btn btn--brass nav__cta" href="services.html#book" data-magnetic><span>Book a chair</span></a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <i class="nav__progress" aria-hidden="true"></i>
+  </header>
+
+  <div class="menu" id="menu" data-lenis-prevent hidden>
+    <nav class="menu__links wrap" aria-label="Mobile">
+      <a href="index.html#shop"><small>01</small>The shop</a>
+      <a href="services.html"><small>02</small>Services</a>
+      <a href="shop.html"><small>03</small>Products</a>
+      <a href="team.html"><small>04</small>The barbers</a>
+      <a href="gallery.html" aria-current="page"><small>05</small>The work</a>
+      <a href="index.html#visit"><small>06</small>A visit</a>
+      <a href="index.html#find"><small>07</small>Find us</a>
+      <a class="btn btn--brass" href="services.html#book"><span>Book a chair</span></a>
+    </nav>
+  </div>
+
+  <main id="main">
+
+    <!-- ───────────── HERO: the room, and one cut from it ───────────── -->
+    <section class="ghero" id="top" data-enter>
+      <div class="wrap ghero__inner">
+        <div class="ghero__head">
+          <h1 class="ghero__title">Cuts, beards <em>and the long room</em> they happen in.</h1>
+          <div class="ghero__side">
+            <p class="ghero__lede">Nine pieces of work from the chairs of the shop on the high street. See a cut you like? Open it, and book it by name.</p>
+            <div class="ghero__actions">
+              <a class="btn btn--brass btn--lg" href="#work" data-magnetic><span>Browse the work</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="ghero__wall">
+          <a class="gframe gframe--wide" href="#work" data-cursor="Browse">
+            <span class="gframe__glass"><img src="assets/img/chairs.webp" srcset="assets/img/chairs-960.webp 960w, assets/img/chairs-1600.webp 1600w, assets/img/chairs.webp 2560w" sizes="100vw" width="1376" height="768" alt="Four black leather barber chairs down a walnut-panelled room, brass mirrors along the wall and the street through the end window" fetchpriority="high" data-source="client" data-subject="room" style="object-position: 40% 55%"></span>
+          </a>
+          <a class="gframe gframe--tall" href="#work" data-cursor="Browse">
+            <span class="gframe__glass"><img class="is-stand" src="assets/img/work-arthur-fade-500.webp" srcset="assets/img/work-arthur-fade-500.webp 500w, assets/img/work-arthur-fade-960.webp 960w" sizes="(max-width: 899px) 40vw, 22vw" width="500" height="670" alt="A barber taking a customer's fade down with clippers" fetchpriority="high" data-source="stand-in" data-subject="stand-in" style="object-position: 46% 40%"></span>
+          </a>
+        </div>
+
+        <ul class="hero__facts ghero__facts">
+          <li><span>Chairs</span>Four</li>
+          <li><span>In the shop</span><b data-assumed>Tuesday to Saturday</b></li>
+          <li><span>A haircut takes</span><b data-assumed>45 minutes</b></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────── THE LOOKBOOK: filter (Flip) and the viewer (moment 1) ───────────── -->
+    <section class="book-of-work" id="work" aria-labelledby="work-title">
+      <div class="wrap">
+        <header class="work__head">
+          <h2 class="h2" id="work-title" data-lines>Cuts and <em>beards</em></h2>
+          <div class="work__tools">
+            <p class="work__note">Open any piece for what to ask for, how long it takes and what it costs.</p>
+            <div class="chips" role="group" aria-label="Show the work by kind">
+              <button type="button" class="chip" aria-pressed="true" data-filter="">All work <sup data-count></sup></button>
+              <button type="button" class="chip" aria-pressed="false" data-filter="cut">Cuts <sup data-count></sup></button>
+              <button type="button" class="chip" aria-pressed="false" data-filter="fade">Fades <sup data-count></sup></button>
+              <button type="button" class="chip" aria-pressed="false" data-filter="beard">Beards <sup data-count></sup></button>
+              <button type="button" class="chip" aria-pressed="false" data-filter="long">Longer hair <sup data-count></sup></button>
+            </div>
+          </div>
+        </header>
+        <p class="visually-hidden" data-work-status aria-live="polite"></p>
+
+        <!-- each tile links to its full-size file, so the work opens without JavaScript too;
+             js/gallery.js reads the data-* on each tile for the viewer -->
+        <ul class="work" data-work>
+          <li class="tile tile--tall" data-tags="cut fade" data-name="Clipper over comb" data-ask="Short at the back and sides, tapered over the comb, left longer on top." data-service="skin-fade" data-barber="Kit">
+            <a class="tile__link" href="assets/img/work-kit-clipper-comb-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-kit-clipper-comb-500.webp" srcset="assets/img/work-kit-clipper-comb-500.webp 500w, assets/img/work-kit-clipper-comb-960.webp 960w, assets/img/work-kit-clipper-comb.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber taking the sides down with clippers over a comb" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 60% 40%"></span>
+            </a>
+          </li>
+          <li class="tile tile--tall" data-tags="cut" data-name="Textured crop" data-ask="Scissor-cut on top for movement, a soft taper at the neck, worked through with clay." data-service="haircut" data-barber="Arthur">
+            <a class="tile__link" href="assets/img/work-kit-scissors-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-kit-scissors-500.webp" srcset="assets/img/work-kit-scissors-500.webp 500w, assets/img/work-kit-scissors-960.webp 960w, assets/img/work-kit-scissors.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber scissor-cutting a customer's hair at the mirror" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 40% 38%"></span>
+            </a>
+          </li>
+          <li class="tile tile--wide" data-tags="beard" data-name="Beard shaped with scissors" data-ask="Bulk taken off with scissors, the shape kept full at the chin and squared at the cheeks." data-service="beard-trim" data-barber="Owen">
+            <a class="tile__link" href="assets/img/work-rafi-beard-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-rafi-beard-500.webp" srcset="assets/img/work-rafi-beard-500.webp 500w, assets/img/work-rafi-beard-960.webp 960w, assets/img/work-rafi-beard.webp 2560w" sizes="(max-width: 899px) 94vw, 48vw" width="500" height="373" alt="A barber shaping a customer's full beard with scissors and comb" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 62% 40%"></span>
+            </a>
+          </li>
+          <li class="tile tile--wide" data-tags="beard cut" data-name="Beard lined up at the mirror" data-ask="Cheek line set with a razor, the moustache taken off the lip, the beard blended into the sides." data-service="haircut-beard" data-barber="Owen">
+            <a class="tile__link" href="assets/img/work-lineup-mirror-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-lineup-mirror-500.webp" srcset="assets/img/work-lineup-mirror-500.webp 500w, assets/img/work-lineup-mirror-960.webp 960w, assets/img/work-lineup-mirror.webp 2560w" sizes="(max-width: 899px) 94vw, 48vw" width="500" height="373" alt="A customer with a trimmed beard watching his line-up in the mirror" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 55% 40%"></span>
+            </a>
+          </li>
+          <li class="tile tile--tall" data-tags="cut long" data-name="Scissor cut, kept long" data-ask="Length kept on top, weight taken out with the scissors, ears tidied and left soft." data-service="haircut" data-barber="Arthur">
+            <a class="tile__link" href="assets/img/work-arthur-mirror-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-arthur-mirror-500.webp" srcset="assets/img/work-arthur-mirror-500.webp 500w, assets/img/work-arthur-mirror-960.webp 960w, assets/img/work-arthur-mirror.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber scissor-cutting a bearded customer's hair, seen in the mirror" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 40% 45%"></span>
+            </a>
+          </li>
+          <li class="tile tile--tall" data-tags="beard fade" data-name="Open-razor line-up" data-ask="Edges of the beard and the hairline set with an open razor, then a hot towel." data-service="hot-towel-shave" data-barber="Rafi">
+            <a class="tile__link" href="assets/img/work-owen-razor-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-owen-razor-500.webp" srcset="assets/img/work-owen-razor-500.webp 500w, assets/img/work-owen-razor-960.webp 960w, assets/img/work-owen-razor.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber lining up a customer's beard with an open razor" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 50% 40%"></span>
+            </a>
+          </li>
+          <li class="tile tile--tall" data-tags="cut fade" data-name="Clean neckline" data-ask="A tapered neckline finished by hand, so it grows out without a hard edge." data-service="haircut" data-barber="Kit">
+            <a class="tile__link" href="assets/img/work-rafi-neckline-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-rafi-neckline-500.webp" srcset="assets/img/work-rafi-neckline-500.webp 500w, assets/img/work-rafi-neckline-960.webp 960w, assets/img/work-rafi-neckline.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber finishing a customer's neckline" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 55% 30%"></span>
+            </a>
+          </li>
+          <li class="tile tile--wide" data-tags="long beard" data-name="Top knot and full beard" data-ask="Length left for a knot, the sides cleaned up, the beard shaped to the jaw." data-service="haircut-beard" data-barber="Rafi">
+            <a class="tile__link" href="assets/img/work-topknot-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-topknot-500.webp" srcset="assets/img/work-topknot-500.webp 500w, assets/img/work-topknot-960.webp 960w, assets/img/work-topknot.webp 2560w" sizes="(max-width: 899px) 94vw, 48vw" width="500" height="373" alt="A customer with a top knot and a full beard in the chair, seen in profile" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 55% 40%"></span>
+            </a>
+          </li>
+          <li class="tile tile--tall" data-tags="cut long" data-name="Blow-dry and set" data-ask="Washed, cut and dried into shape with a round brush, finished with a light cream." data-service="haircut" data-barber="Arthur">
+            <a class="tile__link" href="assets/img/work-owen-blowdry-960.webp" data-cursor="Open">
+              <span class="gframe__glass"><img class="is-stand" src="assets/img/work-owen-blowdry-500.webp" srcset="assets/img/work-owen-blowdry-500.webp 500w, assets/img/work-owen-blowdry-960.webp 960w, assets/img/work-owen-blowdry.webp 2560w" sizes="(max-width: 899px) 46vw, 23vw" width="500" height="670" alt="A barber drying and setting a customer's hair" loading="lazy" decoding="async" data-source="stand-in" data-subject="stand-in" style="object-position: 50% 45%"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────── CLOSE: type moment on the paper ground ───────────── -->
+    <section class="ask" id="ask" aria-labelledby="ask-title">
+      <div class="wrap ask__inner">
+        <h2 class="ask__title" id="ask-title" data-lines>Bring a photo, <em>or point at one of these.</em></h2>
+        <div class="ask__row">
+          <p class="ask__text">Every cut on this page is on the price list. Book the service, add the name of the cut in the notes, and your barber will have it on the mirror when you sit down.</p>
+          <div class="ask__actions">
+            <a class="btn btn--ink btn--lg" href="services.html#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="link" href="services.html">See the prices</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───────────── THE VIEWER: one piece of work, opened from its tile ───────────── -->
+  <dialog class="viewer" aria-labelledby="viewer-name" data-viewer data-lenis-prevent>
+    <div class="viewer__inner">
+      <figure class="viewer__stage" data-viewer-stage>
+        <span class="gframe__glass viewer__glass" data-viewer-glass></span>
+      </figure>
+      <div class="viewer__panel">
+        <p class="viewer__count" aria-live="polite"><b data-viewer-index>01</b> / <span data-viewer-total>09</span></p>
+        <div class="viewer__text" data-viewer-text>
+          <h2 class="viewer__name" id="viewer-name" data-viewer-name></h2>
+          <p class="viewer__ask"><span>Ask for</span><span data-viewer-ask></span></p>
+          <dl class="viewer__facts">
+            <div><dt>Service</dt><dd data-viewer-service></dd></div>
+            <div><dt>Time</dt><dd data-viewer-mins></dd></div>
+            <div><dt>Price</dt><dd data-viewer-price data-assumed></dd></div>
+            <div><dt>Often by</dt><dd data-viewer-barber data-assumed></dd></div>
+          </dl>
+          <a class="btn btn--brass btn--lg viewer__book" href="services.html#book" data-viewer-book><span>Book this cut</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+        <div class="viewer__nav">
+          <button type="button" class="viewer__step" data-viewer-prev aria-label="Previous piece of work"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <button type="button" class="viewer__step" data-viewer-next aria-label="Next piece of work"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <button type="button" class="viewer__close" data-viewer-close aria-label="Close" autofocus><span></span><span></span></button>
+    </div>
+  </dialog>
+
+  <footer class="footer">
+    <div class="wrap footer__top">
+      <img class="footer__seal" src="assets/img/seal.webp" width="660" height="660" loading="lazy" alt="Heritage Grooming seal: a comb and a straight razor crossed on a shield">
+      <nav class="footer__links" aria-label="Footer">
+        <a class="link" href="index.html#shop">The shop</a>
+        <a class="link" href="services.html">Services</a>
+        <a class="link" href="shop.html">Products</a>
+        <a class="link" href="team.html">The barbers</a>
+        <a class="link" href="gallery.html">The work</a>
+        <a class="link" href="index.html#visit">A visit</a>
+        <a class="link" href="index.html#find">Find us</a>
+        <a class="link" href="index.html#contact">Contact</a>
+      </nav>
+      <a class="btn btn--brass btn--lg" href="services.html#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <!-- the shop's facts, then the fascia. ASSUMED: address, hours, phone and email are stand-ins (hours: house.js HOURS) -->
+    <div class="wrap footer__info">
+      <section class="footer__col" aria-labelledby="ft-visit">
+        <h2 class="footer__label" id="ft-visit">Visit</h2>
+        <address class="footer__text" data-assumed>14 Chapel Street<br>Old Town</address>
+        <a class="link" href="index.html#find">How to find us</a>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-hours">
+        <h2 class="footer__label" id="ft-hours">Hours</h2>
+        <dl class="footer__hours" data-assumed>
+          <div><dt>Tuesday to Friday</dt><dd>9:00 – 19:00</dd></div>
+          <div><dt>Saturday</dt><dd>9:00 – 17:00</dd></div>
+          <div><dt>Sunday and Monday</dt><dd>Closed</dd></div>
+        </dl>
+        <p class="footer__status" data-open-status>Open Tuesday to Saturday</p>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-call">
+        <h2 class="footer__label" id="ft-call">Call or write</h2>
+        <a class="footer__text footer__tel" href="tel:+440000000000" data-assumed>+44 0000 000 000</a>
+        <a class="link" href="mailto:hello@heritagegrooming.example" data-assumed>hello@heritagegrooming.example</a>
+      </section>
+    </div>
+    <div class="wrap">
+      <div class="footer__sign" aria-hidden="true">
+        <span class="footer__rule"></span>
+        <p class="footer__word">Heritage Grooming</p>
+        <span class="footer__rule"></span>
+        <p class="footer__strap"><span>Barbers</span><span>Chapel Street · Old Town</span><span>Est. 2020</span></p>
+      </div>
+    </div>
+    <div class="wrap footer__legal">
+      <span>© 2026 Heritage Grooming</span>
+      <a class="link" href="#top">Back to top</a>
+    </div>
+  </footer>
+
+  <a class="bookbar btn btn--brass" href="services.html#book"><span>Book a chair</span></a>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script type="module" src="js/gallery.js"></script>
+  <script type="module" src="js/book-sheet.js"></script>
+</body>
+</html>

@@ -595,7 +595,7 @@ describe('comparison cluster internal links', () => {
     const reasonLinks = FRESHA_REASONS.flatMap((reason) => (reason.link ? [reason.link.href] : []));
     expect(reasonLinks).toEqual(['/barbershop-websites', '/barbershop-online-booking']);
     expect(reasonsSource).toContain('href={reason.link.href}');
-    expect(countLinks(outcomesSource, '/demo')).toBe(1);
+    expect(outcomesSource.split('href={KERSIVO_LIVE_DEMO_HREF}').length - 1).toBe(1);
     expect(outcomesSource).toContain('data-track="view_live_demo_click"');
     for (const path of ['barbershop-websites', 'barbershop-online-booking', 'demo']) {
       const page = join(here, '../../pages', path);

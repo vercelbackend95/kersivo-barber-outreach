@@ -25,15 +25,26 @@ import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from '@/lib/seo/barbershopWe
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
+import {
+  HERITAGE_ADMIN_DASHBOARD_HREF,
+  HERITAGE_DEMO_BASE_PATH,
+  HERITAGE_DEMO_BOOK_HREF,
+  HERITAGE_DEMO_SERVICES_HREF,
+  HERITAGE_DEMO_SHOP_HREF,
+  HERITAGE_DEMO_SITE_HREF,
+} from '@/lib/demo/heritage/links';
 
 const pagesDir = path.resolve(__dirname, '../../pages');
+const publicDir = path.resolve(__dirname, '../../../public');
 
 function pageExists(pathname: string): boolean {
   if (pathname === '/') return existsSync(path.join(pagesDir, 'index.astro'));
   const clean = pathname.replace(/^\//, '').replace(/\/$/, '');
   return (
     existsSync(path.join(pagesDir, `${clean}.astro`)) ||
-    existsSync(path.join(pagesDir, clean, 'index.astro'))
+    existsSync(path.join(pagesDir, clean, 'index.astro')) ||
+    // The Heritage Grooming demo site is static HTML under public/.
+    (clean.endsWith('.html') && existsSync(path.join(publicDir, clean)))
   );
 }
 
@@ -58,7 +69,7 @@ describe('marketing navigation config', () => {
       'Resources',
       'Pricing',
     ]);
-    expect(MARKETING_NAV_SECONDARY_ACTION).toMatchObject({ label: 'See live demo', href: '/demo' });
+    expect(MARKETING_NAV_SECONDARY_ACTION).toMatchObject({ label: 'See live demo', href: HERITAGE_DEMO_SITE_HREF });
     expect(MARKETING_NAV_PRIMARY_ACTION).toMatchObject({
       label: NAVBAR_SUBSCRIBE_CTA_LABEL,
       href: '/admin/launch',
@@ -75,15 +86,15 @@ describe('marketing navigation config', () => {
     expect(included.items.map((item) => item.href)).toEqual([
       '/barbershop-websites',
       '/barbershop-online-booking',
-      '/demo/admin?section=bookings_dashboard',
-      '/demo/shop',
+      HERITAGE_ADMIN_DASHBOARD_HREF,
+      HERITAGE_DEMO_SHOP_HREF,
       '/starter',
     ]);
     expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
     // Admin & reports already links the admin demo; the demo section does not repeat it.
     expect(product.sections.find((section) => section.id === 'demo')?.items.map((item) => item.href)).toEqual([
-      '/demo',
-      '/demo/book',
+      HERITAGE_DEMO_SITE_HREF,
+      HERITAGE_DEMO_BOOK_HREF,
     ]);
     expect(product).toMatchObject({
       eyebrow: 'KERSIVO',
@@ -131,7 +142,7 @@ describe('marketing navigation config', () => {
   it('builds four mobile quick links and a finder entry for every destination', () => {
     expect(buildMarketingNavQuickLinks().map((link) => link.href)).toEqual([
       '/pricing',
-      '/demo',
+      HERITAGE_DEMO_SITE_HREF,
       '/compare',
       '/barber-software-cost-calculator',
     ]);
@@ -152,7 +163,10 @@ describe('marketing navigation config', () => {
       expect(href.startsWith('/'), href).toBe(true);
       const { pathname, hash } = new URL(href, 'https://kersivo.co.uk');
       expect(pageExists(pathname), `${href} has no page`).toBe(true);
-      if (hash) expect(pathname, `${href} should anchor into the homepage`).toBe('/');
+      // Hash links anchor into the homepage, or into a page of the static Heritage Grooming demo (#book).
+      if (hash && !pathname.startsWith(`${HERITAGE_DEMO_BASE_PATH}/`)) {
+        expect(pathname, `${href} should anchor into the homepage`).toBe('/');
+      }
     }
   });
 
@@ -206,9 +220,12 @@ describe('marketing navigation config', () => {
     }
     expect(isMarketingNavGroupCurrent(product, '/pricing')).toBe(false);
     const overview = MARKETING_NAV_ITEMS.find((item) => item.id === 'product-demo')!;
-    expect(isMarketingNavItemCurrent(overview, '/demo')).toBe(true);
-    expect(isMarketingNavItemCurrent(overview, '/demo/book')).toBe(false);
-    expect(isMarketingNavItemCurrent(MARKETING_NAV_ITEMS.find((item) => item.id === 'platform-booking')!, '/demo/book')).toBe(true);
+    expect(isMarketingNavGroupCurrent(product, HERITAGE_DEMO_SITE_HREF)).toBe(true);
+    expect(isMarketingNavItemCurrent(overview, HERITAGE_DEMO_SITE_HREF)).toBe(true);
+    expect(isMarketingNavItemCurrent(overview, HERITAGE_DEMO_SERVICES_HREF)).toBe(false);
+    expect(
+      isMarketingNavItemCurrent(MARKETING_NAV_ITEMS.find((item) => item.id === 'platform-booking')!, HERITAGE_DEMO_SERVICES_HREF),
+    ).toBe(true);
   });
 
   it('hides a primary action that points at the current page and keeps hash links', () => {

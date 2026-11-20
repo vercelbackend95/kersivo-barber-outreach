@@ -1,0 +1,93 @@
+---
+/**
+ * Heritage Grooming owner dashboard — the live KERSIVO demo.
+ * Same AdminPanel as a real shop, fed by `src/lib/admin/heritageDemoFixtures` through
+ * `/api/demo/heritage/admin/*`, plus the bookings and orders a visitor makes on the
+ * Heritage Grooming website (`public/demo/heritage-grooming`, bridged by its js/kersivo.js).
+ */
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import DemoBanner from '@/components/demo/DemoBanner.astro';
+import AdminPanel from '@/components/admin/AdminPanel';
+import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
+import { getHeritageBookingsResponse } from '@/lib/admin/heritageDemoFixtures/schedule';
+import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
+import { HERITAGE_ADMIN_DEMO_PATH } from '@/lib/admin/demoConfig';
+import { HERITAGE_SHOP_NAME } from '@/lib/demo/heritage/data';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/demo/fonts-blackline.css';
+import '@/styles/demo/blackline-wordmark.css';
+import '@/styles/demo/heritage-wordmark.css';
+import '@/styles/global.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/admin-mobile-sticky-overrides.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/admin-section-header.css';
+import '@/styles/components/admin-demo.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/admin-services.css';
+import '@/styles/components/admin-service-wizard.css';
+import '@/styles/components/admin-product-wizard.css';
+import '@/styles/components/admin-barber-wizard.css';
+import '@/styles/components/shop-products-polish.css';
+import '@/styles/components/admin-retail-onboarding.css';
+import '@/styles/components/table.css';
+import '@/styles/components/admin-ui.css';
+import '@/styles/components/admin-ai.css';
+
+const now = new Date();
+const { bookings: initialBookings } = getHeritageBookingsResponse(
+  new URLSearchParams({ date: blacklineDayKey(now), mode: 'day' }),
+  now,
+);
+---
+
+<MinimalLayout
+  title={`Owner dashboard | ${HERITAGE_SHOP_NAME}`}
+  description="Fictional Heritage Grooming owner dashboard using sample KERSIVO admin data. No real appointments, orders or payments are created."
+  canonicalPath={HERITAGE_ADMIN_DEMO_PATH}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+  noindex={true}
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-400-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-600-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link slot="head" rel="preconnect" href="https://fonts.googleapis.com" />
+  <link slot="head" rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    slot="head"
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&display=swap"
+  />
+  <DemoBanner view="admin" shop="heritage" />
+  <main class="container page-wrap admin-page-wrap" data-demo-tenant="heritage">
+    <h1 class="sr-only">Heritage Grooming owner dashboard</h1>
+    <AdminPanel
+      client:load
+      demoMode={true}
+      demoTenant="heritage"
+      initialBookings={initialBookings}
+      initialSection={Astro.url.searchParams.get('section')}
+    />
+  </main>
+  <InitDataTrackScript />
+</MinimalLayout>

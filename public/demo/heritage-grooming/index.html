@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Heritage Grooming · Barbershop for haircuts, beards and hot-towel shaves</title>
+  <meta name="description" content="Heritage Grooming is a traditional barbershop, established 2020. Haircuts, skin fades, beard trims and hot-towel shaves by appointment. Book a chair online.">
+  <meta name="theme-color" content="#0f1716">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Heritage Grooming · Barbers, est. 2020">
+  <meta property="og:description" content="Haircuts, beard work and hot-towel shaves by appointment. Book a chair online.">
+  <meta property="og:image" content="assets/img/share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+
+  <script>document.documentElement.className = 'js';</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="assets/img/chairs-1600.webp" type="image/webp" media="(max-width: 640px)" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/img/chairs.webp" type="image/webp" media="(min-width: 641px)" fetchpriority="high">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/reviews.css">
+  <link rel="stylesheet" href="css/brass-frame.css">
+  <link rel="stylesheet" href="css/book-sheet.css">
+  <link rel="stylesheet" href="css/map.css">
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- Intro curtain: the seal, then the hero develops out of the dark -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader__inner">
+      <img class="loader__seal" src="assets/img/seal.webp" width="660" height="660" alt="">
+      <div class="loader__meta"><span class="loader__count">0</span><span class="loader__rule"><i></i></span><span>Est. 2020</span></div>
+    </div>
+  </div>
+
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+  <header class="nav" data-nav>
+    <div class="nav__bar wrap">
+      <a class="brand" href="#top" aria-label="Heritage Grooming, back to top">
+        <img src="assets/img/seal-64.webp" srcset="assets/img/seal-64.webp 1x, assets/img/seal-128.webp 2x, assets/img/seal-192.webp 3x" width="48" height="48" alt="">
+        <span class="brand__name">Heritage <i>Grooming</i></span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a class="nav__link" href="#shop">The shop</a>
+        <a class="nav__link" href="#services">Services</a>
+        <a class="nav__link" href="shop.html">Products</a>
+        <a class="nav__link" href="team.html">The barbers</a>
+        <a class="nav__link" href="gallery.html">The work</a>
+        <a class="nav__link" href="#visit">A visit</a>
+        <a class="nav__link" href="#find">Find us</a>
+      </nav>
+      <a class="btn btn--brass nav__cta" href="#book" data-magnetic><span>Book a chair</span></a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <i class="nav__progress" aria-hidden="true"></i>
+  </header>
+
+  <div class="menu" id="menu" data-lenis-prevent hidden>
+    <nav class="menu__links wrap" aria-label="Mobile">
+      <a href="#shop"><small>01</small>The shop</a>
+      <a href="#services"><small>02</small>Services</a>
+      <a href="shop.html"><small>03</small>Products</a>
+      <a href="team.html"><small>04</small>The barbers</a>
+      <a href="gallery.html"><small>05</small>The work</a>
+      <a href="#visit"><small>06</small>A visit</a>
+      <a href="#find"><small>07</small>Find us</a>
+      <a class="btn btn--brass" href="#book"><span>Book a chair</span></a>
+    </nav>
+  </div>
+
+  <main id="main">
+
+    <!-- ───────────── HERO ───────────── -->
+    <section class="hero" id="top">
+      <div class="hero__media">
+        <picture>
+          <source media="(max-width: 640px)" srcset="assets/img/chairs-1600.webp" type="image/webp"><source srcset="assets/img/chairs.webp" type="image/webp">
+          <img class="hero__img" src="assets/img/chairs.jpg" width="1376" height="768" alt="A row of black leather barber chairs facing brass mirrors on a walnut wall, with street windows at the far end" fetchpriority="high" data-focus="0.42 0.5">
+        </picture>
+        <canvas class="hero__gl" aria-hidden="true"></canvas>
+        <div class="hero__shade" aria-hidden="true"></div>
+      </div>
+
+      <div class="hero__content wrap">
+        <h1 class="hero__title">A barbershop that <em>takes its time.</em></h1>
+        <div class="hero__row">
+          <p class="hero__lede">Haircuts, beard work and hot-towel shaves, by appointment. One long room of walnut, brass and black leather chairs.</p>
+          <div class="hero__actions">
+            <a class="btn btn--brass btn--lg" href="#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="link" href="#services">See services and prices</a>
+          </div>
+        </div>
+        <ul class="hero__facts">
+          <li><span>Opened</span>2020</li>
+          <li><span>Open</span><b data-assumed>Tuesday to Saturday</b></li>
+          <li><span>Haircuts from</span><b data-assumed>£26</b></li>
+          <li class="hero__scroll" aria-hidden="true"><span>Scroll</span><i></i></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ───────────── MANIFESTO ───────────── -->
+    <section class="manifesto" aria-label="About the shop">
+      <div class="wrap manifesto__grid">
+        <p class="eyebrow"><i class="tick"></i>The house rule</p>
+        <p class="manifesto__text" data-words>We opened in 2020 with one rule. Nobody gets rushed out of the chair. Every appointment starts with a conversation and ends when the cut is right.</p>
+      </div>
+    </section>
+
+    <!-- scroll-driven type band: the price board and the card in the window (prices as in the list below; the
+         status line is live, on London time, from house.js HOURS) -->
+    <section class="band" aria-label="Prices and opening">
+      <p class="visually-hidden"><span data-open-status>Open Tuesday to Saturday</span>. Haircuts from £26, walk-ins when a chair is free.</p>
+      <div class="band__row" data-dir="-1" aria-hidden="true"><span class="band__item">Haircut<sup>£26</sup></span><i></i><span class="band__item">Skin fade<sup>£29</sup></span><i></i><span class="band__item">Beard trim<sup>£15</sup></span><i></i><span class="band__item">Haircut and beard<sup>£38</sup></span><i></i><span class="band__item">Hot-towel shave<sup>£32</sup></span><i></i><span class="band__item">The Heritage<sup>£56</sup></span><i></i><span class="band__item">Haircut<sup>£26</sup></span><i></i><span class="band__item">Skin fade<sup>£29</sup></span><i></i><span class="band__item">Beard trim<sup>£15</sup></span><i></i><span class="band__item">Haircut and beard<sup>£38</sup></span><i></i><span class="band__item">Hot-towel shave<sup>£32</sup></span><i></i><span class="band__item">The Heritage<sup>£56</sup></span><i></i></div>
+      <div class="band__row band__row--alt" data-dir="1" aria-hidden="true"><span>Walk-ins when a chair is free</span><i></i><span class="band__status" data-open-status>Open Tuesday to Saturday</span><i></i><span>Chapel Street, Old Town</span><i></i><span>Est. 2020</span><i></i><span>Walk-ins when a chair is free</span><i></i><span class="band__status" data-open-status>Open Tuesday to Saturday</span><i></i><span>Chapel Street, Old Town</span><i></i><span>Est. 2020</span><i></i></div>
+    </section>
+
+    <!-- ───────────── THE SHOP (pinned chapters) ───────────── -->
+    <section class="shop" id="shop">
+      <div class="shop__pin">
+        <div class="wrap shop__grid">
+          <header class="shop__head">
+            <h2 class="eyebrow"><i class="tick"></i>Inside the shop</h2>
+          </header>
+
+          <div class="shop__texts">
+            <article class="chapter is-active">
+              <h3 class="chapter__title">The room</h3>
+              <p class="chapter__body">Walnut panels, brass mirrors and filament bulbs, in one long room with windows onto the street. Arrive early and there is a bench by the glass.</p>
+            </article>
+            <article class="chapter">
+              <h3 class="chapter__title">The chair</h3>
+              <p class="chapter__body">Black leather and chrome, with a headrest that tips back for the shave. You stay in the same chair from the first word to the final check in the mirror.</p>
+            </article>
+            <article class="chapter">
+              <h3 class="chapter__title">The tools</h3>
+              <p class="chapter__body">Clippers for the fade, scissors for the top, an open razor for the neckline, and a badger brush for the lather. Cleaned and laid out fresh for every customer.</p>
+            </article>
+          </div>
+
+          <div class="shop__frame mirror">
+            <picture><source media="(max-width: 640px)" srcset="assets/img/room-1600.webp" type="image/webp"><source srcset="assets/img/room.webp" type="image/webp"><img src="assets/img/room.jpg" width="1376" height="768" alt="The shop interior: barber chairs along a walnut wall of brass mirrors and shelves" data-focus="0.66 0.5"></picture>
+            <picture><source media="(max-width: 640px)" srcset="assets/img/chair-1600.webp" type="image/webp"><source srcset="assets/img/chair.webp" type="image/webp"><img src="assets/img/chair.jpg" width="928" height="1152" alt="A single black leather barber chair under a filament bulb" data-focus="0.5 0.6"></picture>
+            <picture><source media="(max-width: 640px)" srcset="assets/img/tools-1600.webp" type="image/webp"><source srcset="assets/img/tools.webp" type="image/webp"><img src="assets/img/tools.jpg" width="1264" height="848" alt="A shaving brush, straight razor, combs and brass clippers laid out on a walnut counter" data-focus="0.52 0.5"></picture>
+            <canvas class="shop__gl" aria-hidden="true"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── SERVICES ───────────── -->
+    <section class="services" id="services">
+      <div class="wrap services__grid">
+        <div class="services__aside">
+          <h2 class="h2" data-lines>Services <em>and prices</em></h2>
+          <p class="services__note">Every service includes a consultation. Pick one to go straight to the times we have free.</p>
+          <a class="link" href="services.html">See all fifteen services</a>
+          <div class="services__photo mirror mirror--ink" data-parallax>
+            <picture><source media="(max-width: 640px)" srcset="assets/img/shelf-1600.webp" type="image/webp"><source srcset="assets/img/shelf.webp" type="image/webp"><img src="assets/img/shelf.jpg" width="1024" height="1024" loading="lazy" alt="A badger shaving brush and a walnut box on a brass shelf"></picture>
+          </div>
+        </div>
+
+        <ol class="svc-list">
+          <li><button class="svc" type="button" data-service="haircut" data-name="Haircut" data-mins="45" data-price="26" data-cursor="Book">
+            <span class="svc__no">01</span>
+            <span class="svc__main"><b class="svc__name">Haircut</b><span class="svc__desc">Scissor or clipper cut, washed and styled.</span></span>
+            <span class="svc__mins" data-assumed>45 min</span><span class="svc__price" data-assumed>£26</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+          <li><button class="svc" type="button" data-service="skin-fade" data-name="Skin fade" data-mins="45" data-price="29" data-cursor="Book">
+            <span class="svc__no">02</span>
+            <span class="svc__main"><b class="svc__name">Skin fade</b><span class="svc__desc">Taken down to the skin and blended by hand.</span></span>
+            <span class="svc__mins" data-assumed>45 min</span><span class="svc__price" data-assumed>£29</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+          <li><button class="svc" type="button" data-service="beard-trim" data-name="Beard trim" data-mins="20" data-price="15" data-cursor="Book">
+            <span class="svc__no">03</span>
+            <span class="svc__main"><b class="svc__name">Beard trim</b><span class="svc__desc">Shaped, lined up with a razor and oiled.</span></span>
+            <span class="svc__mins" data-assumed>20 min</span><span class="svc__price" data-assumed>£15</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+          <li><button class="svc" type="button" data-service="haircut-beard" data-name="Haircut and beard" data-mins="60" data-price="38" data-cursor="Book">
+            <span class="svc__no">04</span>
+            <span class="svc__main"><b class="svc__name">Haircut and beard</b><span class="svc__desc">Both, in one sitting.</span></span>
+            <span class="svc__mins" data-assumed>60 min</span><span class="svc__price" data-assumed>£38</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+          <li><button class="svc" type="button" data-service="hot-towel-shave" data-name="Hot-towel shave" data-mins="40" data-price="32" data-cursor="Book">
+            <span class="svc__no">05</span>
+            <span class="svc__main"><b class="svc__name">Hot-towel shave</b><span class="svc__desc">Hot towels, brushed lather and an open razor.</span></span>
+            <span class="svc__mins" data-assumed>40 min</span><span class="svc__price" data-assumed>£32</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+          <li><button class="svc" type="button" data-service="the-heritage" data-name="The Heritage" data-mins="90" data-price="56" data-cursor="Book">
+            <span class="svc__no">06</span>
+            <span class="svc__main"><b class="svc__name">The Heritage</b><span class="svc__desc">Haircut, beard trim and a hot-towel shave.</span></span>
+            <span class="svc__mins" data-assumed>90 min</span><span class="svc__price" data-assumed>£56</span>
+            <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────── A VISIT ───────────── -->
+    <section class="visit" id="visit">
+      <div class="wrap visit__grid">
+        <header class="visit__head">
+          <h2 class="h2" data-lines>How a visit <em>goes</em></h2>
+          <p class="visit__note">A haircut takes forty-five minutes. This is where they go, written out the way the counter writes it.</p>
+        </header>
+
+        <div class="docket-wrap">
+          <article class="docket" aria-labelledby="docket-title">
+            <header class="docket__head">
+              <p class="docket__shop">Heritage Grooming</p>
+              <p class="docket__addr"><span>Chapel Street, Old Town</span><span>Est. 2020</span></p>
+              <h3 class="docket__title" id="docket-title">Haircut <span>45 min</span></h3>
+            </header>
+            <ol class="docket__lines">
+              <li class="docket__line"><time class="docket__at" datetime="PT0M">0:00</time><div class="docket__main"><h4 class="docket__item">Talk it through</h4><p class="docket__body">How you wear it and how long you give it each morning. Bring a photo if you have one.</p></div><span class="docket__len">5 min</span></li>
+              <li class="docket__line"><time class="docket__at" datetime="PT5M">0:05</time><div class="docket__main"><h4 class="docket__item">The cut</h4><p class="docket__body">Clippers and scissors, checked in the mirror as we go, so nothing comes as a surprise.</p></div><span class="docket__len">30 min</span></li>
+              <li class="docket__line"><time class="docket__at" datetime="PT35M">0:35</time><div class="docket__main"><h4 class="docket__item">The razor finish</h4><p class="docket__body">A hot towel, then an open razor around the neckline and the edges.</p></div><span class="docket__len">5 min</span></li>
+              <li class="docket__line"><time class="docket__at" datetime="PT40M">0:40</time><div class="docket__main"><h4 class="docket__item">Styled and shown how</h4><p class="docket__body">Finished with a product you can use at home, and shown how to get the same result.</p></div><span class="docket__len">5 min</span></li>
+            </ol>
+            <footer class="docket__foot">
+              <p class="docket__total"><span>Out of the chair at <time datetime="PT45M">0:45</time></span><b data-assumed>£26</b></p>
+              <a class="docket__book link" href="#book" data-book-service="haircut">Book this haircut</a>
+            </footer>
+            <img class="docket__stamp" src="assets/img/seal-192.webp" width="192" height="192" alt="" aria-hidden="true">
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── REVIEWS ─────────────
+         The five reviews, their names, dates and the 4.9 / 212 score are STAND-INS (data-assumed):
+         replace them with the shop's own Google reviews before launch. Photographs are stand-ins too. -->
+    <section class="reviews" id="reviews" aria-labelledby="reviews-title">
+      <div class="wrap reviews__grid">
+          <header class="reviews__head">
+            <h2 class="h2" id="reviews-title" data-lines>Reviews <em>from the chair</em></h2>
+          </header>
+
+          <div class="score" data-score data-assumed>
+            <p class="score__num"><span data-score-num>4.9</span><small>out of 5</small></p>
+            <div class="score__side">
+              <span class="stars stars--lg" role="img" aria-label="Rated 4.9 out of 5">
+                <i></i><i></i><i></i><i></i><i style="--fill:.9"></i>
+              </span>
+              <p class="score__from">Average of 212 reviews on Google</p>
+              <dl class="score__bars">
+                <div><dt>5 stars</dt><dd><i style="--v:.91"></i><span>91%</span></dd></div>
+                <div><dt>4 stars</dt><dd><i style="--v:.07"></i><span>7%</span></dd></div>
+                <div><dt>3 stars</dt><dd><i style="--v:.01"></i><span>1%</span></dd></div>
+                <div><dt>2 stars</dt><dd><i style="--v:0"></i><span>0%</span></dd></div>
+                <div><dt>1 star</dt><dd><i style="--v:.01"></i><span>1%</span></dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <ol class="reviews__list" data-reviews>
+            <li class="review" id="review-1" data-assumed>
+              <figure class="review__photo"><img src="assets/img/work-arthur-fade-500.webp" srcset="assets/img/work-arthur-fade-500.webp 500w, assets/img/work-arthur-fade-960.webp 960w" sizes="(max-width: 1099px) 80vw, 24vw" width="500" height="670" loading="lazy" decoding="async" alt="A barber taking a customer's fade down with clippers" data-focus="0.46 0.4" data-hi="assets/img/work-arthur-fade-960.webp"></figure>
+              <blockquote class="review__quote"><p>Kit asked how often I actually style my hair before he picked up the clippers. Nobody had ever asked me that. Three weeks on, the fade still sits right.</p></blockquote>
+              <footer class="review__cite">
+                <span class="review__initial" aria-hidden="true">D</span>
+                <p class="review__who"><b>Daniel R.</b><span>Skin fade with Kit · October 2026</span></p>
+                <span class="stars" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></span>
+                <a class="link review__book" href="#book" data-book-service="skin-fade" data-book-barber="kit">Book a skin fade with Kit</a>
+              </footer>
+            </li>
+            <li class="review" id="review-2" data-assumed>
+              <figure class="review__photo"><img src="assets/img/work-owen-razor-500.webp" srcset="assets/img/work-owen-razor-500.webp 500w, assets/img/work-owen-razor-960.webp 960w" sizes="(max-width: 1099px) 80vw, 24vw" width="500" height="670" loading="lazy" decoding="async" alt="A barber lining up a customer's beard with an open razor" data-focus="0.5 0.4" data-hi="assets/img/work-owen-razor-960.webp"></figure>
+              <blockquote class="review__quote"><p>I booked the shave for my wedding morning and nearly cancelled from nerves. Two hot towels in, I had forgotten what I was nervous about. Not one nick.</p></blockquote>
+              <footer class="review__cite">
+                <span class="review__initial" aria-hidden="true">T</span>
+                <p class="review__who"><b>Tom H.</b><span>Hot-towel shave with Rafi · September 2026</span></p>
+                <span class="stars" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></span>
+                <a class="link review__book" href="#book" data-book-service="hot-towel-shave" data-book-barber="rafi">Book a shave with Rafi</a>
+              </footer>
+            </li>
+            <li class="review" id="review-3" data-assumed>
+              <figure class="review__photo"><img src="assets/img/work-rafi-beard-500.webp" srcset="assets/img/work-rafi-beard-500.webp 500w, assets/img/work-rafi-beard-960.webp 960w" sizes="(max-width: 1099px) 80vw, 24vw" width="500" height="373" loading="lazy" decoding="async" alt="A barber shaping a customer's full beard with scissors and comb" data-focus="0.62 0.4" data-hi="assets/img/work-rafi-beard-960.webp"></figure>
+              <blockquote class="review__quote"><p>Owen shaped the beard to my jaw, not to a picture on his phone. Then he showed me where to stop trimming at home, which has saved me from myself twice already.</p></blockquote>
+              <footer class="review__cite">
+                <span class="review__initial" aria-hidden="true">M</span>
+                <p class="review__who"><b>Marcus O.</b><span>Beard trim with Owen · September 2026</span></p>
+                <span class="stars" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></span>
+                <a class="link review__book" href="#book" data-book-service="beard-trim" data-book-barber="owen">Book a beard trim with Owen</a>
+              </footer>
+            </li>
+            <li class="review" id="review-4" data-assumed>
+              <figure class="review__photo"><img src="assets/img/work-kit-scissors-500.webp" srcset="assets/img/work-kit-scissors-500.webp 500w, assets/img/work-kit-scissors-960.webp 960w, assets/img/work-kit-scissors.webp 2560w" sizes="(max-width: 1099px) 80vw, 24vw" width="500" height="670" loading="lazy" decoding="async" alt="A barber scissor-cutting a customer's hair at the mirror" data-focus="0.4 0.38" data-hi="assets/img/work-kit-scissors-960.webp"></figure>
+              <blockquote class="review__quote"><p>Forty-five minutes and not one glance at the clock. Arthur held up the hand mirror twice before he would let me out of the chair.</p></blockquote>
+              <footer class="review__cite">
+                <span class="review__initial" aria-hidden="true">J</span>
+                <p class="review__who"><b>James W.</b><span>Haircut with Arthur · August 2026</span></p>
+                <span class="stars" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></span>
+                <a class="link review__book" href="#book" data-book-service="haircut" data-book-barber="arthur">Book a haircut with Arthur</a>
+              </footer>
+            </li>
+            <li class="review" id="review-5" data-assumed>
+              <figure class="review__photo"><img src="assets/img/work-lineup-mirror-500.webp" srcset="assets/img/work-lineup-mirror-500.webp 500w, assets/img/work-lineup-mirror-960.webp 960w" sizes="(max-width: 1099px) 80vw, 24vw" width="500" height="373" loading="lazy" decoding="async" alt="A customer with a trimmed beard watching his line-up in the mirror" data-focus="0.55 0.4" data-hi="assets/img/work-lineup-mirror-960.webp"></figure>
+              <blockquote class="review__quote"><p>I took my dad for The Heritage on his sixtieth. He has brought up the hot towel at every Sunday lunch since.</p></blockquote>
+              <footer class="review__cite">
+                <span class="review__initial" aria-hidden="true">S</span>
+                <p class="review__who"><b>Sam K.</b><span>The Heritage with Rafi · August 2026</span></p>
+                <span class="stars" role="img" aria-label="5 out of 5"><i></i><i></i><i></i><i></i><i></i></span>
+                <a class="link review__book" href="#book" data-book-service="the-heritage" data-book-barber="rafi">Book The Heritage with Rafi</a>
+              </footer>
+            </li>
+          </ol>
+
+          <nav class="reviews__nav" aria-label="Reviews">
+            <p class="reviews__count" aria-live="polite"><b data-review-no>01</b><i aria-hidden="true"><u></u></i><span><span class="sr">of </span>05</span></p>
+            <div class="reviews__step">
+              <button type="button" class="rstep" data-review-step="-1" aria-label="Previous review"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+              <button type="button" class="rstep" data-review-step="1" aria-label="Next review"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </nav>
+
+          <div class="reviews__mirror" aria-hidden="true"><canvas class="reviews__gl"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ───────────── BOOKING ───────────── -->
+    <section class="book" id="book">
+      <div class="wrap">
+        <header class="book__head">
+          <div>
+            <h2 class="h2" data-lines>Book <em>a chair</em></h2>
+          </div>
+          <ol class="stepper" aria-label="Booking progress">
+            <li><button type="button" class="stepper__btn is-current" data-goto="1" aria-current="step"><b>1</b>Service</button></li>
+            <li><button type="button" class="stepper__btn" data-goto="2" disabled><b>2</b>Day and time</button></li>
+            <li><button type="button" class="stepper__btn" data-goto="3" disabled><b>3</b>Your details</button></li>
+          </ol>
+        </header>
+
+        <!-- Kersivo mounts here later: see js/booking.js → BOOKING.submit -->
+        <div class="book__panel" id="booking" data-booking>
+          <div class="book__main">
+
+            <fieldset class="bstep is-active" data-step="1">
+              <legend class="bstep__title">Choose a service</legend>
+              <div class="choices" data-services role="radiogroup" aria-label="Service"></div>
+              <p class="bstep__sub" id="barber-label">Barber <small>optional</small></p>
+              <div class="picks" data-barbers role="radiogroup" aria-labelledby="barber-label"></div>
+            </fieldset>
+
+            <fieldset class="bstep" data-step="2" hidden>
+              <legend class="bstep__title">Choose a day and a time</legend>
+              <div class="days" data-days role="radiogroup" aria-label="Day"></div>
+              <p class="bstep__sub" data-daylabel aria-live="polite"></p>
+              <div class="slots" data-slots role="radiogroup" aria-label="Time"></div>
+            </fieldset>
+
+            <fieldset class="bstep" data-step="3" hidden>
+              <legend class="bstep__title">Your details</legend>
+              <div class="fields">
+                <label class="field"><span class="field__label">Name</span>
+                  <input type="text" name="name" autocomplete="name" required>
+                  <span class="field__error" data-error-for="name"></span></label>
+                <label class="field"><span class="field__label">Mobile number</span>
+                  <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required>
+                  <span class="field__error" data-error-for="phone"></span></label>
+                <label class="field field--wide"><span class="field__label">Email <small>optional, for a confirmation</small></span>
+                  <input type="email" name="email" autocomplete="email">
+                  <span class="field__error" data-error-for="email"></span></label>
+                <label class="field field--wide"><span class="field__label">Notes for your barber <small>optional</small></span>
+                  <textarea name="notes" rows="3"></textarea></label>
+              </div>
+            </fieldset>
+
+            <div class="bstep bstep--done" data-step="4" hidden tabindex="-1">
+              <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
+              <h3 class="done__title" data-done-title></h3>
+              <p class="done__body" data-done-body></p>
+              <p class="done__demo">Preview mode: online booking is not switched on yet, so nothing has been sent or stored.</p>
+              <button type="button" class="btn btn--line" data-restart><span>Book another chair</span></button>
+            </div>
+
+            <div class="book__nav" data-booknav>
+              <button type="button" class="link link--btn" data-back hidden>Back</button>
+              <button type="button" class="btn btn--brass btn--lg" data-next disabled><span data-next-label>Choose a time</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </div>
+
+          <aside class="summary" aria-label="Your appointment">
+            <p class="summary__title">Your appointment</p>
+            <dl class="summary__list">
+              <div><dt>Service</dt><dd data-sum="service">Not chosen yet</dd></div>
+              <div><dt>Barber</dt><dd data-sum="barber">Any barber</dd></div>
+              <div><dt>Day</dt><dd data-sum="day">Not chosen yet</dd></div>
+              <div><dt>Time</dt><dd data-sum="time">Not chosen yet</dd></div>
+              <div><dt>Length</dt><dd data-sum="mins">–</dd></div>
+            </dl>
+            <p class="summary__total"><span>To pay in the shop</span><b data-sum="price">£0</b></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── FIND US ─────────────
+         The map is drawn for the site (no map service, no tiles): Old Town as the shop describes it.
+         ASSUMED: the address, the streets and the walking times are stand-ins until the shop sends its own. -->
+    <section class="find" id="find">
+      <div class="wrap find__grid">
+        <figure class="find__map mirror" data-map data-hl="station">
+          <svg class="map" viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="map-title map-desc">
+            <title id="map-title">Map of Old Town with Heritage Grooming on Chapel Street</title>
+            <desc id="map-desc">The shop is on the north side of Chapel Street, east of High Street. Old Town station is a six-minute walk south-east along Station Road; the Market Cross bus stop is four minutes north-west; Mill Lane car park is five minutes west.</desc>
+            <defs>
+              <pattern id="map-blocks" width="34" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(-4)">
+                <rect x="2" y="2" width="14" height="9" rx="1.5"/><rect x="19" y="2" width="12" height="9" rx="1.5"/>
+                <rect x="2" y="14" width="9" height="9" rx="1.5"/><rect x="14" y="14" width="17" height="9" rx="1.5"/>
+              </pattern>
+              <pattern id="map-trees" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6"/><circle cx="12" cy="11" r="1.6"/></pattern>
+              <path id="st-chapel" d="M-40 505 C150 480 400 448 640 418 S900 388 1040 378"/>
+              <path id="st-high" d="M470 -40 C500 200 520 420 560 840"/>
+              <path id="st-market" d="M180 232 C420 212 700 176 1040 150"/>
+              <path id="st-station" d="M820 840 C800 700 775 540 760 404 S742 260 735 -40"/>
+              <path id="st-mill" d="M300 -40 C310 200 320 520 300 840"/>
+              <path id="st-tanner" d="M150 622 C380 600 560 584 760 574"/>
+              <path id="st-river" d="M-40 90 C110 170 190 300 150 430 S70 650 190 860"/>
+              <path id="rt-station" d="M806 664 C795 600 780 510 764 420 C745 412 724 412 700 414"/>
+              <path id="rt-bus" d="M502 238 C510 320 515 380 520 432 C580 426 640 418 700 414"/>
+              <path id="rt-parking" d="M352 340 L318 340 C319 400 318 440 316 466 C440 452 580 428 700 414"/>
+              <mask id="mk-station" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="800"><use href="#rt-station" class="map__reveal"/></mask>
+              <mask id="mk-bus" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="800"><use href="#rt-bus" class="map__reveal"/></mask>
+              <mask id="mk-parking" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="800"><use href="#rt-parking" class="map__reveal"/></mask>
+              <clipPath id="map-seal-clip"><circle r="23"/></clipPath>
+            </defs>
+
+            <rect class="map__land" width="1000" height="800"/>
+            <rect class="map__blocks" width="1000" height="800" fill="url(#map-blocks)"/>
+            <path class="map__park" d="M770 70 L1010 46 L1010 132 L792 160 Z"/>
+            <path class="map__park map__park--trees" d="M770 70 L1010 46 L1010 132 L792 160 Z" fill="url(#map-trees)"/>
+            <path class="map__park" d="M40 560 C80 600 70 700 20 760 L-10 760 L-10 560 Z"/>
+
+            <use href="#st-river" class="map__river"/>
+            <use href="#st-river" class="map__river-edge"/>
+
+            <g class="map__minor">
+              <path d="M180 110 C400 90 600 70 1040 40"/>
+              <path d="M620 150 C630 260 640 340 650 420"/>
+              <path d="M880 150 C886 250 892 320 900 386"/>
+              <path d="M400 222 C404 300 404 380 400 456"/>
+              <path d="M560 600 C640 680 700 740 740 840"/>
+              <path d="M-40 300 L120 318"/><path d="M-40 690 L130 676"/>
+              <path d="M330 600 C330 680 320 760 310 840"/>
+              <use href="#st-mill"/><use href="#st-tanner"/>
+            </g>
+            <g class="map__major">
+              <use href="#st-high"/><use href="#st-market"/><use href="#st-station"/>
+            </g>
+            <use href="#st-chapel" class="map__chapel"/>
+
+            <!-- railway and Old Town station -->
+            <path class="map__rail" d="M520 840 C700 700 860 640 1040 600"/>
+            <path class="map__rail-ties" d="M520 840 C700 700 860 640 1040 600"/>
+            <g class="map__poi" data-poi="station" transform="translate(806 668) rotate(-20)">
+              <rect x="-34" y="-11" width="68" height="22" rx="4"/>
+            </g>
+            <!-- Market Cross and the bus stop -->
+            <circle class="map__square" cx="502" cy="216" r="24"/>
+            <g class="map__poi" data-poi="bus" transform="translate(502 216)"><circle r="11"/><text y="4">B</text></g>
+            <!-- Mill Lane car park -->
+            <g class="map__poi" data-poi="parking" transform="translate(352 340)"><rect x="-13" y="-13" width="26" height="26" rx="5"/><text y="5">P</text></g>
+
+            <!-- the three ways in, drawn on when the map comes into view -->
+            <g class="map__routes">
+              <use href="#rt-station" class="map__route" data-route="station" mask="url(#mk-station)"/>
+              <use href="#rt-bus" class="map__route" data-route="bus" mask="url(#mk-bus)"/>
+              <use href="#rt-parking" class="map__route" data-route="parking" mask="url(#mk-parking)"/>
+            </g>
+
+            <g class="map__labels">
+              <text class="map__street" dy="4"><textPath href="#st-chapel" startOffset="28%">Chapel Street</textPath></text>
+              <text class="map__street" dy="4"><textPath href="#st-high" startOffset="56%">High Street</textPath></text>
+              <text class="map__street" dy="4"><textPath href="#st-market" startOffset="66%">Market Street</textPath></text>
+              <text class="map__street" dy="4"><textPath href="#st-station" startOffset="18%">Station Road</textPath></text>
+              <text class="map__street map__street--minor" dy="3.5"><textPath href="#st-mill" startOffset="10%">Mill Lane</textPath></text>
+              <text class="map__street map__street--minor" dy="3.5"><textPath href="#st-tanner" startOffset="42%">Tanner’s Row</textPath></text>
+              <text class="map__water" dy="4"><textPath href="#st-river" startOffset="64%">River Wend</textPath></text>
+              <text class="map__area" x="900" y="104">Abbey Gardens</text>
+              <text class="map__place" x="534" y="200">Market Cross</text>
+              <text class="map__place" x="826" y="706" text-anchor="end">Old Town station</text>
+              <text class="map__place" x="376" y="334">Mill Lane car park</text>
+            </g>
+
+            <!-- the shop -->
+            <g class="map__pin" transform="translate(700 380)">
+              <circle class="map__pulse" r="27"/>
+              <path class="map__pin-tail" d="M-9 22 L0 36 L9 22 Z"/>
+              <circle class="map__pin-disc" r="27"/>
+              <image href="assets/img/seal-64.webp" x="-23" y="-23" width="46" height="46" clip-path="url(#map-seal-clip)"/>
+              <g class="map__card" transform="translate(-106 -112)">
+                <rect width="212" height="62" rx="6"/>
+                <text class="map__card-name" x="16" y="28">Heritage Grooming</text>
+                <text class="map__card-addr" x="16" y="47">14 Chapel Street</text>
+              </g>
+            </g>
+
+            <!-- north and scale -->
+            <g class="map__compass" transform="translate(940 736)"><circle r="24"/><path d="M0 -17 L6 4 L0 0 L-6 4 Z"/><text y="-30">N</text></g>
+            <g class="map__scale" transform="translate(330 764)"><path d="M0 0 V-6 M0 0 H96 M96 0 V-6 M48 0 V-4"/><text x="104" y="2">100 m</text></g>
+          </svg>
+        </figure>
+
+        <div class="find__info">
+          <h2 class="h2" data-lines>Find <em>the shop</em></h2>
+          <p class="find__address" data-assumed>14 Chapel Street, Old Town</p>
+          <p class="find__note">Look for the big windows and the row of bulbs, just east of High Street. By appointment, with walk-ins when a chair is free.</p>
+          <ul class="ways" aria-label="Getting here" data-assumed>
+            <li><button type="button" class="way" data-way="station" aria-pressed="true"><b class="way__mark way__mark--rail" aria-hidden="true"></b><span class="way__name">Old Town station</span><span class="way__time">6 min walk</span></button></li>
+            <li><button type="button" class="way" data-way="bus" aria-pressed="false"><b class="way__mark" aria-hidden="true">B</b><span class="way__name">Buses 12 and 38, Market Cross</span><span class="way__time">4 min walk</span></button></li>
+            <li><button type="button" class="way" data-way="parking" aria-pressed="false"><b class="way__mark" aria-hidden="true">P</b><span class="way__name">Mill Lane car park</span><span class="way__time">5 min walk</span></button></li>
+          </ul>
+          <h3 class="find__sub">Opening hours</h3>
+          <dl class="hours" data-assumed>
+            <div><dt>Tuesday to Friday</dt><dd>9:00 – 19:00</dd></div>
+            <div><dt>Saturday</dt><dd>9:00 – 17:00</dd></div>
+            <div><dt>Sunday and Monday</dt><dd>Closed</dd></div>
+          </dl>
+          <div class="find__actions">
+            <a class="btn btn--line find__cta" href="#contact"><span>Contact the shop</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <button type="button" class="link link--btn find__copy" data-copy-address="14 Chapel Street, Old Town">Copy the address</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── CONTACT ───────────── -->
+    <section class="contact" id="contact">
+      <div class="wrap contact__grid">
+        <div class="contact__info">
+          <h2 class="h2" data-lines>Contact <em>the shop</em></h2>
+          <p class="contact__note">A question about a cut, a group booking or a gift voucher? Leave a message and a barber will reply within one working day.</p>
+          <dl class="contact__list">
+            <div><dt>Phone</dt><dd><a class="link" href="tel:+440000000000" data-assumed>+44 0000 000 000</a></dd></div>
+            <div><dt>Email</dt><dd><a class="link" href="mailto:hello@heritagegrooming.example" data-assumed>hello@heritagegrooming.example</a></dd></div>
+            <div><dt>Address</dt><dd data-assumed>14 Chapel Street, Old Town</dd></div>
+          </dl>
+        </div>
+
+        <form class="contact__form" data-contact novalidate>
+          <div class="contact__fields" data-contact-fields>
+            <div class="fields">
+              <label class="field"><span class="field__label">Name</span>
+                <input type="text" name="name" autocomplete="name" required>
+                <span class="field__error" data-error-for="name"></span></label>
+              <label class="field"><span class="field__label">Email</span>
+                <input type="email" name="email" autocomplete="email" required>
+                <span class="field__error" data-error-for="email"></span></label>
+              <label class="field field--wide"><span class="field__label">Phone <small>optional</small></span>
+                <input type="tel" name="phone" autocomplete="tel" inputmode="tel"></label>
+              <label class="field field--wide"><span class="field__label">Message</span>
+                <textarea name="message" rows="5" required></textarea>
+                <span class="field__error" data-error-for="message"></span></label>
+            </div>
+            <div class="contact__nav">
+              <button type="submit" class="btn btn--brass btn--lg"><span>Send message</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </div>
+
+          <div class="contact__done" data-contact-done hidden tabindex="-1">
+            <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
+            <h3 class="done__title" data-contact-title>Thank you</h3>
+            <p class="done__body">We will reply to your email within one working day.</p>
+            <p class="done__demo">Preview mode: the contact form is not connected yet, so nothing has been sent or stored.</p>
+            <button type="button" class="btn btn--line" data-contact-again><span>Write another message</span></button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__top">
+      <img class="footer__seal" src="assets/img/seal.webp" width="660" height="660" loading="lazy" alt="Heritage Grooming seal: a comb and a straight razor crossed on a shield">
+      <nav class="footer__links" aria-label="Footer">
+        <a class="link" href="#shop">The shop</a>
+        <a class="link" href="#services">Services</a>
+        <a class="link" href="shop.html">Products</a>
+        <a class="link" href="team.html">The barbers</a>
+        <a class="link" href="gallery.html">The work</a>
+        <a class="link" href="#visit">A visit</a>
+        <a class="link" href="#reviews">Reviews</a>
+        <a class="link" href="#find">Find us</a>
+        <a class="link" href="#contact">Contact</a>
+      </nav>
+      <a class="btn btn--brass btn--lg" href="#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <!-- the shop's facts, then the fascia. ASSUMED: address, hours, phone and email are stand-ins (hours: house.js HOURS) -->
+    <div class="wrap footer__info">
+      <section class="footer__col" aria-labelledby="ft-visit">
+        <h2 class="footer__label" id="ft-visit">Visit</h2>
+        <address class="footer__text" data-assumed>14 Chapel Street<br>Old Town</address>
+        <a class="link" href="#find">How to find us</a>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-hours">
+        <h2 class="footer__label" id="ft-hours">Hours</h2>
+        <dl class="footer__hours" data-assumed>
+          <div><dt>Tuesday to Friday</dt><dd>9:00 – 19:00</dd></div>
+          <div><dt>Saturday</dt><dd>9:00 – 17:00</dd></div>
+          <div><dt>Sunday and Monday</dt><dd>Closed</dd></div>
+        </dl>
+        <p class="footer__status" data-open-status>Open Tuesday to Saturday</p>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-call">
+        <h2 class="footer__label" id="ft-call">Call or write</h2>
+        <a class="footer__text footer__tel" href="tel:+440000000000" data-assumed>+44 0000 000 000</a>
+        <a class="link" href="mailto:hello@heritagegrooming.example" data-assumed>hello@heritagegrooming.example</a>
+      </section>
+    </div>
+    <div class="wrap">
+      <div class="footer__sign" aria-hidden="true">
+        <span class="footer__rule"></span>
+        <p class="footer__word">Heritage Grooming</p>
+        <span class="footer__rule"></span>
+        <p class="footer__strap"><span>Barbers</span><span>Chapel Street · Old Town</span><span>Est. 2020</span></p>
+      </div>
+    </div>
+    <div class="wrap footer__legal">
+      <span>© 2026 Heritage Grooming</span>
+      <a class="link" href="#top">Back to top</a>
+    </div>
+  </footer>
+
+  <a class="bookbar btn btn--brass" href="#book"><span>Book a chair</span></a>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script type="module" src="js/booking.js"></script>
+  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/book-sheet.js"></script>
+  <script type="module" src="js/map.js"></script>
+</body>
+</html>

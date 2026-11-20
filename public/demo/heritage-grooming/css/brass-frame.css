@@ -1,0 +1,53 @@
+/* ──────────────────────────────────────────────────────────
+   The print mount (js/brass-frame.js). Every photograph hangs as an old shop hangs its prints:
+   square corners, one brass hairline for a slim gilt moulding, an ivory passe-partout, and the
+   bevelled cut of the mat round the picture. Loaded last on every page, so it also squares off
+   and re-mounts the frames drawn in each page's own CSS (team, services, gallery, shop, index).
+   ────────────────────────────────────────────────────────── */
+:root {
+  --radius-mirror: 0px;
+  --mount-line: #a8874f;                       /* the moulding: one brass hairline */
+  --mount-mat: #efe7d4;                        /* the passe-partout */
+  --mount-bevel: #fbf7ec;                      /* the mat's bevelled cut catches the light */
+  --mount-seam: rgba(15, 23, 22, .38);         /* where the mat meets the print */
+}
+
+/* the mount itself, as one stack of inset rings (outside in) */
+.bframe,
+:is(.bcard__photo, .chap__photo, .mirror)::before {
+  --pp: clamp(8px, 1.2vw, 18px);
+  box-shadow:
+    inset 0 0 0 1px var(--mount-line),
+    inset 0 0 0 var(--pp) var(--mount-mat),
+    inset 0 0 0 calc(var(--pp) + 1px) var(--mount-bevel),
+    inset 0 0 0 calc(var(--pp) + 2px) var(--mount-seam);
+}
+.bframe { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+:is(.counter__stage, .prices__stage) > .bframe { z-index: 3; }            /* the count and the hint stay above the mount */
+
+/* every photo frame on the site: square, no mirror rim, no glare, no rounded arch */
+:is(.arch__frame, .bcard__photo, .roster__stage, .mcard__frame, .gframe__glass, .prices__stage, .chap__photo,
+    .counter__stage, .mirror, .review__photo, .reviews__mirror, .pick__face, .shop__frame picture) {
+  border-radius: 0 !important;
+  outline: none;
+}
+:is(.arch__frame, .bcard__photo, .roster__stage, .mcard__frame, .gframe__glass, .prices__stage, .chap__photo, .counter__stage)::after {
+  display: none;
+}
+:is(.arch__frame, .roster__stage, .mcard__frame, .gframe__glass, .prices__stage, .counter__stage)::before {
+  background: none; box-shadow: none;
+}
+/* the frames no script mounts: the mount is drawn by the host's own ::before */
+:is(.bcard__photo, .chap__photo, .mirror)::before {
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: none;
+}
+.mirror { isolation: isolate; }
+
+/* the print stands a little off the wall */
+:is(.arch__frame, .bcard__photo, .roster__stage, .gframe__glass, .prices__stage, .chap__photo, .counter__stage, .mirror, .reviews__mirror) {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 18px 30px -18px rgba(0, 0, 0, .7);
+}
+:is(.mcard__frame, .review__photo, .mirror--ink, .reviews__mirror) {
+  box-shadow: 0 1px 2px rgba(15, 23, 22, .22), 0 16px 26px -18px rgba(15, 23, 22, .5);
+}
+.pick__face { box-shadow: 0 4px 10px -6px rgba(15, 23, 22, .55); }

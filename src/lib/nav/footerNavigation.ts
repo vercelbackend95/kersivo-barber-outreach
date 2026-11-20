@@ -7,6 +7,7 @@ import {
   SUBSCRIBE_NOW_CTA_HREF,
   SUBSCRIBE_NOW_CTA_TRACK,
 } from '@/lib/freePreview/fullPlanCta';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 
 export type FooterColumnLink = FooterNavItem & {
   track?: string;
@@ -34,7 +35,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { name: 'Online booking & deposits', href: '/barbershop-online-booking' },
       { name: 'KERSIVO Starter', href: '/starter' },
       { name: 'Pricing', href: '/pricing' },
-      { name: 'Live demo', href: '/demo' },
+      { name: 'Live demo', href: KERSIVO_LIVE_DEMO_HREF },
       FOOTER_PRODUCT_CTA,
     ],
   },

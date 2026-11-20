@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en" class="no-js" data-type="place">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Services and prices · Heritage Grooming</title>
+  <meta name="description" content="Every haircut, beard trim, straight-razor shave, combination and children's cut at Heritage Grooming, with its price and how long it takes. Book a chair online.">
+  <meta name="page-type" content="place">
+  <meta name="site-kind" content="other">
+  <meta name="page-kind" content="place">
+  <meta name="theme-color" content="#0f1716">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Services and prices · Heritage Grooming">
+  <meta property="og:description" content="Fifteen services, each with its price and its time in the chair. Haircuts from £16.">
+  <meta property="og:image" content="assets/img/share.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="assets/img/favicon.png">
+
+  <script>document.documentElement.className = 'js';</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/services.css">
+  <link rel="stylesheet" href="css/brass-frame.css">
+  <link rel="stylesheet" href="css/book-sheet.css">
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }
+  </script>
+</head>
+<body class="services-page">
+  <!-- Services and prices. Kind: place (barbershop). Same system as index.html and team.html: palette, Caslon + Hanken, brass buttons.
+       Moment: the pinned price list (#prices: five chapters, the mirror takes each photograph in with one razor stroke, three.js)
+       Prices and lengths are ASSUMED (data-assumed), from js/data.js MENU: replace with the shop's own.
+       Photographs: tools, chair and room are the shop's; the haircut and beard frames are AI STAND-INS (generated with Porter). -->
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+  <header class="nav" data-nav>
+    <div class="nav__bar wrap">
+      <a class="brand" href="index.html" aria-label="Heritage Grooming, home">
+        <img src="assets/img/seal-64.webp" srcset="assets/img/seal-64.webp 1x, assets/img/seal-128.webp 2x, assets/img/seal-192.webp 3x" width="48" height="48" alt="">
+        <span class="brand__name">Heritage <i>Grooming</i></span>
+      </a>
+      <nav class="nav__links" aria-label="Main">
+        <a class="nav__link" href="index.html#shop">The shop</a>
+        <a class="nav__link is-here" href="services.html" aria-current="page">Services</a>
+        <a class="nav__link" href="shop.html">Products</a>
+        <a class="nav__link" href="team.html">The barbers</a>
+        <a class="nav__link" href="gallery.html">The work</a>
+        <a class="nav__link" href="index.html#visit">A visit</a>
+        <a class="nav__link" href="index.html#find">Find us</a>
+      </nav>
+      <a class="btn btn--brass nav__cta" href="#book" data-magnetic><span>Book a chair</span></a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <i class="nav__progress" aria-hidden="true"></i>
+  </header>
+
+  <div class="menu" id="menu" data-lenis-prevent hidden>
+    <nav class="menu__links wrap" aria-label="Mobile">
+      <a href="index.html#shop"><small>01</small>The shop</a>
+      <a href="services.html" aria-current="page"><small>02</small>Services</a>
+      <a href="shop.html"><small>03</small>Products</a>
+      <a href="team.html"><small>04</small>The barbers</a>
+      <a href="gallery.html"><small>05</small>The work</a>
+      <a href="index.html#visit"><small>06</small>A visit</a>
+      <a href="index.html#find"><small>07</small>Find us</a>
+      <a class="btn btn--brass" href="#book"><span>Book a chair</span></a>
+    </nav>
+  </div>
+
+  <main id="main">
+
+    <!-- ───────────── HERO: the board over the counter ───────────── -->
+    <section class="shero" id="top" data-enter>
+      <div class="wrap shero__inner">
+        <div class="shero__head">
+          <h1 class="shero__title">Cuts, beards and shaves, <em>priced up front.</em></h1>
+          <div class="shero__side">
+            <p class="shero__lede">Fifteen services, each with what it costs and how long you sit in the chair. You pay in the shop, by card or cash, once you have seen the mirror.</p>
+            <div class="shero__actions">
+              <a class="btn btn--brass btn--lg" href="#prices" data-magnetic><span>See the price list</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              <a class="link" href="#book">Book a chair</a>
+            </div>
+          </div>
+        </div>
+
+        <ol class="board" aria-label="Chapters of the price list">
+          <li><a class="board__item" href="#ch-cuts" data-goto-chap="0" data-cursor="Open">
+            <small>01</small><b class="board__name">Haircuts</b>
+            <span class="board__meta" data-assumed>4 services · 20 to 60 min</span>
+            <span class="board__from" data-assumed>from <i data-count="16">£16</i></span>
+          </a></li>
+          <li><a class="board__item" href="#ch-beards" data-goto-chap="1" data-cursor="Open">
+            <small>02</small><b class="board__name">Beards</b>
+            <span class="board__meta" data-assumed>3 services · 15 to 30 min</span>
+            <span class="board__from" data-assumed>from <i data-count="12">£12</i></span>
+          </a></li>
+          <li><a class="board__item" href="#ch-shaves" data-goto-chap="2" data-cursor="Open">
+            <small>03</small><b class="board__name">Straight razor</b>
+            <span class="board__meta" data-assumed>2 services · 40 min each</span>
+            <span class="board__from" data-assumed>from <i data-count="30">£30</i></span>
+          </a></li>
+          <li><a class="board__item" href="#ch-combos" data-goto-chap="3" data-cursor="Open">
+            <small>04</small><b class="board__name">Combinations</b>
+            <span class="board__meta" data-assumed>3 services · 60 to 90 min</span>
+            <span class="board__from" data-assumed>from <i data-count="38">£38</i></span>
+          </a></li>
+          <li><a class="board__item" href="#ch-young" data-goto-chap="4" data-cursor="Open">
+            <small>05</small><b class="board__name">Under twelves</b>
+            <span class="board__meta" data-assumed>3 services · 30 to 75 min</span>
+            <span class="board__from" data-assumed>from <i data-count="18">£18</i></span>
+          </a></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ───────────── THE PRICE LIST: pinned mirror, five chapters (moment 1) ───────────── -->
+    <section class="prices" id="prices" aria-labelledby="prices-title">
+      <div class="prices__pin">
+        <div class="wrap prices__grid">
+          <header class="prices__head">
+            <h2 class="prices__title" id="prices-title">The price <em>list</em></h2>
+            <ol class="prices__index" aria-label="Jump to a chapter">
+              <li><button type="button" class="pidx" data-goto-chap="0"><small>01</small>Haircuts</button></li>
+              <li><button type="button" class="pidx" data-goto-chap="1"><small>02</small>Beards</button></li>
+              <li><button type="button" class="pidx" data-goto-chap="2"><small>03</small>Straight razor</button></li>
+              <li><button type="button" class="pidx" data-goto-chap="3"><small>04</small>Combinations</button></li>
+              <li><button type="button" class="pidx" data-goto-chap="4"><small>05</small>Under twelves</button></li>
+            </ol>
+          </header>
+
+          <div class="prices__stage" aria-hidden="true">
+            <canvas class="prices__gl"></canvas>
+            <p class="prices__count"><b>01</b><i><u></u></i><span>05</span></p>
+          </div>
+
+          <div class="prices__chapters">
+            <article class="chap" id="ch-cuts" data-chap="cuts">
+              <figure class="chap__photo"><img src="assets/img/work-kit-clipper-comb-960.webp" srcset="assets/img/work-kit-clipper-comb-500.webp 500w, assets/img/work-kit-clipper-comb-960.webp 960w, assets/img/work-kit-clipper-comb.webp 2560w" sizes="(max-width: 1023px) 92vw, 34vw" width="960" height="1286" alt="A barber taking the sides of a haircut down with a comb and clippers" loading="lazy" decoding="async" data-focus="0.5 0.42" data-source="stand-in" data-subject="stand-in"></figure>
+              <div class="chap__text">
+                <p class="chap__no">4 services</p>
+                <h3 class="chap__name">Haircuts</h3>
+                <p class="chap__intro">Every cut starts with a talk at the mirror and ends with a wash, a hot-towel neck and a style you can do again at home.</p>
+                <ul class="rows" aria-label="Haircuts">
+                <li><button type="button" class="row" data-book="haircut" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Haircut</b><span class="row__desc">Scissor or clipper cut, washed and styled.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.500"></i>45 min</span>
+                  <span class="row__price" data-assumed>£26</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="skin-fade" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Skin fade</b><span class="row__desc">Taken down to the skin and blended by hand.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.500"></i>45 min</span>
+                  <span class="row__price" data-assumed>£29</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="long-hair" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Longer hair</b><span class="row__desc">Scissors only, for hair past the collar.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.667"></i>60 min</span>
+                  <span class="row__price" data-assumed>£34</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="clipper-cut" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Clipper cut</b><span class="row__desc">One grade all over, neckline tidied with the razor.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.222"></i>20 min</span>
+                  <span class="row__price" data-assumed>£16</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="chap" id="ch-beards" data-chap="beards">
+              <figure class="chap__photo"><img src="assets/img/work-owen-razor-960.webp" srcset="assets/img/work-owen-razor-500.webp 500w, assets/img/work-owen-razor-960.webp 960w" sizes="(max-width: 1023px) 92vw, 34vw" width="960" height="1286" alt="A barber lining up a customer’s beard with an open razor" loading="lazy" decoding="async" data-focus="0.5 0.4" data-source="stand-in" data-subject="stand-in"></figure>
+              <div class="chap__text">
+                <p class="chap__no">3 services</p>
+                <h3 class="chap__name">Beards</h3>
+                <p class="chap__intro">Shaped to the jaw it sits on, edged with an open razor, finished with oil or balm. Bring a photo if you have one in mind.</p>
+                <ul class="rows" aria-label="Beards">
+                <li><button type="button" class="row" data-book="beard-trim" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Beard trim</b><span class="row__desc">Shaped, lined up with a razor and oiled.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.222"></i>20 min</span>
+                  <span class="row__price" data-assumed>£15</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="beard-sculpt" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Beard and hot towel</b><span class="row__desc">A hot towel first, then shaped by hand and lined with the razor.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.333"></i>30 min</span>
+                  <span class="row__price" data-assumed>£22</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="line-up" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Line-up</b><span class="row__desc">Hairline, cheeks and neck edged with the open razor.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.167"></i>15 min</span>
+                  <span class="row__price" data-assumed>£12</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="chap" id="ch-shaves" data-chap="shaves">
+              <figure class="chap__photo"><img src="assets/img/tools.webp" srcset="assets/img/tools-960.webp 960w, assets/img/tools-1600.webp 1600w, assets/img/tools.webp 2560w" sizes="100vw" width="1264" height="848" alt="Shaving brush, open razor, combs and folded towels on the walnut counter" loading="lazy" decoding="async" data-focus="0.6 0.62" data-source="client" data-subject="place"></figure>
+              <div class="chap__text">
+                <p class="chap__no">2 services</p>
+                <h3 class="chap__name">Straight razor</h3>
+                <p class="chap__intro">Two hot towels, lather brushed in by hand and a fresh blade for every customer. Book the time; it is not a quick one.</p>
+                <ul class="rows" aria-label="Straight razor">
+                <li><button type="button" class="row" data-book="hot-towel-shave" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Hot-towel shave</b><span class="row__desc">Hot towels, brushed lather and an open razor.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.444"></i>40 min</span>
+                  <span class="row__price" data-assumed>£32</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="head-shave" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Head shave</b><span class="row__desc">Clippered down, hot towel, then the razor over the whole head.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.444"></i>40 min</span>
+                  <span class="row__price" data-assumed>£30</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="chap" id="ch-combos" data-chap="combos">
+              <figure class="chap__photo"><img src="assets/img/chair.webp" srcset="assets/img/chair-960.webp 960w, assets/img/chair-1600.webp 1600w, assets/img/chair.webp 2560w" sizes="100vw" width="928" height="1152" alt="A black leather barber’s chair at a walnut station under a brass-framed mirror" loading="lazy" decoding="async" data-focus="0.45 0.62" data-source="client" data-subject="place"></figure>
+              <div class="chap__text">
+                <p class="chap__no">3 services</p>
+                <h3 class="chap__name">Combinations</h3>
+                <p class="chap__intro">Two or three services in one sitting, priced below what they cost on their own. The chair is yours the whole time.</p>
+                <ul class="rows" aria-label="Combinations">
+                <li><button type="button" class="row" data-book="haircut-beard" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Haircut and beard</b><span class="row__desc">Both, in one sitting.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.667"></i>60 min</span>
+                  <span class="row__price" data-assumed><s aria-label="£41 booked apart">£41</s> £38</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="fade-beard" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Skin fade and beard</b><span class="row__desc">The fade, then the beard blended into it.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.667"></i>60 min</span>
+                  <span class="row__price" data-assumed><s aria-label="£44 booked apart">£44</s> £41</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="the-heritage" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">The Heritage</b><span class="row__desc">Haircut, beard trim and a hot-towel shave.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 1.000"></i>90 min</span>
+                  <span class="row__price" data-assumed><s aria-label="£73 booked apart">£73</s> £56</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                </ul>
+              </div>
+            </article>
+
+            <article class="chap" id="ch-young" data-chap="young">
+              <figure class="chap__photo"><img src="assets/img/chairs.webp" srcset="assets/img/chairs-960.webp 960w, assets/img/chairs-1600.webp 1600w, assets/img/chairs.webp 2560w" sizes="100vw" width="1376" height="768" alt="The row of chairs down the long room, the street outside the window" loading="lazy" decoding="async" data-focus="0.34 0.6" data-source="client" data-subject="place"></figure>
+              <div class="chap__text">
+                <p class="chap__no">3 services</p>
+                <h3 class="chap__name">Under twelves</h3>
+                <p class="chap__intro">A booster seat, no rush and a barber who has done a first haircut many times. A parent stays in the shop.</p>
+                <ul class="rows" aria-label="Under twelves">
+                <li><button type="button" class="row" data-book="child-cut" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Children’s haircut</b><span class="row__desc">Under twelve. Scissors or clippers, no product unless asked.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.333"></i>30 min</span>
+                  <span class="row__price" data-assumed>£18</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="child-fade" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Children’s fade</b><span class="row__desc">Under twelve. Faded and blended, finished with a comb-through.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.333"></i>30 min</span>
+                  <span class="row__price" data-assumed>£21</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                <li><button type="button" class="row" data-book="father-son" data-cursor="Book">
+                  <span class="row__main"><b class="row__name">Parent and child</b><span class="row__desc">Two haircuts, one after the other in the same chair.</span></span>
+                  <span class="row__time" data-assumed><i style="--m: 0.833"></i>75 min</span>
+                  <span class="row__price" data-assumed>£40</span>
+                  <svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button></li>
+                </ul>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── BOOKING (same flow as the other pages, full price list) ───────────── -->
+    <section class="book" id="book">
+      <div class="wrap">
+        <header class="book__head">
+          <div>
+            <h2 class="h2" data-lines>Book <em>a chair</em></h2>
+          </div>
+          <ol class="stepper" aria-label="Booking progress">
+            <li><button type="button" class="stepper__btn is-current" data-goto="1" aria-current="step"><b>1</b>Service and barber</button></li>
+            <li><button type="button" class="stepper__btn" data-goto="2" disabled><b>2</b>Day and time</button></li>
+            <li><button type="button" class="stepper__btn" data-goto="3" disabled><b>3</b>Your details</button></li>
+          </ol>
+        </header>
+
+        <!-- Kersivo mounts here later: see js/booking.js → BOOKING.submit -->
+        <div class="book__panel" id="booking" data-booking data-menu="full">
+          <div class="book__main">
+
+            <fieldset class="bstep is-active" data-step="1">
+              <legend class="bstep__title">Choose a service and a barber</legend>
+              <p class="bstep__sub bstep__sub--first" id="service-label">Service</p>
+              <div class="choices" data-services role="radiogroup" aria-labelledby="service-label"></div>
+              <p class="bstep__sub" id="barber-label">Barber</p>
+              <div class="picks" data-barbers role="radiogroup" aria-labelledby="barber-label"></div>
+            </fieldset>
+
+            <fieldset class="bstep" data-step="2" hidden>
+              <legend class="bstep__title">Choose a day and a time</legend>
+              <div class="days" data-days role="radiogroup" aria-label="Day"></div>
+              <p class="bstep__sub" data-daylabel aria-live="polite"></p>
+              <div class="slots" data-slots role="radiogroup" aria-label="Time"></div>
+            </fieldset>
+
+            <fieldset class="bstep" data-step="3" hidden>
+              <legend class="bstep__title">Your details</legend>
+              <div class="fields">
+                <label class="field"><span class="field__label">Name</span>
+                  <input type="text" name="name" autocomplete="name" required>
+                  <span class="field__error" data-error-for="name"></span></label>
+                <label class="field"><span class="field__label">Mobile number</span>
+                  <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required>
+                  <span class="field__error" data-error-for="phone"></span></label>
+                <label class="field field--wide"><span class="field__label">Email <small>optional, for a confirmation</small></span>
+                  <input type="email" name="email" autocomplete="email">
+                  <span class="field__error" data-error-for="email"></span></label>
+                <label class="field field--wide"><span class="field__label">Notes for your barber <small>optional</small></span>
+                  <textarea name="notes" rows="3"></textarea></label>
+              </div>
+            </fieldset>
+
+            <div class="bstep bstep--done" data-step="4" hidden tabindex="-1">
+              <svg class="done__tick" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M20 33l8.5 8.5L45 24"/></svg>
+              <h3 class="done__title" data-done-title></h3>
+              <p class="done__body" data-done-body></p>
+              <p class="done__demo">Preview mode: online booking is not switched on yet, so nothing has been sent or stored.</p>
+              <button type="button" class="btn btn--line" data-restart><span>Book another chair</span></button>
+            </div>
+
+            <div class="book__nav" data-booknav>
+              <button type="button" class="link link--btn" data-back hidden>Back</button>
+              <button type="button" class="btn btn--brass btn--lg" data-next disabled><span data-next-label>Choose a time</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            </div>
+          </div>
+
+          <aside class="summary" aria-label="Your appointment">
+            <p class="summary__title">Your appointment</p>
+            <dl class="summary__list">
+              <div><dt>Service</dt><dd data-sum="service">Not chosen yet</dd></div>
+              <div><dt>Barber</dt><dd data-sum="barber">Any barber</dd></div>
+              <div><dt>Day</dt><dd data-sum="day">Not chosen yet</dd></div>
+              <div><dt>Time</dt><dd data-sum="time">Not chosen yet</dd></div>
+              <div><dt>Length</dt><dd data-sum="mins">–</dd></div>
+            </dl>
+            <p class="summary__total"><span>To pay in the shop</span><b data-sum="price">£0</b></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__top">
+      <img class="footer__seal" src="assets/img/seal.webp" width="660" height="660" loading="lazy" alt="Heritage Grooming seal: a comb and a straight razor crossed on a shield">
+      <nav class="footer__links" aria-label="Footer">
+        <a class="link" href="index.html#shop">The shop</a>
+        <a class="link" href="services.html">Services</a>
+        <a class="link" href="shop.html">Products</a>
+        <a class="link" href="team.html">The barbers</a>
+        <a class="link" href="gallery.html">The work</a>
+        <a class="link" href="index.html#visit">A visit</a>
+        <a class="link" href="index.html#find">Find us</a>
+        <a class="link" href="index.html#contact">Contact</a>
+      </nav>
+      <a class="btn btn--brass btn--lg" href="#book" data-magnetic><span>Book a chair</span><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+    <!-- the shop's facts, then the fascia. ASSUMED: address, hours, phone and email are stand-ins (hours: house.js HOURS) -->
+    <div class="wrap footer__info">
+      <section class="footer__col" aria-labelledby="ft-visit">
+        <h2 class="footer__label" id="ft-visit">Visit</h2>
+        <address class="footer__text" data-assumed>14 Chapel Street<br>Old Town</address>
+        <a class="link" href="index.html#find">How to find us</a>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-hours">
+        <h2 class="footer__label" id="ft-hours">Hours</h2>
+        <dl class="footer__hours" data-assumed>
+          <div><dt>Tuesday to Friday</dt><dd>9:00 – 19:00</dd></div>
+          <div><dt>Saturday</dt><dd>9:00 – 17:00</dd></div>
+          <div><dt>Sunday and Monday</dt><dd>Closed</dd></div>
+        </dl>
+        <p class="footer__status" data-open-status>Open Tuesday to Saturday</p>
+      </section>
+      <section class="footer__col" aria-labelledby="ft-call">
+        <h2 class="footer__label" id="ft-call">Call or write</h2>
+        <a class="footer__text footer__tel" href="tel:+440000000000" data-assumed>+44 0000 000 000</a>
+        <a class="link" href="mailto:hello@heritagegrooming.example" data-assumed>hello@heritagegrooming.example</a>
+      </section>
+    </div>
+    <div class="wrap">
+      <div class="footer__sign" aria-hidden="true">
+        <span class="footer__rule"></span>
+        <p class="footer__word">Heritage Grooming</p>
+        <span class="footer__rule"></span>
+        <p class="footer__strap"><span>Barbers</span><span>Chapel Street · Old Town</span><span>Est. 2020</span></p>
+      </div>
+    </div>
+    <div class="wrap footer__legal">
+      <span>© 2026 Heritage Grooming</span>
+      <a class="link" href="#top">Back to top</a>
+    </div>
+  </footer>
+
+  <a class="bookbar btn btn--brass" href="#book"><span>Book a chair</span></a>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+  <script type="module" src="js/booking.js"></script>
+  <script type="module" src="js/services.js"></script>
+  <script type="module" src="js/book-sheet.js"></script>
+</body>
+</html>

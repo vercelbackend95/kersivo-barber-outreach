@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import BlacklineWebsitePreview from './BlacklineWebsitePreview.astro';
 import BookingPreview from './BookingPreview.astro';
 import WebsiteFeaturesPanel from './WebsiteFeaturesPanel.astro';
@@ -68,7 +69,7 @@ const lines = splitAt > 0 ? [headline.slice(0, splitAt), headline.slice(splitAt 
       </a>
       )}
       <a
-        href="/demo"
+        href={KERSIVO_LIVE_DEMO_HREF}
         class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary bsw-hero__action"
         data-track="view_live_demo_click"
         data-track-placement="barbershop_websites_hero"

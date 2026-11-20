@@ -15,6 +15,7 @@ import { PREVIEW_HUB_PATHS } from '@/lib/adminHub/previewHubPaths';
 import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { HERITAGE_SHOP_NAME } from '@/lib/demo/heritage/data';
 import {
   enablePublicAdminDemo,
   getStoredAdminSecret,
@@ -22,7 +23,7 @@ import {
   setPublicAdminDemoMode,
 } from './adminAuth';
 import type { AdminProfileUser } from './AdminSidebarProfile';
-import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
+import { getPublicAdminDemoCapabilities, isBrandedDemoTenant, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
 import { SkeletonKPICards } from '../skeleton';
 import { authClient } from '@/lib/auth-client';
 import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConstruction';
@@ -181,7 +182,7 @@ export default function AdminPanel({
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
   const [shopName, setShopName] = useState<string | null>(
-    demoTenant === 'blackline' ? DEMO_SHOP_NAME : null,
+    demoTenant === 'blackline' ? DEMO_SHOP_NAME : demoTenant === 'heritage' ? HERITAGE_SHOP_NAME : null,
   );
   const [shopId, setShopId] = useState<string | null>(null);
   const [publicActivityPaused, setPublicActivityPaused] = useState(false);
@@ -534,7 +535,7 @@ export default function AdminPanel({
         shopId={demoMode ? null : shopId}
         shopLogoUrl={demoMode ? null : (shopLogoUrl ?? hubChrome?.shopLogoUrl ?? null)}
         shopName={
-          demoTenant === 'blackline'
+          isBrandedDemoTenant(demoTenant)
             ? shopName
             : demoMode
               ? null
@@ -557,7 +558,7 @@ export default function AdminPanel({
           key="bookings"
           isActive={isBookingsSection && !hubLockedFeature}
           isPublicDemo={demoMode}
-          isBlacklineDemo={demoTenant === 'blackline'}
+          isBlacklineDemo={isBrandedDemoTenant(demoTenant)}
           initialBookings={initialBookings as never}
           isHubAccess={isHubAccess}
           openCreateOnMount={
@@ -589,7 +590,7 @@ export default function AdminPanel({
             {activeSection === 'services' ? (
               <ServicesAdminPanel
                 key="services"
-                isBlacklineDemo={demoTenant === 'blackline'}
+                isBlacklineDemo={isBrandedDemoTenant(demoTenant)}
                 showcaseMode={showcaseMode}
                 openCreateOnMount={openCreateRequested}
               />
@@ -603,7 +604,7 @@ export default function AdminPanel({
               <ShopAdminPanel
                 key="shop"
                 initialTab={isHubChrome ? 'products' : shopTab}
-                isBlacklineDemo={demoTenant === 'blackline'}
+                isBlacklineDemo={isBrandedDemoTenant(demoTenant)}
                 showcaseMode={showcaseMode}
                 isHubAccess={isHubAccess}
                 openCreateOnMount={openCreateRequested && activeSection === 'shop_products'}
@@ -638,7 +639,7 @@ export default function AdminPanel({
     <AdminClockContext.Provider value={showcaseMode ? HERO_SHOWCASE_ADMIN_CLOCK : REAL_ADMIN_CLOCK}>
     <AdminTodayBookingsLiveProvider
       isPublicDemo={demoMode}
-      isBlacklineDemo={demoTenant === 'blackline'}
+      isBlacklineDemo={isBrandedDemoTenant(demoTenant)}
       showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
       initialBookings={isHubChrome ? [] : initialBookings}
     >

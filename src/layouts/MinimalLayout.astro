@@ -69,6 +69,8 @@ const isAdminSurface =
   path.startsWith('/admin/') ||
   path === '/demo/admin' ||
   path.startsWith('/demo/admin/') ||
+  path === '/demo/heritage-grooming/admin' ||
+  path.startsWith('/demo/heritage-grooming/admin/') ||
   path === '/ops' ||
   path.startsWith('/ops/');
 const app = isAdminSurface ? 'admin' : 'flow';

@@ -29,7 +29,9 @@ describe('/llms.txt', () => {
     const paths = [...body.matchAll(/\]\(https:\/\/kersivo\.co\.uk(\/[^)]*)\)/g)].map((m) => m[1]);
     for (const path of paths.filter((p) => !p.startsWith('/insights/'))) {
       const base = join(process.cwd(), 'src/pages', path.slice(1));
-      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')), path).toBe(true);
+      // The Heritage Grooming live demo is static HTML under public/.
+      const staticPage = path.endsWith('.html') && existsSync(join(process.cwd(), 'public', path.slice(1)));
+      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')) || staticPage, path).toBe(true);
     }
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) expect(paths).toContain(article.path);
     expect(body).not.toContain('/seo-growth');

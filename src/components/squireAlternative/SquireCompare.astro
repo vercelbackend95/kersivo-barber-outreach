@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import {
   BarChart3,
   CalendarDays,
@@ -169,7 +170,7 @@ const sectionCountLabel = String(sections.length).padStart(2, '0');
     </div>
 
     <a
-      href="/demo"
+      href={KERSIVO_LIVE_DEMO_HREF}
       class="fresha-alt-compare__demo-cta"
       data-track="view_live_demo_click"
     >

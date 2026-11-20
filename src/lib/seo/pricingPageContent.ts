@@ -12,6 +12,7 @@ import {
 } from '@/lib/pricing/claimsPolicy';
 import { PRICING_FULL_BEST_FOR, PRICING_STARTER_BEST_FOR } from '@/lib/pricing/pricingPlans';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 
 const PRICE = `£${SAAS_MONTHLY_GBP}`;
 
@@ -166,7 +167,7 @@ export const PRICING_COMPARE_LINKS = [
     body: 'Pricing models, commission and own-website options across 11 systems.',
   },
   {
-    href: '/demo',
+    href: KERSIVO_LIVE_DEMO_HREF,
     kicker: 'Live demo',
     title: 'See a shop running on KERSIVO',
     body: 'Click through a working barbershop site and booking flow.',

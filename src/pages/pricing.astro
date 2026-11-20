@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
@@ -90,7 +91,7 @@ const currentYear = new Date().getFullYear();
           placement: 'pricing_final',
         }}
         links={[
-          { href: '/demo', label: 'See the demo' },
+          { href: KERSIVO_LIVE_DEMO_HREF, label: 'See the demo' },
           ...(freePreview
             ? [
                 {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960" width="720" height="960">
+  <!-- Stand-in until this product's photo is generated (see js/shop-data.js, photo: false). -->
+  <defs>
+    <radialGradient id="g" cx="50%" cy="58%" r="70%">
+      <stop offset="0" stop-color="#f3ecdf"/>
+      <stop offset="1" stop-color="#e6dccb"/>
+    </radialGradient>
+  </defs>
+  <rect width="720" height="960" fill="url(#g)"/>
+  <ellipse cx="360" cy="620" rx="120" ry="14" fill="#cbbd9f" opacity=".45"/>
+  <g fill="none" stroke="#b39a68" stroke-width="2">
+    <rect x="270" y="400" width="180" height="220" rx="14"/>
+    <rect x="285" y="370" width="150" height="34" rx="6"/>
+    <line x1="300" y1="470" x2="420" y2="470" opacity=".6"/>
+    <line x1="300" y1="550" x2="420" y2="550" opacity=".6"/>
+  </g>
+  <text x="360" y="720" text-anchor="middle" font-family="Hanken Grotesk, Helvetica, Arial, sans-serif" font-size="20" letter-spacing="5" fill="#8e7748">PHOTO TO COME</text>
+</svg>

@@ -54,7 +54,7 @@ describe('comparison engine CTAs', () => {
     expect(COMPARISON_HERO_PRIMARY_LABEL).toBe('See Full KERSIVO pricing');
     expect(COMPARISON_HERO_PRIMARY_HREF).toBe('/pricing#plan');
     expect(COMPARISON_HERO_SECONDARY_LABEL).toBe('See it working');
-    expect(COMPARISON_HERO_SECONDARY_HREF).toBe('/demo');
+    expect(COMPARISON_HERO_SECONDARY_HREF).toBe('/demo/heritage-grooming/index.html');
     expect(heroActions.indexOf('COMPARISON_HERO_PRIMARY_HREF}')).toBeLessThan(heroActions.indexOf('COMPARISON_HERO_SECONDARY_HREF}'));
     expect(heroActions).toContain('data-track="view_pricing_click"');
     expect(heroActions).toContain('data-track="view_live_demo_click"');
