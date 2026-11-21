@@ -31,8 +31,9 @@ const currentYear = new Date().getFullYear();
   jsonLd={buildHomepageJsonLd(freePreview)}
 >
   <link slot="head" rel="preload" as="image" type="image/svg+xml" href="/images/brand/kersivo-mark-reversed.svg" />
-  <!-- LCP: the demo shop hero photo in the hero stage. -->
-  <link slot="head" rel="preload" as="image" href="/demo/heritage-grooming/assets/img/chair-960.webp" fetchpriority="high" />
+  <!-- LCP: the first screen of the real demo shop page in the hero stage (phone or desktop capture). -->
+  <link slot="head" rel="preload" as="image" href="/images/home-v2/heritage-stage-phone-top.webp" media="(max-width: 47.99rem)" fetchpriority="high" />
+  <link slot="head" rel="preload" as="image" href="/images/home-v2/heritage-stage-desktop-top.webp" media="(min-width: 48rem)" fetchpriority="high" />
   <main class="hv2 landing-overflow-guard">
     <HomeV2Journey />
     <HomeV2Hero />
