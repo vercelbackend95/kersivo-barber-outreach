@@ -291,7 +291,9 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     if (!menuButton || !hub || isHubOpen()) return;
     mountHub();
     closePanel();
-    doc.body.style.setProperty(FLOW_HEIGHT_VAR, `${root.getBoundingClientRect().height}px`);
+    // The header's in-flow height includes its top margin (the gap above the pill).
+    const marginTop = Number.parseFloat(doc.defaultView?.getComputedStyle(root).marginTop ?? '') || 0;
+    doc.body.style.setProperty(FLOW_HEIGHT_VAR, `${root.getBoundingClientRect().height + marginTop}px`);
     // Pin the header before the hub is shown: an in-flow hub would grow the page and let scroll anchoring move it.
     root.setAttribute('data-mnav-hub-open', '');
     doc.documentElement.classList.add(LOCK_CLASS);

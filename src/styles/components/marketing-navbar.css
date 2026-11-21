@@ -16,8 +16,12 @@
   --mnav-fill-strong: rgba(255, 255, 255, 0.07);
   --mnav-radius: 0.75rem;
   --mnav-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* The gap above the pill is margin and a sticky offset, not padding: iOS 26 Safari tints its top bar
+     with any full-width fixed or sticky box touching the top edge. Keeping the header box off the edge
+     lets the page show through the bar as clear glass. */
   position: sticky;
-  top: 0;
+  top: var(--mnav-gutter);
+  margin-top: var(--mnav-gutter);
   z-index: 50;
   font-family: var(--font-body);
   /* Own layer in a cross-document view transition, so the header does not fade with the page. */
@@ -33,6 +37,7 @@
 .mnav[data-mnav-hub-open] {
   position: fixed;
   inset: 0;
+  margin-top: 0;
   z-index: 95;
   display: flex;
   flex-direction: column;
@@ -40,6 +45,7 @@
 
 .mnav[data-mnav-hub-open] > .mnav__bar {
   flex-shrink: 0;
+  padding-top: var(--mnav-gutter);
 }
 
 /* Lock the viewport only: overflow on <body> would make it a scroll container. */
@@ -91,7 +97,7 @@ html.mnav-locked body::before {
 .mnav__bar {
   position: relative;
   z-index: 2;
-  padding: var(--mnav-gutter) 0 0;
+  padding: 0;
   background: transparent;
 }
 
