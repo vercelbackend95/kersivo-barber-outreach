@@ -1,0 +1,100 @@
+/* ── find us: the drawn map of Old Town (index.html #find, js/map.js) ──
+   Dark like the room: ink land, building blocks as a faint texture, streets a shade lighter,
+   Chapel Street in brass, the shop as the seal. No map service, no tiles. */
+
+.find__map { aspect-ratio: 5 / 4; margin: 10px; }
+.map { display: block; width: 100%; height: 100%; font-family: var(--sans); }
+
+.map__land { fill: #121d1b; }
+#map-blocks rect { fill: #182523; }
+.map__park { fill: #1a2c25; }
+.map__park--trees { fill: url(#map-trees); }
+#map-trees circle { fill: #24392f; }
+
+.map__river { fill: none; stroke: #0b1517; stroke-width: 72; stroke-linecap: round; }
+.map__river-edge { fill: none; stroke: #1c3433; stroke-width: 1; stroke-dasharray: 2 5; opacity: .9; transform: translate(0, 0); }
+
+.map__minor :is(path, use) { fill: none; stroke: #1f2e2b; stroke-width: 10; stroke-linecap: round; }
+.map__major use { fill: none; stroke: #283a36; stroke-width: 20; stroke-linecap: round; }
+.map__chapel { fill: none; stroke: #4c4430; stroke-width: 22; stroke-linecap: round; }
+
+.map__rail { fill: none; stroke: #33433f; stroke-width: 4; }
+.map__rail-ties { fill: none; stroke: #33433f; stroke-width: 12; stroke-dasharray: 1.5 10; }
+
+.map__square { fill: #20302d; stroke: #2e403c; }
+.map__poi :is(rect, circle) { fill: #0f1716; stroke: var(--muted); stroke-width: 1.5; transition: stroke .35s ease, fill .35s ease; }
+.map__poi text { fill: var(--muted); font: 600 13px var(--sans); text-anchor: middle; transition: fill .35s ease; }
+.map__poi[data-poi="station"] rect { fill: #2a3834; }
+
+/* labels: small capitals, spaced, quiet; the shop's street in brass */
+.map__street { fill: #7f8d88; font-size: 10.5px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; }
+.map__street--minor { fill: #66736e; font-size: 9.5px; }
+.map__street:first-child { fill: var(--brass-hi); }
+.map__water { fill: #3f6462; font: italic 400 15px var(--serif-text); letter-spacing: .08em; }
+.map__area { fill: #5f7a6b; font: italic 400 15px var(--serif-text); letter-spacing: .04em; text-anchor: middle; }
+.map__place { fill: #b9c2bd; font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; paint-order: stroke; stroke: #121d1b; stroke-width: 4px; stroke-linejoin: round; }
+
+/* the ways in: dashed brass, drawn on through a mask; the chosen one bright, the others resting */
+.map__route { fill: none; stroke: var(--brass); stroke-width: 3.5; stroke-dasharray: 2 8; stroke-linecap: round; opacity: .28; transition: opacity .45s ease; }
+.map__reveal { fill: none; stroke: #fff; stroke-width: 14; stroke-linecap: round; stroke-dasharray: 1600; stroke-dashoffset: 1600; transition: stroke-dashoffset 1.8s cubic-bezier(.65, 0, .35, 1); }
+.find__map.is-in .map__reveal { stroke-dashoffset: 0; }
+.find__map.is-in #mk-bus .map__reveal { transition-delay: .25s; }
+.find__map.is-in #mk-parking .map__reveal { transition-delay: .5s; }
+:is([data-hl="station"] [data-route="station"], [data-hl="bus"] [data-route="bus"], [data-hl="parking"] [data-route="parking"]) { opacity: 1; }
+:is([data-hl="station"] [data-poi="station"], [data-hl="bus"] [data-poi="bus"], [data-hl="parking"] [data-poi="parking"]) :is(rect, circle) { stroke: var(--brass); fill: #2b2a1e; }
+:is([data-hl="bus"] [data-poi="bus"], [data-hl="parking"] [data-poi="parking"]) text { fill: var(--brass-hi); }
+
+/* the shop: the seal on a brass ring, a slow ring that widens and fades, and its card */
+.map__pin-disc { fill: var(--ink); stroke: var(--brass); stroke-width: 2; }
+.map__pin-tail { fill: var(--brass); }
+.map__pulse { fill: none; stroke: var(--brass); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; opacity: 0; }
+.find__map.is-in .map__pulse { animation: map-pulse 3.6s cubic-bezier(.2, .6, .35, 1) 1.6s infinite; }
+@keyframes map-pulse { 0% { transform: scale(1); opacity: .7; } 70%, 100% { transform: scale(2.3); opacity: 0; } }
+.map__card rect { fill: #f3ecdc; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .45)); }
+.map__card-name { fill: var(--ink); font: 400 19px var(--serif); letter-spacing: -.01em; }
+.map__card-addr { fill: var(--walnut); font: 600 10.5px var(--sans); letter-spacing: .18em; text-transform: uppercase; }
+
+.map__compass circle { fill: rgba(15, 23, 22, .7); stroke: var(--line); }
+.map__compass path { fill: var(--brass); }
+.map__compass text { fill: var(--brass); font: 600 11px var(--sans); text-anchor: middle; letter-spacing: .1em; }
+.map__scale path { fill: none; stroke: #9ba8a2; stroke-width: 1.5; }
+.map__scale text { fill: #9ba8a2; font: 500 11px var(--sans); letter-spacing: .08em; }
+
+/* getting here: three rows that light their way on the map */
+.ways { list-style: none; margin: 6px 0 0; padding: 0; width: 100%; display: grid; border-top: 1px solid var(--line); }
+.ways li { border-bottom: 1px solid var(--line); }
+.way {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  width: 100%; min-height: 52px; padding: 10px 2px; text-align: left; color: var(--muted);
+  transition: color .3s ease;
+}
+.way__mark {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px;
+  font: 600 .75rem/1 var(--sans); color: var(--muted); box-shadow: inset 0 0 0 1.5px currentColor;
+  transition: color .3s ease, background-color .3s ease, box-shadow .3s ease;
+}
+.way__mark--rail { border-radius: 4px; height: 14px; width: 26px; }
+.way__name { font: 500 .9375rem/1.3 var(--sans); }
+.way__time { font: 500 .8125rem/1 var(--sans); letter-spacing: .06em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.way[aria-pressed="true"] { color: var(--text); }
+.way[aria-pressed="true"] .way__mark { color: var(--ink); background: var(--brass); box-shadow: none; }
+.way[aria-pressed="true"] .way__time { color: var(--brass-hi); }
+.way:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .way:hover { color: var(--text); } }
+
+.find__actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 10px; }
+.find__actions .find__cta { margin-top: 0; }
+
+@media (max-width: 899px) {
+  .find__map { aspect-ratio: 1 / 1; }
+}
+@media (max-width: 599px) {
+  .find__map { aspect-ratio: 4 / 5; margin: 6px; }
+  .way { grid-template-columns: 28px minmax(0, 1fr); }
+  .way__time { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map__reveal { stroke-dashoffset: 0; transition: none; }
+  .find__map.is-in .map__pulse { animation: none; }
+}

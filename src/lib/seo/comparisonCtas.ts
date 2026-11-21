@@ -3,10 +3,12 @@
  * *-alternative pages. Full KERSIVO leads; Starter is a secondary text link.
  */
 
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
+
 export const COMPARISON_HERO_PRIMARY_LABEL = 'See Full KERSIVO pricing';
 export const COMPARISON_HERO_PRIMARY_HREF = '/pricing#plan';
 export const COMPARISON_HERO_SECONDARY_LABEL = 'See it working';
-export const COMPARISON_HERO_SECONDARY_HREF = '/demo';
+export const COMPARISON_HERO_SECONDARY_HREF = KERSIVO_LIVE_DEMO_HREF;
 
 export const COMPARISON_FINAL_CTA_HEADING = 'Move bookings onto your own website';
 export const COMPARISON_FINAL_CTA_PRICING_LABEL = 'See exactly what Full KERSIVO includes →';

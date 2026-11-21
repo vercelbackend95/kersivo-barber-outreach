@@ -33,6 +33,14 @@ export default defineConfig({
   security: {
     checkOrigin: false
   },
+  // Heritage Grooming (the live demo shop) is a static site in public/demo/heritage-grooming with
+  // relative asset paths, so it must be entered at its index.html (Vercel strips trailing slashes).
+  redirects: {
+    '/demo/heritage-grooming': {
+      status: 308,
+      destination: '/demo/heritage-grooming/index.html',
+    },
+  },
 
   vite: {
     define: {

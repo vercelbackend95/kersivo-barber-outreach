@@ -5,6 +5,11 @@ import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
+import {
+  HERITAGE_ADMIN_DASHBOARD_HREF,
+  HERITAGE_DEMO_BOOK_HREF,
+  HERITAGE_DEMO_SHOP_HREF,
+} from '@/lib/demo/heritage/links';
 import { MARKETING_NAV_GROUPS, MARKETING_NAV_ITEMS, MARKETING_NAV_SECONDARY_ACTION } from '@/lib/nav/marketingNavigation';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
 
@@ -39,11 +44,11 @@ describe('marketing CTAs route to the live BLACKLINE demo', () => {
     });
   }
 
-  it('routes the Platform menu admin and retail items to BLACKLINE', () => {
+  it('routes the Platform menu admin, booking and retail items to the Heritage Grooming demo', () => {
     const href = (id: string) => MARKETING_NAV_ITEMS.find((item) => item.id === id)?.href;
-    expect(href('platform-admin')).toBe(blacklineAdminHref('bookings_dashboard'));
-    expect(href('platform-retail')).toBe(DEMO_SHOP_HREF);
-    expect(href('platform-booking')).toBe(DEMO_BOOK_HREF);
+    expect(href('platform-admin')).toBe(HERITAGE_ADMIN_DASHBOARD_HREF);
+    expect(href('platform-retail')).toBe(HERITAGE_DEMO_SHOP_HREF);
+    expect(href('platform-booking')).toBe(HERITAGE_DEMO_BOOK_HREF);
   });
 
   it('keeps every marketing navigation link off the generic demo', () => {

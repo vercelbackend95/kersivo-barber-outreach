@@ -54,6 +54,11 @@ export function getRouteFamily(pathname: string): RouteFamily {
   const path = normalizePathname(pathname);
 
   if (path === '/demo/admin' || path.startsWith('/demo/admin/')) return 'minimal';
+  if (path === '/demo/heritage-grooming/admin' || path.startsWith('/demo/heritage-grooming/admin/')) {
+    return 'minimal';
+  }
+  /** Heritage Grooming's own static website (public/), outside every Astro layout. */
+  if (path === '/demo/heritage-grooming' || path.startsWith('/demo/heritage-grooming/')) return 'other';
 
   if (path === '/demo' || path.startsWith('/demo/')) return 'demo';
 

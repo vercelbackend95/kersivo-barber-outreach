@@ -1,0 +1,64 @@
+/* Heritage Grooming lockup in the demo owner dashboard sidebar (HeritageWordmark.tsx).
+   The seal and the cream/brass pair come from the shop's own site (public/demo/heritage-grooming). */
+
+.hg-lockup {
+  --hg-seal: 2.75rem;
+  --hg-cream: #f3ecd9;
+  --hg-brass: #c9a45c;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  max-width: 100%;
+  user-select: none;
+}
+
+.hg-lockup__seal {
+  display: block;
+  flex: 0 0 auto;
+  width: var(--hg-seal);
+  height: var(--hg-seal);
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.hg-lockup__name {
+  min-width: 0;
+  font-family: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  font-size: calc(var(--hg-seal) * 0.42);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--hg-cream);
+  text-wrap: balance;
+}
+
+.hg-lockup--compact {
+  --hg-seal: 2rem;
+}
+
+.hg-lockup--display {
+  --hg-seal: clamp(3.5rem, 9vw, 5rem);
+}
+
+@media (max-width: 640px) {
+  .hg-lockup--default {
+    --hg-seal: 2.35rem;
+  }
+}
+
+/* The sidebar grid is sized to the lockup; let the caption sit under it, left-aligned with the seal. */
+aside.admin-sidebar .admin-sidebar-brand--heritage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+aside.admin-sidebar .admin-sidebar-brand--heritage .admin-sidebar-brand-text {
+  width: auto;
+  justify-self: start;
+  align-items: flex-start;
+  padding-left: calc(var(--hg-seal, 2.75rem) + 0.65rem);
+}

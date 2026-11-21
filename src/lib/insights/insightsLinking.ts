@@ -31,6 +31,7 @@ import {
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 
 export type InsightsRelatedLink = {
   href: string;
@@ -432,7 +433,7 @@ export function isInsightsCommercialHref(href: string): boolean {
   const path = href.replace(/^https?:\/\/(www\.)?kersivo\.co\.uk/, '').split('#')[0];
   return (
     ['/pricing', '/starter', '/barbershop-websites', '/barbershop-online-booking', '/barbershop-website-design',
-      '/barber-software-cost-calculator', '/chair-rent-vs-commission-calculator', '/compare', '/demo',
+      '/barber-software-cost-calculator', '/chair-rent-vs-commission-calculator', '/compare', '/demo', KERSIVO_LIVE_DEMO_HREF,
       '/free-preview'].includes(path) ||
     path.startsWith('/admin') ||
     path.endsWith('-alternative')

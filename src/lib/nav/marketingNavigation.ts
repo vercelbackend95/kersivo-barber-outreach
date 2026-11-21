@@ -10,6 +10,14 @@ import type { MarketingNavIcon } from './marketingNavIcons';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import {
+  HERITAGE_ADMIN_DASHBOARD_HREF,
+  HERITAGE_ADMIN_DEMO_PATH,
+  HERITAGE_DEMO_BOOK_HREF,
+  HERITAGE_DEMO_SERVICES_HREF,
+  HERITAGE_DEMO_SHOP_HREF,
+  KERSIVO_LIVE_DEMO_HREF,
+} from '@/lib/demo/heritage/links';
 
 export type MarketingNavGroupId = 'product' | 'compare' | 'tools' | 'resources';
 
@@ -153,22 +161,21 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-admin',
     label: 'Admin & reports',
     description: 'Bookings, clients, team and performance.',
-    href: '/demo/admin?section=bookings_dashboard',
+    href: HERITAGE_ADMIN_DASHBOARD_HREF,
     group: 'product',
     section: 'included',
     icon: 'admin',
-    matchPrefix: '/demo/admin',
+    matchPrefix: HERITAGE_ADMIN_DEMO_PATH,
   },
   {
     id: 'platform-retail',
     label: 'Retail pickup',
     description: 'Sell products for collection in your shop.',
-    href: '/demo/shop',
+    href: HERITAGE_DEMO_SHOP_HREF,
     group: 'product',
     section: 'included',
     icon: 'retail',
-    matchPrefix: '/demo/shop',
-  },
+      },
   {
     id: 'product-starter',
     label: 'KERSIVO Starter',
@@ -184,7 +191,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'product-demo',
     label: 'Live demo overview',
     description: 'Website, booking and shop in the live demo.',
-    href: '/demo',
+    href: KERSIVO_LIVE_DEMO_HREF,
     group: 'product',
     section: 'demo',
     icon: 'system',
@@ -193,12 +200,12 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-booking',
     label: 'Client booking experience',
     description: 'Try the booking journey from the client side.',
-    href: '/demo/book',
+    href: HERITAGE_DEMO_BOOK_HREF,
+    match: HERITAGE_DEMO_SERVICES_HREF,
     group: 'product',
     section: 'demo',
     icon: 'booking',
-    matchPrefix: '/demo/book',
-  },
+      },
   {
     id: 'compare-booksy',
     label: 'Booksy Alternative',
@@ -459,7 +466,7 @@ export function buildMarketingNavQuickLinks(
   const alternatives = compare ? compare.sections.flatMap((section) => section.items).length : 0;
   return [
     { id: 'quick-pricing', label: 'Pricing', meta: 'Plans and Starter', href: '/pricing', icon: 'pricing' },
-    { id: 'quick-demo', label: 'Live demo', meta: 'Try it as a client', href: '/demo', icon: 'system' },
+    { id: 'quick-demo', label: 'Live demo', meta: 'Try it as a client', href: KERSIVO_LIVE_DEMO_HREF, icon: 'system' },
     {
       id: 'quick-compare',
       label: 'Compare',
@@ -542,7 +549,7 @@ export function buildMarketingNavFinderEntries(
   });
 }
 
-export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: '/demo' };
+export const MARKETING_NAV_SECONDARY_ACTION: MarketingNavAction = { label: 'See live demo', href: KERSIVO_LIVE_DEMO_HREF };
 
 /** Fallback when middleware has not resolved a session-aware CTA. */
 export const MARKETING_NAV_PRIMARY_ACTION: MarketingNavAction = {

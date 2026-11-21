@@ -10,7 +10,7 @@ import '@/styles/components/admin-login.css';
 import '@/styles/components/admin-demo.css';
 
 type DemoActionLockProps = {
-  variant?: 'generic' | 'blackline';
+  variant?: 'generic' | 'blackline' | 'heritage';
 };
 
 const FOCUSABLE_SELECTOR =
@@ -23,7 +23,8 @@ export default function DemoActionLock({ variant = 'generic' }: DemoActionLockPr
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const wasOpenRef = useRef(false);
-  const isBlackline = variant === 'blackline';
+  const isBlackline = variant === 'blackline' || variant === 'heritage';
+  const brandedDashboardName = variant === 'heritage' ? 'Heritage Grooming' : 'CUTSTATE';
 
   const dismiss = useCallback(() => {
     setOpen(false);
@@ -142,7 +143,7 @@ export default function DemoActionLock({ variant = 'generic' }: DemoActionLockPr
                   Sample data
                 </p>
                 <p id="admin-demo-lock-desc" className="admin-demo-lock__body">
-                  This CUTSTATE owner dashboard is read-only. Changes reset automatically and no real
+                  This {brandedDashboardName} owner dashboard is read-only. Changes reset automatically and no real
                   appointments, orders or payments are created.
                 </p>
                 <hr className="admin-demo-lock__rule" />

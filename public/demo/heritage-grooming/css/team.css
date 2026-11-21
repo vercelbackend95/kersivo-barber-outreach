@@ -1,0 +1,280 @@
+/* ──────────────────────────────────────────────────────────
+   Heritage Grooming · The barbers (team.html)
+   Builds on css/style.css: same tokens, type, buttons and booking panel.
+   The portraits hang in the shop's own mirrors (assets/img/room.jpg and the station photo):
+   a tall 2:3 pane, corners about 7.5% of its width, very dark glass, and a polished brass
+   frame made of a wide bright band, a dark groove and a thin inner lip, lit from the bulb
+   above so the top edge glows and the sides fall to bronze.
+   ────────────────────────────────────────────────────────── */
+
+/* ── the mirror ─────────────────────────────────────────
+   --rim is the whole brass frame, --mr the corner; each place a mirror hangs sets both
+   for its own size, so the frame keeps the photo's proportions from a 52px tile to the stage. */
+:is(.arch__frame, .bcard__photo, .roster__stage, .mcard__frame) {
+  --rim: 5px; --mr: 16px;
+  position: relative; isolation: isolate; overflow: hidden;
+  border-radius: var(--mr); background: #070b0b;
+  box-shadow:
+    0 0 0 .5px rgba(20, 12, 2, .7),                    /* where the frame meets the wall */
+    0 2px 3px rgba(0, 0, 0, .45),                      /* contact shadow under the frame */
+    0 22px 34px -16px rgba(0, 0, 0, .8);               /* the mirror standing off the wall */
+}
+.arch__frame  { --rim: clamp(4px, .36vw, 6px);  --mr: clamp(13px, 1.15vw, 19px); }
+.mcard__frame { --rim: clamp(4px, .42vw, 6.5px); --mr: clamp(14px, 1.6vw, 24px); }
+.roster__stage { --rim: clamp(6px, .5vw, 8px);   --mr: clamp(22px, 2vw, 30px); }
+.bcard__photo { --rim: 6px; --mr: 24px; }
+
+/* the brass, in cross-section from the outside in (each ring is one inset shadow, so the
+   rounded corners stay concentric), then the shade the frame throws onto the glass.
+   The background is the glass: the bulb above caught near the top, one faint diagonal
+   sheen, and a dark tint, since a mirror is never as bright as the room it shows. */
+:is(.arch__frame, .bcard__photo, .roster__stage, .mcard__frame)::before {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit;
+  background:
+    radial-gradient(ellipse 15% 6.5% at 50% 5.5%, rgba(255, 226, 160, .34), rgba(255, 196, 112, .12) 45%, transparent 75%),
+    linear-gradient(116deg, transparent 26%, rgba(255, 244, 222, .055) 36%, transparent 47%),
+    linear-gradient(180deg, rgba(6, 12, 12, .16), rgba(6, 12, 12, .3));
+  box-shadow:
+    inset 0 0 0 calc(var(--rim) * .1)  #3a2a10,       /* outer edge, in shadow */
+    inset 0 0 0 calc(var(--rim) * .26) #f1cf86,       /* the polished crown of the band */
+    inset 0 0 0 calc(var(--rim) * .44) #d3a456,
+    inset 0 0 0 calc(var(--rim) * .6)  #a8803c,       /* the band turning away from the light */
+    inset 0 0 0 calc(var(--rim) * .72) #24180a,       /* the groove */
+    inset 0 0 0 calc(var(--rim) * .86) #d2a95c,       /* the thin inner lip */
+    inset 0 0 0 var(--rim)             #6e5226,
+    inset 0 0 0 calc(var(--rim) + 1px) rgba(4, 4, 2, .9),               /* glass meets frame */
+    inset 0 calc(var(--rim) * 1.6) calc(var(--rim) * 3.2) calc(var(--rim) * -.4) rgba(0, 0, 0, .55),   /* frame's shade from the top light */
+    inset 0 0 calc(var(--rim) * 5) rgba(0, 0, 0, .42);
+}
+/* the light on the brass: brightest along the top and round the upper corners (the bulb),
+   falling to bronze down the sides, with one small glint on the bottom edge.
+   A ring over the brass, blended so the metal keeps its own colours underneath. */
+:is(.arch__frame, .bcard__photo, .roster__stage, .mcard__frame)::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: inherit;
+  padding: calc(var(--rim) * .88);
+  background:
+    linear-gradient(180deg, rgba(255, 232, 180, .32) 0%, rgba(255, 226, 170, .08) 9%, transparent 22%, transparent 70%, rgba(0, 0, 0, .3) 100%),
+    conic-gradient(from 0deg,
+      rgba(255, 236, 196, .4) 0deg, rgba(255, 236, 196, .55) 24deg, rgba(255, 244, 214, .35) 40deg,
+      rgba(70, 48, 16, .25) 70deg, rgba(40, 26, 6, .45) 120deg, rgba(40, 26, 6, .55) 165deg,
+      rgba(255, 236, 190, .3) 180deg,
+      rgba(40, 26, 6, .55) 195deg, rgba(40, 26, 6, .45) 240deg, rgba(70, 48, 16, .25) 290deg,
+      rgba(255, 244, 214, .35) 320deg, rgba(255, 236, 196, .55) 336deg, rgba(255, 236, 196, .4) 360deg);
+  mix-blend-mode: overlay;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  transition: filter .5s ease, opacity .5s ease;
+}
+.mcard__frame {
+  box-shadow: 0 0 0 .5px rgba(60, 40, 10, .55), 0 2px 3px rgba(15, 23, 22, .35), 0 20px 30px -16px rgba(15, 23, 22, .55);
+}
+
+/* every portrait is printed in one warm monochrome, so the set reads as one */
+.arch__frame img, .bcard__photo img, .mcard__face {
+  filter: grayscale(1) sepia(.28) contrast(1.06) brightness(.94);
+}
+
+/* ── hero: four mirrors on the wall ───────────────────── */
+main > .thero { background: var(--ink); }
+.thero__inner {
+  min-height: 100svh; display: flex; flex-direction: column;
+  padding: calc(var(--nav-h) + clamp(24px, 4vh, 56px)) 0 26px;
+}
+.thero__head {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: end;
+  gap: 24px clamp(32px, 5vw, 96px);
+}
+.thero__title {
+  font: 400 clamp(2.9rem, 6.6vw, 7rem)/.98 var(--serif); letter-spacing: -.02em; max-width: 12ch;
+}
+.thero__title em { font-style: normal; color: var(--brass); }
+.thero__side { display: grid; gap: 26px; justify-items: start; padding-bottom: .4em; }
+.thero__lede { font-size: clamp(1.0625rem, 1.2vw, 1.1875rem); line-height: 1.55; color: #d9d3c5; max-width: 42ch; }
+.thero__actions { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+
+.thero__wall {
+  flex: 1; min-height: clamp(240px, 38svh, 520px);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(14px, 2vw, 32px);
+  margin-top: clamp(28px, 5vh, 64px);
+}
+.thero__wall li { display: flex; min-height: 0; }
+.arch { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; padding-top: 10px; }
+.arch__frame {
+  position: relative; flex: 1; min-height: 0; display: block; overflow: hidden;
+  aspect-ratio: 2 / 3; width: auto; max-width: 100%;          /* the shop's mirrors are 2:3 */
+  transition: translate .5s var(--ease-out);
+}
+.arch__frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: scale .9s var(--ease-out), filter .6s ease; }
+.arch__name {
+  align-self: center; position: relative; padding-bottom: 4px;
+  font: 400 clamp(1.0625rem, 1.3vw, 1.3125rem)/1 var(--serif-text); letter-spacing: .01em;
+}
+.arch__name::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--brass);
+  transform: scaleX(0); transform-origin: 100% 50%; transition: transform .45s var(--ease-out);
+}
+.thero__facts { margin-top: clamp(22px, 3.4vh, 40px); }
+
+@media (hover: hover) and (pointer: fine) {
+  .arch:hover .arch__frame { translate: 0 -2px; }
+  .arch:hover .arch__frame::after, .mcard:hover .mcard__frame::after { filter: brightness(1.25); }
+  .arch:hover .arch__frame img { scale: 1.03; filter: grayscale(.2) sepia(.12) contrast(1.04); }
+  .arch:hover .arch__name::after { transform: scaleX(1); transform-origin: 0 50%; }
+}
+.arch:active .arch__frame { scale: .99; }
+
+/* ── the four barbers ─────────────────────────────────── */
+/* default = static (phones, reduced motion, no JS): one barber after another */
+.roster { padding-block: var(--section); }
+.roster__grid { display: grid; gap: clamp(28px, 4vw, 56px); }
+.roster__title { font: 400 clamp(2.6rem, 6.2vw, 6.25rem)/1 var(--serif); letter-spacing: -.015em; }
+.roster__title em { font-style: normal; color: var(--brass); }
+.roster__index, .roster__count, .roster__stage { display: none; }
+.roster__cards { display: grid; gap: clamp(64px, 9vw, 120px); }
+
+.bcard { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px clamp(32px, 6vw, 96px); align-items: center; scroll-margin-top: calc(var(--nav-h) + 24px); }
+.bcard__photo {
+  aspect-ratio: 2 / 3;
+}
+.bcard__photo img { width: 100%; height: 100%; object-fit: cover; }
+.bcard__text { display: grid; gap: 18px; justify-items: start; }
+.bcard__role { font: 500 .8125rem/1.3 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--brass); }
+.bcard__name { font: 400 clamp(2.6rem, 5.4vw, 5.5rem)/.98 var(--serif); letter-spacing: -.02em; }
+.bcard__bio { color: #c5cdc7; max-width: 42ch; font-size: clamp(1rem, 1.15vw, 1.125rem); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags li {
+  padding: 7px 13px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line);
+  font: 500 .8125rem/1 var(--sans); letter-spacing: .03em; color: var(--text);
+}
+.bcard__facts { display: flex; flex-wrap: wrap; gap: 10px clamp(24px, 3vw, 48px); padding-top: 16px; border-top: 1px solid var(--line); width: 100%; max-width: 520px; }
+.bcard__facts dt { font: 500 .6875rem/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.bcard__facts dd { font: 400 1.0625rem/1.2 var(--serif-text); color: var(--cream); }
+.bcard__actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 6px; }
+
+.ig { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font: 500 .9375rem/1 var(--sans); color: var(--text); transition: color .25s ease; }
+.ig svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; transition: transform .45s var(--ease-out); }
+.ig .ig__dot { fill: currentColor; stroke: none; }
+.ig span { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; padding-block: 4px; transition: background-size .45s var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .ig:hover { color: var(--brass-hi); }
+  .ig:hover span { background-size: 100% 1px; }
+  .ig:hover svg { transform: rotate(-8deg) scale(1.06); }
+}
+
+/* pinned stage (JS adds .roster--pinned on wide screens with motion on) */
+.roster--pinned { padding-block: 0; }
+.roster--pinned .roster__pin { height: 100svh; min-height: 640px; display: flex; align-items: center; padding-top: calc(var(--nav-h) * .6); }
+.roster--pinned .roster__grid {
+  grid-template-columns: minmax(0, 3.4fr) minmax(0, 4fr) minmax(0, 4.6fr); grid-template-areas: "head stage cards";
+  align-items: stretch; column-gap: clamp(28px, 4vw, 72px); height: min(78svh, 820px);
+}
+.roster--pinned .roster__head { grid-area: head; display: flex; flex-direction: column; gap: clamp(24px, 4vh, 48px); }
+.roster--pinned .roster__title { font-size: clamp(2.4rem, 4.2vw, 4.5rem); }
+.roster--pinned .roster__index { display: grid; gap: 2px; margin-top: auto; }
+.idx {
+  display: flex; align-items: baseline; gap: 16px; width: 100%; min-height: 48px; padding: 10px 0; text-align: left;
+  font: 400 clamp(1.25rem, 1.8vw, 1.75rem)/1.1 var(--serif); letter-spacing: -.01em; color: var(--muted);
+  border-top: 1px solid rgba(233, 227, 213, .1);
+  transition: color .35s ease, translate .5s var(--ease-out);
+}
+.idx small { font: 500 .6875rem/1 var(--sans); letter-spacing: .18em; color: var(--muted); transition: color .35s ease; }
+.idx.is-on { color: var(--cream); translate: 10px 0; }
+.idx.is-on small { color: var(--brass); }
+@media (hover: hover) and (pointer: fine) { .idx:not(.is-on):hover { color: var(--text); translate: 5px 0; } }
+.roster--pinned .roster__count {
+  display: flex; align-items: center; gap: 12px;
+  font: 500 .8125rem/1 var(--sans); letter-spacing: .14em; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.roster__count b { color: var(--brass); font-weight: 500; }
+.roster__count i { width: clamp(48px, 7vw, 110px); height: 1px; background: var(--line); }
+.roster__count u { display: block; height: 100%; background: var(--brass); transform: scaleX(0); transform-origin: 0 50%; }
+
+.roster--pinned .roster__stage {
+  grid-area: stage; display: block;
+  width: 100%; max-height: 100%; aspect-ratio: 2 / 3; align-self: center; justify-self: center;
+}
+.roster__gl { display: none; position: absolute; inset: 0; width: 100%; height: 100%; }
+.roster.is-gl .roster__gl { display: block; }
+.roster__stage > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.roster__stage > img:first-of-type { opacity: 1; }
+.roster.is-gl .roster__stage > img { display: none; }
+
+.roster--pinned .roster__cards { grid-area: cards; display: grid; align-self: center; gap: 0; }
+.roster--pinned .bcard { grid-area: 1 / 1; display: block; visibility: hidden; }
+.roster--pinned .bcard.is-active { visibility: visible; }
+.roster--pinned .bcard__photo { display: none; }
+.roster--pinned .bcard__name { font-size: clamp(2.6rem, 4.6vw, 5rem); }
+
+/* ── who to see for what (printed paper ground, like the price list) ── */
+main > .match { background: var(--paper); color: var(--ink); padding-block: var(--section); }
+.match :focus-visible { outline-color: var(--walnut); }
+.match .h2 em { color: var(--walnut); }
+.match__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px 48px; flex-wrap: wrap; margin-bottom: clamp(28px, 3.4vw, 48px); }
+.match__note { max-width: 40ch; color: var(--ink-muted); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  min-height: 44px; padding: 0 18px; border-radius: 999px;
+  font: 500 .875rem/1 var(--sans); letter-spacing: .02em; color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line-ink); background: transparent;
+  transition: background-color .3s ease, color .3s ease, box-shadow .3s ease, scale .16s var(--ease-out);
+}
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--cream); box-shadow: none; }
+.chip:active { scale: .96; }
+@media (hover: hover) and (pointer: fine) { .chip[aria-pressed="false"]:hover { box-shadow: inset 0 0 0 1px var(--walnut); color: var(--walnut); } }
+.match__status { margin: 18px 0 clamp(28px, 3.4vw, 44px); font-size: .9375rem; color: var(--ink-muted); min-height: 1.6em; }
+
+.mgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 2vw, 28px); }
+.mcard { display: grid; gap: 8px; align-content: start; justify-items: start; transition: opacity .45s ease, filter .45s ease; }
+.mcard__frame {
+  display: block; width: 100%; aspect-ratio: 2 / 3; margin-bottom: 12px;
+  transition: translate .5s var(--ease-out);
+}
+.mcard__face { width: 100%; height: 100%; object-fit: cover; transition: scale .9s var(--ease-out); }
+.mcard__name { font: 400 clamp(1.5rem, 2.2vw, 2.125rem)/1.05 var(--serif); letter-spacing: -.015em; }
+.mcard__role { font-size: .9375rem; color: var(--ink-muted); margin-bottom: 8px; }
+.match .btn--line { --btn-fg: var(--ink); --btn-fill: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .match .btn--line:not(:disabled):hover { color: var(--cream); }
+  .mcard:hover .mcard__frame { translate: 0 -2px; }
+  .mcard:hover .mcard__face { scale: 1.03; }
+}
+.mcard.is-out { opacity: .38; filter: saturate(.4); }
+.mcard.is-out .mcard__frame { translate: 0 0; }
+
+/* ── booking on this page: barber first ───────────────── */
+.bstep__sub--first { margin-top: 0; }
+.picks + .bstep__sub { margin-top: clamp(26px, 3vw, 38px); }
+.pick.is-flash .pick__box { animation: pick-flash .9s var(--ease-out) 1; }
+@keyframes pick-flash { 0% { box-shadow: 0 0 0 0 rgba(198, 167, 102, .9); } 100% { box-shadow: 0 0 0 14px rgba(198, 167, 102, 0); } }
+
+.footer__credits { flex: 1 1 320px; text-align: center; }
+
+/* ── responsive ──────────────────────────────────────── */
+@media (max-width: 1099px) {
+  .mgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+}
+@media (max-width: 899px) {
+  .thero__head { grid-template-columns: 1fr; }
+  .thero__wall { grid-template-columns: repeat(2, minmax(0, 1fr)); flex: none; min-height: 0; }
+  .thero__wall .arch__frame { flex: none; width: 100%; aspect-ratio: 2 / 3; }
+  .bcard { grid-template-columns: 1fr; }
+  .bcard__photo { aspect-ratio: 2 / 3; max-width: 440px; width: 100%; margin: 0; }
+  .match__head { display: grid; }
+}
+@media (max-width: 599px) {
+  .thero__actions { flex-direction: column; align-items: stretch; gap: 14px; width: 100%; }
+  .thero__actions .link { align-self: flex-start; }
+  .thero__wall { gap: 22px 14px; }
+  .chips { gap: 8px; }
+  .chip { padding: 0 14px; }
+  .mgrid { grid-template-columns: 1fr 1fr; gap: 28px 14px; }
+  .mcard__btn { width: 100%; padding: 8px 10px; font-size: .75rem; letter-spacing: .08em; white-space: normal; line-height: 1.25; text-align: center; }
+  .bcard__actions { flex-direction: column; align-items: stretch; width: 100%; }
+  .bcard__actions .btn { width: 100%; }
+  .footer__credits { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arch__frame, .arch__frame img, .mcard__frame, .mcard__face, .idx, .ig svg { transition-duration: .01ms !important; }
+}

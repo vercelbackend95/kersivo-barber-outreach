@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import {
   ABOUT_ENTITY_DEFINITION,
   ABOUT_PAGE_DESCRIPTION,
@@ -128,7 +129,8 @@ describe('/about page', () => {
       expect(page).toContain(`id="${id}"`);
     }
     expect(page).toContain('href="/pricing"');
-    expect(page).toContain('href="/demo"');
+    expect(page).toContain('href={KERSIVO_LIVE_DEMO_HREF}');
+    expect(KERSIVO_LIVE_DEMO_HREF).toBe('/demo/heritage-grooming/index.html');
     expect(page).toContain('<Contact16');
   });
 
@@ -229,7 +231,7 @@ describe('/pricing page', () => {
 
   it('links to the demo, the checkout and the comparison pages without fake urgency', () => {
     expect(hero).toContain('see the demo');
-    expect(hero).toContain('href="/demo"');
+    expect(hero).toContain('href={KERSIVO_LIVE_DEMO_HREF}');
     expect(page).toContain('<PricingPlanCards freePreview={freePreview} />');
     expect(hero).toContain('href="/admin/launch"');
     expect(links).toContain('PRICING_COMPARE_LINKS');

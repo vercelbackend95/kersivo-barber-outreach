@@ -1,24 +1,29 @@
 ---
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { HERITAGE_DEMO_SITE_HREF, blacklineAdminHref, heritageAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_HOME_HREF } from '@/lib/demo/nav';
 
 interface Props {
   view?: 'customer' | 'admin';
+  /** Which demo shop the banner belongs to. Heritage Grooming is the live demo; CUTSTATE stays available. */
+  shop?: 'cutstate' | 'heritage';
 }
 
-const { view = 'customer' } = Astro.props;
+const { view = 'customer', shop = 'cutstate' } = Astro.props;
 const isAdmin = view === 'admin';
-const ownerHref = blacklineAdminHref('bookings_dashboard');
+const isHeritage = shop === 'heritage';
+const shopLabel = isHeritage ? 'Heritage Grooming' : 'CUTSTATE';
+const ownerHref = isHeritage ? heritageAdminHref('bookings_dashboard') : blacklineAdminHref('bookings_dashboard');
+const customerHref = isHeritage ? HERITAGE_DEMO_SITE_HREF : DEMO_HOME_HREF;
 ---
 
 <aside
   class:list={['bl-demo-banner', isAdmin && 'bl-demo-banner--admin']}
-  aria-label={isAdmin ? 'CUTSTATE owner demo notice' : 'Kersivo live demo notice'}
+  aria-label={isAdmin ? `${shopLabel} owner demo notice` : 'Kersivo live demo notice'}
   transition:persist={isAdmin ? undefined : 'bl-banner'}
 >
   <div class="bl-container bl-demo-banner-inner">
     <p class="bl-demo-banner-copy">
-      <span class="bl-eyebrow">{isAdmin ? 'CUTSTATE owner demo' : 'Kersivo live demo'}</span>
+      <span class="bl-eyebrow">{isAdmin ? `${shopLabel} owner demo` : 'Kersivo live demo'}</span>
       <span class="bl-demo-banner-text">
         {
           isAdmin
@@ -30,7 +35,12 @@ const ownerHref = blacklineAdminHref('bookings_dashboard');
     <div class="bl-demo-banner-actions">
       {
         isAdmin ? (
-          <a class="bl-demo-banner-switch" href={DEMO_HOME_HREF} aria-label="Open CUTSTATE customer website">
+          <a
+            class="bl-demo-banner-switch"
+            href={customerHref}
+            aria-label={`Open ${shopLabel} customer website`}
+            data-astro-reload={isHeritage ? '' : undefined}
+          >
             <span class="bl-demo-banner-switch-full">Customer website</span>
             <span class="bl-demo-banner-switch-short">Customer</span>
           </a>
@@ -38,7 +48,7 @@ const ownerHref = blacklineAdminHref('bookings_dashboard');
           <a
             class="bl-demo-banner-switch"
             href={ownerHref}
-            aria-label="Open CUTSTATE owner dashboard"
+            aria-label={`Open ${shopLabel} owner dashboard`}
           >
             <span class="bl-demo-banner-switch-full">Owner dashboard</span>
             <span class="bl-demo-banner-switch-short">Owner view</span>

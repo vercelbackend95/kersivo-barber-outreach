@@ -1,5 +1,6 @@
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import { atDayMinute } from '@/lib/admin/blacklineDemoFixtures/time';
+import { HERITAGE_DEMO_BOOKINGS_KEY, currentBrandedDemoTenant, demoTenantStorage } from './demoTenantStore';
 
 export const BLACKLINE_SESSION_BOOKINGS_KEY = 'kersivo.blackline.session-bookings.v1';
 export const BLACKLINE_SESSION_BOOKING_SOURCE = 'blackline-demo-session' as const;
@@ -48,12 +49,12 @@ export type BlacklineSessionBookingInput = {
 };
 
 function getSessionStorage(): Storage | null {
-  try {
-    if (typeof globalThis === 'undefined' || !('sessionStorage' in globalThis)) return null;
-    return globalThis.sessionStorage;
-  } catch {
-    return null;
-  }
+  return demoTenantStorage();
+}
+
+/** CUTSTATE keeps its key; the Heritage Grooming demo has its own (see demoTenantStore). */
+function sessionBookingsKey(): string {
+  return currentBrandedDemoTenant() === 'heritage' ? HERITAGE_DEMO_BOOKINGS_KEY : BLACKLINE_SESSION_BOOKINGS_KEY;
 }
 
 export function createCollisionResistantId(): string {
@@ -117,7 +118,7 @@ function readRawList(): unknown[] {
   const storage = getSessionStorage();
   if (!storage) return [];
   try {
-    const raw = storage.getItem(BLACKLINE_SESSION_BOOKINGS_KEY);
+    const raw = storage.getItem(sessionBookingsKey());
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -130,7 +131,7 @@ function writeList(rows: BlacklineSessionBooking[]): void {
   const storage = getSessionStorage();
   if (!storage) return;
   try {
-    storage.setItem(BLACKLINE_SESSION_BOOKINGS_KEY, JSON.stringify(rows));
+    storage.setItem(sessionBookingsKey(), JSON.stringify(rows));
   } catch {
     // Quota or private-mode — ignore; the in-memory caller still has the record.
   }

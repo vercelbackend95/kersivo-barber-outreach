@@ -39,6 +39,8 @@ type AdminSidebarProfileProps = {
   conversionAccountMenu?: boolean;
   createShopHref?: string;
   previewWebsiteHref?: string;
+  /** Shop name in the "Preview … website" link of the branded demo menu. */
+  previewWebsiteLabel?: string;
   kersivoHomeHref?: string;
   /** Plan-locked product state for real tenants (from the admin product gate); null otherwise. */
   productState?: KersivoProductState | null;
@@ -66,6 +68,7 @@ export default function AdminSidebarProfile({
   conversionAccountMenu = false,
   createShopHref = '/admin/onboarding',
   previewWebsiteHref = '/demo',
+  previewWebsiteLabel = 'CUTSTATE',
   kersivoHomeHref = '/',
   productState = null,
   onLockedFeature,
@@ -571,7 +574,7 @@ export default function AdminSidebarProfile({
                   </a>
                   <a className="admin-profile-menu__item" role="menuitem" href={previewWebsiteHref}>
                     <Globe width={15} height={15} aria-hidden="true" />
-                    Preview CUTSTATE website
+                    Preview {previewWebsiteLabel} website
                   </a>
                   <a className="admin-profile-menu__item" role="menuitem" href={kersivoHomeHref}>
                     <LogOut width={15} height={15} aria-hidden="true" />

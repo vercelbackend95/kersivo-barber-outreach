@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -109,7 +110,7 @@ const starterFeatures = [
             >
               Start KERSIVO Starter
             </a>
-            <a href="/demo" class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary" data-track="view_live_demo_click">
+            <a href={KERSIVO_LIVE_DEMO_HREF} class="btn btn--outline btn--lg fresha-alt-hero__action fresha-alt-hero__action--secondary" data-track="view_live_demo_click">
               See KERSIVO in action
             </a>
           </div>

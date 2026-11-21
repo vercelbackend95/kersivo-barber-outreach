@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { offer } from '@/content/offer';
@@ -57,7 +58,7 @@ const icons: Record<string, string> = {
 
       <p class="pr-hero__aside pr-enter" style="--i: 6">
         {freePreview ? <FullPlanCta part="subscribe" placement="pricing_hero" /> : null}
-        <a href="/demo" data-track="view_live_demo_click" data-track-placement="pricing_hero">Or see the demo first</a>
+        <a href={KERSIVO_LIVE_DEMO_HREF} data-track="view_live_demo_click" data-track-placement="pricing_hero">Or see the demo first</a>
       </p>
 
       <ul class="pr-hero__facts pr-enter" style="--i: 7" aria-label="Full KERSIVO terms">

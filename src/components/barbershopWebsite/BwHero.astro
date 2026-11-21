@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import BwSite from '@/components/barbershopWebsite/BwSite.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
@@ -43,7 +44,7 @@ const tail = words.slice(-4).join(' ');
             Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
           </a>
         )}
-        <a href="/demo" class="btn btn--outline btn--lg bw-btn bw-btn--ghost" data-track="view_live_demo_click" data-track-placement={placement}>
+        <a href={KERSIVO_LIVE_DEMO_HREF} class="btn btn--outline btn--lg bw-btn bw-btn--ghost" data-track="view_live_demo_click" data-track-placement={placement}>
           See a demo website
         </a>
       </div>

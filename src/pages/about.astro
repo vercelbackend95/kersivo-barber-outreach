@@ -1,4 +1,5 @@
 ---
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import Contact16 from '@/components/contact16.astro';
@@ -70,7 +71,7 @@ const officialProfiles = getAboutOfficialProfiles();
         <p class="fresha-alt-hero__lead">{ABOUT_ENTITY_DEFINITION}</p>
         <div class="fresha-alt-hero__actions">
           <a
-            href="/demo"
+            href={KERSIVO_LIVE_DEMO_HREF}
             class="fresha-alt-hero__action fresha-alt-hero__action--primary"
             data-track="view_live_demo_click"
           >
@@ -230,7 +231,7 @@ const officialProfiles = getAboutOfficialProfiles();
       headingId="about-demo-title"
       text="Open the live demo to see the barbershop website, booking journey and admin dashboard — no signup needed."
       primary={{
-        href: '/demo',
+        href: KERSIVO_LIVE_DEMO_HREF,
         label: 'See KERSIVO in Action',
         track: 'view_live_demo_click',
       }}

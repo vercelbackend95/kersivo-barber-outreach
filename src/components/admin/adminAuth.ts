@@ -3,6 +3,7 @@ import {
   DEMO_ADMIN_MODE_HEADER,
   isAnyPublicAdminDemoPathname,
   isBlacklineAdminDemoPathname,
+  isHeritageAdminDemoPathname,
 } from '@/lib/admin/demoConfig';
 import {
   collectBlacklineSessionOrder,
@@ -65,9 +66,14 @@ function rewriteAdminUrlForDemo(input: RequestInfo | URL, init?: RequestInit): s
   const parsed = resolveRequestUrl(input, init);
   if (!parsed?.pathname.startsWith('/api/admin/')) return null;
   const rest = parsed.pathname.slice('/api/admin/'.length);
-  const onBlackline =
-    typeof window !== 'undefined' && isBlacklineAdminDemoPathname(window.location.pathname);
-  parsed.pathname = onBlackline ? `/api/demo/admin/${rest}` : `/api/admin-demo/${rest}`;
+  const pagePath = typeof window !== 'undefined' ? window.location.pathname : '';
+  if (isHeritageAdminDemoPathname(pagePath)) {
+    parsed.pathname = `/api/demo/heritage/admin/${rest}`;
+  } else if (isBlacklineAdminDemoPathname(pagePath)) {
+    parsed.pathname = `/api/demo/admin/${rest}`;
+  } else {
+    parsed.pathname = `/api/admin-demo/${rest}`;
+  }
   return parsed.toString();
 }
 

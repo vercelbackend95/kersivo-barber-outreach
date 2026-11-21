@@ -9,6 +9,7 @@ import {
   estimateTreatwellPublishedBookingFees,
   requireVerifiedTreatwellFact,
 } from '@/lib/seo/treatwellFacts';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 
 const pct = (n: number) => `${n}%`;
 const gbp = (n: number) => (Number.isInteger(n) ? `£${n}` : `£${n.toFixed(2)}`);
@@ -104,7 +105,7 @@ export const TW_STARTING_POINTS: readonly TwStartingPoint[] = [
       `Every online booking can carry a ${DEPOSIT} deposit or full payment, so a held chair has money behind it.`,
       'Your booking page carries your shop’s name, not a list of shops nearby.',
     ],
-    link: { label: 'Try the live demo', href: '/demo' },
+    link: { label: 'Try the live demo', href: KERSIVO_LIVE_DEMO_HREF },
   },
 ];
 

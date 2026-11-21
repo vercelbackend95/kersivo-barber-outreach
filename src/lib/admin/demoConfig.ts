@@ -1,3 +1,5 @@
+import { HERITAGE_ADMIN_DEMO_PATH, HERITAGE_DEMO_SITE_HREF } from '@/lib/demo/heritage/links';
+
 /** Public admin preview route — instant access, read-only demo data. */
 export const PUBLIC_ADMIN_DEMO_PATH = '/admin-demo' as const;
 
@@ -5,6 +7,14 @@ export const PUBLIC_ADMIN_DEMO_PATH = '/admin-demo' as const;
 export const BLACKLINE_ADMIN_DEMO_PATH = '/demo/admin' as const;
 
 export const BLACKLINE_ADMIN_API_PREFIX = '/api/demo/admin' as const;
+
+/** Heritage Grooming owner dashboard — the live demo shop KERSIVO shows on its marketing site. */
+export { HERITAGE_ADMIN_DEMO_PATH };
+
+export const HERITAGE_ADMIN_API_PREFIX = '/api/demo/heritage/admin' as const;
+
+/** Public Heritage Grooming website (static, served from `public/demo/heritage-grooming/`). */
+export { HERITAGE_DEMO_SITE_HREF };
 
 export const DEMO_ACTION_BLOCKED_MESSAGE =
   'This action is disabled in the public demo.';
@@ -17,7 +27,12 @@ export const DEMO_PILL_TOOLTIP = 'This preview uses example barbershop data.';
 
 export const DEMO_ADMIN_MODE_HEADER = 'x-admin-demo-mode';
 
-export type PublicAdminDemoTenant = 'generic' | 'blackline';
+export type PublicAdminDemoTenant = 'generic' | 'blackline' | 'heritage';
+
+/** Branded demo shops (CUTSTATE, Heritage Grooming) share the conversion chrome and session-booking bridge. */
+export function isBrandedDemoTenant(tenant: PublicAdminDemoTenant): boolean {
+  return tenant !== 'generic';
+}
 
 /** Canonical create-shop entry — existing onboarding wizard, not launch or retail. */
 export const CREATE_OWN_BARBERSHOP_HREF = '/admin/onboarding' as const;
@@ -26,7 +41,7 @@ export const CREATE_OWN_BARBERSHOP_HREF = '/admin/onboarding' as const;
 export const KERSIVO_PLANS_HREF = '/pricing' as const;
 
 export function getPublicAdminDemoCapabilities(tenant: PublicAdminDemoTenant = 'generic') {
-  const isBlackline = tenant === 'blackline';
+  const isBlackline = isBrandedDemoTenant(tenant);
   return {
     isBlackline,
     showLaunchCta: !isBlackline,
@@ -34,7 +49,8 @@ export function getPublicAdminDemoCapabilities(tenant: PublicAdminDemoTenant = '
     showDemoModePills: !isBlackline,
     conversionAccountMenu: isBlackline,
     createShopHref: CREATE_OWN_BARBERSHOP_HREF,
-    previewWebsiteHref: '/demo',
+    previewWebsiteHref: tenant === 'heritage' ? HERITAGE_DEMO_SITE_HREF : '/demo',
+    previewWebsiteLabel: tenant === 'heritage' ? 'Heritage Grooming' : 'CUTSTATE',
     kersivoHomeHref: '/',
   } as const;
 }
@@ -64,8 +80,26 @@ export function isBlacklineAdminDemoPathname(pathname: string): boolean {
   );
 }
 
+export function isHeritageAdminDemoPathname(pathname: string): boolean {
+  const normalized = normalizeDemoPathname(pathname);
+  return (
+    normalized === HERITAGE_ADMIN_DEMO_PATH ||
+    normalized.startsWith(`${HERITAGE_ADMIN_DEMO_PATH}/`)
+  );
+}
+
+/** CUTSTATE or Heritage Grooming owner dashboard. */
+export function isBrandedAdminDemoPathname(pathname: string): boolean {
+  return isBlacklineAdminDemoPathname(pathname) || isHeritageAdminDemoPathname(pathname);
+}
+
 export function isAnyPublicAdminDemoPathname(pathname: string): boolean {
-  return isPublicAdminDemoPathname(pathname) || isBlacklineAdminDemoPathname(pathname);
+  return isPublicAdminDemoPathname(pathname) || isBrandedAdminDemoPathname(pathname);
+}
+
+export function heritageAdminHref(section?: string): string {
+  if (!section) return HERITAGE_ADMIN_DEMO_PATH;
+  return `${HERITAGE_ADMIN_DEMO_PATH}?section=${section}`;
 }
 
 export function blacklineAdminHref(section?: string): string {
@@ -80,13 +114,18 @@ export function buildBlacklineRetailHref(options: {
   section: BlacklineRetailAdminSection;
   orderId: string;
   demoJourney?: boolean;
+  /** Dashboard to open; defaults to the branded dashboard the visitor is on (CUTSTATE otherwise). */
+  adminPath?: string;
 }): string {
   const params = new URLSearchParams({
     section: options.section,
     order: options.orderId,
   });
   if (options.demoJourney) params.set('demoJourney', 'retail');
-  return `${BLACKLINE_ADMIN_DEMO_PATH}?${params.toString()}`;
+  const onHeritage =
+    typeof window !== 'undefined' && isHeritageAdminDemoPathname(window.location.pathname);
+  const adminPath = options.adminPath ?? (onHeritage ? HERITAGE_ADMIN_DEMO_PATH : BLACKLINE_ADMIN_DEMO_PATH);
+  return `${adminPath}?${params.toString()}`;
 }
 
 export function parseBlacklineRetailFocusSearch(search: string): {

@@ -4,8 +4,18 @@ import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import { OWNER_LAUNCH_HREF } from '@/lib/admin/launchCtaProgress';
 import { DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { isHeritageAdminDemoPathname } from '@/lib/admin/demoConfig';
+import { HERITAGE_DEMO_SHOP_HREF } from '@/lib/demo/heritage/links';
 import { ArrowRight, X } from '@/components/lucide-react';
 import '@/styles/components/admin-booking-proof-card.css';
+
+/** The shop of the demo the visitor is in: Heritage Grooming's static shop, or CUTSTATE's. */
+function demoShopHref(): string {
+  if (typeof window !== 'undefined' && isHeritageAdminDemoPathname(window.location.pathname)) {
+    return HERITAGE_DEMO_SHOP_HREF;
+  }
+  return DEMO_SHOP_HREF;
+}
 
 export type BlacklineBookingProofCardProps = {
   bookingId: string;
@@ -74,7 +84,7 @@ export default function BlacklineBookingProofCard({
           <p className="bl-booking-proof__next-label">NEXT EXPERIENCE</p>
           <a
             className="bl-booking-proof__next-link"
-            href={DEMO_SHOP_HREF}
+            href={demoShopHref()}
             onClick={() => {
               trackConsentedEvent(
                 FUNNEL_EVENTS.blackline_booking_proof_order_clicked,
