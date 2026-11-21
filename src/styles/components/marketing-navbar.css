@@ -34,6 +34,21 @@
  * the root scroller, which on phones can drift from the viewport (elastic overscroll, dynamic toolbars)
  * and expose the page above the bar.
  */
+/* Slides up out of view while scrolling down (marketingNavController sets data-mnav-hidden). */
+.mnav {
+  transition: translate 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mnav[data-mnav-hidden]:not([data-mnav-hub-open]) {
+  translate: 0 calc(-100% - var(--mnav-gutter) - 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mnav {
+    transition: none;
+  }
+}
+
 .mnav[data-mnav-hub-open] {
   position: fixed;
   inset: 0;

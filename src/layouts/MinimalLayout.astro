@@ -1,4 +1,5 @@
 ---
+import SafariEdgeProbes from '@/components/SafariEdgeProbes.astro';
 import { ClientRouter } from 'astro:transitions';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
@@ -143,5 +144,6 @@ const cartExploreHref = productionCartEnabled ? `/shop/${productionCartShopId}` 
         <CookieConsentMount />
       </div>
     ) : null}
+    <SafariEdgeProbes />
   </body>
 </html>

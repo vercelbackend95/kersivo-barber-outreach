@@ -1,4 +1,5 @@
 ---
+import SafariEdgeProbes from '@/components/SafariEdgeProbes.astro';
 import { ClientRouter } from 'astro:transitions';
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
@@ -200,5 +201,6 @@ const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' &&
       ) : null
     }
     {enableAnalytics ? <InitDataTrackScript /> : null}
+    <SafariEdgeProbes />
   </body>
 </html>

@@ -550,3 +550,50 @@ describe('navigation finder', () => {
     expect(input().getAttribute('aria-activedescendant')).toBe('f-noshow');
   });
 });
+
+describe('hide on scroll', () => {
+  const scrollTo = async (y: number) => {
+    Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+    window.dispatchEvent(new Event('scroll'));
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+  };
+
+  afterEach(() => {
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+  });
+
+  it('slides away scrolling down, returns scrolling up and stays near the top', async () => {
+    const root = render();
+    cleanup = initMarketingNav(root);
+    await scrollTo(60);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(false);
+    await scrollTo(400);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(true);
+    await scrollTo(380);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(false);
+    await scrollTo(700);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(true);
+    await scrollTo(40);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(false);
+  });
+
+  it('stays while the menu is open and comes back when focus enters it', async () => {
+    const root = render();
+    cleanup = initMarketingNav(root);
+    await scrollTo(400);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(true);
+    menu().focus();
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(false);
+    await scrollTo(900);
+    expect(root.hasAttribute('data-mnav-hidden')).toBe(false);
+  });
+
+  it('never makes the Safari edge probes inert when the hub opens', () => {
+    const root = render();
+    document.body.insertAdjacentHTML('beforeend', '<div data-edge-probe></div>');
+    cleanup = initMarketingNav(root);
+    menu().click();
+    expect($('[data-edge-probe]').hasAttribute('inert')).toBe(false);
+    expect($('#footer').hasAttribute('inert')).toBe(true);
+  });
+});

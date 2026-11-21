@@ -220,7 +220,13 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     if (on) {
       inerted = [...doc.body.children].filter(
         (el): el is HTMLElement =>
-          el instanceof HTMLElement && el !== root && !el.contains(root) && el.tagName !== 'SCRIPT' && !el.hasAttribute('inert'),
+          el instanceof HTMLElement &&
+          el !== root &&
+          !el.contains(root) &&
+          el.tagName !== 'SCRIPT' &&
+          !el.hasAttribute('inert') &&
+          // The Safari toolbar probes must stay hit-testable (see SafariEdgeProbes.astro).
+          !el.hasAttribute('data-edge-probe'),
       );
       inerted.forEach((el) => el.setAttribute('inert', ''));
     } else {
@@ -553,10 +559,21 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     { signal },
   );
 
+  // The bar slides away while scrolling down and returns on any scroll up. It stays while the menu or a
+  // panel is open, while it holds focus, and near the top of the page.
+  const HIDE_AFTER = 96;
+  const SCROLL_SLOP = 6;
   let scrollFrame = 0;
+  let lastScrollY = win.scrollY;
   const updateScrolled = () => {
     scrollFrame = 0;
-    root.toggleAttribute('data-scrolled', win.scrollY > 8);
+    const y = win.scrollY;
+    root.toggleAttribute('data-scrolled', y > 8);
+    const delta = y - lastScrollY;
+    if (Math.abs(delta) < SCROLL_SLOP && y > HIDE_AFTER) return;
+    lastScrollY = y;
+    const keep = y <= HIDE_AFTER || isHubOpen() || root.hasAttribute('data-mnav-panel') || root.contains(doc.activeElement);
+    root.toggleAttribute('data-mnav-hidden', !keep && delta > 0);
   };
   updateScrolled();
   win.addEventListener(
@@ -566,6 +583,8 @@ export function initMarketingNav(root: HTMLElement, options: MarketingNavOptions
     },
     { passive: true, signal },
   );
+  // Keyboard focus entering the bar brings it back.
+  root.addEventListener('focusin', () => root.removeAttribute('data-mnav-hidden'), { signal });
 
   let sectionObserver: IntersectionObserver | null = null;
   const sectionLinks = [...root.querySelectorAll<HTMLAnchorElement>('a[data-mnav-section]')];

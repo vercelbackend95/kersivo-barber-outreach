@@ -1,0 +1,50 @@
+---
+/**
+ * Keeps the iOS 26 Safari toolbars clear glass, so the page shows from the very top of the screen to
+ * the very bottom.
+ *
+ * Safari tints a toolbar with a solid colour when it finds a "fixed container" at that edge. WebKit's
+ * LocalFrameView::fixedContainerEdges hit-tests ONE point per edge: the horizontal centre of the
+ * layout viewport, 4px in from the top and the bottom (PageColorSampler::fixedContainerSampleRectMargin).
+ * From the element hit there it walks up the ancestors, and the first fixed or sticky box at least 90%
+ * as wide as the viewport (stuck or not) becomes the container; its background colour, or sampled
+ * pixels, paint the bar. Viewport-sized containers even keep the previous colour, and that state lives
+ * on the tab, so one tinted moment (a pinned section passing the edge) sticks across navigations.
+ *
+ * These two probes sit exactly on those points, above everything. Each is a small, empty, transparent
+ * fixed box, which WebKit skips as "hidden or nearly transparent" without looking past it, and it has
+ * no fixed or sticky ancestor, so no container is found and no tint is applied, whatever the page has
+ * pinned underneath. They must stay hit-testable (pointer-events: auto; never inert, see
+ * marketingNavController), but they are 16 × 8px at the screen edges, under Safari's own bars.
+ * Static demo pages carry the same markup (public/demo/heritage-grooming).
+ */
+---
+
+<div class="ks-edge-probe ks-edge-probe--top" aria-hidden="true" data-edge-probe></div>
+<div class="ks-edge-probe ks-edge-probe--bottom" aria-hidden="true" data-edge-probe></div>
+
+<style is:global>
+  .ks-edge-probe {
+    position: fixed;
+    left: 50%;
+    z-index: 2147483647;
+    width: 16px;
+    height: 8px;
+    margin-left: -8px;
+    pointer-events: auto;
+  }
+
+  .ks-edge-probe--top {
+    top: 0;
+  }
+
+  .ks-edge-probe--bottom {
+    bottom: 0;
+  }
+
+  @media print {
+    .ks-edge-probe {
+      display: none;
+    }
+  }
+</style>
