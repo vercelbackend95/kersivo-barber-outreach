@@ -11,10 +11,6 @@
       root.style.setProperty('--kd-offset', `${offset}px`);
     };
     const queue = () => { if (!frame) frame = requestAnimationFrame(sync); };
-    // The bar's own height, for layout that must fit under it (the hero, see css/style.css).
-    const syncHeight = () => root.style.setProperty('--kd-h', `${bar.offsetHeight}px`);
-    syncHeight();
-    window.addEventListener('resize', syncHeight);
     sync();
     window.addEventListener('scroll', queue, { passive: true });
     window.addEventListener('resize', queue);
