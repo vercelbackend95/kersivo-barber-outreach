@@ -1,4 +1,5 @@
 ---
+import SafariEdgeProbes from '@/components/SafariEdgeProbes.astro';
 import { ClientRouter } from 'astro:transitions';
 import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import DemoBanner from '@/components/demo/DemoBanner.astro';
@@ -118,5 +119,6 @@ const currentPath = Astro.url.pathname;
       const veil = document.querySelector('[data-bl-route-veil]');
       if (veil instanceof HTMLElement) bindRouteTransition({ veil });
     </script>
+    <SafariEdgeProbes />
   </body>
 </html>

@@ -63,3 +63,10 @@
 
 /* The Heritage nav is fixed at the top; while the bar is on screen it sits just under it. */
 .nav { top: calc(var(--kd-offset, 0px) + var(--edge-gap, 8px)); }
+
+/* iOS 26 Safari toolbar probes: tiny empty boxes on the points Safari hit-tests to tint its bars, so the
+   bars stay clear glass over the page (see src/components/SafariEdgeProbes.astro in the KERSIVO repo). */
+.ks-edge-probe { position: fixed; left: 50%; z-index: 2147483647; width: 16px; height: 8px; margin-left: -8px; pointer-events: auto; }
+.ks-edge-probe--top { top: 0; }
+.ks-edge-probe--bottom { bottom: 0; }
+@media print { .ks-edge-probe { display: none; } }
