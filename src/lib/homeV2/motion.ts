@@ -235,7 +235,7 @@ function bindHeadings(gsap: Gsap, ScrollTrigger: ScrollTriggerStatic, root: Docu
   for (const head of heads) {
     const eyebrow = head.querySelector('.hv2-eyebrow');
     const title = head.querySelector('.hv2-h2');
-    const rest = Array.from(head.children).filter((child) => child !== eyebrow && child !== title && !child.hasAttribute('data-hv2-glyph'));
+    const rest = Array.from(head.children).filter((child) => child !== eyebrow && child !== title);
     if (eyebrow) gsap.set(eyebrow, { autoAlpha: 0, x: -14 });
     if (title) gsap.set(title, { clipPath: 'inset(100% 0% 0% 0%)', y: 48 });
     if (rest.length) gsap.set(rest, { autoAlpha: 0, y: 18 });
