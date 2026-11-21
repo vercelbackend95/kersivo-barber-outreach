@@ -104,11 +104,11 @@ describe('marketing navbar markup', () => {
   });
 
   it('pins the open header to the viewport as one column, with the hub directly under the bar', () => {
-    expect(css).toMatch(/\.mnav \{[^}]*position: sticky;\s*top: 0;/);
+    expect(css).toMatch(/\.mnav \{[^}]*position: sticky;\s*top: var\(--mnav-gutter\);\s*margin-top: var\(--mnav-gutter\);/);
     expect(css).toMatch(
-      /\.mnav\[data-mnav-hub-open\] \{\s*position: fixed;\s*inset: 0;\s*z-index: 95;\s*display: flex;\s*flex-direction: column;\s*\}/,
+      /\.mnav\[data-mnav-hub-open\] \{\s*position: fixed;\s*inset: 0;\s*margin-top: 0;\s*z-index: 95;\s*display: flex;\s*flex-direction: column;\s*\}/,
     );
-    expect(css).toMatch(/\.mnav\[data-mnav-hub-open\] > \.mnav__bar \{\s*flex-shrink: 0;\s*\}/);
+    expect(css).toMatch(/\.mnav\[data-mnav-hub-open\] > \.mnav__bar \{\s*flex-shrink: 0;\s*padding-top: var\(--mnav-gutter\);\s*\}/);
     const hubRule = css.match(/\n\.mnav-hub \{([^}]*)\}/)?.[1] ?? '';
     expect(hubRule).toMatch(/flex: 1;/);
     expect(hubRule).toMatch(/min-height: 0;/);

@@ -52,9 +52,11 @@
 }
 
 /* ---------- Film grain ---------- */
+/* Stops 1rem short of the top and bottom edges and shifts its noise with background-position (not
+   transform), so the layer never reaches an edge and iOS 26 Safari keeps its bars clear glass. */
 .bw-grain {
   position: fixed;
-  inset: -50%;
+  inset: 1rem 0;
   z-index: 2;
   pointer-events: none;
   opacity: 0.055;
@@ -68,12 +70,12 @@
 }
 
 @keyframes bw-grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-3%, 2%); }
-  40% { transform: translate(2%, -4%); }
-  60% { transform: translate(-4%, -1%); }
-  80% { transform: translate(3%, 3%); }
-  100% { transform: translate(0, 0); }
+  0% { background-position: 0 0; }
+  20% { background-position: -23px 17px; }
+  40% { background-position: 15px -31px; }
+  60% { background-position: -31px -8px; }
+  80% { background-position: 23px 23px; }
+  100% { background-position: 0 0; }
 }
 
 /* ---------- Chapter index ---------- */
@@ -177,12 +179,18 @@
 
 .bw-film__canvas {
   position: sticky;
-  top: 0;
+  top: var(--nav-sticky-offset, 3.75rem);
   z-index: 0;
   display: block;
   width: 100%;
-  height: 100vh;
-  margin-bottom: -100vh;
+  /* Sits between the navbar and 1rem above the bottom edge (faded), from page load on, so iOS 26
+     Safari keeps its bars clear glass. The translate moves it down without a margin (a top margin
+     would collapse into .bw-film). */
+  height: calc(100svh - var(--nav-sticky-offset, 3.75rem) - 2rem);
+  margin-bottom: calc(var(--nav-sticky-offset, 3.75rem) + 2rem - 100svh);
+  translate: 0 1rem;
+  -webkit-mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
   pointer-events: none;
   opacity: 0;
   transition: opacity 1400ms ease;

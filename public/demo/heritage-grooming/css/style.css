@@ -30,6 +30,7 @@
   --radius: 4px;
   --radius-mirror: clamp(18px, 2.2vw, 30px);
   --nav-h: 84px;
+  --edge-gap: 8px;   /* keeps fixed and sticky boxes off the screen edges (see the nav) */
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -181,14 +182,17 @@ a { color: inherit; text-decoration: none; }
 .cursor.is-label .cursor__label { opacity: 1; transform: none; }
 
 /* ── nav ─────────────────────────────────────────────── */
+/* iOS 26 Safari tints its top and bottom bars with any full-width fixed or sticky box touching that
+   edge, instead of showing the page through them as clear glass. So the nav floats --edge-gap off the
+   edges (top set in kersivo-bar.css under the KERSIVO demo bar), and the sticky hero and pinned shop
+   scene below stop short of the edges too. */
 .nav {
-  position: fixed; inset: 0 0 auto 0; z-index: 120; height: var(--nav-h);
-  transition: transform .5s var(--ease-out), background-color .35s ease;
+  position: fixed; top: var(--edge-gap); left: var(--edge-gap); right: var(--edge-gap); z-index: 120; height: var(--nav-h);
+  border-radius: 18px;
+  transition: transform .5s var(--ease-out), background-color .35s ease, box-shadow .35s ease;
 }
-.nav::after { content: ""; position: absolute; inset: auto 0 0 0; height: 1px; background: var(--line); opacity: 0; transition: opacity .35s ease; }
-.nav.is-solid { background: rgba(15, 23, 22, .82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-.nav.is-solid::after { opacity: 1; }
-.nav.is-hidden { transform: translateY(-101%); }
+.nav.is-solid { background: rgba(15, 23, 22, .82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 0 0 1px var(--line); }
+.nav.is-hidden { transform: translateY(calc(-100% - 2 * var(--edge-gap))); }
 .nav__bar { height: 100%; display: flex; align-items: center; gap: 32px; }
 .brand { display: flex; align-items: center; gap: 14px; margin-right: auto; }
 .brand img {
@@ -211,7 +215,8 @@ a { color: inherit; text-decoration: none; }
   .nav__link:hover::after { transform: scaleX(1); transform-origin: 0 50%; }
   .brand:hover img { transform: rotate(40deg); }
 }
-.nav__progress { position: absolute; inset: auto 0 0 0; height: 1px; background: var(--brass); transform: scaleX(0); transform-origin: 0 50%; z-index: 1; }
+.nav__progress { position: absolute; inset: auto 18px 0 18px;   /* clear of the nav's rounded corners */
+   height: 1px; background: var(--brass); transform: scaleX(0); transform-origin: 0 50%; z-index: 1; }
 .nav__toggle { display: none; width: 48px; height: 48px; position: relative; }
 .nav__toggle span { position: absolute; left: 12px; right: 12px; height: 1.5px; background: var(--text); transition: transform .4s var(--ease-out); }
 .nav__toggle span:first-child { top: 19px; }
@@ -235,8 +240,11 @@ a { color: inherit; text-decoration: none; }
 
 /* ── hero ────────────────────────────────────────────── */
 .hero {
-  position: sticky; top: 0; z-index: 0;
-  height: 100svh; min-height: 640px; overflow: hidden;
+  /* --kd-h (js/kersivo-bar.js): the KERSIVO demo bar above it, so the hero ends --edge-gap above the
+     bottom edge from first paint, and stays clear of both edges once stuck. */
+  position: sticky; top: var(--edge-gap); z-index: 0;
+  height: calc(100svh - 2 * var(--edge-gap) - var(--kd-h, 0px));
+  min-height: min(640px, calc(100svh - 2 * var(--edge-gap) - var(--kd-h, 0px))); overflow: hidden;
   background: var(--ink);
 }
 .hero__media, .hero__media picture, .hero__gl, .hero__shade { position: absolute; inset: 0; }
@@ -340,7 +348,7 @@ main > :not(.hero) { position: relative; z-index: 2; background: var(--ink); }
 
 /* pinned, scroll-driven layout (JS adds .shop--pinned) */
 .shop--pinned { padding-block: 0; }
-.shop--pinned .shop__pin { height: 100svh; min-height: 600px; display: flex; align-items: center; padding-top: calc(var(--nav-h) * .5); }
+.shop--pinned .shop__pin { height: calc(100svh - 2 * var(--edge-gap)); min-height: 600px; display: flex; align-items: center; padding-top: calc(var(--nav-h) * .5); }
 .shop--pinned .shop__grid {
   grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); grid-template-rows: auto 1fr;
   grid-template-areas: "head frame" "texts frame"; column-gap: clamp(32px, 7vw, 120px); row-gap: 0; width: min(100% - 2 * var(--gutter), 1480px);

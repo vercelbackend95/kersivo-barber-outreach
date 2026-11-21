@@ -1203,7 +1203,11 @@
 
 .hv2-scene {
   position: fixed;
-  inset: 0;
+  /* Stops 1rem short of the top and bottom edges (faded) so iOS 26 Safari keeps its bars clear glass
+     (see cookie-consent.css). */
+  inset: 1rem 0;
+  -webkit-mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
   z-index: 0;
   pointer-events: none;
   background:

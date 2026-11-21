@@ -103,7 +103,9 @@ const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' &&
     {enableAnalytics ? <GoogleAnalytics /> : null}
     <meta charset="utf-8" />
     <FaviconLinks />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Android Chrome colours its address bar from theme-color: match the dark page so the bar blends in. -->
+    <meta name="theme-color" content="#0b0d10" />
     <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
     <title>{title}</title>

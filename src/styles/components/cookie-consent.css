@@ -5,12 +5,14 @@
   color: var(--fg);
 }
 
+/* iOS 26 Safari tints its bottom bar with any full-width fixed element that touches the bottom edge.
+   The banner floats 0.75rem above it, so the bar stays clear glass. */
 .cookie-consent__banner {
   position: fixed;
   inset-inline: 0;
-  bottom: 0;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   z-index: 80;
-  padding: 0.4rem;
+  padding: 0 0.4rem;
   pointer-events: none;
 }
 
