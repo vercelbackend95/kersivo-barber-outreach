@@ -98,4 +98,52 @@ describe('PATCH /api/admin/barbershop-settings/retail', () => {
     expect(response.status).toBe(200);
     expect(productCount).not.toHaveBeenCalled();
   });
+
+  it('lets the owner switch shop orders to pay at collection', async () => {
+    shopUpdate.mockResolvedValueOnce({
+      id: 'shop_1',
+      retailEnabled: true,
+      retailPaymentMode: 'PAY_AT_COLLECTION',
+      shopPaidAt: new Date(),
+      smsRemindersEnabled: true,
+      stripeConnectAccountId: 'acct_1',
+      stripeConnectChargesEnabled: true,
+    });
+    const response = await patch({ retailPaymentMode: 'PAY_AT_COLLECTION' });
+    expect(response.status).toBe(200);
+    expect((await response.json()).retailPaymentMode).toBe('PAY_AT_COLLECTION');
+    expect(shopUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { retailPaymentMode: 'PAY_AT_COLLECTION' } }),
+    );
+    expect(productCount).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown payment mode', async () => {
+    const response = await patch({ retailPaymentMode: 'LATER' });
+    expect(response.status).toBe(400);
+    expect(shopUpdate).not.toHaveBeenCalled();
+  });
+
+  it('requires billing.manage to change the payment mode (owner only)', async () => {
+    requirePermission.mockReturnValueOnce(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }));
+    const response = await patch({ retailPaymentMode: 'PAY_AT_COLLECTION' });
+    expect(response.status).toBe(403);
+    expect(requirePermission).toHaveBeenCalledWith(expect.anything(), 'billing.manage');
+    expect(shopUpdate).not.toHaveBeenCalled();
+  });
+
+  it('requires the RETAIL capability to change the payment mode', async () => {
+    requireAdminProductCapability.mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'Locked' }), { status: 403 }),
+    );
+    const response = await patch({ retailPaymentMode: 'FULL_UPFRONT' });
+    expect(response.status).toBe(403);
+    expect(requireAdminProductCapability).toHaveBeenCalledWith(expect.anything(), 'RETAIL');
+    expect(shopUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a body with neither field', async () => {
+    const response = await patch({});
+    expect(response.status).toBe(400);
+  });
 });

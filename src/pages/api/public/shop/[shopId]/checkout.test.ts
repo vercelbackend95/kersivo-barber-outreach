@@ -10,6 +10,7 @@ const assertShopAcceptingPublicActivity = vi.fn();
 const createRetailCheckoutSession = vi.fn();
 const enforceIpRateLimit = vi.fn();
 const lockShopCustomerIdentity = vi.fn();
+const createRetailReservation = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
@@ -44,6 +45,10 @@ vi.mock('@/lib/shop/stripeConnect', () => ({
   createRetailCheckoutSession: (...args: unknown[]) => createRetailCheckoutSession(...args),
 }));
 
+vi.mock('@/lib/shop/createRetailReservation', () => ({
+  createRetailReservation: (...args: unknown[]) => createRetailReservation(...args),
+}));
+
 vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
   enforceIpRateLimit: (...args: unknown[]) => enforceIpRateLimit(...args),
 }));
@@ -76,6 +81,7 @@ const readyShop = {
   shopPaidAt: new Date('2026-07-01T00:00:00.000Z'),
   smsRemindersEnabled: true,
   retailEnabled: true,
+  retailPaymentMode: 'FULL_UPFRONT',
   stripeConnectAccountId: 'acct_shop',
   stripeConnectChargesEnabled: true,
 };
@@ -106,6 +112,12 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
       url: 'https://checkout.stripe.test/cs_1',
     });
     orderUpdate.mockResolvedValue({});
+    createRetailReservation.mockResolvedValue({
+      id: 'ord_res',
+      reference: 'KRV-RESV01',
+      customerEmail: 'sam@example.com',
+      totalPence: 3000,
+    });
   });
 
   it('returns 404 for the BLACKLINE demo tenant', async () => {
@@ -212,5 +224,109 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
         ],
       }),
     );
+  });
+
+  it('full upfront mode ignores contact details and still opens Stripe Checkout', async () => {
+    const res = await POST(
+      ctx('shop_1', {
+        items: [{ productId: 'prod_1', quantity: 1 }],
+        customerName: 'Sam Client',
+        customerEmail: 'sam@example.com',
+      }) as never,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ kind: 'redirect', paymentMode: 'FULL_UPFRONT' });
+    expect(createRetailReservation).not.toHaveBeenCalled();
+    expect(createRetailCheckoutSession).toHaveBeenCalledTimes(1);
+  });
+
+  describe('pay at collection', () => {
+    beforeEach(() => {
+      findUniqueShop.mockResolvedValue({ ...readyShop, retailPaymentMode: 'PAY_AT_COLLECTION' });
+    });
+
+    it('asks for customer details instead of creating anything', async () => {
+      const res = await POST(ctx('shop_1', { items: [{ productId: 'prod_1', quantity: 1 }] }) as never);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({
+        code: 'customer_details_required',
+        field: 'customerName',
+        paymentMode: 'PAY_AT_COLLECTION',
+      });
+      expect(createRetailReservation).not.toHaveBeenCalled();
+      expect(orderCreate).not.toHaveBeenCalled();
+      expect(createRetailCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects an invalid email', async () => {
+      const res = await POST(
+        ctx('shop_1', {
+          items: [{ productId: 'prod_1', quantity: 1 }],
+          customerName: 'Sam Client',
+          customerEmail: 'not-an-email',
+        }) as never,
+      );
+      expect(res.status).toBe(400);
+      expect((await res.json()).field).toBe('customerEmail');
+      expect(createRetailReservation).not.toHaveBeenCalled();
+    });
+
+    it('reserves an unpaid order with DB prices and no Stripe session', async () => {
+      const res = await POST(
+        ctx('shop_1', {
+          items: [{ productId: 'prod_1', quantity: 2, unitPricePence: 1 }],
+          customerName: '  Sam   Client ',
+          customerEmail: 'Sam@Example.com',
+          customerPhone: '07700 900123',
+        }) as never,
+      );
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({
+        kind: 'reserved',
+        paymentMode: 'PAY_AT_COLLECTION',
+        orderId: 'ord_res',
+        reference: 'KRV-RESV01',
+        totalPence: 3000,
+      });
+      expect(createRetailReservation).toHaveBeenCalledWith({
+        shopId: 'shop_1',
+        shopName: 'Fade Room',
+        contact: {
+          customerName: 'Sam Client',
+          customerEmail: 'sam@example.com',
+          customerPhone: '07700 900123',
+        },
+        cart: [
+          expect.objectContaining({
+            productId: 'prod_1',
+            unitPricePence: 1500,
+            quantity: 2,
+            lineTotalPence: 3000,
+          }),
+        ],
+        totalPence: 3000,
+      });
+      expect(createRetailCheckoutSession).not.toHaveBeenCalled();
+      expect(orderCreate).not.toHaveBeenCalled();
+    });
+
+    it('keeps the Stripe Connect selling gate (open question for pay at collection)', async () => {
+      findUniqueShop.mockResolvedValue({
+        ...readyShop,
+        retailPaymentMode: 'PAY_AT_COLLECTION',
+        stripeConnectChargesEnabled: false,
+      });
+      const res = await POST(
+        ctx('shop_1', {
+          items: [{ productId: 'prod_1', quantity: 1 }],
+          customerName: 'Sam Client',
+          customerEmail: 'sam@example.com',
+        }) as never,
+      );
+      expect(res.status).toBe(503);
+      expect((await res.json()).reason).toBe('connect_not_ready');
+      expect(createRetailReservation).not.toHaveBeenCalled();
+    });
   });
 });

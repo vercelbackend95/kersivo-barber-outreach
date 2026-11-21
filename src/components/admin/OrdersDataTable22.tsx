@@ -2,6 +2,7 @@ import { type MouseEvent, type ReactNode, useEffect, useMemo, useState } from 'r
 import { createPortal } from 'react-dom';
 import EmptyState from '../EmptyState';
 import { Check, Package, ShoppingBag } from '../lucide-react';
+import { RESERVED_UNPAID_STATUS_LABEL } from '@/lib/shop/retailPaymentMode';
 import AdminDataTable, {
   AdminTableFilters,
   AdminTableIdentity,
@@ -11,12 +12,14 @@ import AdminDataTable, {
   type AdminDataTableSort,
 } from './AdminDataTable';
 
-type OrderStatus = 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+/** RESERVED_UNPAID = pay-at-collection reservation: nothing paid yet, client pays in the shop. */
+type OrderStatus = 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED' | 'RESERVED_UNPAID';
 
 type OrderListItem = {
   id: string;
   orderNumber?: string | null;
   customerName?: string | null;
+  customerPhone?: string | null;
   customerEmail: string;
   status: OrderStatus;
   totalPence: number;
@@ -31,6 +34,7 @@ type OrderDetail = {
   id: string;
   orderNumber?: string | null;
   customerName?: string | null;
+  customerPhone?: string | null;
   customerEmail: string;
   status: OrderStatus;
   totalPence: number;
@@ -55,7 +59,8 @@ type OrdersDataTable22Props = {
   onToggleExpand: (orderId: string) => void;
   orderDetailsById: Record<string, OrderDetail>;
   orderDetailsLoadingId: string | null;
-  onMarkCollected: (orderId: string) => void;
+  /** `paymentTakenInShop` is sent for unpaid (pay-at-collection) orders. */
+  onMarkCollected: (orderId: string, options?: { paymentTakenInShop?: boolean }) => void;
   onLoadOrderDetails?: (orderId: string) => void;
   highlightedOrderId?: string | null;
   walkthroughOrderId?: string | null;
@@ -171,8 +176,20 @@ type SortColumn = 'orderNumber' | 'placed' | 'total';
 type SortDir = 'asc' | 'desc';
 
 function getOrderStatusLabel(status: OrderListItem['status']): string {
+  if (status === 'RESERVED_UNPAID') return RESERVED_UNPAID_STATUS_LABEL;
   if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
   return status === 'PAID' ? 'Paid' : 'Collected';
+}
+
+function isUnpaid(order: Pick<OrderListItem, 'status'>): boolean {
+  return order.status === 'RESERVED_UNPAID';
+}
+
+function getListStatusLabel(status: OrderListItem['status']): string {
+  if (status === 'COLLECTED') return 'Collected';
+  if (status === 'RESERVED_UNPAID') return RESERVED_UNPAID_STATUS_LABEL;
+  if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
+  return 'To collect';
 }
 
 function formatItemCount(count: number): string {
@@ -246,7 +263,8 @@ export default function OrdersDataTable22({
 
   function confirmCollect() {
     if (!confirmOrderId) return;
-    onMarkCollected(confirmOrderId);
+    const target = orders.find((order) => order.id === confirmOrderId);
+    onMarkCollected(confirmOrderId, target && isUnpaid(target) ? { paymentTakenInShop: true } : undefined);
     setConfirmOrderId(null);
   }
 
@@ -360,8 +378,16 @@ export default function OrdersDataTable22({
       width: 'minmax(8rem, 0.9fr)',
       mobile: 'hidden',
       cell: (order) => (
-        <AdminTableStatus tone={order.status === 'COLLECTED' ? 'ok' : order.status === 'READY_FOR_PICKUP' ? 'warn' : 'info'}>
-          {order.status === 'COLLECTED' ? 'Collected' : order.status === 'READY_FOR_PICKUP' ? 'Ready for pickup' : 'To collect'}
+        <AdminTableStatus
+          tone={
+            order.status === 'COLLECTED'
+              ? 'ok'
+              : order.status === 'READY_FOR_PICKUP' || order.status === 'RESERVED_UNPAID'
+                ? 'warn'
+                : 'info'
+          }
+        >
+          {getListStatusLabel(order.status)}
         </AdminTableStatus>
       ),
     },
@@ -374,7 +400,9 @@ export default function OrdersDataTable22({
       cell: (order) => (
         <span>
           <span className="adt-num">{formatPrice(order.totalPence)}</span>
-          {` · ${formatItemCount(order._count.items)} · ${order.status === 'COLLECTED' ? 'Collected' : 'To collect'}`}
+          {` · ${formatItemCount(order._count.items)} · ${
+            order.status === 'COLLECTED' ? 'Collected' : isUnpaid(order) ? RESERVED_UNPAID_STATUS_LABEL : 'To collect'
+          }`}
         </span>
       ),
     },
@@ -398,6 +426,7 @@ export default function OrdersDataTable22({
       cell: (order) => {
         const orderLabel = getOrderNumberLabel(order);
         const done = order.status === 'COLLECTED';
+        const unpaid = isUnpaid(order);
         return (
           <button
             type="button"
@@ -407,10 +436,16 @@ export default function OrdersDataTable22({
             ].join(' ')}
             onClick={done ? undefined : (event) => handleCollectClick(event, order.id)}
             disabled={done}
-            aria-label={done ? `${orderLabel} collected` : `Mark ${orderLabel} as collected`}
+            aria-label={
+              done
+                ? `${orderLabel} collected`
+                : unpaid
+                  ? `Take payment for ${orderLabel} and mark it collected`
+                  : `Mark ${orderLabel} as collected`
+            }
           >
             {done ? <Check aria-hidden="true" /> : <Package aria-hidden="true" />}
-            <span>{done ? 'Collected' : 'Collect'}</span>
+            <span>{done ? 'Collected' : unpaid ? 'Take payment' : 'Collect'}</span>
           </button>
         );
       },
@@ -486,7 +521,7 @@ export default function OrdersDataTable22({
               title={statusFilter === 'open' ? 'Nothing to collect' : 'No collected orders yet'}
               description={
                 statusFilter === 'open'
-                  ? 'Every paid order has been handed over.'
+                  ? 'Every order has been handed over.'
                   : 'Orders move here once you mark them as collected.'
               }
               variant="filtered"
@@ -519,13 +554,20 @@ export default function OrdersDataTable22({
                 aria-describedby="collect-order-confirm-body"
               >
                 <h4 id="collect-order-confirm-title" className="admin-product-delete-confirm-title">
-                  Mark as collected?
+                  {isUnpaid(confirmOrder) ? 'Take payment and mark collected?' : 'Mark as collected?'}
                 </h4>
                 <div id="collect-order-confirm-body" className="admin-product-delete-confirm-body">
                   <div className="admin-collect-receipt__customer">
                     <p className="admin-collect-receipt__customer-name">{confirmIdentity.displayName}</p>
                     <p className="admin-collect-receipt__customer-email">{confirmIdentity.email}</p>
                   </div>
+
+                  {isUnpaid(confirmOrder) ? (
+                    <p className="admin-collect-receipt__unpaid" data-collect-unpaid>
+                      Not paid yet. Take {formatPrice(confirmOrder.totalPence)} in the shop, then confirm.
+                      It counts in Sales from now.
+                    </p>
+                  ) : null}
 
                   <div className="admin-collect-receipt">
                     <p className="admin-collect-receipt__eyebrow">
@@ -571,7 +613,7 @@ export default function OrdersDataTable22({
                     Cancel
                   </button>
                   <button type="button" className="btn btn--primary" onClick={confirmCollect}>
-                    Confirm
+                    {isUnpaid(confirmOrder) ? 'Paid and collected' : 'Confirm'}
                   </button>
                 </div>
               </div>
@@ -610,7 +652,7 @@ function OrderDetailsPanel({
         </div>
         <div>
           <dt>Paid</dt>
-          <dd>{formatDate(detail.paidAt)}</dd>
+          <dd>{detail.status === 'RESERVED_UNPAID' ? 'Not paid yet · pay in shop' : formatDate(detail.paidAt)}</dd>
         </div>
         <div>
           <dt>Status</dt>
@@ -620,6 +662,14 @@ function OrderDetailsPanel({
           <dt>Collected</dt>
           <dd>{formatDate(detail.collectedAt)}</dd>
         </div>
+        {detail.customerPhone ? (
+          <div>
+            <dt>Phone</dt>
+            <dd>
+              <a href={`tel:${detail.customerPhone.replace(/[^0-9+]/g, '')}`}>{detail.customerPhone}</a>
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
       <table className="adt-lines">

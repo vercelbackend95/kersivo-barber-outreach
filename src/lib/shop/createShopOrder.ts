@@ -4,6 +4,7 @@ import { lockShopCustomerIdentity } from '@/lib/db/customerIdentityLock';
 import { formatGbp } from '@/lib/shop/money';
 import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
 import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
+import type { RetailOrderStatus } from '@/lib/shop/retailPaymentMode';
 
 export type ShopOrderCartItem = {
   productId: string;
@@ -28,7 +29,7 @@ export type CreatedShopOrder = {
   id: string;
   shopId: string;
   customerEmail: string;
-  status: 'PENDING_PAYMENT' | 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+  status: RetailOrderStatus;
   totalPence: number;
   isTestOrder: boolean;
   paidAt: Date | null;

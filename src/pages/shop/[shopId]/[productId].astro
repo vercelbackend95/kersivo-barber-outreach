@@ -39,6 +39,7 @@ const pageData = await withPrismaQuotaFallback(
         shopPaidAt: true,
         smsRemindersEnabled: true,
         retailEnabled: true,
+        retailPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
         publicActivityPaused: true,
@@ -92,6 +93,7 @@ const pageData = await withPrismaQuotaFallback(
       shopPaidAt: null,
       smsRemindersEnabled: false,
       retailEnabled: false,
+      retailPaymentMode: 'FULL_UPFRONT' as const,
       stripeConnectAccountId: null,
       stripeConnectChargesEnabled: false,
       publicActivityPaused: true,
@@ -134,6 +136,7 @@ const jsonLd = buildTenantProductPageJsonLd({
   shopId={shopId}
   shopName={shopName}
   brandLogoUrl={pageData.shop.logoUrl}
+  retailPaymentMode={pageData.shop.retailPaymentMode}
   jsonLd={jsonLd}
   ogImagePath={product.image.src.startsWith('/') ? product.image.src : undefined}
   ogImageAlt={`${product.name} at ${shopName}`}

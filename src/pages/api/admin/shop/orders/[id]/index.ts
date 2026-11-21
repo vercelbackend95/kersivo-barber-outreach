@@ -51,7 +51,8 @@ export const GET: APIRoute = async (ctx) => {
 
   if (!order) return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 });
 
-  const customerName = await resolveCustomerName(shopId, order.customerEmail);
+  const customerName =
+    order.customerName?.trim() || (await resolveCustomerName(shopId, order.customerEmail));
 
   return new Response(JSON.stringify({ order: { ...order, customerName } }), { status: 200 });
 };

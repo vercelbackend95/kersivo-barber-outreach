@@ -8,9 +8,12 @@ import { orderAnalyticsWhere } from '../../../../../lib/booking/sandboxBookings'
 import { prisma } from '../../../../../lib/db/client';
 import { toLondonDateBucket } from '../../../../../lib/time/londonDateBucket';
 import { requireAdminPermissionAndCapability } from '@/lib/admin/productCapability';
+import { RETAIL_PAID_ORDER_STATUSES } from '@/lib/shop/retailPaymentMode';
 
 const TZ = 'Europe/London';
-const PAID_STATUSES = ['PAID', 'READY_FOR_PICKUP', 'COLLECTED'] as const;
+// Revenue counts only once money is in: pay-at-collection reservations (RESERVED_UNPAID) join
+// when the shop marks them paid at the counter (status COLLECTED, paidAt set).
+const PAID_STATUSES = RETAIL_PAID_ORDER_STATUSES;
 const DEFAULT_RANGE_DAYS = 30;
 
 type SalesDatePoint = { date: string; revenuePence: number; units: number };

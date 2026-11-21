@@ -853,6 +853,40 @@ export function buildShopOrderConfirmationEmail(input: ShopOrderConfirmationEmai
   return { subject, html };
 }
 
+export type ShopReservationConfirmationEmailInput = {
+  to: string;
+  customerName: string;
+  itemLines: string[];
+  totalFormatted: string;
+  shopName?: string | null;
+  reference?: string | null;
+};
+
+/** Pure builder for pay-at-collection reservation emails (nothing paid yet; client pays in the shop). */
+export function buildShopReservationConfirmationEmail(input: ShopReservationConfirmationEmailInput): {
+  subject: string;
+  html: string;
+} {
+  const shopName = input.shopName?.trim() || 'the shop';
+  const reference = input.reference?.trim() || '';
+  const subject = reference
+    ? `Order ${reference} reserved — pay when you collect at ${shopName}`
+    : `Order reserved — pay when you collect at ${shopName}`;
+  const listHtml = input.itemLines.map((line) => `<li>${escapeHtml(line)}</li>`).join('');
+  const referenceHtml = reference
+    ? `<p><strong>Pickup reference:</strong> ${escapeHtml(reference)}</p>`
+    : '';
+  const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
+  <p>Your order from <strong>${escapeHtml(shopName)}</strong> is reserved for in-store pickup.</p>
+  <p>Nothing has been paid yet. You pay in the shop when you collect.</p>
+  ${referenceHtml}
+  <ul>${listHtml}</ul>
+  <p><strong>Total to pay on collection:</strong> ${escapeHtml(input.totalFormatted)}</p>
+  <p>Please quote your reference when collecting.</p>`;
+
+  return { subject, html };
+}
+
 export async function sendShopOrderConfirmationEmail(input: ShopOrderConfirmationEmailInput) {
   const { subject, html } = buildShopOrderConfirmationEmail(input);
 

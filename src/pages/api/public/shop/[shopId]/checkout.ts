@@ -15,6 +15,8 @@ import {
   isDemoShopId,
 } from '@/lib/shop/cardPaymentsGate';
 import { createRetailCheckoutSession } from '@/lib/shop/stripeConnect';
+import { createRetailReservation } from '@/lib/shop/createRetailReservation';
+import { normalizeReservationContact } from '@/lib/shop/retailPaymentMode';
 import { generateOrderReference } from '@/lib/shop/orderReference';
 import {
   normalizeRetailCartItems,
@@ -24,6 +26,9 @@ import {
 type CheckoutInput = {
   items?: Array<{ productId?: unknown; quantity?: unknown }>;
   customerEmail?: unknown;
+  /** Pay-at-collection reservations only. */
+  customerName?: unknown;
+  customerPhone?: unknown;
 };
 
 function json(body: unknown, status = 200) {
@@ -78,6 +83,7 @@ export const POST: APIRoute = async (ctx) => {
         shopPaidAt: true,
         smsRemindersEnabled: true,
         retailEnabled: true,
+        retailPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
       },
@@ -127,6 +133,42 @@ export const POST: APIRoute = async (ctx) => {
     }
     const snapshot = resolved.cart.items;
     const totalPence = resolved.cart.totalPence;
+
+    if (shop.retailPaymentMode === 'PAY_AT_COLLECTION') {
+      // Reserve now, pay in the shop on collection: no Stripe session, order stays RESERVED_UNPAID.
+      const contact = normalizeReservationContact(body);
+      if (!contact.ok) {
+        return json(
+          {
+            error: contact.error,
+            code: 'customer_details_required',
+            field: contact.field,
+            paymentMode: 'PAY_AT_COLLECTION',
+          },
+          400,
+        );
+      }
+      const reservation = await createRetailReservation({
+        shopId,
+        shopName: shop.name,
+        contact: contact.contact,
+        cart: snapshot,
+        totalPence,
+      });
+      return json({
+        kind: 'reserved',
+        paymentMode: 'PAY_AT_COLLECTION',
+        orderId: reservation.id,
+        reference: reservation.reference,
+        totalPence: reservation.totalPence,
+        customerEmail: reservation.customerEmail,
+        items: snapshot.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          lineTotalPence: item.lineTotalPence,
+        })),
+      });
+    }
 
     const rawEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
     const customerEmail = rawEmail && rawEmail.includes('@') ? rawEmail : 'pending@checkout.kersivo.local';
@@ -190,7 +232,13 @@ export const POST: APIRoute = async (ctx) => {
       data: { stripeSessionId: session.id },
     });
 
-    return json({ url: session.url, orderId: order.id, reference: order.reference });
+    return json({
+      kind: 'redirect',
+      paymentMode: 'FULL_UPFRONT',
+      url: session.url,
+      orderId: order.id,
+      reference: order.reference,
+    });
   } catch (error) {
     console.error('Public retail checkout failed', error);
     return json({ error: 'Unable to create checkout session.' }, 500);

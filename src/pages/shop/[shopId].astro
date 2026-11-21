@@ -37,6 +37,7 @@ const outageShop = {
   shopPaidAt: null as Date | null,
   smsRemindersEnabled: false,
   retailEnabled: false,
+  retailPaymentMode: 'FULL_UPFRONT' as const,
   stripeConnectAccountId: null as string | null,
   stripeConnectChargesEnabled: false,
   publicActivityPaused: true,
@@ -54,6 +55,7 @@ const pageData = await withPrismaQuotaFallback(
         shopPaidAt: true,
         smsRemindersEnabled: true,
         retailEnabled: true,
+        retailPaymentMode: true,
         stripeConnectAccountId: true,
         stripeConnectChargesEnabled: true,
         publicActivityPaused: true,
@@ -117,6 +119,7 @@ const selectedCategory = parseStorefrontCategoryParam(
   Astro.url.searchParams.get('category'),
   storefrontCategoryOptions(products).map((option) => option.value),
 );
+const payAtCollection = shop.retailPaymentMode === 'PAY_AT_COLLECTION';
 const title = `${shop.name} — Shop | Kersivo`;
 const description = `Order products for pickup at ${shop.name}.`;
 const listingJsonLd =
@@ -138,6 +141,7 @@ const listingJsonLd =
   shopId={shopId}
   shopName={shop.name}
   brandLogoUrl={shop.logoUrl}
+  retailPaymentMode={shop.retailPaymentMode}
   jsonLd={listingJsonLd}
   enableAnalytics={false}
 >
@@ -166,7 +170,9 @@ const listingJsonLd =
           eyebrow: 'Pickup only',
           heading: shop.name,
           headingId: 'storefront-heading',
-          description: 'Order online and collect in store. No shipping.',
+          description: payAtCollection
+            ? 'Reserve online and pay when you collect in store. No shipping.'
+            : 'Order online and collect in store. No shipping.',
           fulfilmentLabel: 'Collect in shop',
         }}
         showPoweredBy

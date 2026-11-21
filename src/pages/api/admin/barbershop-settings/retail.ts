@@ -8,6 +8,7 @@ import { requireAdminProductCapability } from '@/lib/admin/productCapability';
 import { prisma } from '@/lib/db/client';
 import { canSellRetail, evaluateRetailSelling } from '@/lib/shop/cardPaymentsGate';
 import { isPaidShop } from '@/lib/shop/paidShop';
+import { parseRetailPaymentMode } from '@/lib/shop/retailPaymentMode';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 function json(body: unknown, status = 200) {
@@ -31,6 +32,7 @@ export const GET: APIRoute = async (ctx) => {
       shopPaidAt: true,
       smsRemindersEnabled: true,
       retailEnabled: true,
+      retailPaymentMode: true,
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
     },
@@ -43,6 +45,7 @@ export const GET: APIRoute = async (ctx) => {
   return json({
     paid: isPaidShop(shop),
     retailEnabled: shop.retailEnabled,
+    retailPaymentMode: shop.retailPaymentMode,
     sellReady: canSellRetail(shop),
     gate,
     canManageRetailPayments: canManage,
@@ -54,7 +57,10 @@ export const GET: APIRoute = async (ctx) => {
   });
 };
 
-/** Toggle retailEnabled. Owner / billing.manage only — same financial class as deposits. */
+/**
+ * Toggle retailEnabled and/or choose retailPaymentMode (full payment upfront vs pay when collecting).
+ * Owner / billing.manage only — same financial class as deposits.
+ */
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -65,10 +71,23 @@ export const PATCH: APIRoute = async (ctx) => {
   const grant = await requireAdminProductCapability(access, 'RETAIL');
   if (grant instanceof Response) return grant;
 
-  const body = (await ctx.request.json().catch(() => null)) as { retailEnabled?: unknown } | null;
-  if (!body || typeof body.retailEnabled !== 'boolean') {
+  const body = (await ctx.request.json().catch(() => null)) as {
+    retailEnabled?: unknown;
+    retailPaymentMode?: unknown;
+  } | null;
+  const hasEnabled = body ? 'retailEnabled' in body : false;
+  const hasMode = body ? 'retailPaymentMode' in body : false;
+  if (!body || (!hasEnabled && !hasMode)) {
+    return json({ error: 'retailEnabled boolean or retailPaymentMode required.' }, 400);
+  }
+  if (hasEnabled && typeof body.retailEnabled !== 'boolean') {
     return json({ error: 'retailEnabled boolean required.' }, 400);
   }
+  const nextMode = hasMode ? parseRetailPaymentMode(body.retailPaymentMode) : null;
+  if (hasMode && !nextMode) {
+    return json({ error: 'retailPaymentMode must be FULL_UPFRONT or PAY_AT_COLLECTION.' }, 400);
+  }
+  const nextEnabled = hasEnabled ? (body.retailEnabled as boolean) : null;
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
@@ -79,16 +98,18 @@ export const PATCH: APIRoute = async (ctx) => {
       stripeConnectAccountId: true,
       stripeConnectChargesEnabled: true,
       retailEnabled: true,
+      retailPaymentMode: true,
     },
   });
   if (!shop) return json({ error: 'Shop not found.' }, 404);
   if (!isPaidShop(shop)) {
     return json({ error: 'Retail checkout is available after your KERSIVO subscription is active.' }, 403);
   }
-  if (body.retailEnabled && (!shop.stripeConnectAccountId || !shop.stripeConnectChargesEnabled)) {
+  // Selling still needs Stripe Connect in both payment modes (cardPaymentsGate) — kept on purpose.
+  if (nextEnabled && (!shop.stripeConnectAccountId || !shop.stripeConnectChargesEnabled)) {
     return json({ error: 'Connect Stripe and finish onboarding before enabling retail checkout.' }, 400);
   }
-  if (body.retailEnabled) {
+  if (nextEnabled) {
     const activeProducts = await prisma.product.count({ where: { shopId: shop.id, active: true } });
     if (activeProducts < 1) {
       return json({ error: 'Add at least one active product before enabling retail checkout.' }, 400);
@@ -97,10 +118,14 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const updated = await prisma.shopSettings.update({
     where: { id: shop.id },
-    data: { retailEnabled: body.retailEnabled },
+    data: {
+      ...(nextEnabled !== null ? { retailEnabled: nextEnabled } : {}),
+      ...(nextMode ? { retailPaymentMode: nextMode } : {}),
+    },
     select: {
       id: true,
       retailEnabled: true,
+      retailPaymentMode: true,
       shopPaidAt: true,
       smsRemindersEnabled: true,
       stripeConnectAccountId: true,
@@ -110,6 +135,7 @@ export const PATCH: APIRoute = async (ctx) => {
 
   return json({
     retailEnabled: updated.retailEnabled,
+    retailPaymentMode: updated.retailPaymentMode,
     sellReady: canSellRetail(updated),
     gate: evaluateRetailSelling(updated),
     publicShopUrl: `${getPublicSiteUrl()}/shop/${updated.id}`,

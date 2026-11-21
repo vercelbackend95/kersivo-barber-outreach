@@ -58,6 +58,7 @@ export function getStatusBadgeClass(tone: BookingStatusTone): string {
 export function getStatusTone(status: string, rescheduledAt?: string | null): StatusTone {
   if (status === 'PAID') return 'info';
   if (status === 'READY_FOR_PICKUP') return 'pending';
+  if (status === 'RESERVED_UNPAID') return 'pending';
   if (status === 'COLLECTED') return 'confirmed';
   if (status === 'ACTIVE') return 'confirmed';
   if (status === 'INACTIVE') return 'neutral';
@@ -79,6 +80,7 @@ export function getStatusLabel(status: string, rescheduledAt?: string | null): s
   if (status === 'NO_SHOW') return 'No Show';
   if (status === 'PAID') return 'Paid';
   if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
+  if (status === 'RESERVED_UNPAID') return 'To collect · Pay in shop';
   if (status === 'COLLECTED') return 'Collected';
   if (status === 'PENDING') return 'Pending';
   if (status === 'ACTIVE') return 'Active';

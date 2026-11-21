@@ -60,6 +60,8 @@ export const GET: APIRoute = async (ctx) => {
       select: {
         id: true,
         customerEmail: true,
+        customerName: true,
+        customerPhone: true,
         status: true,
         totalPence: true,
         currency: true,
@@ -81,7 +83,11 @@ export const GET: APIRoute = async (ctx) => {
       JSON.stringify({
         orders: page.map((order) => ({
           ...order,
-          customerName: namesByEmail.get(order.customerEmail.trim().toLowerCase()) ?? null,
+          // Pay-at-collection reservations store the name the client typed; others resolve via Client/User.
+          customerName:
+            order.customerName?.trim() ||
+            namesByEmail.get(order.customerEmail.trim().toLowerCase()) ||
+            null,
         })),
         hasMore: orders.length > limit,
       }),
