@@ -62,4 +62,4 @@
 }
 
 /* The Heritage nav is fixed at the top; while the bar is on screen it sits just under it. */
-.nav { top: var(--kd-offset, 0px); }
+.nav { top: calc(var(--kd-offset, 0px) + var(--edge-gap, 8px)); }

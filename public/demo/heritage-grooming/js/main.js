@@ -431,7 +431,8 @@ function shop(GL) {
   const tl = gsap.timeline({
     defaults: { ease: 'power2.inOut', duration: 1 },
     scrollTrigger: {
-      trigger: section, start: 'top top', end: () => `+=${window.innerHeight * 2.8}`,
+      // pinned --edge-gap below the top edge (8px), so iOS Safari keeps its bars clear glass
+      trigger: section, start: 'top 8px', end: () => `+=${window.innerHeight * 2.8}`,
       pin: '.shop__pin', scrub: .7, anticipatePin: 1, invalidateOnRefresh: true,
     },
     onUpdate: apply,
