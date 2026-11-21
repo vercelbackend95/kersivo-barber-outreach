@@ -1,13 +1,13 @@
 ---
+import { HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
 import OnlineBookingAvailabilitySync from '@/components/barbershop-online-booking/OnlineBookingAvailabilitySync';
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
 import { buildAvailabilityExample } from '@/lib/barbershopOnlineBooking/availabilityExample';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/components/barbershop-online-booking-availability.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_online_booking_availability';
-const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');
+const OWNER_TIMELINE_HREF = heritageAdminHref('bookings_dashboard');
 
 const example = buildAvailabilityExample();
 const { barber, service, window: hours, offered, notOffered } = example;

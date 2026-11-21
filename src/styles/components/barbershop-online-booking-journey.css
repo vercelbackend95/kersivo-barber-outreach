@@ -1,6 +1,6 @@
 /* /barbershop-online-booking Section 02: an editorial stage rail beside one large, flat booking
    showcase. Each rail stage selects a recreated /demo/book state; without JavaScript every state
-   is shown in order. The showcase reuses the CUTSTATE body face declared by the Section 01 sheet. */
+   is shown in order. The showcase reuses the demo body face declared by the Section 01 sheet. */
 
 .boj {
   --boj-red: var(--accent);
@@ -339,7 +339,7 @@
     0 1px 0 rgb(0 0 0 / 0.6),
     0 40px 70px -40px #000;
   color: var(--boj-ink);
-  font-family: 'BOB Cutstate Body', var(--font-body);
+  font-family: 'BOB Demo Body', var(--font-body);
   font-size: clamp(13px, 1.9cqi, 16px);
   line-height: 1.4;
 }

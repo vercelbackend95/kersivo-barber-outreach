@@ -1,6 +1,6 @@
 /**
  * Section 03's paired views: the times a client is offered and the real admin timeline for the
- * same CUTSTATE example day. Choosing a time moves the timeline to it and marks it there; it
+ * same Heritage Grooming example day. Choosing a time moves the timeline to it and marks it there; it
  * never creates, inserts or edits a booking.
  */
 import { useState } from 'react';

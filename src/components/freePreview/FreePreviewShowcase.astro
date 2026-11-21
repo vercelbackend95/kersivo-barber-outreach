@@ -1,9 +1,9 @@
 ---
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 import { CalendarDays } from 'lucide-react';
 import BlacklineWebsitePreview from '@/components/barbershop-websites/BlacklineWebsitePreview.astro';
-import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { FREE_PREVIEW_PAGE } from '@/lib/seo/freePreviewPage';
 import '@/styles/components/barbershop-websites-hero.css';
 
@@ -19,14 +19,14 @@ const barbers = DEMO_BARBERS.slice(0, 2);
     </div>
 
     <div class="fp-phone">
-      <div class="fp-phone__screen" role="group" aria-label="Example booking step from the CUTSTATE demo">
+      <div class="fp-phone__screen" role="group" aria-label="Example booking step from the Heritage Grooming demo">
         <span class="fp-phone__notch" aria-hidden="true"></span>
         <img
           class="fp-phone__logo"
-          src={CUTSTATE_LOGO_SRC}
-          alt="CUTSTATE Barbers"
-          width={CUTSTATE_LOGO_WIDTH}
-          height={CUTSTATE_LOGO_HEIGHT}
+          src={HERITAGE_LOCKUP.src}
+          alt="Heritage Grooming"
+          width={HERITAGE_LOCKUP.width}
+          height={HERITAGE_LOCKUP.height}
           loading="lazy"
           decoding="async"
         />

@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -117,8 +117,8 @@ describe('Barbershop online booking page — Section 03 client times and the rea
     expect(anchors[0]).toContain('href={OWNER_TIMELINE_HREF}');
     expect(anchors[0]).toContain('data-track={TRACK_EVENT}');
     expect(anchors[0]).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(frontmatter).toContain("const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');");
-    expect(blacklineAdminHref('bookings_dashboard')).toBe('/demo/admin?section=bookings_dashboard');
+    expect(frontmatter).toContain("const OWNER_TIMELINE_HREF = heritageAdminHref('bookings_dashboard');");
+    expect(heritageAdminHref('bookings_dashboard')).toBe('/demo/heritage-grooming/admin?section=bookings_dashboard');
     expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.view_live_demo_click}';`);
     expect(frontmatter).toContain("const TRACK_PLACEMENT = 'barbershop_online_booking_availability';");
     expect(`${component}\n${sync}\n${preview}`).not.toMatch(/<form\b|<iframe\b/);

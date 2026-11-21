@@ -15,7 +15,7 @@ import {
   OWNER_SELF_CONFIG_CLAIM,
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
-import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
 import { FREE_BOOKABLE_BARBER_LIMIT } from '@/lib/shop/freeBookableBarbers';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE } from '@/lib/seo/barbershopWebsitesPage';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -215,7 +215,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(full).toContain('class="btn btn--primary btn--lg bsw-final__cta"');
     expect(text(full)).toBe('Start Full KERSIVO');
     expect(demo).toContain('href={DEMO_HOME_HREF}');
-    expect(DEMO_HOME_HREF).toBe('/demo');
+    expect(DEMO_HOME_HREF).toBe('/demo/heritage-grooming/index.html');
     expect(text(demo)).toBe('Explore the working demo');
     expect(markup.match(/class="btn btn--primary btn--lg bsw-final__cta"/g) ?? []).toHaveLength(1);
     expect(termsLink).toContain('href={SUBSCRIPTION_TERMS_HREF}');
@@ -244,7 +244,7 @@ describe('/barbershop-websites — section 07 FAQ and final CTA', () => {
     expect(NO_SETUP_FEE_SHORT).toBe('No setup fee.');
     expect(fine).toMatch(/0% KERSIVO commission\. \{STRIPE_FEES_NOTE\}/);
     expect(STRIPE_FEES_NOTE).toBe('Standard Stripe payment-processing fees apply to online payments.');
-    expect(fine).toMatch(/CUTSTATE\s+Barbers, a fictional shop/);
+    expect(fine).toMatch(/Heritage\s+Grooming, a fictional shop/);
     expect(markup).toContain('amount={SAAS_MONTHLY_GBP}');
     expect(markup).toContain('qualifier="per location"');
     expect(readFileSync(join(root, 'src/components/ui/Price.tsx'), 'utf8')).toContain('/month');

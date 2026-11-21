@@ -1,9 +1,9 @@
 ---
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
-import { DEMO_SHOP_TAGLINE } from '@/lib/demo/site';
+import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES, HERITAGE_DEMO_TAGLINE as DEMO_SHOP_TAGLINE } from '@/lib/demo/heritage/demoShapes';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { WD_BRAND } from '@/lib/seo/barbershopWebsiteDesignContent';
 
-const rows = ['Skin Fade', 'Taper Fade', 'Beard Sculpt & Hot Towel']
+const rows = ['Skin fade', 'Haircut and beard', 'Hot-towel shave']
   .map((name) => DEMO_SERVICES.find((service) => service.name === name))
   .filter(Boolean)
   .map((service) => ({ name: service!.name, price: formatDemoPriceGbp(service!.pricePence) }));
@@ -23,7 +23,7 @@ const rows = ['Skin Fade', 'Taper Fade', 'Beard Sculpt & Hot Towel']
           <legend class="wd-choice__legend">Colour palette</legend>
           {WD_BRAND.palettes.map((palette, index) => (
             <label class="wd-choice__option">
-              <input type="radio" name="wd-palette" value={palette.id} checked={index === 0} data-wd-palette />
+              <input type="radio" name="wd-palette" value={palette.id} checked={palette.id === 'heritage'} data-wd-palette />
               <span class={`wd-choice__swatch wd-choice__swatch--${palette.id}`} aria-hidden="true"><i></i><i></i><i></i></span>
               <span class="wd-choice__text">
                 <span class="wd-choice__name">{palette.label}</span>
@@ -37,7 +37,7 @@ const rows = ['Skin Fade', 'Taper Fade', 'Beard Sculpt & Hot Towel']
           <legend class="wd-choice__legend">Typeface</legend>
           {WD_BRAND.typefaces.map((face, index) => (
             <label class="wd-choice__option">
-              <input type="radio" name="wd-type" value={face.id} checked={index === 0} data-wd-type />
+              <input type="radio" name="wd-type" value={face.id} checked={face.id === 'serif'} data-wd-type />
               <span class={`wd-choice__glyph wd-choice__glyph--${face.id}`} aria-hidden="true">Aa</span>
               <span class="wd-choice__text">
                 <span class="wd-choice__name">{face.label}</span>
@@ -48,26 +48,26 @@ const rows = ['Skin Fade', 'Taper Fade', 'Beard Sculpt & Hot Towel']
         </fieldset>
       </div>
 
-      <div class="wd-brand__preview" data-wd-brand-preview data-palette="night" data-type="condensed" aria-hidden="true">
+      <div class="wd-brand__preview" data-wd-brand-preview data-palette="heritage" data-type="serif" aria-hidden="true">
         <div class="wd-site">
           <div class="wd-site__nav">
-            <span class="wd-site__logo">CUTSTATE</span>
+            <span class="wd-site__logo">Heritage Grooming</span>
             <span class="wd-site__links"><span>Services</span><span>Barbers</span><span>Visit</span></span>
             <span class="wd-site__pill">Book</span>
           </div>
           <div class="wd-site__body">
             <div class="wd-site__copy">
-              <span class="wd-site__kicker">Barbers · Northern Quarter</span>
+              <span class="wd-site__kicker">Barbers · Chapel Street</span>
               <span class="wd-site__title">{DEMO_SHOP_TAGLINE}</span>
               <span class="wd-site__rows">
                 {rows.map((row) => (
                   <span class="wd-site__row"><span>{row.name}</span><b>{row.price}</b></span>
                 ))}
               </span>
-              <span class="wd-site__book">Book an appointment</span>
+              <span class="wd-site__book">Book a chair</span>
             </div>
             <div class="wd-site__photo">
-              <img src="/images/website-design/fade.webp" alt="" width="640" height="960" loading="lazy" decoding="async" />
+              <img src="/demo/heritage-grooming/assets/img/work-arthur-fade-960.webp" alt="" width="960" height="1286" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>

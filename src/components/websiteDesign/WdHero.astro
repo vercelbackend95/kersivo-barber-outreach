@@ -1,7 +1,7 @@
 ---
 import WdPhoneScreen from './WdPhoneScreen.astro';
 import WdPrimaryCta from './WdPrimaryCta.astro';
-import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import {
   WD_HERO_EYEBROW,
@@ -48,7 +48,7 @@ const lastIndex = WD_HERO_TITLE_LINES.length - 1;
           data-track="view_live_demo_click"
           data-track-placement="barbershop_website_design_hero_demo"
         >
-          See the CUTSTATE demo
+          See the Heritage Grooming demo
         </a>
       </div>
 
@@ -60,7 +60,7 @@ const lastIndex = WD_HERO_TITLE_LINES.length - 1;
     <div class="wd-inspector wd-enter" style="--i: 3" data-wd-inspector data-active={WD_INSPECTOR_POINTS[0].id}>
       <div class="wd-inspector__stage">
         <div class="wd-phone">
-          <WdPhoneScreen photo="/images/website-design/hero.webp" photoPosition="center 25%" eager />
+          <WdPhoneScreen photo="/demo/heritage-grooming/assets/img/work-arthur-mirror-960.webp" photoPosition="center 25%" eager />
           {WD_INSPECTOR_POINTS.map((point, index) => (
             <span class={`wd-inspector__pin wd-inspector__pin--${point.id}`} data-pin={point.id} aria-hidden="true">
               {index + 1}
@@ -84,7 +84,7 @@ const lastIndex = WD_HERO_TITLE_LINES.length - 1;
             </li>
           ))}
         </ol>
-        <p class="wd-inspector__note">Shown: CUTSTATE, KERSIVO’s fictional demo shop.</p>
+        <p class="wd-inspector__note">Shown: Heritage Grooming, KERSIVO’s fictional demo shop.</p>
       </div>
     </div>
   </div>

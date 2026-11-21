@@ -25,7 +25,7 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(hero).not.toContain('STRIPE_FEES_NOTE');
     expect(offer).toContain('STRIPE_FEES_NOTE');
     expect(offer).toContain('landingConditionsLine2');
-    expect(hero).toContain('CUTSTATE BARBERS is a fictional demonstration shop');
+    expect(hero).toContain('Heritage Grooming is a fictional demonstration shop');
     expect(hero).toContain('data-track="view_live_demo_click"');
     expect(hero).toContain('data-track="saas_subscribe_click"');
     expect(hero).toContain('data-track-placement="barbershop_websites_hero"');
@@ -70,7 +70,7 @@ describe('/barbershop-websites Batch 1 commercial accuracy and copy', () => {
     expect(definition).toContain('features that vary by provider');
     expect((essentials.match(/number: '0[1-6]'/g) ?? [])).toHaveLength(6);
     expect(essentials).toContain('Can a new client find your prices');
-    expect(journey).toContain('fictional CUTSTATE shop example');
+    expect(journey).toContain('fictional Heritage Grooming shop example');
     expect(journey).toContain('Explore the working demo');
   });
 });

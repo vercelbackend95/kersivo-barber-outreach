@@ -33,6 +33,10 @@ function imageSize(path: string): { width: number; height: number } {
     const bits = buf.readUInt32LE(21);
     return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
   }
+  // Lossy WebP: the capture script falls back to it only when lossless would break the size budget.
+  if (buf.toString('ascii', 12, 16) === 'VP8 ') {
+    return { width: buf.readUInt16LE(26) & 0x3fff, height: buf.readUInt16LE(28) & 0x3fff };
+  }
   const ispe = buf.indexOf('ispe');
   if (buf.toString('ascii', 4, 12) === 'ftypavif' && ispe > 0) {
     return { width: buf.readUInt32BE(ispe + 8), height: buf.readUInt32BE(ispe + 12) };
@@ -122,7 +126,7 @@ describe('hero showcase: static phone image', () => {
 
   it('keeps the desktop iframe route and title, and puts no image inside the live viewport', () => {
     const viewport = showcase.slice(showcase.indexOf('data-deferred-demo-frame'), showcase.indexOf('<picture'));
-    expect(viewport).toContain('data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"');
+    expect(viewport).toContain('data-deferred-src="/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard"');
     expect(viewport.match(/title="Interactive KERSIVO owner dashboard demo"/g)).toHaveLength(2);
     expect(viewport).not.toMatch(/<img|<picture/);
   });
@@ -169,7 +173,7 @@ describe('hero showcase: static phone image', () => {
 
   it('is produced by the repeatable capture script from the real hero dashboard', () => {
     const script = read('scripts/capture-hero-dashboard-mobile.mjs');
-    expect(script).toContain('/demo/admin?embed=hero&section=bookings_dashboard');
+    expect(script).toContain('/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard');
     expect(script).toContain('html[data-hero-showcase-ready="true"]');
     expect(script).toContain("default: '1100x900'");
     expect(script).toContain("phone: { crop: '0,0,640,720', dprs: '2.5,2,1.875,1.5625,1.25', name: 'hero-dashboard-mobile' }");

@@ -16,6 +16,7 @@ import { isAdminHubRouteEnabled } from '@/lib/freePreview/hubPage';
 import { readOperatorImpersonation } from '@/lib/adminHub/operatorImpersonation';
 import { isPreviewHubAllowedPath } from '@/lib/adminHub/previewHubPaths';
 import { applySecurityHeaders } from '@/lib/security/headers';
+import { retiredDemoRedirectTarget } from '@/lib/demo/heritage/retiredDemoRedirect';
 import {
   SAFE_METHODS,
   evaluateOriginGate,
@@ -28,6 +29,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isProd = import.meta.env.PROD;
   const forwardedProto = request.headers.get('x-forwarded-proto');
   const isHttps = isProd || forwardedProto === 'https';
+
+  // The CUTSTATE demo shop was retired: its old pages now open the matching Heritage Grooming page.
+  if ((method === 'GET' || method === 'HEAD') && url.pathname.startsWith('/demo')) {
+    const target = retiredDemoRedirectTarget(url.pathname, url.search);
+    if (target) {
+      return applySecurityHeaders(new Response(null, { status: 301, headers: { Location: target } }), {
+        isProd,
+        isHttps,
+      });
+    }
+  }
 
   // Resolve navbar CTA on the server only (never imported by components with client scripts).
   if (SAFE_METHODS.has(method) && !url.pathname.startsWith('/api/')) {

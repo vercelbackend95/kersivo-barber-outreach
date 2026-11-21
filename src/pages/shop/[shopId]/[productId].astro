@@ -20,7 +20,7 @@ const shopId = Astro.params.shopId?.trim() ?? '';
 const productId = Astro.params.productId?.trim() ?? '';
 
 if (!shopId || isDemoShopId(shopId)) {
-  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/shop' : '/shop');
+  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/heritage-grooming/shop.html' : '/shop');
 }
 
 if (!productId || productId === 'success' || productId === 'cancelled') {

@@ -1,23 +1,24 @@
 ---
+import { heritageBarberThumb } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME, HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 import { ArrowRight } from 'lucide-react';
 import '@/styles/components/barbershop-websites-brand-to-booking.css';
-import { DEMO_BARBERS, demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
-import { DEMO_HOME_HREF } from '@/lib/demo/nav';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { demoBarberFirstName, demoBarberRosterIndex } from '@/lib/demo/barbers';
+import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_websites_brand_to_booking';
 
-const barberIndex = Math.max(0, DEMO_BARBERS.findIndex((item) => item.slug === 'ellis-ward'));
+const barberIndex = Math.max(0, DEMO_BARBERS.findIndex((item) => item.slug === 'kit'));
 const barber = DEMO_BARBERS[barberIndex] ?? DEMO_BARBERS[0];
 const firstName = demoBarberFirstName(barber.name);
 
 const shopPhoto = {
-  src: '/demo/gallery/barber-at-work.webp',
-  width: 2000,
-  height: 1333,
+  src: '/demo/heritage-grooming/assets/img/chairs-960.webp',
+  width: 960,
+  height: 536,
 };
 
 const bookingProgress = ['Service', 'Barber', 'Schedule', 'Details'];
@@ -34,7 +35,7 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
           <span>to <em class="bsw-b2b__accent">booking</em>.</span>
         </h2>
         <p class="bsw-b2b__lede">
-          See how the fictional CUTSTATE shop example takes a client from its homepage to
+          See how the fictional Heritage Grooming shop example takes a client from its homepage to
           choosing a barber and booking an appointment.
         </p>
       </header>
@@ -44,22 +45,22 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
         <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
       </p>
 
-      <div class="bsw-b2b__track" role="region" aria-label="The CUTSTATE client journey" tabindex="0">
+      <div class="bsw-b2b__track" role="region" aria-label="The Heritage Grooming client journey" tabindex="0">
         <ol class="bsw-b2b__moments" role="list">
           <li class="bsw-b2b-moment">
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the CUTSTATE demo homepage: ${barber.name} at work, the headline Precision in every detail and a Book an appointment button.`}
+              aria-label={`Illustrative preview of the Heritage Grooming demo homepage: ${barber.name} at work, the headline A barbershop that takes its time and a Book a chair button.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
                   <img
                     class="bsw-b2b-lockup"
-                    src={CUTSTATE_LOGO_SRC}
+                    src={HERITAGE_LOCKUP.src}
                     alt=""
-                    width={CUTSTATE_LOGO_WIDTH}
-                    height={CUTSTATE_LOGO_HEIGHT}
+                    width={HERITAGE_LOCKUP.width}
+                    height={HERITAGE_LOCKUP.height}
                     loading="lazy"
                     decoding="async"
                   />
@@ -75,11 +76,11 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
                   decoding="async"
                 />
                 <div class="bsw-b2b-phone__body bsw-b2b-phone__body--hero">
-                  <span class="bsw-b2b-phone__eyebrow">Manchester · Appointments & walk-ins</span>
-                  <span class="bsw-b2b-phone__display">Precision in every detail.</span>
-                  <span class="bsw-b2b-phone__lede">Modern cuts, sharp fades and proper attention to every line.</span>
+                  <span class="bsw-b2b-phone__eyebrow">Chapel Street · By appointment</span>
+                  <span class="bsw-b2b-phone__display">A barbershop that takes its time.</span>
+                  <span class="bsw-b2b-phone__lede">Haircuts, beard work and hot-towel shaves, by appointment.</span>
                   <span class="bsw-b2b-phone__actions">
-                    <span class="bsw-b2b-phone__btn">Book an appointment</span>
+                    <span class="bsw-b2b-phone__btn">Book a chair</span>
                     <span class="bsw-b2b-phone__btn bsw-b2b-phone__btn--ghost">Services</span>
                   </span>
                 </div>
@@ -98,16 +99,16 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the CUTSTATE demo barbers page: ${barber.name}, ${barber.specialisation}, with a Book with ${firstName} link.`}
+              aria-label={`Illustrative preview of the Heritage Grooming demo barbers page: ${barber.name}, ${barber.specialisation}, with a Book with ${firstName} link.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
                   <img
                     class="bsw-b2b-lockup"
-                    src={CUTSTATE_LOGO_SRC}
+                    src={HERITAGE_LOCKUP.src}
                     alt=""
-                    width={CUTSTATE_LOGO_WIDTH}
-                    height={CUTSTATE_LOGO_HEIGHT}
+                    width={HERITAGE_LOCKUP.width}
+                    height={HERITAGE_LOCKUP.height}
                     loading="lazy"
                     decoding="async"
                   />
@@ -149,16 +150,16 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
             <div
               class="bsw-b2b-phone"
               role="img"
-              aria-label={`Illustrative preview of the CUTSTATE demo booking page, Book a chair, with ${barber.name} already selected as the barber.`}
+              aria-label={`Illustrative preview of the Heritage Grooming demo booking page, Book a chair, with ${barber.name} already selected as the barber.`}
             >
               <div class="bsw-b2b-phone__screen" aria-hidden="true">
                 <div class="bsw-b2b-phone__bar">
                   <img
                     class="bsw-b2b-lockup"
-                    src={CUTSTATE_LOGO_SRC}
+                    src={HERITAGE_LOCKUP.src}
                     alt=""
-                    width={CUTSTATE_LOGO_WIDTH}
-                    height={CUTSTATE_LOGO_HEIGHT}
+                    width={HERITAGE_LOCKUP.width}
+                    height={HERITAGE_LOCKUP.height}
                     loading="lazy"
                     decoding="async"
                   />
@@ -179,7 +180,7 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
                 <div class="bsw-b2b-phone__body bsw-b2b-phone__body--booking">
                   <span class="bsw-b2b-carried">
                     <img
-                      src={`/images/barbershop-websites/barber-${barber.slug}.webp`}
+                      src={heritageBarberThumb(barber.slug)}
                       alt=""
                       width="160"
                       height="160"
@@ -223,7 +224,7 @@ const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3)
 
       <footer class="bsw-b2b__close">
         <p class="bsw-b2b__disclosure">
-          CUTSTATE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings
+          Heritage Grooming is a fictional demo shop. These previews are illustrative. Demo bookings
           stay in your browser session — no real appointment is created and no payment is taken.
         </p>
         <a

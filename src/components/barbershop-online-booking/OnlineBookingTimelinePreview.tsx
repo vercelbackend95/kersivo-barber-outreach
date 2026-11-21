@@ -1,7 +1,7 @@
 /**
  * OnlineBookingTimelinePreview — the real admin `TodayTimeline` for
  * /barbershop-online-booking Section 03, in the landing page's floating widget treatment
- * (`.isw`), fed by the CUTSTATE demo owner timeline for the section's example weekday.
+ * (`.isw`), fed by the Heritage Grooming demo owner timeline for the section's example weekday.
  *
  * Safety follows `InsideSystemLiveWidget`: every /api/admin write is answered by the demo
  * interceptor with a blocked 403, `previewSwipe` stops the status/service sheets from opening,
@@ -26,13 +26,13 @@ import {
   installAdminFetchInterceptor,
   setPublicAdminDemoMode,
 } from '@/components/admin/adminAuth';
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
 import { getAvailabilityTimelineData } from '@/lib/barbershopOnlineBooking/availabilityTimeline';
 import { locateTimelineMinute, type TimelineRowAnchor } from '@/lib/barbershopOnlineBooking/timelineFocus';
 import { computeCenteredScrollTop, prefersReducedMotion } from '@/lib/landing/liveTimelineScroll';
 import { useMaxWidthPassive } from '@/lib/landing/useMaxWidthPassive';
 
-const ADMIN_DEMO_HREF = blacklineAdminHref('bookings_dashboard');
+const ADMIN_DEMO_HREF = heritageAdminHref('bookings_dashboard');
 
 export type TimelineFocus = {
   /** Minutes after midnight, London time. */

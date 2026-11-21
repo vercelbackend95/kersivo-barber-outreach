@@ -1,23 +1,19 @@
 ---
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS } from '@/lib/demo/heritage/demoShapes';
 import { WD_PHOTO } from '@/lib/seo/barbershopWebsiteDesignContent';
 
+const IMG = '/demo/heritage-grooming/assets/img';
 const shots: Record<string, { src: string; width: number; height: number; alt: string }> = {
-  chair: { src: '/images/website-design/interior.webp', width: 960, height: 1440, alt: 'Barber stations and chairs in the CUTSTATE demo shop.' },
-  work: { src: '/images/website-design/hairline.webp', width: 640, height: 960, alt: 'Close-up of a razor refining a fade at the hairline.' },
-  hands: { src: '/images/website-design/at-work.webp', width: 640, height: 427, alt: 'A barber cutting a client’s hair in the demo shop.' },
-  detail: { src: '/images/website-design/beard.webp', width: 640, height: 427, alt: 'Clippers shaping a beard line, close up.' },
+  chair: { src: `${IMG}/chair-960.webp`, width: 960, height: 1192, alt: 'A black leather chair in front of a brass-framed mirror at Heritage Grooming, the demo shop.' },
+  work: { src: `${IMG}/work-arthur-fade-960.webp`, width: 960, height: 1286, alt: 'A fresh fade, finished and photographed in the shop.' },
+  hands: { src: `${IMG}/work-rafi-beard-960.webp`, width: 960, height: 717, alt: 'A barber shaping a client’s beard in the demo shop.' },
+  detail: { src: `${IMG}/tools-960.webp`, width: 960, height: 644, alt: 'Scissors, combs and an open razor laid out on the counter, close up.' },
 };
 
-const portraits: Record<string, string> = {
-  'Ellis Ward': '/images/website-design/ellis-ward.webp',
-  'Noah Reid': '/images/website-design/noah-reid.webp',
-  'Marcus Bell': '/images/website-design/marcus-bell.webp',
-};
-const team = DEMO_BARBERS.filter((barber) => portraits[barber.name]).map((barber) => ({
+const team = DEMO_BARBERS.slice(0, 3).map((barber) => ({
   name: barber.name,
   first: barber.name.split(' ')[0],
-  src: portraits[barber.name],
+  src: barber.image.src,
 }));
 ---
 
@@ -64,9 +60,9 @@ const team = DEMO_BARBERS.filter((barber) => portraits[barber.name]).map((barber
       <ul class="wd-team__list">
         {team.map((barber) => (
           <li>
-            <a class="wd-barber" href="/demo/barbers" data-track="view_live_demo_click" data-track-placement="barbershop_website_design_team">
+            <a class="wd-barber" href="/demo/heritage-grooming/team.html" data-track="view_live_demo_click" data-track-placement="barbershop_website_design_team">
               <span class="wd-barber__photo">
-                <img src={barber.src} alt={`Portrait of ${barber.name}, a barber at the CUTSTATE demo shop.`} width="600" height="720" loading="lazy" decoding="async" />
+                <img src={barber.src} alt={`Portrait of ${barber.name}, a barber at the Heritage Grooming demo shop.`} width="600" height="804" loading="lazy" decoding="async" />
               </span>
               <span class="wd-barber__name">{barber.name}</span>
               <span class="wd-barber__book">Book with {barber.first}</span>

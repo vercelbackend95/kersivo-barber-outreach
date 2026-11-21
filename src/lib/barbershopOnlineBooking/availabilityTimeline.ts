@@ -1,14 +1,14 @@
 /**
  * Data for the real admin `TodayTimeline` shown in /barbershop-online-booking Section 03.
  *
- * It is the CUTSTATE demo owner timeline (the rows /demo/admin renders) for the same fixed
+ * It is the Heritage Grooming demo owner timeline (the rows its owner dashboard renders) for the same fixed
  * example weekday and clock as `availabilityExample`, so the client times in that example and
  * this timeline come from one set of fixture rows. Barbers carry the same avatars the demo admin
  * loads. Everything is fictional demo data; nothing reads a database.
  */
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS } from '@/lib/demo/heritage/demoShapes';
 import type { TimelineBooking } from '@/components/admin/TodayTimeline';
-import { getBlacklineBookingsForDayKey } from '@/lib/admin/blacklineDemoFixtures/schedule';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
+import { getHeritageBookingsForDayKey } from '@/lib/admin/heritageDemoFixtures/schedule';
 import { EXAMPLE_CLOCK, EXAMPLE_DAY_KEY } from './availabilityExample';
 
 export type AvailabilityTimelineBarber = { id: string; name: string; avatarUrl: string };
@@ -21,7 +21,7 @@ export type AvailabilityTimelineData = {
 };
 
 export function getAvailabilityTimelineData(): AvailabilityTimelineData {
-  const bookings: TimelineBooking[] = getBlacklineBookingsForDayKey(EXAMPLE_DAY_KEY, { now: EXAMPLE_CLOCK }).map(
+  const bookings: TimelineBooking[] = getHeritageBookingsForDayKey(EXAMPLE_DAY_KEY, { now: EXAMPLE_CLOCK }).map(
     (row) => ({
       id: row.id,
       fullName: row.fullName,

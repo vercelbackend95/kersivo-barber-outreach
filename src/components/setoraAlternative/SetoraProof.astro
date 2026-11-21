@@ -1,6 +1,6 @@
 ---
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
-import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
+import { HERITAGE_DEMO_BOOK_HREF as DEMO_BOOK_HREF, HERITAGE_DEMO_SHOP_HREF as DEMO_SHOP_HREF } from '@/lib/demo/heritage/links';
 import LandingDemoPreview from '@/components/landingDemoPreview.astro';
 const rows = [
   {
@@ -9,7 +9,7 @@ const rows = [
     description:
       'Manage bookings, clients, barbers, services and daily activity from one central dashboard.',
     ctaLabel: 'Explore the admin system',
-    ctaHref: blacklineAdminHref('bookings_dashboard'),
+    ctaHref: heritageAdminHref('bookings_dashboard'),
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'widget' as const,

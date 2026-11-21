@@ -2031,3 +2031,40 @@
     transform: none;
   }
 }
+
+/* The browser mock is the Heritage Grooming demo shop, so it wears that shop's look:
+   ink green, Caslon-style serif headings, brass for actions. KERSIVO red stays outside the frame. */
+.nc-site {
+  --nc-red: #c6a766;
+  background: #0f1716;
+  color: #efe8d8;
+}
+
+.nc-site__page {
+  background: #0f1716;
+}
+
+.nc-site__display,
+.nc-site__h {
+  font-family: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.nc-site__display {
+  font-size: 5.6cqi;
+  line-height: 1.05;
+}
+
+.nc-site__btn--red {
+  color: #0f1716;
+}
+
+.nc-site__book {
+  background: #142120;
+}
+
+.nc-site__slots .is-on {
+  color: #efe8d8;
+}

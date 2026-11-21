@@ -6,7 +6,8 @@
  * produced a CSS-only JS chunk that returned 404 and the carousel never mounted.
  */
 import { ProductRail } from '@/components/shop/ProductRail';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { HERITAGE_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/data';
+import { HERITAGE_DEMO_SHOP_HREF } from '@/lib/demo/heritage/links';
 import { getLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 import '@/styles/components/shopProductCards6.css';
 import '@/styles/components/storefront.css';
@@ -18,7 +19,7 @@ export function RetailDemoRail() {
       products={getLandingDemoCarouselProducts()}
       className="feature261-retail-carousel"
       eagerImages={false}
-      productHrefBase="/demo/shop"
+      productHref={(product) => `${HERITAGE_DEMO_SHOP_HREF}?product=${encodeURIComponent(product.id.replace(/^hg-product-/, ''))}`}
       variant="storefront"
       imageFallback="wordmark"
       priceFormat="demo"
@@ -28,7 +29,7 @@ export function RetailDemoRail() {
       showProgress={false}
       showCategory={true}
       showPrice={true}
-      fallbackBrandMark="CS"
+      fallbackBrandMark="HG"
       shopName={DEMO_SHOP_NAME}
       addToBagLabel="Add to bag"
       addToBagShortLabel="Add"

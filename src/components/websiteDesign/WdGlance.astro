@@ -1,13 +1,13 @@
 ---
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
-import { DEMO_LOCATION } from '@/lib/demo/site';
+import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES, HERITAGE_DEMO_LOCATION as DEMO_LOCATION } from '@/lib/demo/heritage/demoShapes';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { WD_GLANCE } from '@/lib/seo/barbershopWebsiteDesignContent';
 
-const fade = DEMO_SERVICES.find((service) => service.name === 'Skin Fade');
-const cut = DEMO_SERVICES.find((service) => service.name === 'Classic Cut & Finish');
-const beard = DEMO_SERVICES.find((service) => service.name === 'Beard Trim & Shape');
+const fade = DEMO_SERVICES.find((service) => service.name === 'Skin fade');
+const cut = DEMO_SERVICES.find((service) => service.name === 'Haircut');
+const beard = DEMO_SERVICES.find((service) => service.name === 'Beard trim');
 const chips = [fade, cut, beard].filter(Boolean).map((service) => ({
-  name: service!.name.replace(' & Finish', '').replace(' & Shape', ''),
+  name: service!.name,
   price: formatDemoPriceGbp(service!.pricePence),
 }));
 ---
@@ -44,20 +44,20 @@ const chips = [fade, cut, beard].filter(Boolean).map((service) => ({
 
             <!-- After: designed to book -->
             <div class="wd-after">
-              <img src="/images/website-design/interior.webp" alt="" width="960" height="1440" loading="lazy" decoding="async" />
+              <img src="/demo/heritage-grooming/assets/img/chair-960.webp" alt="" width="960" height="1192" loading="lazy" decoding="async" />
               <div class="wd-after__shade"></div>
               <div class="wd-after__top">
-                <span class="wd-after__logo">CUTSTATE</span>
+                <span class="wd-after__logo">Heritage Grooming</span>
                 <span class="wd-after__nav">Services · Barbers · Visit</span>
                 <span class="wd-after__cta">Book</span>
               </div>
               <div class="wd-after__copy">
-                <span class="wd-after__area">{DEMO_LOCATION} · Open 6 days</span>
-                <span class="wd-after__title">Defined cuts.<br />Precise finishes.</span>
+                <span class="wd-after__area">{DEMO_LOCATION} · Tuesday to Saturday</span>
+                <span class="wd-after__title">A barbershop that<br /><em>takes its time.</em></span>
                 <span class="wd-after__chips">
                   {chips.map((chip) => <span><b>{chip.price}</b> {chip.name}</span>)}
                 </span>
-                <span class="wd-after__book">Book an appointment</span>
+                <span class="wd-after__book">Book a chair</span>
               </div>
             </div>
           </div>

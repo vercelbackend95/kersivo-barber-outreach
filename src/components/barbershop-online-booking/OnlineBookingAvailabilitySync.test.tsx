@@ -44,30 +44,30 @@ describe('OnlineBookingAvailabilitySync', () => {
     previewSpy.mockClear();
   });
 
-  it('offers the CUTSTATE example times with 12:00 selected and shown in the owner view', () => {
+  it('offers the Heritage Grooming example times with 12:00 selected and shown in the owner view', () => {
     mount();
     const buttons = screen.getAllByRole('button');
-    expect(buttons.map((button) => button.getAttribute('data-boa-time'))).toEqual(['12:00', '12:15', '18:00', '18:15']);
+    expect(buttons.map((button) => button.getAttribute('data-boa-time'))).toEqual(['12:00', '12:15', '14:45', '15:00', '15:15', '15:30']);
     expect(pressed()).toEqual(['12:00']);
     expect(previewSpy.mock.calls.at(-1)?.[0].focus).toEqual({
       minute: 720,
       label: '12:00',
-      caption: 'Marcus free until 12:45',
+      caption: 'Kit free until 12:45',
     });
     expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe('');
   });
 
   it('moves the owner view to the chosen time without booking anything', () => {
     mount();
-    fireEvent.click(screen.getByRole('button', { name: /18:15/ }));
-    expect(pressed()).toEqual(['18:15']);
+    fireEvent.click(screen.getByRole('button', { name: /15:30/ }));
+    expect(pressed()).toEqual(['15:30']);
     expect(previewSpy.mock.calls.at(-1)?.[0].focus).toEqual({
-      minute: 1095,
-      label: '18:15',
-      caption: 'Marcus free until 19:00',
+      minute: 930,
+      label: '15:30',
+      caption: 'Kit free until 16:15',
     });
     expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
-      'Owner view moved to 18:15. Marcus is free 18:15 to 19:00 for a 45-minute Skin Fade. Nothing has been booked.',
+      'Owner view moved to 15:30. Kit is free 15:30 to 16:15 for a 45-minute Skin fade. Nothing has been booked.',
     );
     expect(screen.queryByRole('dialog')).toBeNull();
 

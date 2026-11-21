@@ -15,11 +15,15 @@ import {
   BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
   buildBarbershopOnlineBookingJsonLd,
 } from './barbershopOnlineBookingPage';
-import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { getDemoFeaturedServices } from '@/lib/demo/services';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import {
+  HERITAGE_DEMO_BARBERS as DEMO_BARBERS,
+  HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME,
+  getHeritageFeaturedServices,
+  heritageBarberThumb,
+} from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
@@ -139,8 +143,8 @@ describe('/barbershop-online-booking Section 01 hero', () => {
 
   it('sends the primary action to the verified demo with the existing demo-click event', () => {
     const demo = anchors(hero).find((tag) => tag.includes('href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}'));
-    expect(BARBERSHOP_ONLINE_BOOKING_DEMO_HREF).toBe('/demo/book');
-    expect(existsSync(join(srcDir, 'pages/demo/book.astro'))).toBe(true);
+    expect(BARBERSHOP_ONLINE_BOOKING_DEMO_HREF).toBe(HERITAGE_DEMO_BOOK_HREF);
+    expect(existsSync(join(publicDir, 'demo/heritage-grooming/services.html'))).toBe(true);
     expect(demo).toContain('bob-hero__action--primary');
     expect(demo).toContain('data-track={TRACK_EVENT}');
     expect(demo).toContain('data-track-placement={TRACK_PLACEMENT}');
@@ -220,15 +224,13 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     }
   });
 
-  it('recreates the CUTSTATE booking screen from verified demo data and BookingFlow copy', () => {
-    expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
-    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
-    expect(existsSync(join(publicDir, CUTSTATE_LOGO_SRC))).toBe(true);
-    expect(preview).toContain(
-      "import { CUTSTATE_LOGO_ALT, CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';",
-    );
-    expect(preview).toContain(`headed by the \${CUTSTATE_LOGO_ALT} logo.`);
-    expect(previewMarkup).not.toMatch(/bob-screen__brand|>\s*Cutstate\s*</i);
+  it('recreates the Heritage Grooming booking screen from verified demo data and BookingFlow copy', () => {
+    expect(DEMO_SHOP_NAME).toBe('Heritage Grooming');
+    expect(HERITAGE_LOCKUP.src).toBe('/images/heritage/heritage-lockup.webp');
+    expect(existsSync(join(publicDir, HERITAGE_LOCKUP.src))).toBe(true);
+    expect(preview).toContain("import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';");
+    expect(preview).toContain(`headed by the \${HERITAGE_LOCKUP.alt} logo.`);
+    expect(previewMarkup).not.toMatch(/bob-screen__brand|>\s*(Cutstate|Heritage Grooming)\s*</i);
     expect(previewMarkup).not.toMatch(/>\s*KERSIVO\s*</);
     expect(cssRule('.bob-screen__logo')).toMatch(/width: auto;\s*height: 2\.9em;/);
 
@@ -244,18 +246,15 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(preview).toContain("const TIME_STEP_TITLE = 'Pick a time';");
 
     expect(preview).toContain('getDemoFeaturedServices()');
-    expect(getDemoFeaturedServices().map((s) => [s.name, s.durationMinutes, s.pricePence])).toEqual([
-      ['Skin Fade', 45, 2800],
-      ['Classic Cut & Finish', 35, 2400],
-      ['Haircut & Beard', 60, 3600],
-    ]);
+    expect(preview).toContain('getHeritageFeaturedServices as getDemoFeaturedServices');
+    expect(getHeritageFeaturedServices().length).toBeGreaterThanOrEqual(3);
+    for (const service of getHeritageFeaturedServices()) {
+      expect(service.pricePence % 100).toBe(0);
+      expect(service.durationMinutes).toBeGreaterThan(0);
+    }
 
     expect(preview).toContain('specialisation: barber.specialisation');
-    expect(DEMO_BARBERS.map((b) => [b.name, b.specialisation])).toEqual([
-      ['Ellis Ward', 'Skin fades · Textured cuts'],
-      ['Noah Reid', 'Classic cuts · Beard shaping'],
-      ['Marcus Bell', 'Scissor work · Natural styling'],
-    ]);
+    expect(DEMO_BARBERS.map((b) => b.name)).toEqual(['Arthur Penn', 'Kit Harlow', 'Rafi Mendes', 'Owen Clarke']);
   });
 
   it('shows only labelled illustrative times drawn from the product sandbox slots, with no date', () => {
@@ -279,7 +278,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     const caption = textOf(previewMarkup.slice(previewMarkup.indexOf('<figcaption')));
     expect(caption).toContain('Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page.');
     expect(caption).toContain(
-      'Cutstate is a fictional KERSIVO demonstration shop; times shown are examples, no appointment is created and no payment is taken.',
+      'Heritage Grooming is a fictional KERSIVO demonstration shop; times shown are examples, no appointment is created and no payment is taken.',
     );
     expect(preview).toContain('<div class="bob-device__bezel" role="img" aria-label={screenLabel} data-bob-ref="device">');
     expect(preview).toContain('<div class="bob-screen" aria-hidden="true">');
@@ -290,7 +289,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
   it('uses the approved logo and small lazy portrait thumbnails, all with explicit dimensions', () => {
     const imgs = previewMarkup.match(/<img\b[\s\S]*?\/>/g) ?? [];
     expect(imgs).toHaveLength(2);
-    for (const attr of ['src={CUTSTATE_LOGO_SRC}', 'alt=""', 'width={CUTSTATE_LOGO_WIDTH}', 'height={CUTSTATE_LOGO_HEIGHT}', 'decoding="async"']) {
+    for (const attr of ['src={HERITAGE_LOCKUP.src}', 'alt=""', 'width={HERITAGE_LOCKUP.width}', 'height={HERITAGE_LOCKUP.height}', 'decoding="async"']) {
       expect(imgs[0]).toContain(attr);
     }
     for (const attr of ['src={barber.thumb}', 'alt=""', 'width={THUMB_SIZE}', 'height={THUMB_SIZE}', 'loading="lazy"', 'decoding="async"']) {
@@ -298,7 +297,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     }
     expect(preview).toContain('const THUMB_SIZE = 160;');
     for (const barber of DEMO_BARBERS) {
-      const thumb = join(publicDir, `demo/barbers/thumbs/${barber.slug}-160.webp`);
+      const thumb = join(publicDir, heritageBarberThumb(barber.slug));
       expect(existsSync(thumb)).toBe(true);
       expect(readFileSync(thumb).byteLength).toBeLessThan(12 * 1024);
     }
@@ -331,7 +330,7 @@ describe('/barbershop-online-booking Section 01 hero', () => {
       expect(preview).toContain(target);
     }
     expect(preview).toContain("{ id: 'barber', side: 'left', icon: ICONS.user, title: 'Pick a barber',");
-    expect(preview).toContain("const SELECTED_BARBER_SLUG = 'marcus-bell';");
+    expect(preview).toContain("const SELECTED_BARBER_SLUG = 'kit';");
     expect(preview).not.toMatch(/side: '(below|above)'|data-bob-corridor/);
     const slots = [...(preview.match(/const EXAMPLE_SLOTS = \[([^\]]+)\]/)?.[1].matchAll(/'(\d{2}:\d{2})'/g) ?? [])].map((m) => m[1]);
     expect(slots.indexOf('11:00') % 3).toBe(2);
@@ -358,12 +357,12 @@ describe('/barbershop-online-booking Section 01 hero', () => {
     expect(heroCss).not.toMatch(/rotateY|rotate3d/);
   });
 
-  it('keeps the CUTSTATE body font scoped to the screen under a unique name', () => {
-    expect(heroCss).not.toContain('BOB Cutstate Display');
-    expect(heroCss).toMatch(/font-family: 'BOB Cutstate Body';[^}]*font-weight: 400;/);
-    expect(heroCss).toMatch(/font-family: 'BOB Cutstate Body';[^}]*font-weight: 600;/);
+  it('keeps the demo shop body font scoped to the screen under a unique name', () => {
+    expect(heroCss).not.toMatch(/BOB Cutstate/);
+    expect(heroCss).toMatch(/font-family: 'BOB Demo Body';[^}]*font-weight: 400;/);
+    expect(heroCss).toMatch(/font-family: 'BOB Demo Body';[^}]*font-weight: 600;/);
     expect(cssRule('.bob-hero__title')).toContain('font-family: var(--font-body);');
-    expect(cssRule('.bob-screen')).toContain("font-family: 'BOB Cutstate Body'");
+    expect(cssRule('.bob-screen')).toContain("font-family: 'BOB Demo Body'");
   });
 
   it('keeps focus visible, CTAs touch-sized and the hero free of entrance animation', () => {

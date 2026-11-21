@@ -1578,3 +1578,32 @@
   background: #0b57d0;
   color: #fff;
 }
+
+/* The phone shows the Heritage Grooming demo shop, so its booking screens wear the shop's brass, not KERSIVO red. */
+.bw.bw .bw-phone {
+  --bw-red: #c6a766;
+}
+
+.bw.bw .bw-phone__h,
+.bw.bw .bw-phone__stamp {
+  font-family: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.bw.bw .bw-phone__h {
+  font-size: 1.45rem;
+}
+
+.bw.bw .bw-phone__option.is-picked,
+.bw.bw .bw-phone__field:focus-within {
+  background: rgba(198, 167, 102, 0.1);
+  box-shadow: inset 0 0 0 1px var(--bw-red), 0 12px 30px -18px rgba(198, 167, 102, 0.6);
+}
+
+.bw.bw .bw-phone__days span.is-picked,
+.bw.bw .bw-phone__slots span.is-picked,
+.bw.bw .bw-phone__pay span.is-picked,
+.bw.bw .bw-phone__cta-btn {
+  color: #0f1716;
+}

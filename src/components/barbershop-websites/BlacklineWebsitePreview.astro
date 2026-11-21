@@ -1,8 +1,10 @@
 ---
+import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES, heritageBookingHref as demoBookingHref } from '@/lib/demo/heritage/demoShapes';
 import { ArrowRight, Lock, RotateCw } from 'lucide-react';
-import { DEMO_SERVICES, demoBookingHref, formatDemoPriceGbp } from '@/lib/demo/services';
-import { DEMO_BOOK_HREF, DEMO_CONTACT_HREF, DEMO_GALLERY_HREF, DEMO_HOME_HREF } from '@/lib/demo/nav';
-import { CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
+import { HERITAGE_DEMO_BOOK_HREF as DEMO_BOOK_HREF, HERITAGE_DEMO_CONTACT_HREF as DEMO_CONTACT_HREF, HERITAGE_DEMO_GALLERY_HREF as DEMO_GALLERY_HREF, HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
+import { HERITAGE_DEMO_SERVICES_HREF, HERITAGE_DEMO_TEAM_HREF } from '@/lib/demo/heritage/links';
+import { HERITAGE_LOCKUP, HERITAGE_MOCK_BOOK_LABEL, HERITAGE_MOCK_EYEBROW, HERITAGE_MOCK_LEDE, HERITAGE_MOCK_PHOTOS, HERITAGE_MOCK_TITLE } from '@/lib/demo/heritage/mock';
 
 interface Props {
   /** Hero-only frame without the service strip; used at reduced scale on /free-preview. */
@@ -19,13 +21,13 @@ const {
 const loading = imageLoading ?? (compact ? 'lazy' : undefined);
 const fetchPriority = imageFetchPriority ?? (compact ? 'low' : 'high');
 
-const IMG = '/images/barbershop-websites';
+const IMG = '/demo/heritage-grooming/assets/img';
 
 const serviceImages = {
-  'haircut-finish': `${IMG}/service-haircut.webp`,
-  'beard-trim': `${IMG}/service-beard.webp`,
-  'skin-fade': `${IMG}/service-fade.webp`,
-  'wash-style-finish': `${IMG}/service-style.webp`,
+  haircut: `${IMG}/work-kit-scissors-500.webp`,
+  'skin-fade': `${IMG}/work-arthur-fade-500.webp`,
+  'beard-trim': `${IMG}/work-rafi-beard-500.webp`,
+  'hot-towel-shave': `${IMG}/work-owen-razor-500.webp`,
 } as const;
 
 const serviceCards = (Object.keys(serviceImages) as (keyof typeof serviceImages)[]).flatMap((slug) => {
@@ -35,14 +37,14 @@ const serviceCards = (Object.keys(serviceImages) as (keyof typeof serviceImages)
 
 const siteNav = [
   { href: DEMO_HOME_HREF, label: 'Home', current: true },
-  { href: '/demo/services', label: 'Services' },
-  { href: '/demo/barbers', label: 'Barbers' },
+  { href: HERITAGE_DEMO_SERVICES_HREF, label: 'Services' },
+  { href: HERITAGE_DEMO_TEAM_HREF, label: 'Barbers' },
   { href: DEMO_GALLERY_HREF, label: 'Gallery' },
   { href: DEMO_CONTACT_HREF, label: 'Contact' },
 ];
 ---
 
-<figure class="bsw-browser" aria-label="Illustrated preview of the CUTSTATE BARBERS demo website built on KERSIVO">
+<figure class="bsw-browser" aria-label="Illustrated preview of the Heritage Grooming demo website built on KERSIVO">
   <div class="bsw-browser__toolbar">
     <span class="bsw-browser__dots" aria-hidden="true"><i></i><i></i><i></i></span>
     <a class="bsw-browser__address" href={DEMO_HOME_HREF}>
@@ -54,44 +56,44 @@ const siteNav = [
 
   <div class="bsw-site">
     <div class="bsw-site__nav">
-      <a class="bsw-site__brand" href={DEMO_HOME_HREF} aria-label="CUTSTATE BARBERS demo home">
+      <a class="bsw-site__brand" href={DEMO_HOME_HREF} aria-label="Heritage Grooming demo home">
         <img
-          src={CUTSTATE_LOGO_SRC}
+          src={HERITAGE_LOCKUP.src}
           alt=""
-          width={CUTSTATE_LOGO_WIDTH}
-          height={CUTSTATE_LOGO_HEIGHT}
+          width={HERITAGE_LOCKUP.width}
+          height={HERITAGE_LOCKUP.height}
           loading={loading}
           decoding="async"
           draggable="false"
         />
       </a>
-      <nav class="bsw-site__links" aria-label="CUTSTATE demo pages">
+      <nav class="bsw-site__links" aria-label="Heritage Grooming demo pages">
         {siteNav.map((item) => (
           <a href={item.href} aria-current={item.current ? 'page' : undefined}>{item.label}</a>
         ))}
       </nav>
-      <a class="bsw-site__book" href={DEMO_BOOK_HREF}>Book Now</a>
+      <a class="bsw-site__book" href={DEMO_BOOK_HREF}>{HERITAGE_MOCK_BOOK_LABEL}</a>
     </div>
 
     <div class="bsw-site__hero">
       <picture class="bsw-site__photo">
-        <source media="(max-width: 640px)" srcset={`${IMG}/site-hero-640.webp`} />
+        <source media="(max-width: 640px)" srcset={`${IMG}/chair-960.webp`} />
         <img
-          src={compact ? `${IMG}/site-hero-640.webp` : `${IMG}/site-hero-1100.webp`}
-          alt="A CUTSTATE demo barber cutting a client's hair with clippers"
-          width={compact ? 640 : 1100}
-          height={compact ? 524 : 900}
+          src={compact ? `${IMG}/chair-960.webp` : `${IMG}/chairs-1600.webp`}
+          alt={compact ? HERITAGE_MOCK_PHOTOS.chair.alt : HERITAGE_MOCK_PHOTOS.chairs.alt}
+          width={compact ? HERITAGE_MOCK_PHOTOS.chair.width : 1600}
+          height={compact ? HERITAGE_MOCK_PHOTOS.chair.height : 893}
           loading={loading}
           fetchpriority={fetchPriority}
           decoding="async"
         />
       </picture>
       <div class="bsw-site__copy">
-        <p class="bsw-site__eyebrow">Precision <span aria-hidden="true">×</span> Style <span aria-hidden="true">×</span> Community</p>
-        <p class="bsw-site__headline">More than<br />a haircut<span class="bsw-accent">.</span></p>
-        <p class="bsw-site__lead">Modern cuts. Real people. A barbershop built on quality, community and good conversation.</p>
+        <p class="bsw-site__eyebrow">{HERITAGE_MOCK_EYEBROW}</p>
+        <p class="bsw-site__headline">{HERITAGE_MOCK_TITLE.lead}<br /><em class="bsw-accent">{HERITAGE_MOCK_TITLE.em}</em></p>
+        <p class="bsw-site__lead">{HERITAGE_MOCK_LEDE}</p>
         <a class="bsw-site__cta" href={DEMO_BOOK_HREF}>
-          Book an Appointment <ArrowRight size={13} strokeWidth={2} aria-hidden="true" />
+          {HERITAGE_MOCK_BOOK_LABEL} <ArrowRight size={13} strokeWidth={2} aria-hidden="true" />
         </a>
       </div>
     </div>
@@ -105,7 +107,7 @@ const siteNav = [
             class="bsw-service"
             href={demoBookingHref(card.slug)}
             data-astro-reload
-            aria-label={`Book ${card.service.name} in the CUTSTATE demo`}
+            aria-label={`Book ${card.service.name} in the Heritage Grooming demo`}
           >
             <img src={card.image} alt="" width="400" height="300" loading="lazy" decoding="async" />
             <span class="bsw-service__text">

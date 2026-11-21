@@ -18,8 +18,8 @@ describe('Section 05 entry-points example', () => {
     });
     expect(example.channels.find((channel) => channel.id === 'social')?.visual).toMatchObject({
       kind: 'instagram',
-      avatarSrc: '/demo/cutstate-logo.png',
-      handle: '@cutstatebarbers',
+      avatarSrc: '/demo/heritage-grooming/assets/img/seal-128.webp',
+      handle: '@heritagegrooming',
       bookLabel: 'Book',
     });
     const social = example.channels.find((channel) => channel.id === 'social')?.visual;

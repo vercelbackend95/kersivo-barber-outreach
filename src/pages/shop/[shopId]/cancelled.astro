@@ -11,7 +11,7 @@ export const prerender = false;
 
 const shopId = Astro.params.shopId?.trim() ?? '';
 if (!shopId || isDemoShopId(shopId)) {
-  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/shop' : '/shop');
+  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/heritage-grooming/shop.html' : '/shop');
 }
 ---
 

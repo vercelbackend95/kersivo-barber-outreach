@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE } from '@/lib/seo/barbershopOnlineBookingPage';
 
@@ -57,8 +57,8 @@ describe('Barbershop online booking page — Section 06 confirmations and remind
     expect(anchors[0]).toContain('href="/pricing#plan"');
     expect(anchors[1]).toContain('href="/barbershop-cancellation-policy-template"');
     expect(anchors[2]).toContain('href={OWNER_TIMELINE_HREF}');
-    expect(frontmatter).toContain("const OWNER_TIMELINE_HREF = blacklineAdminHref('bookings_dashboard');");
-    expect(blacklineAdminHref('bookings_dashboard')).toBe('/demo/admin?section=bookings_dashboard');
+    expect(frontmatter).toContain("const OWNER_TIMELINE_HREF = heritageAdminHref('bookings_dashboard');");
+    expect(heritageAdminHref('bookings_dashboard')).toBe('/demo/heritage-grooming/admin?section=bookings_dashboard');
     expect(frontmatter).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.view_live_demo_click}';`);
     expect(component).not.toMatch(/<form\b|<iframe\b|client:/);
     expect(component).not.toMatch(/<script\b/);

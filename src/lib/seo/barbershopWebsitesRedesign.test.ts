@@ -89,7 +89,7 @@ describe('/barbershop-websites redesign — offer and claims', () => {
   });
 
   it('labels the demo shop as fictional and invents no reviews or numbers', () => {
-    expect(component('BwHero')).toContain('CUTSTATE Barbers is a fictional demonstration shop.');
+    expect(component('BwHero')).toContain('Heritage Grooming is a fictional demonstration shop.');
     expect(all).not.toMatch(/\btestimonials?\b|\breviews?\b|\bratings?\b|★|\d+\s*%\s*(?:more|of clients|of barbershops)/i);
   });
 });

@@ -3,9 +3,9 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEMO_ACTION_BLOCKED_MESSAGE } from '@/lib/admin/demoConfig';
-import { BLACKLINE_HERO_SHOWCASE_DAY } from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_DAY } from '@/lib/admin/heroShowcase';
 
-const HERO_URL = '/demo/admin?embed=hero&section=bookings_dashboard';
+const HERO_URL = '/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard';
 const nativeFetch = vi.fn(async () => new Response('{}', { status: 200 }));
 let activity: typeof import('./heroShowcaseFetch');
 
@@ -28,12 +28,12 @@ beforeEach(() => {
 
 describe('hero showcase fetch adapter', () => {
   it('serves admin data from local fixtures at the showcase clock without touching the network', async () => {
-    const response = await window.fetch(`/api/admin/bookings?date=${BLACKLINE_HERO_SHOWCASE_DAY}&mode=day`, {
+    const response = await window.fetch(`/api/admin/bookings?date=${HERO_SHOWCASE_DAY}&mode=day`, {
       credentials: 'include',
     });
     const body = (await response.json()) as { bookings: unknown[] };
     expect(response.status).toBe(200);
-    expect(body.bookings).toHaveLength(21);
+    expect(body.bookings).toHaveLength(47);
     expect(nativeFetch).not.toHaveBeenCalled();
   });
 
@@ -67,10 +67,10 @@ describe('hero showcase fetch adapter', () => {
     expect(nativeFetch).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the normal BLACKLINE demo on the network API', async () => {
-    window.history.replaceState({}, '', '/demo/admin?section=bookings_dashboard');
+  it('keeps the normal Heritage Grooming demo dashboard on its own fetch path', async () => {
+    window.history.replaceState({}, '', '/demo/heritage-grooming/admin?section=bookings_dashboard');
     await window.fetch('/api/admin/bookings?mode=day');
     expect(nativeFetch).toHaveBeenCalledTimes(1);
-    expect(String((nativeFetch.mock.calls[0] as unknown[])[0])).toContain('/api/demo/admin/bookings');
+    expect(String((nativeFetch.mock.calls[0] as unknown[])[0])).toContain('/api/demo/heritage/admin/bookings');
   });
 });

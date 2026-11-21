@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HERO_SHOWCASE_READY_MESSAGE_TYPE } from '@/lib/admin/heroShowcase';
 import { bindHeroDashboardShowcase } from './heroDashboardShowcase';
 
-const SRC = '/demo/admin?embed=hero&section=bookings_dashboard';
+const SRC = '/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard';
 const componentSource = readFileSync(join(process.cwd(), 'src/components/marketing/HeroDashboardShowcase.astro'), 'utf8');
 /** The component's own markup, minus frontmatter, script and the noscript fallback. */
 const componentMarkup = componentSource

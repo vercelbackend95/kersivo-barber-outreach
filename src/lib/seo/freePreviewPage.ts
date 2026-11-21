@@ -80,7 +80,7 @@ export const FREE_PREVIEW_PAGE = {
   showcaseHeading: 'A private preview built around your shop',
   showcasePins: ['Your name, logo and colours', 'Your services and prices', 'Your barbers and booking'],
   visualCaption:
-    'Example: CUTSTATE Barbers, a fictional demo shop. Your preview is designed for your shop.',
+    'Example: Heritage Grooming, a fictional demo shop. Your preview is designed for your shop.',
   formEyebrow: 'Request your free preview',
   formReadyLine: `Usually ready ${PREVIEW_TURNAROUND_TEXT_SHORT}.`,
   whatYouGetHeading: "What you'll get",

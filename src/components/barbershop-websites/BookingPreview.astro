@@ -1,16 +1,15 @@
 ---
+import { heritageBarberThumb } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 import { ArrowRight, CalendarDays, ChevronDown } from 'lucide-react';
 import { bookingPreviewDates } from '@/lib/barbershopWebsites/bookingPreviewDates';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
-
-const IMG = '/images/barbershop-websites';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 
 const service = DEMO_SERVICES.find((item) => item.slug === 'skin-fade') ?? DEMO_SERVICES[0];
 const barbers = DEMO_BARBERS.map((barber, index) => ({
   name: barber.name,
   role: barber.specialisation.split('·')[0].trim(),
-  avatar: `${IMG}/barber-${barber.slug}.webp`,
+  avatar: heritageBarberThumb(barber.slug),
   selected: index === 0,
 }));
 const firstBarber = DEMO_BARBERS[0];
@@ -29,7 +28,7 @@ const dates = bookingPreviewDates();
     <span class="bsw-booking__icon" aria-hidden="true"><CalendarDays size={16} strokeWidth={1.6} /></span>
     <div>
       <p id="bsw-booking-title" class="bsw-booking__title">Client booking flow</p>
-      <p class="bsw-booking__sub">A preview of the CUTSTATE demo booking flow.</p>
+      <p class="bsw-booking__sub">A preview of the Heritage Grooming demo booking flow.</p>
     </div>
   </header>
 
