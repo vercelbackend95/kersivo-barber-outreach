@@ -2,14 +2,14 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { getBlacklineBookingsResponse } from '@/lib/admin/blacklineDemoFixtures/schedule';
-import { BLACKLINE_HERO_SHOWCASE_DAY, blacklineHeroShowcaseNow } from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_DAY, heroShowcaseNow } from '@/lib/admin/heroShowcase';
 import AdminNextAppointmentsStripLive from './AdminNextAppointmentsStripLive';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, REAL_ADMIN_CLOCK, type AdminClock } from './adminClock';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 
 const { bookings } = getBlacklineBookingsResponse(
-  new URLSearchParams({ date: BLACKLINE_HERO_SHOWCASE_DAY, mode: 'day' }),
-  blacklineHeroShowcaseNow(),
+  new URLSearchParams({ date: HERO_SHOWCASE_DAY, mode: 'day' }),
+  heroShowcaseNow(),
 );
 
 function renderStrip(clock: AdminClock) {

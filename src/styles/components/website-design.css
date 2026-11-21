@@ -358,7 +358,7 @@
   }
 }
 
-/* ---------- Phone + CUTSTATE screen ---------- */
+/* ---------- Phone + Heritage Grooming screen ---------- */
 
 .wd-phone {
   position: relative;
@@ -1564,13 +1564,13 @@
 }
 
 .wd-brand__preview[data-palette='heritage'] {
-  --b-bg: #13261d;
-  --b-ink: #f3ecd9;
+  --b-bg: #0f1716;
+  --b-ink: #efe8d8;
   --b-muted: #c4bea6;
-  --b-accent: #c9a45c;
-  --b-on-accent: #13261d;
-  --b-line: rgba(243, 236, 217, 0.16);
-  --b-surface: #1a3227;
+  --b-accent: #c6a766;
+  --b-on-accent: #0f1716;
+  --b-line: rgba(239, 232, 216, 0.16);
+  --b-surface: #293d3c;
 }
 
 .wd-brand__preview[data-palette='clean'] {
@@ -2611,5 +2611,85 @@
     animation: none !important;
     transition-duration: 1ms !important;
     transition-delay: 0ms !important;
+  }
+}
+
+/* The phone and the "designed to book" half show the Heritage Grooming demo shop in its own look:
+   ink green, Caslon-style serif, brass for the thing to tap. */
+.wd-screen,
+.wd-after {
+  --wd-hg-ink: #0f1716;
+  --wd-hg-ivory: #efe8d8;
+  --wd-hg-brass: #c6a766;
+  --wd-hg-brass-hi: #e3cb94;
+  --wd-hg-serif: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+}
+
+.wd-screen {
+  background: var(--wd-hg-ink);
+  color: var(--wd-hg-ivory);
+}
+
+.wd-screen__logo,
+.wd-after__logo {
+  font-family: var(--wd-hg-serif);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.wd-screen__logo {
+  font-size: 1.05rem;
+}
+
+.wd-after__logo {
+  font-size: clamp(13px, 2.4cqi, 22px);
+}
+
+.wd-screen__tagline,
+.wd-after__title {
+  font-family: var(--wd-hg-serif);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.wd-after__title em {
+  color: var(--wd-hg-brass-hi);
+}
+
+.wd-screen__area,
+.wd-after__area {
+  color: var(--wd-hg-brass);
+}
+
+.wd-screen__prices {
+  background: #142120;
+}
+
+.wd-screen__book,
+.wd-after__cta,
+.wd-after__book {
+  background: var(--wd-hg-brass);
+  color: var(--wd-hg-ink);
+}
+
+.wd-after__shade {
+  background: linear-gradient(270deg, #0f1716 36%, rgba(15, 23, 22, 0.55) 62%, rgba(15, 23, 22, 0.1));
+}
+
+.wd-screen__tagline {
+  font-size: 1.3rem;
+}
+
+.wd-after__title {
+  font-size: clamp(22px, 5.6cqi, 50px);
+}
+
+@media (max-width: 639px) {
+  .wd-after__shade {
+    background: linear-gradient(180deg, rgba(15, 23, 22, 0.3), #0f1716 70%);
   }
 }

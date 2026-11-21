@@ -1,12 +1,13 @@
 ---
+import { heritageBarberThumb } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 /**
  * How clients book from the website: five tabs drive an illustrative phone. The phone screens are
  * static markup (no form controls). Auto-advance runs once when the section comes into view and
  * stops on any interaction; a pause control is always available.
  */
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
-import { DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { HERITAGE_DEMO_BOOK_HREF as DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
@@ -14,7 +15,7 @@ import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 const services = DEMO_SERVICES.filter((service) => service.featured).slice(0, 3);
 const chosenService = services.find((service) => service.slug === 'skin-fade') ?? services[0];
 const team = DEMO_BARBERS.slice(0, 3);
-const chosenBarber = team.find((barber) => barber.slug === 'ellis-ward') ?? team[0];
+const chosenBarber = team.find((barber) => barber.slug === 'kit') ?? team[0];
 const days = ['Thu', 'Fri', 'Sat', 'Sun'];
 const times = ['09:30', '10:15', '11:00', '13:45', '15:30', '16:15'];
 
@@ -71,8 +72,8 @@ const steps: Step[] = [
         <span class="bw-phone__tap" aria-hidden="true" data-bw-tap></span>
         <div class="bw-phone__screen">
           <div class="bw-phone__top" aria-hidden="true">
-            <img src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
-            <span class="bw-phone__url">cutstate.co.uk/book</span>
+            <img src="/images/heritage/heritage-lockup.webp" alt="" width="648" height="216" loading="lazy" decoding="async" />
+            <span class="bw-phone__url">heritagegrooming.co.uk/book</span>
           </div>
           <span class="bw-phone__progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
 
@@ -90,7 +91,7 @@ const steps: Step[] = [
             <p class="bw-phone__h">Choose a barber</p>
             {team.map((barber) => (
               <p class:list={['bw-phone__option bw-phone__option--barber', { 'is-picked': barber.slug === chosenBarber.slug }]}>
-                <img src={`/images/barbershop-websites/barber-${barber.slug}.webp`} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                <img src={heritageBarberThumb(barber.slug)} alt="" width="160" height="160" loading="lazy" decoding="async" />
                 <span><strong>{barber.name}</strong><small>{barber.specialisation}</small></span>
               </p>
             ))}

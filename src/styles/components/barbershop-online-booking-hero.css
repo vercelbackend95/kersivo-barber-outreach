@@ -1,9 +1,9 @@
 /* /barbershop-online-booking Section 01: centred headline stack above a tilted tablet that
-   recreates the CUTSTATE demo booking page, lit by KERSIVO red, with connector callouts. */
+   recreates the Heritage Grooming demo booking page, lit by KERSIVO red, with connector callouts. */
 
-/* CUTSTATE body face, uniquely named so it only applies inside the recreated booking screen. */
+/* Demo booking-screen body face, uniquely named so it only applies inside the recreated booking screen. */
 @font-face {
-  font-family: 'BOB Cutstate Body';
+  font-family: 'BOB Demo Body';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -11,7 +11,7 @@
 }
 
 @font-face {
-  font-family: 'BOB Cutstate Body';
+  font-family: 'BOB Demo Body';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -369,7 +369,7 @@
     inset 0 0 0 1px rgb(0 0 0 / 0.6),
     inset 0 10px 24px -18px rgb(0 0 0 / 0.9);
   color: #f4f1ea;
-  font-family: 'BOB Cutstate Body', var(--font-body);
+  font-family: 'BOB Demo Body', var(--font-body);
   font-size: 13.5px;
   line-height: 1.35;
   pointer-events: none;

@@ -26,6 +26,8 @@ export type ProductRailProps = {
   products: CarouselProduct[];
   className?: string;
   productHrefBase?: string;
+  /** Full link per product; wins over productHrefBase (e.g. a static demo shop with ?product=). */
+  productHref?: (product: CarouselProduct) => string;
   previewMode?: boolean;
   variant?: ProductRailVariant;
   showCategory?: boolean;
@@ -89,6 +91,7 @@ export function ProductRail({
   products,
   className,
   productHrefBase,
+  productHref,
   previewMode = false,
   variant = 'legacy',
   showCategory = true,
@@ -202,7 +205,7 @@ export function ProductRail({
           </li>
         ) : (
           displayProducts.map((product, index) => {
-            const href = resolveProductHref(product, previewMode, productHrefBase);
+            const href = productHref && !previewMode ? productHref(product) : resolveProductHref(product, previewMode, productHrefBase);
             const categoryLabel = CATEGORY_LABELS[product.category] ?? 'Styling';
             const image = toStorefrontImage(product.imageUrl, product.name);
 

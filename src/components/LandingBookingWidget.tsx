@@ -13,6 +13,7 @@
  * `InsideSystemLiveWidget`.
  */
 import { useEffect, useRef, useState, type HTMLAttributes } from 'react';
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
 import BookingFlow from '@/components/booking/BookingFlow';
 import type { BookingFlowPresentation } from '@/components/booking/bookingPresentation';
 import { useMaxWidthPassive } from '@/lib/landing/useMaxWidthPassive';
@@ -50,7 +51,7 @@ type WidgetShopDetails = {
 
 type OverlayPhase = 'idle' | 'success' | 'lock';
 
-const BOOK_HREF = '/demo/book';
+const BOOK_HREF = HERITAGE_DEMO_BOOK_HREF;
 const SUCCESS_HOLD_MS = 1400;
 const SUCCESS_HOLD_REDUCED_MS = 200;
 

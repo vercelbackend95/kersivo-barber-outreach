@@ -34,7 +34,7 @@ export const offer = {
     subscribeDirect: `Start Full KERSIVO — £${SAAS_MONTHLY_GBP}/month`,
   },
   demo: {
-    fictional: 'CUTSTATE is a fictional demonstration shop.',
+    fictional: 'Heritage Grooming is a fictional demonstration shop.',
   },
 } as const;
 

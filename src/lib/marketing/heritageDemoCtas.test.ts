@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BLACKLINE_ADMIN_DEMO_PATH, blacklineAdminHref } from '@/lib/admin/demoConfig';
-import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
+import { HERITAGE_SHOP_NAME } from '@/lib/demo/heritage/data';
+import { HERITAGE_LANDING_BOOKING_DATA } from '@/lib/landing/heritageLandingBookingData';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
 import {
   HERITAGE_ADMIN_DASHBOARD_HREF,
+  HERITAGE_ADMIN_DEMO_PATH,
   HERITAGE_DEMO_BOOK_HREF,
   HERITAGE_DEMO_SHOP_HREF,
 } from '@/lib/demo/heritage/links';
@@ -26,17 +26,17 @@ function ctaHrefExpr(source: string, label: string): string | undefined {
   return match?.[1];
 }
 
-describe('marketing CTAs route to the live BLACKLINE demo', () => {
-  it('uses the canonical BLACKLINE routes', () => {
-    expect(blacklineAdminHref('bookings_dashboard')).toBe(`${BLACKLINE_ADMIN_DEMO_PATH}?section=bookings_dashboard`);
-    expect(BLACKLINE_ADMIN_DEMO_PATH).toBe('/demo/admin');
-    expect(DEMO_BOOK_HREF).toBe('/demo/book');
-    expect(DEMO_SHOP_HREF).toBe('/demo/shop');
+describe('marketing CTAs route to the live Heritage Grooming demo', () => {
+  it('uses the canonical Heritage Grooming routes', () => {
+    expect(heritageAdminHref('bookings_dashboard')).toBe(`${HERITAGE_ADMIN_DEMO_PATH}?section=bookings_dashboard`);
+    expect(HERITAGE_ADMIN_DEMO_PATH).toBe('/demo/heritage-grooming/admin');
+    expect(HERITAGE_DEMO_BOOK_HREF).toBe('/demo/heritage-grooming/services.html#book');
+    expect(HERITAGE_DEMO_SHOP_HREF).toBe('/demo/heritage-grooming/shop.html');
   });
 
   for (const [page, source] of Object.entries(SOURCES)) {
-    it(`${page}: admin, booking and retail CTAs open BLACKLINE`, () => {
-      expect(ctaHrefExpr(source, 'Explore the admin system')).toBe("blacklineAdminHref('bookings_dashboard')");
+    it(`${page}: admin, booking and retail CTAs open Heritage Grooming`, () => {
+      expect(ctaHrefExpr(source, 'Explore the admin system')).toBe("heritageAdminHref('bookings_dashboard')");
       expect(ctaHrefExpr(source, 'Try the booking experience')).toBe('DEMO_BOOK_HREF');
       expect(ctaHrefExpr(source, 'Explore the retail shop')).toBe('DEMO_SHOP_HREF');
       expect(source).not.toContain('adminDemoHref');
@@ -64,30 +64,29 @@ describe('marketing CTAs route to the live BLACKLINE demo', () => {
     }
   });
 
-  it('routes Explore reports to the BLACKLINE reports section', () => {
+  it('routes Explore reports to the Heritage Grooming reports section', () => {
     expect(FEATURE261_MONETIZATION_ROW.ctaLabel).toBe('Explore reports');
-    expect(FEATURE261_MONETIZATION_ROW.ctaHref).toBe('/demo/admin?section=bookings_reports');
+    expect(FEATURE261_MONETIZATION_ROW.ctaHref).toBe('/demo/heritage-grooming/admin?section=bookings_reports');
     expect(resolveAdminSpaSection('bookings_reports')).toBe('bookings_reports');
   });
 
-  it('presents the shared marketing demo as CUTSTATE BARBERS', () => {
+  it('presents the shared marketing demo as Heritage Grooming', () => {
     const preview = SOURCES.homepage;
     const deferred = read('components/landing/DeferredWidget.tsx');
     const retailRail = read('components/landing/RetailDemoRail.tsx');
-    expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
-    expect(preview).toContain('data-sf-theme="blackline"');
+    expect(HERITAGE_SHOP_NAME).toBe('Heritage Grooming');
     expect(deferred).toContain("import('@/components/landing/RetailDemoRail')");
-    expect(retailRail).toContain('fallbackBrandMark="CS"');
+    expect(retailRail).toContain('fallbackBrandMark="HG"');
     expect(retailRail).toContain('shopName={DEMO_SHOP_NAME}');
     expect(retailRail).toContain('ariaLabel={`${DEMO_SHOP_NAME} products`}');
-    expect(preview).not.toMatch(/BLACKLINE"|Blackline products|fallbackBrandMark="BL"/);
-    expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.eyebrow).toBe('Cutstate Barbers');
-    expect(BLACKLINE_LANDING_BOOKING_DATA.presentation.confirmCtas?.[0]?.label).toBe('Back to Cutstate');
+    expect(preview).not.toMatch(/BLACKLINE"|Blackline products|Cutstate|CUTSTATE|fallbackBrandMark="(BL|CS)"/);
+    expect(HERITAGE_LANDING_BOOKING_DATA.presentation.eyebrow).toBe('Heritage Grooming');
+    expect(HERITAGE_LANDING_BOOKING_DATA.presentation.confirmCtas?.[0]?.label).toBe('Back to Heritage Grooming');
   });
 
-  it('routes the homepage live admin widget to the BLACKLINE bookings dashboard', () => {
+  it('routes the homepage live admin widget to the Heritage Grooming bookings dashboard', () => {
     const widget = read('components/InsideSystemLiveWidget.tsx');
-    expect(widget).toContain("const ADMIN_DEMO_HREF = blacklineAdminHref('bookings_dashboard');");
+    expect(widget).toContain("const ADMIN_DEMO_HREF = heritageAdminHref('bookings_dashboard');");
     expect(widget).not.toContain('adminDemoHref');
     expect(resolveAdminSpaSection('bookings_dashboard')).toBe('bookings_dashboard');
   });

@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { DEMO_BARBERS, demoBarberBookingHref, resolveDemoBarberSlug } from '@/lib/demo/barbers';
-import { DEMO_HOME_HREF } from '@/lib/demo/nav';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
+import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
+import { HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
@@ -22,11 +22,8 @@ const text = (source: string) =>
   source.replace(/<[^>]+>/g, ' ').replace(/\{[^}]*\}/g, ' ').replace(/\s+/g, ' ').trim();
 const constant = (name: string) => frontmatter.match(new RegExp(`const ${name} = '([^']+)'`))?.[1];
 const anchors = () => markup.match(/<a\b[\s\S]*?<\/a>/g) ?? [];
-const demoRouteExists = (href: string) => {
-  const path = href.split('?')[0].replace(/^\/demo\/?/, '');
-  const base = join(root, 'src/pages/demo', path);
-  return existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro'));
-};
+/** Heritage Grooming is a static site under public/demo/heritage-grooming. */
+const demoRouteExists = (href: string) => existsSync(join(root, 'public', href.split(/[?#]/)[0]));
 
 describe('/barbershop-websites — section 04 brand to booking', () => {
   it('renders after section 03 and before the footer without adding an H1', () => {
@@ -44,7 +41,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     const copy = text(markup);
     expect(copy).toMatch(/^The client journey/i);
     expect(copy).toContain(
-      'See how the fictional CUTSTATE shop example takes a client from its homepage to choosing a barber and booking an appointment.',
+      'See how the fictional Heritage Grooming shop example takes a client from its homepage to choosing a barber and booking an appointment.',
     );
     expect(markup.indexOf('<h2')).toBeLessThan(markup.indexOf('bsw-b2b__moments'));
   });
@@ -62,7 +59,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(phones).toHaveLength(3);
     for (const phone of phones) {
       expect(phone).toMatch(/role="img"/);
-      expect(phone).toMatch(/aria-label=[{"`]+Illustrative preview of the CUTSTATE demo/);
+      expect(phone).toMatch(/aria-label=[{"`]+Illustrative preview of the Heritage Grooming demo/);
       expect(phone).toContain('aria-hidden="true"');
       expect(phone).not.toMatch(/<a\b|<button\b|href=/);
     }
@@ -75,7 +72,7 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(cta).toContain('href={DEMO_HOME_HREF}');
     expect(cta).toContain('class="btn btn--primary btn--lg bsw-b2b__cta"');
     expect(text(cta)).toBe('Explore the working demo');
-    expect(DEMO_HOME_HREF).toBe('/demo');
+    expect(DEMO_HOME_HREF).toBe('/demo/heritage-grooming/index.html');
     expect(demoRouteExists(DEMO_HOME_HREF)).toBe(true);
     expect(markup).not.toMatch(/Meet the (BLACKLINE|CUTSTATE) barbers|Start a demo booking/);
   });
@@ -107,29 +104,29 @@ describe('/barbershop-websites — section 04 brand to booking', () => {
     expect(markup).not.toMatch(/onclick|addEventListener|gtag\(|checkout|starter_signup/i);
   });
 
-  it('shows the approved CUTSTATE logo in every phone preview instead of a recreated wordmark', () => {
+  it('shows the Heritage Grooming lockup in every phone preview instead of a recreated wordmark', () => {
     const phones = markup.match(/<div\s+class="bsw-b2b-phone"[\s\S]*?<div class="bsw-b2b-moment__caption">/g) ?? [];
     expect(phones).toHaveLength(3);
     for (const phone of phones) {
       const logo = phone.match(/<img\s+class="bsw-b2b-lockup"[\s\S]*?\/>/)?.[0] ?? '';
-      expect(logo).toContain('src={CUTSTATE_LOGO_SRC}');
-      expect(logo).toContain('width={CUTSTATE_LOGO_WIDTH}');
-      expect(logo).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+      expect(logo).toContain('src={HERITAGE_LOCKUP.src}');
+      expect(logo).toContain('width={HERITAGE_LOCKUP.width}');
+      expect(logo).toContain('height={HERITAGE_LOCKUP.height}');
       expect(phone).not.toMatch(/bsw-b2b-lockup__(name|sub)/);
     }
-    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
-    expect(existsSync(join(root, 'public', CUTSTATE_LOGO_SRC))).toBe(true);
+    expect(existsSync(join(root, 'public', HERITAGE_LOCKUP.src))).toBe(true);
     expect(phones[2]).toContain('<span class="bsw-b2b-phone__eyebrow">{DEMO_SHOP_NAME}</span>');
-    expect(DEMO_SHOP_NAME).toBe('Cutstate Barbers');
+    expect(DEMO_SHOP_NAME).toBe('Heritage Grooming');
+    expect(text(markup)).not.toMatch(/cutstate/i);
     expect(text(markup)).not.toMatch(/blackline/i);
     expect(brandCss).not.toMatch(/bsw-shop-rule|#d72638|bsw-b2b-lockup__/i);
     expect(brandCss).toContain('--bsw-shop-accent: #315ef5;');
   });
 
-  it('discloses that CUTSTATE is fictional and demo bookings are not real', () => {
+  it('discloses that Heritage Grooming is fictional and demo bookings are not real', () => {
     const disclosure = text(markup.match(/<p class="bsw-b2b__disclosure">[\s\S]*?<\/p>/)?.[0] ?? '');
     expect(disclosure).toBe(
-      'CUTSTATE BARBERS is a fictional demo shop. These previews are illustrative. Demo bookings stay in your browser session — no real appointment is created and no payment is taken.',
+      'Heritage Grooming is a fictional demo shop. These previews are illustrative. Demo bookings stay in your browser session — no real appointment is created and no payment is taken.',
     );
   });
 

@@ -147,7 +147,7 @@ export function buildBarbershopWebsitesJsonLd(): Record<string, unknown> {
     hasPart: { '@id': `${pageUrl}#faq` },
     primaryImageOfPage: {
       '@type': 'ImageObject',
-      url: `${siteUrl}/images/barbershop-websites/site-hero-1100.webp`,
+      url: `${siteUrl}/demo/heritage-grooming/assets/img/chairs-1600.webp`,
     },
     breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_WEBSITES_BREADCRUMBS, { siteUrl, withContext: false }),
   };

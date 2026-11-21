@@ -11,7 +11,7 @@ const freshaHeroSource = read('src/components/freshaAlternative/FreshaHero.astro
 const freshaCss = read('src/styles/components/fresha-alternative.css');
 const homepageHeroSource = read('src/components/homepage/HomepageHero.astro');
 const homepageHeroCss = read('src/styles/components/homepage-hero.css');
-const adminPage = read('src/pages/demo/admin.astro');
+const adminPage = read('src/components/admin/AdminHeroEmbedStyles.astro');
 
 const frameMarkup = showcaseSource.slice(showcaseSource.indexOf('<iframe'), showcaseSource.indexOf('</iframe>'));
 
@@ -45,7 +45,7 @@ describe('shared hero dashboard showcase: one implementation for every hero', ()
   });
 
   it('shows the real dashboard route with its caption and accessible title', () => {
-    expect(frameMarkup).toContain('data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"');
+    expect(frameMarkup).toContain('data-deferred-src="/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard"');
     expect(frameMarkup).toContain('title="Interactive KERSIVO owner dashboard demo"');
     expect(showcaseSource).toContain(
       'This is the real KERSIVO demo dashboard. Click around — bookings, team, reports and more.',
@@ -73,7 +73,7 @@ describe('hero dashboard progressive loading', () => {
     expect(showcaseCss).not.toMatch(/product-poster|object-fit: none/);
     expect(existsSync(join(process.cwd(), 'public/images/fresha-alternative'))).toBe(false);
     expect(showcaseSource).toMatch(
-      /<noscript>\s*<iframe\s+src="\/demo\/admin\?embed=hero&section=bookings_dashboard"/,
+      /<noscript>\s*<iframe\s+src="\/demo\/heritage-grooming\/admin\?embed=hero&section=bookings_dashboard"/,
     );
   });
 

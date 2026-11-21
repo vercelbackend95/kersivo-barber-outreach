@@ -4,7 +4,7 @@
  * Intent split: /barbershop-websites answers "do I need a website and what should it include";
  * this page answers "what makes a barbershop website look professional and convert": layout,
  * visual hierarchy, mobile UX, branding and photography. Do not repeat pillar content here.
- * British English. No invented numbers, reviews or customers. CUTSTATE is the fictional demo shop.
+ * British English. No invented numbers, reviews or customers. Heritage Grooming is the fictional demo shop.
  */
 
 export const WD_HERO_EYEBROW = 'Barbershop website design guide';

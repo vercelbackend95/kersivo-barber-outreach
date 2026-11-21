@@ -1,6 +1,6 @@
 ---
 /**
- * A KERSIVO barbershop website in miniature, built from the CUTSTATE demo shop's own photos.
+ * A KERSIVO barbershop website in miniature, built from the Heritage Grooming demo shop's own photos.
  * Sized with container units so it scales as one picture. Regions carry data-nc-part so the
  * anatomy section can point at them. Purely illustrative: hidden from assistive tech, the
  * surrounding section describes it in text.
@@ -16,22 +16,24 @@ interface Props {
 const { priority = false, class: className } = Astro.props;
 const loading = priority ? 'eager' : 'lazy';
 
-const work = ['fade', 'beard', 'hairline', 'scissor-cut'];
+// Heritage Grooming, the live demo shop: its own photos, barbers, prices and shelf.
+const IMG = '/demo/heritage-grooming/assets/img';
+const work = ['work-arthur-fade', 'work-rafi-beard', 'work-lineup-mirror', 'work-kit-scissors'];
 const barbers = [
-  { name: 'Marcus', file: 'marcus-bell', role: 'Fades' },
-  { name: 'Ellis', file: 'ellis-ward', role: 'Beards' },
-  { name: 'Noah', file: 'noah-reid', role: 'Scissor cuts' },
+  { name: 'Kit', file: 'work-kit-scissors', role: 'Skin fades' },
+  { name: 'Rafi', file: 'work-rafi-neckline', role: 'Hot-towel shaves' },
+  { name: 'Arthur', file: 'work-arthur-fade', role: 'Scissor cuts' },
 ];
 const services = [
-  ['Skin fade', '45 min', '£26'],
-  ['Cut & beard', '60 min', '£34'],
-  ['Beard sculpt', '30 min', '£16'],
+  ['Skin fade', '45 min', '£29'],
+  ['Haircut and beard', '60 min', '£38'],
+  ['Beard trim', '20 min', '£15'],
 ];
 const slots = ['10:15', '11:00', '12:30', '14:45'];
 const products = [
-  ['ironclad-pomade', 'Pomade', '£14'],
-  ['beard-oil', 'Beard oil', '£12'],
-  ['matte-clay', 'Matte clay', '£13'],
+  ['oakmoss-firm-pomade', 'Pomade', '£18'],
+  ['barrow-beard-oil', 'Beard oil', '£20'],
+  ['kestrel-matte-clay', 'Matte clay', '£19'],
 ];
 ---
 
@@ -47,23 +49,23 @@ const products = [
   <div class="nc-site__viewport">
     <div class="nc-site__page" data-nc-page>
       <header class="nc-site__nav">
-        <img class="nc-site__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading={loading} decoding="async" />
+        <img class="nc-site__logo" src="/images/heritage/heritage-lockup.webp" alt="" width="648" height="216" loading={loading} decoding="async" />
         <span class="nc-site__links"><span>Work</span><span>Barbers</span><span>Prices</span><span>Shop</span></span>
         <span class="nc-site__btn">Book</span>
       </header>
 
       <section class="nc-site__hero">
         <div class="nc-site__hero-copy">
-          <span class="nc-site__eyebrow">Cutstate Barbers</span>
-          <span class="nc-site__display">Sharp cuts.<br />Booked in<br />seconds.</span>
-          <span class="nc-site__hero-cta"><span class="nc-site__btn nc-site__btn--red">Book a cut</span><span class="nc-site__ghost">See our work</span></span>
+          <span class="nc-site__eyebrow">Heritage Grooming</span>
+          <span class="nc-site__display">A barbershop<br />that takes<br />its time.</span>
+          <span class="nc-site__hero-cta"><span class="nc-site__btn nc-site__btn--red">Book a chair</span><span class="nc-site__ghost">See the work</span></span>
         </div>
         <img
           class="nc-site__hero-img"
-          src="/images/nearcut/site-hero.webp"
+          src={`${IMG}/chair-960.webp`}
           alt=""
-          width="1200"
-          height="1800"
+          width="960"
+          height="1192"
           loading={loading}
           fetchpriority={priority ? 'high' : 'auto'}
           decoding="async"
@@ -73,7 +75,7 @@ const products = [
       <section class="nc-site__block" data-nc-part="work">
         <span class="nc-site__h">Our work</span>
         <div class="nc-site__work">
-          {work.map((name) => <img src={`/images/nearcut/work-${name}.webp`} alt="" width="480" height="480" loading="lazy" decoding="async" />)}
+          {work.map((name) => <img src={`${IMG}/${name}-500.webp`} alt="" width="480" height="480" style="object-fit: cover" loading="lazy" decoding="async" />)}
         </div>
       </section>
 
@@ -82,7 +84,7 @@ const products = [
         <div class="nc-site__team">
           {barbers.map((b) => (
             <span class="nc-site__barber">
-              <img src={`/images/nearcut/barber-${b.file}.webp`} alt="" width="320" height="400" loading="lazy" decoding="async" />
+              <img src={`${IMG}/${b.file}-500.webp`} alt="" width="320" height="400" style="object-fit: cover" loading="lazy" decoding="async" />
               <strong>{b.name}</strong>
               <span>{b.role}</span>
             </span>
@@ -102,7 +104,7 @@ const products = [
       <section class="nc-site__block" data-nc-part="book">
         <span class="nc-site__h">Book online</span>
         <div class="nc-site__book">
-          <span class="nc-site__chips"><span class="is-on">Skin fade</span><span>Marcus</span><span>Tomorrow</span></span>
+          <span class="nc-site__chips"><span class="is-on">Skin fade</span><span>Kit</span><span>Tomorrow</span></span>
           <span class="nc-site__slots">{slots.map((s, i) => <span class:list={[{ 'is-on': i === 1 }]}>{s}</span>)}</span>
           <span class="nc-site__btn nc-site__btn--red nc-site__btn--wide">Confirm with £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</span>
         </div>
@@ -113,7 +115,7 @@ const products = [
         <div class="nc-site__products">
           {products.map(([file, name, price]) => (
             <span class="nc-site__product">
-              <img src={`/images/nearcut/product-${file}.webp`} alt="" width="320" height="320" loading="lazy" decoding="async" />
+              <img src={`${IMG}/featured/${file}.webp`} alt="" width="320" height="320" loading="lazy" decoding="async" />
               <strong>{name}</strong>
               <span>{price}</span>
             </span>

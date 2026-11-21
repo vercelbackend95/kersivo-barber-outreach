@@ -1,19 +1,18 @@
 /**
  * Landing "Inside the System" live timeline data.
  *
- * Uses the shared admin-demo day schedule (deterministic 28-day cycle + weekday
- * density, Europe/London, no Neon). Recomputed from the current date on every call.
+ * Heritage Grooming, the live demo shop: its barbers and the same deterministic day the
+ * Heritage owner dashboard shows (Europe/London, no Neon). The shop is closed on Sundays and
+ * Mondays, so on those days the widget shows the next day it trades. Recomputed on every call.
  */
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 import type { TimelineBooking } from '@/components/admin/TodayTimeline';
-import { getSharedDemoDayBookings } from '@/lib/admin/demoFixtures/bookingCalendar';
-import {
-  DEMO_DAY_BARBERS,
-  DEMO_DAY_TZ,
-  demoDaySelectedDate,
-  type DemoDayBarber,
-} from '@/lib/admin/demoFixtures/daySchedule';
+import { DEMO_DAY_TZ } from '@/lib/admin/demoFixtures/daySchedule';
+import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
+import { heritageTradingWindow } from '@/lib/admin/heritageDemoFixtures/catalog';
+import { getHeritageBookingsForDayKey } from '@/lib/admin/heritageDemoFixtures/schedule';
+import { HERITAGE_BARBERS } from '@/lib/demo/heritage/data';
 import { landingDemoClientAvatarForSeed } from '@/lib/landing/landingDemoAssets';
 import { LANDING_TIMELINE_SCROLL_FOCUS } from '@/lib/landing/liveTimelineScroll';
 
@@ -31,11 +30,24 @@ type LandingTimeBlock = {
   endAt: string;
 };
 
-const FIXTURE_BARBERS: LandingBarber[] = DEMO_DAY_BARBERS.map((barber: DemoDayBarber) => ({
+const FIXTURE_BARBERS: LandingBarber[] = HERITAGE_BARBERS.map((barber) => ({
   id: barber.id,
   name: barber.name,
-  avatarUrl: barber.avatarUrl,
+  avatarUrl: barber.avatarSrc,
 }));
+
+/** Today in London, or the next day Heritage Grooming is open. */
+function heritageTradingDayKey(now: Date): string {
+  const today = blacklineDayKey(now);
+  let dayKey = today;
+  for (let offset = 0; offset < 7; offset += 1) {
+    const candidate = new Date(`${today}T12:00:00.000Z`);
+    candidate.setUTCDate(candidate.getUTCDate() + offset);
+    dayKey = candidate.toISOString().slice(0, 10);
+    if (heritageTradingWindow(dayKey)) return dayKey;
+  }
+  return dayKey;
+}
 
 function timeLabelToMinutes(label: string): number | null {
   const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(label.trim());
@@ -129,11 +141,11 @@ export function getLandingTimelineData(
   timeBlocks: LandingTimeBlock[];
   selectedDate: string;
 } {
-  // Always use fixture barbers — never Neon — so landing matches /admin-demo.
+  // Always use fixture barbers — never Neon — so landing matches the Heritage Grooming dashboard.
   const barbers = FIXTURE_BARBERS;
-  const selectedDate = demoDaySelectedDate(now);
+  const selectedDate = heritageTradingDayKey(now);
   const bookings: TimelineBooking[] = ensureLandingFocusBooking(
-    getSharedDemoDayBookings(now).map((booking) => ({
+    getHeritageBookingsForDayKey(selectedDate, { now }).map((booking) => ({
       id: booking.id,
       fullName: booking.fullName,
       email: booking.email,

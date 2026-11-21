@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { HERITAGE_DEMO_SITE_HREF } from '@/lib/demo/heritage/links';
 import { createPortal } from 'react-dom';
 import { AccountCircle, Ban, Calendar, Globe, Lock, LogOut, Package, Sparkles, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
@@ -67,8 +68,8 @@ export default function AdminSidebarProfile({
   suppressAuthLock = false,
   conversionAccountMenu = false,
   createShopHref = '/admin/onboarding',
-  previewWebsiteHref = '/demo',
-  previewWebsiteLabel = 'CUTSTATE',
+  previewWebsiteHref = HERITAGE_DEMO_SITE_HREF,
+  previewWebsiteLabel = 'Heritage Grooming',
   kersivoHomeHref = '/',
   productState = null,
   onLockedFeature,

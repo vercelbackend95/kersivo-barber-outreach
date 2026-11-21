@@ -29,7 +29,7 @@ describe('preview sidebar account menu', () => {
     expect(source).toContain('{!isPreview ? (');
     expect(source).toContain('Launch My Barbershop');
     expect(source).toContain('Create your own barbershop');
-    expect(source).toContain("previewWebsiteLabel = 'CUTSTATE'");
+    expect(source).toContain("previewWebsiteLabel = 'Heritage Grooming'");
     expect(source).toContain('Preview {previewWebsiteLabel} website');
     expect(source).toContain('Workspace setup');
     expect(source).toContain('Retail onboarding');

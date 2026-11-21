@@ -69,16 +69,16 @@ describe('Barbershop online booking page — Section 05 entry points', () => {
     expect(css).not.toContain('bob-ep-dest');
   });
 
-  it('uses required source visuals: Cutstate demo, Google mark, Instagram profile, QR', () => {
+  it('uses required source visuals: Heritage Grooming demo, Google mark, Instagram profile, QR', () => {
     expect(markup).toContain('bob-ep-viz--website');
-    expect(helper).toContain('/demo/heroimg.webp');
-    expect(helper).toContain('/demo/cutstate-logo.png');
+    expect(helper).toContain('/demo/heritage-grooming/assets/img/chairs-960.webp');
+    expect(helper).toContain('/images/heritage/heritage-lockup.webp');
     expect(markup).toContain('bob-ep-viz--google');
     expect(helper).toContain('/images/starter/google-g-192.webp');
     expect(markup).toContain('bob-ep-viz--instagram');
     expect(markup).toContain('bob-ep-ig__book');
     expect(markup).toContain('bob-ep-ig__grid');
-    expect(helper).toContain('@cutstatebarbers');
+    expect(helper).toContain('@heritagegrooming');
     expect(helper).not.toContain('barber-at-work');
     expect(markup).toContain('bob-ep-viz--qr');
     expect(helper).toContain('kersivo-book-now-qr-glass-sign-640.webp');

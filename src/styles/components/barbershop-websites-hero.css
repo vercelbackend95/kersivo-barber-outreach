@@ -1521,3 +1521,51 @@
     display: inline-flex;
   }
 }
+
+/* Heritage Grooming identity inside the preview: ink green ground, Caslon-style serif, brass actions. */
+.bsw-site {
+  --bsw-site-bg: #0f1716;
+  --bsw-hg-ivory: #efe8d8;
+  --bsw-hg-brass: #c6a766;
+  --bsw-hg-brass-hi: #e3cb94;
+}
+
+.bsw-site__headline {
+  color: var(--bsw-hg-ivory);
+  font-family: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 2.6vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.bsw-site__headline .bsw-accent {
+  color: var(--bsw-hg-brass-hi);
+}
+
+.bsw-site__eyebrow {
+  color: var(--bsw-hg-brass);
+}
+
+.bsw-site__lead {
+  color: color-mix(in srgb, var(--bsw-hg-ivory) 74%, transparent);
+}
+
+.bsw-site__book {
+  border-color: color-mix(in srgb, var(--bsw-hg-brass) 70%, transparent);
+  color: var(--bsw-hg-brass-hi);
+}
+
+.bsw-site__book:hover {
+  background: color-mix(in srgb, var(--bsw-hg-brass) 14%, transparent);
+}
+
+.bsw-site__cta {
+  background: var(--bsw-hg-brass);
+  color: #0f1716;
+}
+
+.bsw-site__cta:hover {
+  background: var(--bsw-hg-brass-hi);
+}

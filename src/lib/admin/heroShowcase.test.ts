@@ -1,10 +1,10 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resolveBlacklineDemoFixture } from './blacklineDemoFixtures/router';
+import { resolveHeritageDemoFixture } from './heritageDemoFixtures/router';
 import {
-  BLACKLINE_HERO_SHOWCASE_DAY,
-  BLACKLINE_HERO_SHOWCASE_NOW_ISO,
-  blacklineHeroShowcaseNow,
+  HERO_SHOWCASE_DAY,
+  HERO_SHOWCASE_NOW_ISO,
+  heroShowcaseNow,
   isHeroShowcaseUrl,
 } from './heroShowcase';
 
@@ -27,16 +27,16 @@ const SYSTEM_TIMES = [
 ];
 
 async function showcaseSnapshot() {
-  const now = blacklineHeroShowcaseNow();
-  const params = new URLSearchParams({ date: BLACKLINE_HERO_SHOWCASE_DAY, mode: 'day' });
-  const result = await resolveBlacklineDemoFixture('/api/demo/admin/bookings', params, 'GET', undefined, { now });
+  const now = heroShowcaseNow();
+  const params = new URLSearchParams({ date: HERO_SHOWCASE_DAY, mode: 'day' });
+  const result = await resolveHeritageDemoFixture('/api/demo/heritage/admin/bookings', params, 'GET', undefined, { now });
   const rows = (result?.body as { bookings: Row[] }).bookings;
   const upcoming = rows
     .filter((row) => row.status === 'BOOKED' && new Date(row.endAt).getTime() > now.getTime())
     .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-  const reports = await resolveBlacklineDemoFixture('/api/demo/admin/reports', new URLSearchParams({ range: '7d' }), 'GET', undefined, { now });
-  const clients = await resolveBlacklineDemoFixture('/api/demo/admin/clients', new URLSearchParams(), 'GET', undefined, { now });
-  const sales = await resolveBlacklineDemoFixture('/api/demo/admin/shop/sales', new URLSearchParams(), 'GET', undefined, { now });
+  const reports = await resolveHeritageDemoFixture('/api/demo/heritage/admin/reports', new URLSearchParams({ range: '7d' }), 'GET', undefined, { now });
+  const clients = await resolveHeritageDemoFixture('/api/demo/heritage/admin/clients', new URLSearchParams(), 'GET', undefined, { now });
+  const sales = await resolveHeritageDemoFixture('/api/demo/heritage/admin/shop/sales', new URLSearchParams(), 'GET', undefined, { now });
   return {
     rows,
     upcoming,
@@ -48,25 +48,25 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('BLACKLINE hero showcase clock', () => {
+describe('Heritage Grooming hero showcase clock', () => {
   it('is a busy weekday afternoon in London', () => {
-    const now = blacklineHeroShowcaseNow();
-    expect(now.toISOString()).toBe(BLACKLINE_HERO_SHOWCASE_NOW_ISO);
-    expect(formatInTimeZone(now, 'Europe/London', 'yyyy-MM-dd')).toBe(BLACKLINE_HERO_SHOWCASE_DAY);
-    expect(formatInTimeZone(now, 'Europe/London', 'EEEE HH:mm')).toBe('Tuesday 15:25');
+    const now = heroShowcaseNow();
+    expect(now.toISOString()).toBe(HERO_SHOWCASE_NOW_ISO);
+    expect(formatInTimeZone(now, 'Europe/London', 'yyyy-MM-dd')).toBe(HERO_SHOWCASE_DAY);
+    expect(formatInTimeZone(now, 'Europe/London', 'EEEE HH:mm')).toBe('Thursday 15:25');
   });
 
-  it('shows 21 fixture bookings with Noah Reid · Skin Fade next, without a synthetic live row', async () => {
+  it('shows 47 fixture bookings with Rafi Mendes · The Heritage next, without a synthetic live row', async () => {
     const { rows, upcoming } = await showcaseSnapshot();
-    expect(rows).toHaveLength(21);
+    expect(rows).toHaveLength(47);
     expect(rows.some((row) => row.id.endsWith('-live'))).toBe(false);
-    expect(upcoming[0]).toMatchObject({ barber: { name: 'Noah Reid' }, service: { name: 'Skin Fade' } });
-    expect(formatInTimeZone(new Date(upcoming[0]!.startAt), 'Europe/London', 'HH:mm')).toBe('15:15');
+    expect(upcoming[0]).toMatchObject({ barber: { name: 'Rafi Mendes' }, service: { name: 'The Heritage' } });
+    expect(formatInTimeZone(new Date(upcoming[0]!.startAt), 'Europe/London', 'HH:mm')).toBe('14:30');
     const counts = rows.reduce<Record<string, number>>((acc, row) => {
       acc[row.status] = (acc[row.status] ?? 0) + 1;
       return acc;
     }, {});
-    expect(counts).toEqual({ COMPLETED: 10, CANCELLED_BY_CLIENT: 1, NO_SHOW: 1, BOOKED: 9 });
+    expect(counts).toEqual({ COMPLETED: 30, CANCELLED_BY_CLIENT: 1, NO_SHOW: 1, BOOKED: 15 });
   });
 
   it('produces identical bookings, reports, clients and sales whatever the real system time is', async () => {
@@ -83,15 +83,16 @@ describe('BLACKLINE hero showcase clock', () => {
   it('leaves the normal demo on the real clock', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-06-18T09:40:00.000Z'));
-    const result = await resolveBlacklineDemoFixture('/api/demo/admin/bookings', new URLSearchParams({ mode: 'day' }));
+    const result = await resolveHeritageDemoFixture('/api/demo/heritage/admin/bookings', new URLSearchParams({ mode: 'day' }));
     const rows = (result?.body as { bookings: Row[] }).bookings;
     expect(rows.length).toBeGreaterThan(0);
     expect(formatInTimeZone(new Date(rows[0]!.startAt), 'Europe/London', 'yyyy-MM-dd')).toBe('2026-06-18');
   });
 
-  it('recognises only the BLACKLINE hero embed URL', () => {
-    expect(isHeroShowcaseUrl(new URL('https://x.test/demo/admin?embed=hero&section=bookings_dashboard'))).toBe(true);
-    expect(isHeroShowcaseUrl(new URL('https://x.test/demo/admin?section=bookings_dashboard'))).toBe(false);
+  it('recognises only the Heritage Grooming hero embed URL', () => {
+    expect(isHeroShowcaseUrl(new URL('https://x.test/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard'))).toBe(true);
+    expect(isHeroShowcaseUrl(new URL('https://x.test/demo/heritage-grooming/admin?section=bookings_dashboard'))).toBe(false);
+    expect(isHeroShowcaseUrl(new URL('https://x.test/demo/admin?embed=hero&section=bookings_dashboard'))).toBe(false);
     expect(isHeroShowcaseUrl(new URL('https://x.test/admin-demo?embed=hero'))).toBe(false);
     expect(isHeroShowcaseUrl(new URL('https://x.test/admin?embed=hero'))).toBe(false);
   });

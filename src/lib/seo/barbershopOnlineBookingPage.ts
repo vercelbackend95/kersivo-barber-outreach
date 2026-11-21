@@ -1,3 +1,4 @@
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { buildBreadcrumbListJsonLd, BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
@@ -14,7 +15,7 @@ export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'See How Online Booking Works f
 /** Published booking guide, with reciprocal pillar links and canonical WebPage schema. */
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE = true;
 
-export const BARBERSHOP_ONLINE_BOOKING_DEMO_HREF = '/demo/book';
+export const BARBERSHOP_ONLINE_BOOKING_DEMO_HREF = HERITAGE_DEMO_BOOK_HREF;
 
 /**
  * Hero secondary action: jump to Section 07 plan choice on this page.

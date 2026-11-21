@@ -35,9 +35,9 @@ async function loadWidget(kind: DeferredWidgetKind): Promise<ReactNode> {
     return <InsideSystemLiveWidget forcePassive />;
   }
   if (kind === 'booking') {
-    const [{ LandingBookingWidget }, { BLACKLINE_LANDING_BOOKING_DATA: booking }] = await Promise.all([
+    const [{ LandingBookingWidget }, { HERITAGE_LANDING_BOOKING_DATA: booking }] = await Promise.all([
       import('@/components/LandingBookingWidget'),
-      import('@/lib/landing/blacklineLandingBookingData'),
+      import('@/lib/landing/heritageLandingBookingData'),
     ]);
     return (
       <LandingBookingWidget

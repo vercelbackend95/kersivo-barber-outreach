@@ -1,6 +1,6 @@
 ---
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
-import { DEMO_BOOK_HREF, DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
+import { HERITAGE_DEMO_BOOK_HREF as DEMO_BOOK_HREF, HERITAGE_DEMO_SHOP_HREF as DEMO_SHOP_HREF } from '@/lib/demo/heritage/links';
 import { DeferredWidget } from '@/components/landing/DeferredWidget';
 import Feature261MonetizationRow from '@/components/feature261/Feature261MonetizationRow.astro';
 import Feature261MoreIncluded from '@/components/feature261/Feature261MoreIncluded.astro';
@@ -49,7 +49,7 @@ const DEFAULT_ROWS: LandingDemoPreviewRow[] = [
     description:
       'Manage appointments, clients, barbers, services, working hours and daily activity from one central dashboard.',
     ctaLabel: 'Explore the admin system',
-    ctaHref: blacklineAdminHref('bookings_dashboard'),
+    ctaHref: heritageAdminHref('bookings_dashboard'),
     ctaSameTab: false,
     ctaTrack: 'view_live_demo_click',
     media: 'widget',
@@ -118,17 +118,17 @@ const {
               <div class="sf-shop sf-shop--blackline" data-sf-theme="blackline">
                 <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="retail" />
               </div>
-              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
+              <p class="landing-demo-still__caption">Heritage Grooming is a fictional demonstration shop.</p>
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
               <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="admin" />
-              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
+              <p class="landing-demo-still__caption">Heritage Grooming is a fictional demonstration shop.</p>
             </div>
           ) : (
             <div class="feature261__media feature261__media--widget">
               <DeferredWidget client:visible={{ rootMargin: '200px' }} kind="booking" />
-              <p class="landing-demo-still__caption">CUTSTATE is a fictional demonstration shop.</p>
+              <p class="landing-demo-still__caption">Heritage Grooming is a fictional demonstration shop.</p>
             </div>
           )}
 
@@ -156,7 +156,7 @@ const {
     {showFooterNote ? (
       <div class="landing-demo-preview__footer">
         <p class="landing-demo-preview__footer-note">
-          CUTSTATE is a fictional demonstration shop. Open the demo to click around — no sign-up needed.
+          Heritage Grooming is a fictional demonstration shop. Open the demo to click around — no sign-up needed.
         </p>
       </div>
     ) : null}
