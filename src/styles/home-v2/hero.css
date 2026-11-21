@@ -388,8 +388,10 @@
 
 .hv2-mk__ad img,
 .hv2-mk__listing-head img {
+  width: 3.73rem;
   height: 2.8rem;
   border-radius: 0.3rem;
+  object-fit: cover;
 }
 
 .hv2-mk__ad b,
@@ -649,24 +651,18 @@
   background: var(--mk);
 }
 
-/* ---------- Shop side: the CUTSTATE demo site, in its own brand ---------- */
-@font-face {
-  font-family: 'HV2 Cutstate Display';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 800;
-  src: url('/fonts/barlow-condensed-latin-800-normal.woff2') format('woff2');
-}
-
+/* ---------- Shop side: the Heritage Grooming demo site, in its own brand ----------
+   Ink green, brass and cream from the site's own stylesheet; Caslon-style serif display. */
 .hv2-cs {
-  --cs-accent: #315ef5;
-  --cs-ivory: #f4f1ea;
-  --cs-display: 'HV2 Cutstate Display', 'Bebas Neue', var(--font-heading), sans-serif;
+  --cs-accent: #c6a766;
+  --cs-accent-ink: #0f1716;
+  --cs-ivory: #efe8d8;
+  --cs-display: 'Libre Caslon Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #0b0c0f;
+  background: #0f1716;
 }
 
 .hv2-cs__page {
@@ -685,8 +681,23 @@
 }
 
 .hv2-cs__logo {
-  width: auto;
-  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--cs-ivory);
+  font-family: var(--cs-display);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.hv2-cs__logo img {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.hv2-cs__logo em,
+.hv2 .hv2-cs__title em {
+  color: var(--cs-accent);
 }
 
 .hv2-cs__links {
@@ -714,7 +725,7 @@
   padding: 0.35rem 0.7rem;
   border-radius: 0.3rem;
   background: var(--cs-accent);
-  color: #fff;
+  color: var(--cs-accent-ink);
   font-size: 0.56rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -750,17 +761,16 @@
   font-family: var(--cs-display);
   font-size: clamp(1rem, 1.8cqw, 1.6rem);
   line-height: 0.95;
-  text-transform: uppercase;
 }
 
 .hv2 .hv2-cs__title {
   margin: 0;
   color: var(--cs-ivory);
   font-family: var(--cs-display);
-  font-size: clamp(1.9rem, 4.6cqw, 3.9rem);
-  line-height: 0.88;
+  font-size: clamp(1.6rem, 3.7cqw, 3.2rem);
+  font-weight: 400;
+  line-height: 0.98;
   letter-spacing: -0.01em;
-  text-transform: uppercase;
   text-wrap: balance;
 }
 
@@ -785,6 +795,7 @@
 .hv2-cs__actions i.is-primary {
   border-color: var(--cs-accent);
   background: var(--cs-accent);
+  color: var(--cs-accent-ink);
 }
 
 .hv2-cs__hero-img {
@@ -814,7 +825,6 @@
   font-family: var(--cs-display);
   font-size: 1.1rem;
   line-height: 1;
-  text-transform: uppercase;
 }
 
 .hv2-cs__services {
@@ -905,7 +915,7 @@
   padding: 0.55rem 0.15rem;
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 0.35rem;
-  background: #14161a;
+  background: #16201f;
 }
 
 .hv2-cs__slots b {
@@ -921,11 +931,11 @@
 
 .hv2-cs__slots li.is-picked {
   border-color: var(--cs-accent);
-  background: color-mix(in srgb, var(--cs-accent) 20%, #14161a);
+  background: color-mix(in srgb, var(--cs-accent) 18%, #16201f);
 }
 
 .hv2-cs__slots li.is-picked span {
-  color: #b9c9ff;
+  color: #e3cb94;
 }
 
 .hv2-cs__confirm {
@@ -933,7 +943,7 @@
   padding: 0.45rem 0.85rem;
   border-radius: 0.3rem;
   background: var(--cs-accent);
-  color: #fff;
+  color: var(--cs-accent-ink);
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.06em;

@@ -51,7 +51,7 @@ function mockMatchMedia(passive: boolean) {
 
 async function mount(passive: boolean) {
   mockMatchMedia(passive);
-  render(<OnlineBookingTimelinePreview focus={{ minute: 735, label: '12:15', caption: 'Marcus free until 13:00' }} />);
+  render(<OnlineBookingTimelinePreview focus={{ minute: 735, label: '12:15', caption: 'Kit free until 13:00' }} />);
   await act(async () => {
     await Promise.resolve();
   });
@@ -77,7 +77,7 @@ describe('OnlineBookingTimelinePreview', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the real timeline with the CUTSTATE example day and blocks admin writes', async () => {
+  it('renders the real timeline with the Heritage Grooming example day and blocks admin writes', async () => {
     const props = await mount(false);
     expect(auth.setPublicAdminDemoMode).toHaveBeenCalledWith(true);
     expect(auth.installAdminFetchInterceptor).toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('OnlineBookingTimelinePreview', () => {
     expect(props.previewSwipe).toBe(true);
     expect(props.timeBlocks).toEqual([]);
     expect(props.bookings.length).toBeGreaterThan(0);
-    expect(props.barbers.map((barber: { name: string }) => barber.name)).toEqual(['Ellis Ward', 'Noah Reid', 'Marcus Bell']);
+    expect(props.barbers.map((barber: { name: string }) => barber.name)).toEqual(['Arthur Penn', 'Kit Harlow', 'Rafi Mendes', 'Owen Clarke']);
     expect(typeof props.onClientProfileIntercept).toBe('function');
     expect(props.scrollContainerRef).toBeTruthy();
     expect(document.querySelector('.isw.bot')).toBeTruthy();
@@ -97,7 +97,7 @@ describe('OnlineBookingTimelinePreview', () => {
     const marker = document.querySelector('.bot-marker')!;
     expect(marker.getAttribute('data-bot-marker')).toBe('12:15');
     expect(marker.getAttribute('aria-hidden')).toBe('true');
-    expect(marker.textContent).toBe('12:15 Marcus free until 13:00');
+    expect(marker.textContent).toBe('12:15 Kit free until 13:00');
     expect(screen.getByTestId('mock-timeline').contains(marker)).toBe(false);
   });
 
@@ -109,7 +109,7 @@ describe('OnlineBookingTimelinePreview', () => {
     const dialog = screen.getByRole('dialog');
     expect(dialog.textContent).toContain('This preview is read-only.');
     expect(screen.getByRole('link', { name: 'Open the admin demo' }).getAttribute('href')).toBe(
-      '/demo/admin?section=bookings_dashboard',
+      '/demo/heritage-grooming/admin?section=bookings_dashboard',
     );
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Close read-only message');
 

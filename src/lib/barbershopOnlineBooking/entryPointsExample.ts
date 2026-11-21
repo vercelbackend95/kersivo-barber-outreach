@@ -3,10 +3,9 @@
  *
  * Copy is claim-gated: Google is merchant-guided GBP booking-link setup (not a native Google
  * booking provider); social is a pasteable public URL only; QR uses dynamic redirect codes and
- * must not be shown as the Google booking URL. Visuals are illustrative Cutstate demo only.
+ * must not be shown as the Google booking URL. Visuals are illustrative Heritage Grooming demo only.
  */
-import { DEMO_GALLERY } from '@/lib/demo/gallery';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { HERITAGE_DEMO_GALLERY as DEMO_GALLERY, HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
 
 export type EntryChannelId = 'website' | 'google' | 'social' | 'qr';
 
@@ -71,7 +70,7 @@ const FADE = DEMO_GALLERY.find((image) => image.id === 'fade');
 const HAIRLINE = DEMO_GALLERY.find((image) => image.id === 'hairline');
 const SCISSOR = DEMO_GALLERY.find((image) => image.id === 'scissor-cut');
 if (!FADE || !HAIRLINE || !SCISSOR) {
-  throw new Error('CUTSTATE demo gallery thumbs missing for entry-points Instagram visual.');
+  throw new Error('Heritage Grooming demo gallery thumbs missing for entry-points Instagram visual.');
 }
 
 export const ENTRY_CHANNELS: EntryChannel[] = [
@@ -81,11 +80,11 @@ export const ENTRY_CHANNELS: EntryChannel[] = [
     shortLabel: 'Website',
     visual: {
       kind: 'website',
-      heroSrc: '/demo/heroimg.webp',
-      heroAlt: 'CUTSTATE demo website hero — fictional KERSIVO demonstration shop',
-      logoSrc: '/demo/cutstate-logo.png',
+      heroSrc: '/demo/heritage-grooming/assets/img/chairs-960.webp',
+      heroAlt: 'Heritage Grooming demo website hero — fictional KERSIVO demonstration shop',
+      logoSrc: '/images/heritage/heritage-lockup.webp',
       shopName: DEMO_SHOP_NAME,
-      bookLabel: 'Book now',
+      bookLabel: 'Book a chair',
     },
   },
   {
@@ -104,9 +103,9 @@ export const ENTRY_CHANNELS: EntryChannel[] = [
     shortLabel: 'Social',
     visual: {
       kind: 'instagram',
-      avatarSrc: '/demo/cutstate-logo.png',
+      avatarSrc: '/demo/heritage-grooming/assets/img/seal-128.webp',
       shopName: DEMO_SHOP_NAME,
-      handle: '@cutstatebarbers',
+      handle: '@heritagegrooming',
       bookLabel: 'Book',
       gridSrcs: [FADE.src, HAIRLINE.src, SCISSOR.src],
     },

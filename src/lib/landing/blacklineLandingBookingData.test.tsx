@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { DEMO_BARBERS, toDemoBookingBarber } from '@/lib/demo/barbers';
-import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
 import { DEMO_SERVICE_CATEGORY_ORDER, DEMO_SERVICES } from '@/lib/demo/services';
 import { BLACKLINE_LANDING_BOOKING_DATA } from '@/lib/landing/blacklineLandingBookingData';
 
@@ -71,22 +71,22 @@ describe('landing booking preview zero-DB wiring', () => {
     }
   });
 
-  it('LandingBookingWidget points CTAs at /demo/book and accepts description/categoryOrder/presentation', () => {
+  it('LandingBookingWidget points CTAs at the Heritage Grooming booking page and accepts description/categoryOrder/presentation', () => {
     const widgetSrc = readSrc('src/components/LandingBookingWidget.tsx');
-    expect(widgetSrc).toContain("/demo/book");
+    expect(widgetSrc).toContain('HERITAGE_DEMO_BOOK_HREF');
     expect(widgetSrc).not.toMatch(/BOOK_HREF\s*=\s*['"]\/book['"]/);
     expect(widgetSrc).toContain('description?:');
     expect(widgetSrc).toContain('categoryOrder');
     expect(widgetSrc).toContain('presentation');
   });
 
-  it('landingDemoPreview defaults to BLACKLINE data and /demo/book CTA', () => {
+  it('landingDemoPreview defaults to Heritage Grooming data and its booking CTA', () => {
     const previewSrc = readSrc('src/components/landingDemoPreview.astro');
     expect(previewSrc).toContain('ctaHref: DEMO_BOOK_HREF');
-    expect(DEMO_BOOK_HREF).toBe('/demo/book');
+    expect(HERITAGE_DEMO_BOOK_HREF).toBe('/demo/heritage-grooming/services.html#book');
     expect(previewSrc).toContain('kind="booking"');
     const deferred = readSrc('src/components/landing/DeferredWidget.tsx');
-    expect(deferred).toContain('BLACKLINE_LANDING_BOOKING_DATA');
+    expect(deferred).toContain('HERITAGE_LANDING_BOOKING_DATA');
     expect(deferred).toContain('forcePassive');
     expect(previewSrc).not.toContain('getLandingDemoBookingFallback');
   });

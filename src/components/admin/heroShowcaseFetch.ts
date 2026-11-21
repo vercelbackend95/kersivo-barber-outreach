@@ -1,9 +1,9 @@
-import { BLACKLINE_ADMIN_API_PREFIX } from '@/lib/admin/demoConfig';
-import { blacklineHeroShowcaseNow, isHeroShowcaseUrl } from '@/lib/admin/heroShowcase';
+import { HERITAGE_ADMIN_API_PREFIX as SHOWCASE_API_PREFIX } from '@/lib/admin/demoConfig';
+import { heroShowcaseNow, isHeroShowcaseUrl } from '@/lib/admin/heroShowcase';
 
 /**
- * Client-local data adapter for the landing hero showcase (`/demo/admin?embed=hero`).
- * Every same-origin `/api/*` request is answered from the BLACKLINE fixtures at the
+ * Client-local data adapter for the landing hero showcase (`/demo/heritage-grooming/admin?embed=hero`).
+ * Every same-origin `/api/*` request is answered from the Heritage Grooming fixtures at the
  * canonical showcase clock — the iframe never issues a data request over the network.
  */
 
@@ -46,12 +46,12 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function toFixturePath(pathname: string): string | null {
   if (pathname.startsWith('/api/admin/')) {
-    return `${BLACKLINE_ADMIN_API_PREFIX}/${pathname.slice('/api/admin/'.length)}`;
+    return `${SHOWCASE_API_PREFIX}/${pathname.slice('/api/admin/'.length)}`;
   }
   if (pathname.startsWith('/api/admin-demo/')) {
-    return `${BLACKLINE_ADMIN_API_PREFIX}/${pathname.slice('/api/admin-demo/'.length)}`;
+    return `${SHOWCASE_API_PREFIX}/${pathname.slice('/api/admin-demo/'.length)}`;
   }
-  if (pathname === BLACKLINE_ADMIN_API_PREFIX || pathname.startsWith(`${BLACKLINE_ADMIN_API_PREFIX}/`)) {
+  if (pathname === SHOWCASE_API_PREFIX || pathname.startsWith(`${SHOWCASE_API_PREFIX}/`)) {
     return pathname;
   }
   return null;
@@ -71,13 +71,13 @@ export async function resolveHeroShowcaseFetch(
     if (!fixturePath) {
       return jsonResponse(404, { error: 'Not available in the showcase.' });
     }
-    const { resolveBlacklineDemoFixture } = await import('@/lib/admin/blacklineDemoFixtures/router');
+    const { resolveHeritageDemoFixture } = await import('@/lib/admin/heritageDemoFixtures/router');
     const request =
       method === 'GET' || method === 'HEAD'
         ? undefined
         : new Request(input instanceof Request ? input : url.toString(), { ...init, method });
-    const result = await resolveBlacklineDemoFixture(fixturePath, url.searchParams, method, request, {
-      now: blacklineHeroShowcaseNow(),
+    const result = await resolveHeritageDemoFixture(fixturePath, url.searchParams, method, request, {
+      now: heroShowcaseNow(),
     });
     if (!result) return jsonResponse(404, { error: 'Not found.' });
     return jsonResponse(result.status, result.body);

@@ -305,7 +305,7 @@ describe('claim consistency', () => {
 });
 
 describe('barberdemo subdomain redirect', () => {
-  it('permanently redirects only the barberdemo host to /demo', () => {
+  it('permanently redirects only the barberdemo host to the Heritage Grooming demo', () => {
     type Redirect = {
       source: string;
       destination: string;
@@ -319,11 +319,11 @@ describe('barberdemo subdomain redirect', () => {
     );
     expect(barberdemo.map((rule) => rule.source)).toEqual(['/', '/:path*']);
     for (const rule of barberdemo) {
-      expect(rule.destination).toBe('https://kersivo.co.uk/demo');
+      expect(rule.destination).toBe('https://kersivo.co.uk/demo/heritage-grooming/index.html');
       expect(rule.permanent).toBe(true);
       expect(rule).not.toHaveProperty('statusCode');
     }
-    const unscopedToDemo = redirects.filter((rule) => rule.destination.endsWith('/demo') && !rule.has);
+    const unscopedToDemo = redirects.filter((rule) => /\/demo(\/heritage-grooming\/index\.html)?$/.test(rule.destination) && !rule.has);
     expect(unscopedToDemo).toEqual([]);
   });
 });

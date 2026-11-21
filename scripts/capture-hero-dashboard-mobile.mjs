@@ -1,6 +1,6 @@
 /**
  * Captures the static phone/tablet hero images from the real KERSIVO demo dashboard
- * (`/demo/admin?embed=hero&section=bookings_dashboard`).
+ * (`/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard`).
  *
  * The hero embed pins its clock to BLACKLINE_HERO_SHOWCASE_NOW_ISO (15:25 on the showcase
  * day), so the bookings shown are the same on every run. As on the landing page, the embed
@@ -65,7 +65,7 @@ const jobs = presetNames.map((name) =>
 
 const [vw, vh] = values.viewport.split('x').map(Number);
 const outDir = resolve(values.out);
-const url = `${values.base}/demo/admin?embed=hero&section=bookings_dashboard`;
+const url = `${values.base}/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard`;
 const avifQuality = Number(values['avif-quality']);
 
 const FREEZE_CSS = `
@@ -121,11 +121,24 @@ for (const job of jobs) {
   for (const dpr of job.dprs.split(',').map(Number)) {
     const raw = await capture(browser, dpr, { x, y, width, height });
     const base = join(outDir, `${job.name}-${Math.round(width * dpr)}`);
-    const png = await sharp(raw).png({ compressionLevel: 9, effort: 10, palette: false }).toBuffer();
+    let png = await sharp(raw).png({ compressionLevel: 9, effort: 10, palette: false }).toBuffer();
+    // The PNG is only the fallback behind AVIF/WebP; keep it under the 250 KB budget with a 256-colour palette.
+    if (png.length >= 250_000) {
+      png = await sharp(raw).png({ compressionLevel: 9, effort: 10, palette: true, quality: 100, colours: 256, dither: 0.6 }).toBuffer();
+    }
     // In lossless mode `quality` is compression effort, not fidelity: 100 is pixel-identical and ~40% smaller.
-    const webp = await sharp(raw).webp({ lossless: true, quality: 100, effort: 6 }).toBuffer();
+    let webp = await sharp(raw).webp({ lossless: true, quality: 100, effort: 6 }).toBuffer();
+    // Photo-heavy dashboards (barber avatars) can overshoot the 150 KB budget losslessly; fall back to
+    // high-quality lossy with full-resolution chroma, stepping down only as far as the budget needs.
+    for (let quality = 92; webp.length >= 150_000 && quality >= 80; quality -= 2) {
+      webp = await sharp(raw).webp({ quality, smartSubsample: true, effort: 6 }).toBuffer();
+    }
     // Full-resolution chroma keeps thin red lines and small text clean; 4:2:0 smears them.
-    const avif = await sharp(raw).avif({ quality: avifQuality, effort: 9, chromaSubsampling: '4:4:4' }).toBuffer();
+    let avif = await sharp(raw).avif({ quality: avifQuality, effort: 9, chromaSubsampling: '4:4:4' }).toBuffer();
+    // Step quality down only as far as the 80 KB budget needs.
+    for (let quality = avifQuality - 4; avif.length >= 80_000 && quality >= 50; quality -= 4) {
+      avif = await sharp(raw).avif({ quality, effort: 9, chromaSubsampling: '4:4:4' }).toBuffer();
+    }
     await writeFile(`${base}.png`, png);
     await writeFile(`${base}.webp`, webp);
     await writeFile(`${base}.avif`, avif);

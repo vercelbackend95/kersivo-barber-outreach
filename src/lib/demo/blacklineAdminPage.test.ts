@@ -55,7 +55,7 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(adminLayoutSource).toContain('DEFAULT_SIDEBAR_LOGO');
     expect(adminLayoutSource).toContain('/images/brand/kersivo-mark-reversed.svg');
     expect(profileSource).toContain('Create your own barbershop');
-    expect(profileSource).toContain("previewWebsiteLabel = 'CUTSTATE'");
+    expect(profileSource).toContain("previewWebsiteLabel = 'Heritage Grooming'");
     expect(profileSource).toContain('Preview {previewWebsiteLabel} website');
     expect(profileSource).toContain('Back to Kersivo');
     expect(profileSource).toContain('href={createShopHref}');

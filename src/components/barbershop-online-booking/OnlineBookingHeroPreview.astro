@@ -1,8 +1,7 @@
 ---
-import { CUTSTATE_LOGO_ALT, CUTSTATE_LOGO_HEIGHT, CUTSTATE_LOGO_SRC, CUTSTATE_LOGO_WIDTH } from '@/components/demo/BlacklineWordmark';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { formatDemoPriceGbp, getDemoFeaturedServices } from '@/lib/demo/services';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, heritageBarberThumb, getHeritageFeaturedServices as getDemoFeaturedServices, HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { BARBERSHOP_ONLINE_BOOKING_DEMO_HREF } from '@/lib/seo/barbershopOnlineBookingPage';
 
 const TRACK_EVENT = 'view_live_demo_click';
@@ -21,7 +20,7 @@ const EXAMPLE_SLOTS = ['10:00', '10:30', '11:00', '11:30', '14:00', '14:30'] as 
 const SELECTED_SLOT = '11:00';
 
 const THUMB_SIZE = 160;
-const thumbSrc = (slug: string) => `/demo/barbers/thumbs/${slug}-${THUMB_SIZE}.webp`;
+const thumbSrc = (slug: string) => heritageBarberThumb(slug);
 
 const services = getDemoFeaturedServices().map((service) => ({
   id: service.id,
@@ -39,7 +38,7 @@ const barbers = DEMO_BARBERS.map((barber) => ({
   thumb: thumbSrc(barber.slug),
 }));
 // The bottom card, so the barber connector reaches it on one level line beneath the service list.
-const SELECTED_BARBER_SLUG = 'marcus-bell';
+const SELECTED_BARBER_SLUG = 'kit';
 const selectedBarber = barbers.find((barber) => barber.slug === SELECTED_BARBER_SLUG) ?? barbers[barbers.length - 1];
 
 const svg = (paths: string) =>
@@ -65,7 +64,7 @@ const callouts = [
 ] as const;
 
 const screenLabel = [
-  `Illustrative recreation of the ${DEMO_SHOP_NAME} demo booking page on a tablet, headed by the ${CUTSTATE_LOGO_ALT} logo.`,
+  `Illustrative recreation of the ${DEMO_SHOP_NAME} demo booking page on a tablet, headed by the ${HERITAGE_LOCKUP.alt} logo.`,
   `Steps: ${STEPS.join(', ')}.`,
   `${SERVICE_STEP.title}: ${services.map((s) => `${s.name}, ${s.duration}, ${s.price}`).join('; ')}; ${selectedService.name} selected.`,
   `${BARBER_STEP.title}: ${barbers.map((b) => `${b.name}, ${b.specialisation}`).join('; ')}; ${selectedBarber.name} selected.`,
@@ -86,10 +85,10 @@ const screenLabel = [
           <div class="bob-screen__bar" data-bob-ref="bar">
             <img
               class="bob-screen__logo"
-              src={CUTSTATE_LOGO_SRC}
+              src={HERITAGE_LOCKUP.src}
               alt=""
-              width={CUTSTATE_LOGO_WIDTH}
-              height={CUTSTATE_LOGO_HEIGHT}
+              width={HERITAGE_LOCKUP.width}
+              height={HERITAGE_LOCKUP.height}
               decoding="async"
             />
             <span class="bob-screen__stepper">
@@ -198,7 +197,7 @@ const screenLabel = [
     <figcaption class="bob-device__caption">
       <span class="bob-device__tag">Demo</span>
       <span class="bob-device__note">
-        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Cutstate is a fictional KERSIVO
+        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Heritage Grooming is a fictional KERSIVO
         demonstration shop; times shown are examples, no appointment is created and no payment is taken.
       </span>
       <a

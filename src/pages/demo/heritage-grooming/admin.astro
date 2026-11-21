@@ -9,6 +9,8 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import DemoBanner from '@/components/demo/DemoBanner.astro';
 import AdminPanel from '@/components/admin/AdminPanel';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
+import AdminHeroEmbedStyles from '@/components/admin/AdminHeroEmbedStyles.astro';
+import { HERO_SHOWCASE_DAY, heroShowcaseNow } from '@/lib/admin/heroShowcase';
 import { getHeritageBookingsResponse } from '@/lib/admin/heritageDemoFixtures/schedule';
 import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
 import { HERITAGE_ADMIN_DEMO_PATH } from '@/lib/admin/demoConfig';
@@ -39,9 +41,11 @@ import '@/styles/components/table.css';
 import '@/styles/components/admin-ui.css';
 import '@/styles/components/admin-ai.css';
 
-const now = new Date();
+// `?embed=hero`: the marketing hero frames this dashboard at a fixed, busy afternoon (see heroShowcase.ts).
+const heroEmbed = Astro.url.searchParams.get('embed') === 'hero';
+const now = heroEmbed ? heroShowcaseNow() : new Date();
 const { bookings: initialBookings } = getHeritageBookingsResponse(
-  new URLSearchParams({ date: blacklineDayKey(now), mode: 'day' }),
+  new URLSearchParams({ date: heroEmbed ? HERO_SHOWCASE_DAY : blacklineDayKey(now), mode: 'day' }),
   now,
 );
 ---
@@ -51,9 +55,12 @@ const { bookings: initialBookings } = getHeritageBookingsResponse(
   description="Fictional Heritage Grooming owner dashboard using sample KERSIVO admin data. No real appointments, orders or payments are created."
   canonicalPath={HERITAGE_ADMIN_DEMO_PATH}
   htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
+  bodyClass={heroEmbed ? 'admin-theme-premium-black admin-hero-embed-body' : 'admin-theme-premium-black'}
   viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
   noindex={true}
+  enableAnalytics={!heroEmbed}
+  showCookieConsent={!heroEmbed}
+  enableClientRouter={!heroEmbed}
 >
   <link
     slot="head"
@@ -78,8 +85,12 @@ const { bookings: initialBookings } = getHeritageBookingsResponse(
     rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&display=swap"
   />
-  <DemoBanner view="admin" shop="heritage" />
-  <main class="container page-wrap admin-page-wrap" data-demo-tenant="heritage">
+  {heroEmbed ? null : <DemoBanner view="admin" shop="heritage" />}
+  <main
+    class={heroEmbed ? 'page-wrap admin-page-wrap admin-page-wrap--hero-embed' : 'container page-wrap admin-page-wrap'}
+    data-demo-tenant="heritage"
+    data-hero-embed={heroEmbed ? 'true' : undefined}
+  >
     <h1 class="sr-only">Heritage Grooming owner dashboard</h1>
     <AdminPanel
       client:load
@@ -87,7 +98,9 @@ const { bookings: initialBookings } = getHeritageBookingsResponse(
       demoTenant="heritage"
       initialBookings={initialBookings}
       initialSection={Astro.url.searchParams.get('section')}
+      showcaseMode={heroEmbed}
     />
   </main>
-  <InitDataTrackScript />
+  {heroEmbed ? null : <InitDataTrackScript />}
+  {heroEmbed ? <AdminHeroEmbedStyles /> : null}
 </MinimalLayout>

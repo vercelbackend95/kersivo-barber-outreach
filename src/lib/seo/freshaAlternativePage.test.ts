@@ -632,7 +632,7 @@ describe('hero dashboard showcase', () => {
     expect(heroSource).toContain("import HeroDashboardShowcase from '@/components/marketing/HeroDashboardShowcase.astro';");
     expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeGreaterThan(heroSource.indexOf('fj-hero__facts'));
     expect(heroSource.indexOf('<HeroDashboardShowcase />')).toBeLessThan(heroSource.indexOf('</section>'));
-    expect(showcaseSource).toContain('data-deferred-src="/demo/admin?embed=hero&section=bookings_dashboard"');
+    expect(showcaseSource).toContain('data-deferred-src="/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard"');
   });
 
   it('keeps no page-specific copy of the showcase markup, styles or loader', () => {
@@ -648,7 +648,7 @@ describe('hero dashboard showcase', () => {
   });
 
   it('lets touch scrolling chain from the fixed hero showcase to the landing page', () => {
-    const adminPage = readRepoFile('../../pages/demo/admin.astro');
+    const adminPage = readRepoFile('../../components/admin/AdminHeroEmbedStyles.astro');
     expect(adminPage).toMatch(
       /body\.admin-hero-embed-body,\s*body\.admin-hero-embed-body \* \{\s*overscroll-behavior: auto !important;\s*\}/,
     );
@@ -656,7 +656,7 @@ describe('hero dashboard showcase', () => {
   });
 
   it('pins the BLACKLINE lockup to the sidebar left edge in the hero showcase', () => {
-    const adminPage = readRepoFile('../../pages/demo/admin.astro');
+    const adminPage = readRepoFile('../../components/admin/AdminHeroEmbedStyles.astro');
     expect(adminPage).toMatch(
       /body\.admin-hero-embed-body\s+\.admin-shell--showcase\s+> \.admin-sidebar\s+> \.admin-sidebar-brand--blackline \{[^}]*justify-self: stretch;[^}]*width: 100%;[^}]*align-items: flex-start;[^}]*justify-content: flex-start;/,
     );

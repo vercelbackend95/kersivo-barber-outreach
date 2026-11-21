@@ -111,7 +111,7 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
     expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(designTeamSection).toContain('id="your-team"');
-    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', 'DEMO_BOOK_HREF', '/demo/services', '/demo/barbers']) {
+    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', 'DEMO_BOOK_HREF', 'HERITAGE_DEMO_SERVICES_HREF', 'HERITAGE_DEMO_TEAM_HREF']) {
       expect(panel).toContain(route);
     }
     const footer = read('../../lib/nav/footerNavigation.ts');

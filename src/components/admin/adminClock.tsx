@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { BLACKLINE_HERO_SHOWCASE_NOW_MS } from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_NOW_MS } from '@/lib/admin/heroShowcase';
 
 /**
  * Explicit clock for admin UI that renders "today", "now" or relative times.
@@ -17,7 +17,7 @@ export const REAL_ADMIN_CLOCK: AdminClock = {
 
 export const HERO_SHOWCASE_ADMIN_CLOCK: AdminClock = {
   frozen: true,
-  nowMs: () => BLACKLINE_HERO_SHOWCASE_NOW_MS,
+  nowMs: () => HERO_SHOWCASE_NOW_MS,
 };
 
 export const AdminClockContext = createContext<AdminClock>(REAL_ADMIN_CLOCK);

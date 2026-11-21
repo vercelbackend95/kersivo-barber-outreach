@@ -1,4 +1,4 @@
-import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { heritageAdminHref } from '@/lib/admin/demoConfig';
 
 export const FEATURE261_MONETIZATION_ROW = {
   kicker: 'FULL KERSIVO — REPORTS & PERFORMANCE',
@@ -6,7 +6,7 @@ export const FEATURE261_MONETIZATION_ROW = {
   description:
     'Track booked and completed service value, deposits, booking trends and shop performance.',
   ctaLabel: 'Explore reports',
-  ctaHref: blacklineAdminHref('bookings_reports'),
+  ctaHref: heritageAdminHref('bookings_reports'),
   ctaTrack: 'view_live_demo_click',
   ctaSameTab: false,
 } as const;

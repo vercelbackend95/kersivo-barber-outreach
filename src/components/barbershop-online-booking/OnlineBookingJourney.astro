@@ -1,16 +1,15 @@
 ---
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
-import { DEMO_SERVICE_CATEGORIES } from '@/lib/demo/serviceCategories';
-import { DEMO_DEFAULT_SERVICE_SLUG, DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
-import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, heritageBarberThumb, HERITAGE_DEMO_DEFAULT_SERVICE_SLUG as DEMO_DEFAULT_SERVICE_SLUG, HERITAGE_DEMO_SERVICES as DEMO_SERVICES, HERITAGE_DEMO_SHOP_NAME as DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_SERVICE_CATEGORIES as DEMO_SERVICE_CATEGORIES } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_LANDING_BOOKING_PRESENTATION } from '@/lib/landing/heritageLandingBookingData';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { BARBERSHOP_ONLINE_BOOKING_DEMO_HREF } from '@/lib/seo/barbershopOnlineBookingPage';
 import '@/styles/components/barbershop-online-booking-journey.css';
 
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_online_booking_journey';
 
-const presentation = BLACKLINE_BOOKING_PRESENTATION;
+const presentation = HERITAGE_LANDING_BOOKING_PRESENTATION;
 
 // Step labels, titles and hints mirror the public BookingFlow wizard (STEP_COPY, PUBLIC_DEMO_DETAILS_COPY).
 const FLOW_STEPS = ['Service', 'Barber', 'Schedule', 'Details'] as const;
@@ -30,15 +29,15 @@ const EXAMPLE_DAY = 'Example day';
 // Starter's fixed online payment amount, as in bookingPaymentPolicy.
 const STARTER_DEPOSIT_PENCE = 500;
 
-// Trust items BookingFlow lists for the session-persisted Cutstate demo.
+// Trust items BookingFlow lists for the session-persisted Heritage Grooming demo.
 const DEMO_TRUST_ITEMS = [
   'No real appointment will be created',
   'No confirmation email will be sent',
-  'Times shown follow the Cutstate owner timeline',
+  'Times shown follow the Heritage Grooming owner timeline',
 ];
 
 const THUMB_SIZE = 160;
-const thumbSrc = (slug: string) => `/demo/barbers/thumbs/${slug}-${THUMB_SIZE}.webp`;
+const thumbSrc = (slug: string) => heritageBarberThumb(slug);
 
 // The service grid opens on the first category, ordered as BookingFlow orders it: featured first.
 const firstCategory = DEMO_SERVICE_CATEGORIES[0];
@@ -58,7 +57,7 @@ const servicePrice = formatDemoPriceGbp(selectedService.pricePence);
 const serviceDuration = `${selectedService.durationMinutes} min`;
 
 const barbers = DEMO_BARBERS.map((barber) => ({ id: barber.id, slug: barber.slug, name: barber.name, thumb: thumbSrc(barber.slug) }));
-const SELECTED_BARBER_SLUG = 'marcus-bell';
+const SELECTED_BARBER_SLUG = 'kit';
 const selectedBarber = barbers.find((barber) => barber.slug === SELECTED_BARBER_SLUG) ?? barbers[barbers.length - 1];
 
 const addMinutes = (time: string, minutes: number) => {
@@ -427,7 +426,7 @@ const stepState = (stageIndex: number, stepIndex: number) =>
     <div class="boj__close">
       <p class="boj__disclosure">
         <span class="boj__tag">Demo</span>
-        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Cutstate is a fictional KERSIVO
+        Illustrative recreation of the {DEMO_SHOP_NAME} demo booking page. Heritage Grooming is a fictional KERSIVO
         demonstration shop; times are examples, no appointment is created and no payment is taken.
       </p>
       <a

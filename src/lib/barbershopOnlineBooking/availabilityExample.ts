@@ -1,28 +1,29 @@
 /**
  * The worked availability example for /barbershop-online-booking Section 03.
  *
- * It reads one fixed weekday of the CUTSTATE demo owner timeline (the same generated day
- * /demo/admin shows) and asks the demo's own slot function which Skin Fade start times it would
- * offer with Marcus Bell. The clock is pinned before that day, so the example never depends on
+ * It reads one fixed weekday of the Heritage Grooming demo owner timeline (the same generated day
+ * its owner dashboard shows) and works out which Skin fade start times the diary would offer with
+ * Kit Harlow: 15-minute starts inside opening hours that end before his next appointment. The clock is pinned before that day, so the example never depends on
  * the build date and every appointment is still Booked. Only times, durations and service names
  * leave this module — never the fictional client names attached to the demo appointments.
  */
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, heritageBarberThumb, HERITAGE_DEMO_DEFAULT_SERVICE_SLUG as DEMO_DEFAULT_SERVICE_SLUG, HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 import { formatInTimeZone } from 'date-fns-tz';
-import { getBlacklineBookingsForDayKey } from '@/lib/admin/blacklineDemoFixtures/schedule';
-import { BLACKLINE_TZ, tradingWindow } from '@/lib/admin/blacklineDemoFixtures/time';
-import { listBlacklineAvailableSlots, type BlacklineOccupancyInterval } from '@/lib/demo/blacklineAvailability';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_DEFAULT_SERVICE_SLUG, DEMO_SERVICES, formatDemoPriceGbp } from '@/lib/demo/services';
+import { BLACKLINE_TZ } from '@/lib/admin/blacklineDemoFixtures/time';
+import { heritageTradingWindow } from '@/lib/admin/heritageDemoFixtures/catalog';
+import { getHeritageBookingsForDayKey } from '@/lib/admin/heritageDemoFixtures/schedule';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 
-/** A Wednesday on which all eight of Marcus Bell's template appointments are placed. */
-export const EXAMPLE_DAY_KEY = '2027-01-06';
-export const EXAMPLE_CLOCK = new Date('2027-01-01T12:00:00.000Z');
+/** A Wednesday: Heritage Grooming is open 09:00–19:00 and Kit Harlow is in. */
+export const EXAMPLE_DAY_KEY = '2027-01-13';
+/** The evening before, so the day is fully booked in and every appointment is still Booked. */
+export const EXAMPLE_CLOCK = new Date('2027-01-12T20:00:00.000Z');
 export const EXAMPLE_DAY_LABEL = 'Example weekday';
-export const EXAMPLE_BARBER_SLUG = 'marcus-bell';
-/** The demo slot function steps through the day in 15-minute starts. */
+export const EXAMPLE_BARBER_SLUG = 'kit';
+/** The diary steps through the day in 15-minute starts. */
 export const EXAMPLE_SLOT_STEP_MINUTES = 15;
-/** Start times shown as "not offered", each with the appointment it would run into. */
-export const EXAMPLE_NOT_OFFERED = ['11:45', '12:30'] as const;
+/** How many "not offered" start times the example explains. */
+const NOT_OFFERED_COUNT = 2;
 
 export type DiaryAppointment = {
   start: number;
@@ -61,12 +62,12 @@ const londonMinute = (iso: string) => {
 };
 
 export function buildAvailabilityExample(): AvailabilityExample {
-  const window = tradingWindow(EXAMPLE_DAY_KEY);
+  const window = heritageTradingWindow(EXAMPLE_DAY_KEY);
   const barber = DEMO_BARBERS.find((entry) => entry.slug === EXAMPLE_BARBER_SLUG);
   const service = DEMO_SERVICES.find((entry) => entry.slug === DEMO_DEFAULT_SERVICE_SLUG);
   if (!window || !barber || !service) throw new Error('Availability example: demo day, barber or service missing');
 
-  const rows = getBlacklineBookingsForDayKey(EXAMPLE_DAY_KEY, { now: EXAMPLE_CLOCK }).filter(
+  const rows = getHeritageBookingsForDayKey(EXAMPLE_DAY_KEY, { now: EXAMPLE_CLOCK }).filter(
     (row) => row.barberId === barber.id && row.status === 'BOOKED',
   );
   const appointments: DiaryAppointment[] = rows
@@ -84,36 +85,25 @@ export function buildAvailabilityExample(): AvailabilityExample {
     })
     .sort((a, b) => a.start - b.start);
 
-  const occupancy: BlacklineOccupancyInterval[] = appointments.map((a) => ({
-    barberId: barber.id,
-    startMinute: a.start,
-    endMinute: a.end,
-  }));
-  const offered = listBlacklineAvailableSlots({
-    date: EXAMPLE_DAY_KEY,
-    barberId: barber.id,
-    durationMinutes: service.durationMinutes,
-    now: EXAMPLE_CLOCK,
-    occupancy,
-  }).map((label) => {
-    const start = parseMinute(label);
-    const end = start + service.durationMinutes;
-    return { start, end, label, endLabel: formatMinute(end) };
-  });
-
-  const notOffered = EXAMPLE_NOT_OFFERED.map((label) => {
-    const start = parseMinute(label);
-    const end = start + service.durationMinutes;
-    const blockedBy = appointments.find((a) => start < a.end && a.start < end);
-    if (!blockedBy || offered.some((time) => time.label === label)) {
-      throw new Error(`Availability example: ${label} is not a blocked start time`);
-    }
-    return { label, endLabel: formatMinute(end), blockedBy };
-  });
+  const duration = service.durationMinutes;
+  const overlaps = (start: number) => appointments.find((a) => start < a.end && a.start < start + duration);
+  const offered: OfferedTime[] = [];
+  const blocked: NotOfferedTime[] = [];
+  for (let start = window.openMinute; start + duration <= window.closeMinute; start += EXAMPLE_SLOT_STEP_MINUTES) {
+    const blockedBy = overlaps(start);
+    const end = start + duration;
+    if (!blockedBy) offered.push({ start, end, label: formatMinute(start), endLabel: formatMinute(end) });
+    // The instructive case: the chair is free at that time, but the cut would run into the next appointment.
+    else if (blockedBy.start > start) blocked.push({ label: formatMinute(start), endLabel: formatMinute(end), blockedBy });
+  }
+  const notOffered = blocked.filter((time) => parseMinute(time.label) >= 10 * 60).slice(0, NOT_OFFERED_COUNT);
+  if (offered.length === 0 || notOffered.length < NOT_OFFERED_COUNT) {
+    throw new Error('Availability example: the example day needs offered and blocked start times');
+  }
 
   return {
     dayLabel: EXAMPLE_DAY_LABEL,
-    barber: { name: barber.name, slug: barber.slug, thumb: `/demo/barbers/thumbs/${barber.slug}-160.webp` },
+    barber: { name: barber.name, slug: barber.slug, thumb: heritageBarberThumb(barber.slug) },
     service: { name: service.name, duration: service.durationMinutes, price: formatDemoPriceGbp(service.pricePence) },
     window: {
       open: window.openMinute,

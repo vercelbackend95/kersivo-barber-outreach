@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import TodayTimeline from './TodayTimeline';
 import { AdminClockContext, HERO_SHOWCASE_ADMIN_CLOCK, type AdminClock } from './adminClock';
-import { BLACKLINE_HERO_SHOWCASE_DAY } from '@/lib/admin/heroShowcase';
+import { HERO_SHOWCASE_DAY } from '@/lib/admin/heroShowcase';
 import { atDayMinute } from '@/lib/admin/blacklineDemoFixtures/time';
 import { TIMELINE_NOW_ANCHOR } from '@/lib/admin/timelineNowScroll';
 
@@ -91,7 +91,7 @@ describe('TodayTimeline showcase now-scroll', () => {
   it('does not scroll on mount or render alone', async () => {
     mockMatchMedia(true);
     const onStart = vi.fn();
-    const { container } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, BLACKLINE_HERO_SHOWCASE_DAY, {
+    const { container } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, HERO_SHOWCASE_DAY, {
       allowInitialNowScroll: false,
       containInitialNowScroll: true,
       onInitialNowScroll: onStart,
@@ -106,7 +106,7 @@ describe('TodayTimeline showcase now-scroll', () => {
     mockMatchMedia(true);
     const onStart = vi.fn();
     const props = { containInitialNowScroll: true, onInitialNowScroll: onStart };
-    const { container, nowRow, rerenderWith } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, BLACKLINE_HERO_SHOWCASE_DAY, {
+    const { container, nowRow, rerenderWith } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, HERO_SHOWCASE_DAY, {
       ...props,
       allowInitialNowScroll: false,
     });
@@ -143,7 +143,7 @@ describe('TodayTimeline showcase now-scroll', () => {
 
   it('keeps the normal admin behaviour: scrollIntoView on the now row when allowed', async () => {
     mockMatchMedia(false);
-    const { nowRow } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, BLACKLINE_HERO_SHOWCASE_DAY, {
+    const { nowRow } = renderTimeline(HERO_SHOWCASE_ADMIN_CLOCK, HERO_SHOWCASE_DAY, {
       allowInitialNowScroll: true,
     });
     await waitFor(() => expect(intoView).toHaveBeenCalledTimes(1));

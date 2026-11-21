@@ -13,8 +13,8 @@ import {
   BARBERSHOP_WEBSITES_V1_H1,
 } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
-import { DEMO_SERVICES } from '@/lib/demo/services';
-import { CUTSTATE_LOGO_SRC } from '@/components/demo/BlacklineWordmark';
+import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -80,12 +80,12 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(offer).not.toContain('part="all"');
   });
 
-  it('uses real demo data, no iframes, and labels CUTSTATE as fictional', () => {
+  it('uses real demo data, no iframes, and labels Heritage Grooming as fictional', () => {
     const source = components.join('\n');
     expect(source).not.toMatch(/<iframe|<embed|<video/);
     expect(source).not.toMatch(/<select|<input|<button/);
-    expect(hero).toContain('CUTSTATE BARBERS is a fictional demonstration shop');
-    for (const slug of ['haircut-finish', 'beard-trim', 'skin-fade', 'wash-style-finish']) {
+    expect(hero).toContain('Heritage Grooming is a fictional demonstration shop');
+    for (const slug of ['haircut', 'beard-trim', 'skin-fade', 'hot-towel-shave']) {
       expect(DEMO_SERVICES.some((service) => service.slug === slug)).toBe(true);
     }
   });
@@ -101,7 +101,7 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(panel).not.toContain("label: 'Gallery'");
     expect(panel).toContain('aria-labelledby=');
     expect(panel).toContain('class="bsw-thumb__booking-slots" aria-hidden="true"');
-    for (const route of ['DEMO_HOME_HREF', '/demo/services', '/demo/barbers', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF']) {
+    for (const route of ['DEMO_HOME_HREF', 'HERITAGE_DEMO_SERVICES_HREF', 'HERITAGE_DEMO_TEAM_HREF', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF']) {
       expect(panel).toContain(route);
     }
     expect(panel).not.toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
@@ -131,16 +131,16 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(css).toContain('background: var(--accent);');
   });
 
-  it('brands the website preview with the approved CUTSTATE logo image', () => {
+  it('brands the website preview with the Heritage Grooming lockup image', () => {
     const preview = read(`${componentDir}BlacklineWebsitePreview.astro`);
     const brand = preview.match(/<a class="bsw-site__brand"[\s\S]*?<\/a>/)?.[0] ?? '';
-    expect(brand).toContain('aria-label="CUTSTATE BARBERS demo home"');
+    expect(brand).toContain('aria-label="Heritage Grooming demo home"');
     expect(brand).toContain('href={DEMO_HOME_HREF}');
-    expect(brand).toMatch(/<img\s[\s\S]*src=\{CUTSTATE_LOGO_SRC\}/);
-    expect(brand).toContain('width={CUTSTATE_LOGO_WIDTH}');
-    expect(brand).toContain('height={CUTSTATE_LOGO_HEIGHT}');
+    expect(brand).toMatch(/<img\s[\s\S]*src=\{HERITAGE_LOCKUP\.src\}/);
+    expect(brand).toContain('width={HERITAGE_LOCKUP.width}');
+    expect(brand).toContain('height={HERITAGE_LOCKUP.height}');
     expect(brand).not.toMatch(/<span>/);
-    expect(CUTSTATE_LOGO_SRC).toBe('/demo/cutstate-logo.png');
+    expect(HERITAGE_LOCKUP.src).toBe('/images/heritage/heritage-lockup.webp');
     const css = read('../../styles/components/barbershop-websites-hero.css');
     expect(css).toMatch(/\.bsw-site__brand img \{[^}]*width: auto;[^}]*object-fit: contain;/);
     expect(css).not.toContain('.bsw-site__brand span');

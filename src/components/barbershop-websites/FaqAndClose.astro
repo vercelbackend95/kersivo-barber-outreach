@@ -5,7 +5,7 @@ import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { Price } from '@/components/ui/Price';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { NO_SETUP_FEE_SHORT, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
-import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const FULL_TRACK_EVENT = 'saas_subscribe_click';
@@ -164,8 +164,8 @@ const shownFaqs: Faq[] = isFreePreviewFlowEnabled()
         </a>
         {isFreePreviewFlowEnabled() && <FullPlanCta part="subscribe" class="bsw-final__subscribe" placement={FULL_TRACK_PLACEMENT} />}
         <p class="bsw-final__fine">
-          {NO_SETUP_FEE_SHORT} 0% KERSIVO commission. {STRIPE_FEES_NOTE} The demo uses CUTSTATE
-          Barbers, a fictional shop.
+          {NO_SETUP_FEE_SHORT} 0% KERSIVO commission. {STRIPE_FEES_NOTE} The demo uses Heritage
+          Grooming, a fictional shop.
           <a class="bsw-final__terms" href={SUBSCRIPTION_TERMS_HREF}>Subscription terms</a>
         </p>
       </div>

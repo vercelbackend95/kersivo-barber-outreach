@@ -3,10 +3,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
-import { DEMO_SERVICE_CATEGORIES } from '@/lib/demo/serviceCategories';
-import { DEMO_DEFAULT_SERVICE_SLUG, DEMO_SERVICES } from '@/lib/demo/services';
+import {
+  HERITAGE_DEMO_BARBERS as DEMO_BARBERS,
+  HERITAGE_DEMO_DEFAULT_SERVICE_SLUG as DEMO_DEFAULT_SERVICE_SLUG,
+  HERITAGE_DEMO_SERVICE_CATEGORIES as DEMO_SERVICE_CATEGORIES,
+  HERITAGE_DEMO_SERVICES as DEMO_SERVICES,
+} from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
+import { HERITAGE_LANDING_BOOKING_PRESENTATION } from '@/lib/landing/heritageLandingBookingData';
 import { BARBERSHOP_ONLINE_BOOKING_DEMO_HREF } from './barbershopOnlineBookingPage';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -80,25 +84,26 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     expect(markup).toContain('Phone <em>(optional)</em>');
     expect(flow).toContain("if (publicDemoMode) return presentation?.submitLabel ?? 'Complete demo booking';");
     expect(markup).toContain("'Complete demo booking'");
-    for (const item of ['No real appointment will be created', 'No confirmation email will be sent', 'Times shown follow the Cutstate owner timeline']) {
+    for (const item of ['No real appointment will be created', 'No confirmation email will be sent']) {
       expect(flow).toContain(`{ label: '${item}' }`);
       expect(journey).toContain(`'${item}'`);
     }
+    expect(journey).toContain("'Times shown follow the Heritage Grooming owner timeline'");
   });
 
   it('uses verified demo services, barbers and confirmation copy', () => {
     expect(journey).toContain('DEMO_SERVICES.filter((service) => service.category === firstCategory.key)');
-    expect(DEMO_SERVICE_CATEGORIES[0].label).toBe('Cuts & Fades');
-    expect(DEMO_SERVICES.filter((s) => s.category === 'cuts & fades').length).toBeGreaterThanOrEqual(4);
+    expect(DEMO_SERVICE_CATEGORIES[0].label).toBe('Haircuts');
+    expect(DEMO_SERVICES.filter((s) => s.category === DEMO_SERVICE_CATEGORIES[0].key).length).toBeGreaterThanOrEqual(4);
     expect(DEMO_DEFAULT_SERVICE_SLUG).toBe('skin-fade');
-    expect(DEMO_BARBERS.map((b) => b.name)).toEqual(['Ellis Ward', 'Noah Reid', 'Marcus Bell']);
-    expect(journey).toContain("const SELECTED_BARBER_SLUG = 'marcus-bell';");
+    expect(DEMO_BARBERS.map((b) => b.name)).toEqual(['Arthur Penn', 'Kit Harlow', 'Rafi Mendes', 'Owen Clarke']);
+    expect(journey).toContain("const SELECTED_BARBER_SLUG = 'kit';");
     for (const barber of DEMO_BARBERS) {
-      expect(existsSync(join(publicDir, `demo/barbers/thumbs/${barber.slug}-160.webp`))).toBe(true);
+      expect(existsSync(join(publicDir, barber.image.src))).toBe(true);
     }
-    expect(BLACKLINE_BOOKING_PRESENTATION.confirmEyebrow).toBe('Demo complete');
-    expect(BLACKLINE_BOOKING_PRESENTATION.confirmHeading).toBe("You're all set");
-    expect(BLACKLINE_BOOKING_PRESENTATION.confirmBody).toBe('Demo only — no appointment or email was created.');
+    expect(HERITAGE_LANDING_BOOKING_PRESENTATION.confirmEyebrow).toBe('Demo complete');
+    expect(HERITAGE_LANDING_BOOKING_PRESENTATION.confirmHeading).toBe("You're all set");
+    expect(HERITAGE_LANDING_BOOKING_PRESENTATION.confirmBody).toBe('Demo only — no appointment or email was created.');
     expect(markup).toContain('{presentation.confirmHeading}');
     expect(markup).toContain('{presentation.confirmBody}');
     expect(markup).toContain('{presentation.sandboxNote}');
@@ -142,7 +147,7 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     expect(live).toHaveLength(1);
     expect(journey).toContain('On a live booking page clients see “Booking confirmed”');
     expect(textOf(markup)).toContain(
-      'Cutstate is a fictional KERSIVO demonstration shop; times are examples, no appointment is created and no payment is taken.',
+      'Heritage Grooming is a fictional KERSIVO demonstration shop; times are examples, no appointment is created and no payment is taken.',
     );
   });
 
@@ -151,7 +156,7 @@ describe('Barbershop online booking page — Section 02 client booking journey',
     expect(anchors[0]).toContain('href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}');
     expect(anchors[0]).toContain('data-track={TRACK_EVENT}');
     expect(anchors[0]).toContain('data-track-placement={TRACK_PLACEMENT}');
-    expect(BARBERSHOP_ONLINE_BOOKING_DEMO_HREF).toBe('/demo/book');
+    expect(BARBERSHOP_ONLINE_BOOKING_DEMO_HREF).toBe(HERITAGE_DEMO_BOOK_HREF);
     expect(journey).toContain(`const TRACK_EVENT = '${FUNNEL_EVENTS.view_live_demo_click}';`);
     expect(journey).toContain("const TRACK_PLACEMENT = 'barbershop_online_booking_journey';");
     expect(markup).toContain('Explore the full booking demo');

@@ -110,7 +110,7 @@
   border-radius: 1rem;
   background: linear-gradient(180deg, #111113, #0b0b0c);
   color: var(--boa-ink);
-  font-family: 'BOB Cutstate Body', var(--font-body);
+  font-family: 'BOB Demo Body', var(--font-body);
 }
 
 .boa-client__title,

@@ -1,8 +1,9 @@
 ---
+import { heritageBarberThumb } from '@/lib/demo/heritage/demoShapes';
+import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS, getHeritageFeaturedServices as getDemoFeaturedServices, resolveHeritageServiceSlug as resolveDemoServiceSlug } from '@/lib/demo/heritage/demoShapes';
 import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
 import { KERSIVO_COMMISSION_WITH_STRIPE } from '@/lib/pricing/claimsPolicy';
-import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { formatDemoPriceGbp, getDemoFeaturedServices, resolveDemoServiceSlug } from '@/lib/demo/services';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
 
 const deposit = `£${KERSIVO_BOOKING_DEPOSIT_GBP}`;
 const service = resolveDemoServiceSlug('skin-fade') ?? getDemoFeaturedServices()[0];
@@ -61,7 +62,7 @@ const states = [
       <div class="hv2-ticket" aria-hidden="true" data-hv2-ticket>
         <div class="hv2-ticket__main">
           <div class="hv2-ticket__top">
-            <img class="hv2-ticket__logo" src="/images/home-v2/cutstate-logo.webp" alt="" width="216" height="72" loading="lazy" decoding="async" />
+            <img class="hv2-ticket__logo" src="/images/heritage/heritage-lockup.webp" alt="" width="648" height="216" loading="lazy" decoding="async" />
             <span class="hv2-ticket__ref">Demo booking</span>
           </div>
 
@@ -69,7 +70,7 @@ const states = [
           <p class="hv2-ticket__sub">{service ? `${service.durationMinutes} min · ${formatDemoPriceGbp(service.pricePence)}` : ''}</p>
 
           <div class="hv2-ticket__barber">
-            <img src={`/images/home-v2/${barber.slug}.webp`} alt="" width="360" height="270" loading="lazy" decoding="async" />
+            <img src={heritageBarberThumb(barber.slug)} alt="" width="160" height="160" loading="lazy" decoding="async" />
             <span><small>With</small><b>{barber.name}</b></span>
           </div>
 
@@ -99,7 +100,7 @@ const states = [
         <div class="hv2-ticket__stub">
           <span class="hv2-ticket__barcode"></span>
           <span class="hv2-ticket__progress"><i data-hv2-ticket-progress></i></span>
-          <span class="hv2-ticket__domain">cutstatebarbers.co.uk</span>
+          <span class="hv2-ticket__domain">heritagegrooming.co.uk</span>
         </div>
 
       </div>
@@ -119,6 +120,6 @@ const states = [
     </div>
     </div>
 
-    <p class="hv2-booking__note">{KERSIVO_COMMISSION_WITH_STRIPE} CUTSTATE is a fictional demonstration shop.</p>
+    <p class="hv2-booking__note">{KERSIVO_COMMISSION_WITH_STRIPE} Heritage Grooming is a fictional demonstration shop.</p>
   </div>
 </section>
