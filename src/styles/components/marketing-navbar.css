@@ -1459,6 +1459,21 @@ html.mnav-locked body::before {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem;
   }
+
+  /* Compare: the "vs" grid spans the panel; head-to-head pages and reports sit below it as plain links. */
+  .mnav-panel__surface[data-layout='compact'] .mnav-panel__sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mnav-panel__surface[data-layout='compact'] .mnav-panel__section + .mnav-panel__section {
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .mnav-panel__surface[data-layout='compact'] .mnav-panel__list:not(.mnav-panel__list--compact) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 1rem;
+  }
 }
 
 /* Narrow desktop bars: drop the secondary action and the price suffix; both stay in the panels and on /pricing. */

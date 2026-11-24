@@ -9,11 +9,12 @@ interface Props {
 }
 
 const { group, id } = Astro.props;
-const compact = group.layout === 'compact';
+// A group with a compact "vs" grid stacks its sections: the grid on top, plain links below.
+const layout = group.sections.some((section) => section.layout === 'compact') ? 'compact' : undefined;
 ---
 
 <div id={id} class="mnav-panel" data-mnav-panel={group.id} hidden>
-  <div class="mnav-panel__surface" data-columns={group.sections.length} data-layout={group.layout}>
+  <div class="mnav-panel__surface" data-columns={group.sections.length} data-layout={layout}>
     <div class="mnav-panel__intro">
       <p class="mnav-panel__eyebrow"><span class="mnav-dot" aria-hidden="true"></span>{group.eyebrow}</p>
       <p class="mnav-panel__heading">{group.heading}</p>
@@ -45,10 +46,10 @@ const compact = group.layout === 'compact';
         group.sections.map((section) => (
           <section class="mnav-panel__section" aria-label={section.label ?? group.label}>
             {section.label ? <p class="mnav-panel__section-label" aria-hidden="true">{section.label}</p> : null}
-            <ul class:list={['mnav-panel__list', { 'mnav-panel__list--compact': compact }]} role="list">
+            <ul class:list={['mnav-panel__list', { 'mnav-panel__list--compact': section.layout === 'compact' }]} role="list">
               {section.items.map((item) => (
                 <li>
-                  <MarketingNavLink item={item} compact={compact} />
+                  <MarketingNavLink item={item} compact={section.layout === 'compact'} />
                 </li>
               ))}
             </ul>

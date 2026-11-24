@@ -48,7 +48,12 @@ export type MarketingNavItem = {
   visible?: boolean;
 };
 
-export type MarketingNavSection = { id: string; label: string | null };
+export type MarketingNavSection = {
+  id: string;
+  label: string | null;
+  /** 'compact' lists items by short name with a "vs" prefix in a dense grid (KERSIVO-vs-competitor pages only). */
+  layout?: 'compact';
+};
 
 export type MarketingNavGroup = {
   id: MarketingNavGroupId;
@@ -63,8 +68,6 @@ export type MarketingNavGroup = {
   currentPrefixes?: readonly string[];
   /** Mobile hub opens on this group's tab unless the current page belongs to another group. */
   defaultOpen?: boolean;
-  /** 'compact' lists items by short name in a dense grid (used for the long list of comparisons). */
-  layout?: 'compact';
   sections: readonly MarketingNavSection[];
 };
 
@@ -109,8 +112,10 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     heading: 'Compare your options before you switch.',
     description: 'Fees, features and own-brand booking, side by side for UK barbershops.',
     featuredAction: { label: 'Estimate your costs', href: '/barber-software-cost-calculator' },
-    layout: 'compact',
-    sections: [{ id: 'alternatives', label: 'KERSIVO vs' }],
+    sections: [
+      { id: 'alternatives', label: 'KERSIVO vs', layout: 'compact' },
+      { id: 'reports', label: 'Head to head and fees' },
+    ],
   },
   {
     id: 'tools',
@@ -334,21 +339,21 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     description: 'The two biggest platforms compared for a UK barbershop, by team size.',
     href: '/booksy-vs-fresha',
     group: 'compare',
-    section: 'alternatives',
+    section: 'reports',
     icon: 'compare',
     keywords: ['booksy or fresha', 'which is better', 'commission'],
     shortLabel: 'Booksy vs Fresha',
   },
   {
     id: 'compare-kersivo-vs-booksy',
-    label: 'KERSIVO vs Booksy',
-    description: 'An interactive walk through your own branded site against a marketplace profile.',
+    label: 'Booksy vs your own website',
+    description: 'An interactive look at a marketplace profile against your own branded site.',
     href: '/kersivo-vs-booksy',
     group: 'compare',
     section: 'alternatives',
-    icon: 'compare',
-    keywords: ['kersivo or booksy', 'own website', 'marketplace'],
-    shortLabel: 'KERSIVO vs Booksy',
+    icon: 'system',
+    keywords: ['kersivo vs booksy', 'own website', 'marketplace', 'booksy profile'],
+    featured: true,
   },
   {
     id: 'compare-fees-report',
@@ -356,7 +361,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     description: 'Monthly cost, new-client fees and card fees for 10 UK systems, with dates.',
     href: '/barber-booking-fees-uk',
     group: 'compare',
-    section: 'alternatives',
+    section: 'reports',
     icon: 'compare',
     keywords: ['fees', 'prices', 'report', 'cost'],
     shortLabel: 'Fees report',
@@ -474,7 +479,10 @@ export function buildMarketingNavQuickLinks(
   groups: readonly ResolvedMarketingNavGroup[] = buildMarketingNavigation(),
 ): MarketingNavQuickLink[] {
   const compare = groups.find((group) => group.id === 'compare');
-  const alternatives = compare ? compare.sections.flatMap((section) => section.items).length : 0;
+  // Count competitor comparisons only (the "KERSIVO vs" grid), not head-to-head pages or reports.
+  const alternatives = compare
+    ? compare.sections.filter((section) => section.layout === 'compact').flatMap((section) => section.items).length
+    : 0;
   return [
     { id: 'quick-pricing', label: 'Pricing', meta: 'Plans and Starter', href: '/pricing', icon: 'pricing' },
     { id: 'quick-demo', label: 'Live demo', meta: 'Try it as a client', href: KERSIVO_LIVE_DEMO_HREF, icon: 'system' },

@@ -97,7 +97,6 @@ const selected =
           role="tabpanel"
           aria-labelledby={`${id}-tab-${group.id}`}
           data-mnav-tabpanel={group.id}
-          data-layout={group.layout}
           hidden={group === selected ? undefined : true}
         >
           {group.description ? <p class="mnav-hub__lead">{group.description}</p> : null}
@@ -113,10 +112,10 @@ const selected =
           {group.sections.map((section) => (
             <div class="mnav-hub__subsection">
               {section.label ? <p class="mnav-hub__section-label">{section.label}</p> : null}
-              <ul class:list={['mnav-hub__items', { 'mnav-hub__items--compact': group.layout === 'compact' }]} role="list">
+              <ul class:list={['mnav-hub__items', { 'mnav-hub__items--compact': section.layout === 'compact' }]} role="list">
                 {section.items.map((item) => (
                   <li>
-                    <MarketingNavLink item={item} compact={group.layout === 'compact'} />
+                    <MarketingNavLink item={item} compact={section.layout === 'compact'} />
                   </li>
                 ))}
               </ul>

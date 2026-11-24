@@ -28,6 +28,23 @@ describe('/kersivo-vs-booksy experience', () => {
     expect(MARKETING_NAV_ITEMS.some((item) => item.href === KVB_PAGE_PATH && item.group === 'compare')).toBe(true);
   });
 
+  it('targets "Booksy vs your own website" so it never competes with /booksy-alternative', async () => {
+    const { KVB_TITLE, KVB_DESCRIPTION, KVB_LEDGER_TITLE } = await import('./kersivoVsBooksyExperience');
+    const { BOOKSY_ALTERNATIVE_TITLE } = await import('./booksyAlternativeFaq');
+    expect(KVB_TITLE).toBe('Booksy vs Your Own Booking Website for UK Barbers | KERSIVO');
+    expect(KVB_TITLE.length).toBeLessThanOrEqual(60);
+    expect(KVB_TITLE).not.toMatch(/alternative/i);
+    expect(BOOKSY_ALTERNATIVE_TITLE).not.toMatch(/own (booking )?website/i);
+    expect(KVB_DESCRIPTION.length).toBeLessThanOrEqual(155);
+    expect(KVB_DESCRIPTION).toMatch(/0% KERSIVO commission \(Stripe fees apply\)/);
+    expect(KVB_HERO.eyebrow).toBe('Booksy vs your own website');
+    // /booksy-alternative uses "Booksy vs KERSIVO, line by line"; the ledger here must not repeat it.
+    expect(KVB_LEDGER_TITLE).not.toMatch(/line by line/i);
+    const { buildKersivoVsBooksyWebPageJsonLd } = await import('./kersivoVsBooksyJsonLd');
+    const ld = buildKersivoVsBooksyWebPageJsonLd() as { breadcrumb: { itemListElement: { name: string }[] } };
+    expect(ld.breadcrumb.itemListElement.map((item) => item.name)).toEqual(['Home', 'Compare', 'Booksy vs your own website']);
+  });
+
   it('leads with Full KERSIVO and the free preview CTA; Starter stays secondary', () => {
     expect(KVB_HERO.primary).toBe('Get my free preview');
     expect(KVB_HERO.facts[0]).toBe('£39/month per location');
