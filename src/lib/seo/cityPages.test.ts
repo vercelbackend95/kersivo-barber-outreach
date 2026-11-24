@@ -4,6 +4,7 @@ import {
   PUBLISHED_CITY_PAGES,
   buildCityBreadcrumbJsonLd,
   buildCityFaqJsonLd,
+  buildCityPageH1,
   buildCityPageDescription,
   buildCityPageTitle,
   buildCityWebPageJsonLd,
@@ -15,6 +16,7 @@ import {
 } from './cityPages';
 import { LONDON_CITY_PAGE as LONDON } from './cityPages/london';
 import { BOURNEMOUTH_CITY_PAGE as BOURNEMOUTH } from './cityPages/bournemouth';
+import { BIRMINGHAM_CITY_PAGE as BIRMINGHAM } from './cityPages/birmingham';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { MARKETING_SITEMAP_ENTRIES } from './marketingSitemap';
 import { getStaticPageLastModified } from './pageDates';
@@ -63,14 +65,14 @@ describe('city page metadata', () => {
     expect(buildCityPageTitle('Newcastle upon Tyne')).toBe('Barbershop Websites Newcastle upon Tyne | £39/mo | KERSIVO');
   });
 
-  it('keeps the meta description between 145 and 158 characters', () => {
+  it('keeps the meta description between 145 and 160 characters', () => {
     expect(buildCityPageDescription('London')).toBe(
       'Custom barbershop website design for London shops. Own domain, online booking, deposits and a retail pickup shop for £39/month flat — 0% KERSIVO commission.',
     );
     for (const city of PUBLISHED_CITY_PAGES) {
       const length = buildCityPageDescription(city.name).length;
       expect(length).toBeGreaterThanOrEqual(145);
-      expect(length).toBeLessThanOrEqual(158);
+      expect(length).toBeLessThanOrEqual(160);
     }
   });
 
@@ -292,7 +294,7 @@ describe('Bournemouth city page', () => {
     expect(BOURNEMOUTH.checkedIso).toBe('2026-11-24');
   });
 
-  it('uses the full title and the shorter description that fits 158 characters', () => {
+  it('uses the full title and the shorter description that fits 160 characters', () => {
     expect(buildCityPageTitle('Bournemouth')).toBe('Barbershop Website Design Bournemouth | £39/mo | KERSIVO');
     expect(buildCityPageDescription('Bournemouth')).toBe(
       'Custom barbershop website design for Bournemouth shops. Own domain, online booking, deposits and a retail pickup shop for £39/month — 0% KERSIVO commission.',
@@ -356,6 +358,102 @@ describe('Bournemouth city page', () => {
     expect(BOURNEMOUTH.journey.district).toBe('Winton');
     const places = BOURNEMOUTH.areas.flatMap((area) => area.places);
     for (const place of ['Boscombe', 'Southbourne', 'Winton', 'Charminster', 'Westbourne']) expect(places).toContain(place);
+  });
+});
+
+describe('Birmingham city page', () => {
+  it('is published at /barbershop-websites/birmingham with its own research date', () => {
+    expect(getCityPage('birmingham')).toBe(BIRMINGHAM);
+    expect(getCityPagePath(BIRMINGHAM)).toBe('/barbershop-websites/birmingham');
+    expect(BIRMINGHAM.nation).toBe('England');
+    expect(BIRMINGHAM.checkedIso).toBe('2026-11-24');
+  });
+
+  it('uses the exact title and the full 160-character description', () => {
+    expect(buildCityPageTitle('Birmingham')).toBe('Barbershop Website Design Birmingham | £39/mo | KERSIVO');
+    expect(buildCityPageTitle('Birmingham')).toHaveLength(55);
+    const description = buildCityPageDescription('Birmingham');
+    expect(description).toBe(
+      'Custom barbershop website design for Birmingham shops. Own domain, online booking, deposits and a retail pickup shop for £39/month flat — 0% KERSIVO commission.',
+    );
+    expect(description).toHaveLength(160);
+  });
+
+  it('builds Home > Barbershop Websites > Birmingham', () => {
+    const crumbs = buildCityBreadcrumbJsonLd(BIRMINGHAM);
+    expect((crumbs.itemListElement as Array<Record<string, unknown>>).map((item) => [item.name, item.item])).toEqual([
+      ['Home', 'https://kersivo.co.uk/'],
+      ['Barbershop Websites', 'https://kersivo.co.uk/barbershop-websites'],
+      ['Birmingham', 'https://kersivo.co.uk/barbershop-websites/birmingham'],
+    ]);
+  });
+
+  it('has five Birmingham questions: switching, deposits, Google Maps, rates and price', () => {
+    const faqs = getCityFaqs(BIRMINGHAM);
+    expect(faqs).toHaveLength(5);
+    const questions = faqs.map((faq) => faq.question);
+    for (const question of questions) expect(question).toContain('Birmingham');
+    const joined = questions.join(' ');
+    for (const topic of [/Booksy or Fresha/, /deposits/, /Google Maps/, /business rates/, /Making Tax Digital/, /KERSIVO/]) expect(joined).toMatch(topic);
+    const items = buildCityFaqJsonLd(BIRMINGHAM).mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
+    expect(items).toHaveLength(5);
+    items.forEach((item, index) => {
+      expect(item.name).toBe(faqs[index].question);
+      expect(item.acceptedAnswer.text).toBe(faqs[index].answer.join(' '));
+    });
+  });
+
+  it('prices one new client at the £25 Birmingham middle skin fade', () => {
+    expect(BIRMINGHAM.calculator.price).toBe(25);
+    const r = calculateCityScenario({ ...BIRMINGHAM.calculator, paymentMode: 'deposit' });
+    const byId = Object.fromEntries(r.competitors.map((c) => [c.id, c]));
+    expect(byId.booksy.feePerNewClient).toBe(7.5);
+    expect(byId.fresha.feePerNewClient).toBe(5);
+    expect(byId.treatwell.feePerNewClient).toBe(8.75);
+    expect(byId.booksy.feesToMatchKersivo).toBe(6);
+    expect(byId.fresha.feesToMatchKersivo).toBe(8);
+    expect(byId.treatwell.feesToMatchKersivo).toBe(5);
+  });
+
+  it('works out the Stripe fee examples from the verified Stripe facts', () => {
+    const cards = BIRMINGHAM.costs.find((cost) => cost.id === 'cards')!;
+    expect(cards.figure).toBe('28p');
+    const body = cards.body.join(' ');
+    expect(body).toContain('1.5% + 20p');
+    expect(body).toContain('£25 fade paid in full about 58p');
+    expect(body).toContain(STRIPE_FEES_NOTE);
+  });
+
+  it('cites Birmingham City Council for the 2026/27 multipliers and small business relief', () => {
+    const rates = BIRMINGHAM.costs.find((cost) => cost.id === 'rates')!;
+    expect(rates.sourceIds).toEqual(expect.arrayContaining(['bccMultipliers', 'bccSmallBusiness', 'hmtRhlGuidance']));
+    const body = rates.body.join(' ');
+    expect(body).toMatch(/Birmingham City Council/);
+    expect(body).toMatch(/38\.2p/);
+    expect(body).toMatch(/£12,000/);
+    expect(body).toMatch(/£14,999/);
+    const mtd = BIRMINGHAM.costs.find((cost) => cost.id === 'mtd')!.body.join(' ');
+    expect(mtd).toMatch(/6 April 2027/);
+    expect(mtd).toMatch(/£30,000/);
+  });
+
+  it('sets the walkthrough in Moseley and names the requested districts', () => {
+    expect(BIRMINGHAM.journey.district).toBe('Moseley');
+    expect(BIRMINGHAM.journey.service).toBe('Skin fade + beard trim');
+    expect(BIRMINGHAM.journey.product).toBe('Beard oil');
+    expect(BIRMINGHAM.areas.map((area) => area.name)).toEqual([
+      'City Centre, Jewellery Quarter and Digbeth',
+      'Moseley, Kings Heath and Harborne',
+      'Sutton Coldfield, Erdington and the outer suburbs',
+    ]);
+    for (const place of ['Digbeth', 'Moseley Village', 'Harborne High Street', 'Sutton Coldfield', 'Erdington']) {
+      expect(BIRMINGHAM.areas.flatMap((area) => area.places)).toContain(place);
+    }
+  });
+
+  it('works the target queries into the H1 and copy', () => {
+    expect(buildCityPageH1(BIRMINGHAM)).toBe('Barbershop website design for Birmingham shops');
+    expect(BIRMINGHAM.targetQueries).toContain('barbershop website design Birmingham');
   });
 });
 

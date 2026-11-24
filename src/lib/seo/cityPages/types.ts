@@ -70,6 +70,8 @@ export type CityJourney = {
   shopName: string;
   shopDomain: string;
   service: string;
+  /** Price shown for the walk-through service when it is not the plain skin fade (fictional demo price). Defaults to the calculator price. */
+  servicePrice?: number;
   slot: string;
   /** Retail product added for pickup. */
   product: string;
