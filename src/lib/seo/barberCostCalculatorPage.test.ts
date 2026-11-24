@@ -72,7 +72,7 @@ describe('barber software cost calculator SEO foundation', () => {
     expect(BARBER_COST_CALCULATOR_TITLE.length).toBeLessThanOrEqual(60);
     expect(existsSync(join(here, '../../pages/barber-software-cost-calculator/index.astro'))).toBe(true);
     expect(BARBER_COST_CALCULATOR_DESCRIPTION).toBe(
-      'How much does barber booking software cost? Compare subscriptions, per-barber fees and commission across Booksy, Fresha, Treatwell and 7 more. No sign-up.',
+      'Estimate your monthly barber booking software cost by number of barbers. Interactive UK calculator comparing 10 systems and fees. No sign-up.',
     );
     expect(BARBER_COST_CALCULATOR_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(resolveCanonicalUrl(BARBER_COST_CALCULATOR_PAGE_PATH)).toBe(
