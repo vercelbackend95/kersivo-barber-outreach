@@ -1,6 +1,7 @@
 # City pages playbook — `/barbershop-websites/{city}`
 
-First city: London (`src/lib/seo/cityPages/london.ts`, research checked 24 November 2026).
+Published: London (`src/lib/seo/cityPages/london.ts`) and Bournemouth (`src/lib/seo/cityPages/bournemouth.ts`),
+both researched and checked 24 November 2026.
 This is the workflow for adding the next city. A city ships only with its own research file; there is no
 way to publish a city by name alone, so we never end up with thin, name-swapped pages.
 
@@ -44,7 +45,10 @@ way to publish a city by name alone, so we never end up with thin, name-swapped 
 3. **Register it:** add the export to `PUBLISHED_CITY_PAGES` in `src/lib/seo/cityPages/index.ts`. The route,
    sitemap, lastmod and hub band follow. Add the URL to `EXPECTED_LOCS` in `marketingSitemap.test.ts`.
 4. **Check the title length.** `buildCityPageTitle` switches to "Barbershop Websites {City} | £39/mo | KERSIVO"
-   when the full form passes 60 characters. The description must stay within 145–158 characters (tested).
+   when the full form passes 60 characters. `buildCityPageDescription` drops "flat", then "Custom ", when a long
+   name pushes it past 158 characters (Bournemouth uses the first fallback); it must stay within 145–158 (tested).
+   `cityPages.test.ts` also fails if any sentence of city copy (outside approved policy wording) is shared by two
+   cities, so a new city cannot be a reworded copy of an existing one.
 5. **Verify:** `npm run claims:check`, `npm test`, `npm run typecheck`, `npm run build`; screenshots at 375,
    768, 1024 and 1440 with no horizontal scroll; calculator and tabs work by keyboard; reduced motion.
 
@@ -65,3 +69,21 @@ the targeting follows the query pattern, title and H1. Confirm volumes in Search
   business links (owner-added booking links).
 - Competitor fees: `booksyFacts.ts`, `freshaFacts.ts` (15 Nov 2026), `treatwellFacts.ts` (8 Oct 2026).
   SQUIRE is not priced: its public prices are USD and no UK quote is verified (`squireFacts.ts`).
+
+## Bournemouth sources (checked 24 November 2026)
+
+- Booksy, "Skin Fade in Bournemouth" search (32 results; our read of the 15 barbershops on page 1 with a
+  stand-alone fade, list prices, mobile barbers left out): £16–£30, middle price £20 (calculator default).
+- Booksy, "Barber Shop in Bournemouth" search: men's haircut £13–£23 (5 shops with a plain haircut price).
+- The Barber Board guide: UK town (£15–£27, typical £19) and big-city (£16–£30, typical £22) fades, for comparison.
+- No published Bournemouth chair-rent survey exists. Two UK Therapy Rooms town-centre adverts (BH1 £150/week,
+  BH2 £50/day) were read in the browser; both say they no longer accept enquiries, and the page says so.
+  TrimCheck for the common 60/40 split outside London.
+- BCP Council, "Important changes to business rates in 2026" (no page date): multipliers, council decides
+  eligibility, SBRR kept for 3 years after taking a second property.
+- HM Treasury, "Business Rates Multipliers: Qualifying Retail, Hospitality or Leisure" (updated 30 Mar 2026):
+  lists hair and beauty salons, including hairdressers; appointment-only premises still count.
+- Shared with London (read the same day): GOV.UK multipliers notice, SBRR, MTD press release, Google Business
+  Profile Help pages, Stripe UK pricing (`stripeFacts.ts`).
+- Not usable: Treatwell's Bournemouth listing pages returned empty responses; Fresha's Bournemouth page showed
+  no shop prices. Search volumes not checked (no keyword tool connected).

@@ -23,6 +23,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/starter',
   'https://kersivo.co.uk/barbershop-websites',
   'https://kersivo.co.uk/barbershop-websites/london',
+  'https://kersivo.co.uk/barbershop-websites/bournemouth',
   'https://kersivo.co.uk/barbershop-website-design',
   'https://kersivo.co.uk/barbershop-online-booking',
   'https://kersivo.co.uk/about',
