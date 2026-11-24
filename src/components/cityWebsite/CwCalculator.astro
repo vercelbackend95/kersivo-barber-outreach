@@ -1,0 +1,152 @@
+---
+/**
+ * City revenue & no-show calculator. Server-rendered with the city's defaults so the numbers are in the
+ * HTML without JavaScript; initCityPage recalculates live with the same pure engine (marketplaceMath).
+ * No storage, cookies or network.
+ */
+import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import {
+  CITY_CALCULATOR_LIMITS as L,
+  calculateCityScenario,
+  formatCityGbp,
+  formatCityGbpRounded,
+} from '@/lib/cityPages/marketplaceMath';
+import type { CityPage } from '@/lib/seo/cityPages';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const d = city.calculator;
+const r = calculateCityScenario({ ...d, paymentMode: 'deposit' });
+const maxMonthly = Math.max(r.kersivoMonthly, ...r.competitors.map((c) => c.monthlyTotal));
+const priceSource = city.sources.find((s) => s.id === d.priceSourceId);
+const priceSourceLine = priceSource
+  ? [priceSource.label.split(':')[0], priceSource.pageDate].filter(Boolean).join(', ')
+  : '';
+const fill = (value: number) => (maxMonthly > 0 ? value / maxMonthly : 0).toFixed(3);
+---
+
+<section class="cw-section cw-calc" id="cw-calculator" aria-labelledby="cw-calc-title">
+  <div class="cw-shell">
+    <div class="cw-head cw-head--split">
+      <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>{city.name} calculator</p>
+      <h2 id="cw-calc-title" class="cw-h2">Price your shop: commission against £{SAAS_MONTHLY_GBP} flat</h2>
+      <p class="cw-lead">
+        Move the sliders to match your shop. The bars show what a month costs with each marketplace’s
+        new-client fee, and what deposits would keep from the no-shows you already have.
+      </p>
+    </div>
+
+    <form class="cw-calc__grid" data-cw-calc aria-label={`${city.name} barbershop cost calculator`} novalidate>
+      <fieldset class="cw-card cw-calc__inputs">
+        <span class="cw-card__edge" aria-hidden="true"></span>
+        <legend class="cw-eyebrow cw-eyebrow--small"><span class="cw-dot" aria-hidden="true"></span>Your numbers</legend>
+
+        <div class="cw-field">
+          <div class="cw-field__top">
+            <label for="cw-price">Average cut price</label>
+            <output for="cw-price" data-cw-out="price">{formatCityGbp(d.price)}</output>
+          </div>
+          <input id="cw-price" name="price" type="range" min={L.price.min} max={L.price.max} step={L.price.step} value={d.price} aria-describedby="cw-price-note" />
+          <p id="cw-price-note" class="cw-field__note">
+            Starts at {formatCityGbp(d.price)}, the {d.priceNote.charAt(0).toLowerCase()}{d.priceNote.slice(1)}{priceSourceLine ? ` (${priceSourceLine})` : ''}.
+          </p>
+        </div>
+
+        <div class="cw-field">
+          <div class="cw-field__top">
+            <label for="cw-barbers">Bookable barbers</label>
+            <output for="cw-barbers" data-cw-out="barbers">{d.barbers}</output>
+          </div>
+          <input id="cw-barbers" name="barbers" type="range" min={L.barbers.min} max={L.barbers.max} step={L.barbers.step} value={d.barbers} />
+        </div>
+
+        <div class="cw-field">
+          <div class="cw-field__top">
+            <label for="cw-new">New marketplace clients a week</label>
+            <output for="cw-new" data-cw-out="marketplaceClientsPerWeek">{d.marketplaceClientsPerWeek}</output>
+          </div>
+          <input id="cw-new" name="marketplaceClientsPerWeek" type="range" min={L.marketplaceClientsPerWeek.min} max={L.marketplaceClientsPerWeek.max} step="1" value={d.marketplaceClientsPerWeek} aria-describedby="cw-new-note" />
+          <p id="cw-new-note" class="cw-field__note">Clients charged a new-client fee. Booksy charges nothing for Marketplace bookings unless Boost is on.</p>
+        </div>
+
+        <div class="cw-field">
+          <div class="cw-field__top">
+            <label for="cw-noshows">No-shows a week</label>
+            <output for="cw-noshows" data-cw-out="noShowsPerWeek">{d.noShowsPerWeek}</output>
+          </div>
+          <input id="cw-noshows" name="noShowsPerWeek" type="range" min={L.noShowsPerWeek.min} max={L.noShowsPerWeek.max} step="1" value={d.noShowsPerWeek} />
+        </div>
+
+        <fieldset class="cw-segment">
+          <legend>How online bookings pay on KERSIVO</legend>
+          <div class="cw-segment__options">
+            <label><input type="radio" name="paymentMode" value="deposit" checked /><span>£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</span></label>
+            <label><input type="radio" name="paymentMode" value="full" /><span>Pay in full</span></label>
+          </div>
+        </fieldset>
+      </fieldset>
+
+      <div class="cw-calc__results">
+        <section class="cw-card cw-calc__month" aria-labelledby="cw-month-title">
+          <span class="cw-card__edge" aria-hidden="true"></span>
+          <h3 id="cw-month-title" class="cw-card__title">A month, priced out</h3>
+          <ul class="cw-bars" role="list" aria-live="polite" data-cw-bars>
+            <li class="cw-bar cw-bar--own">
+              <span class="cw-bar__name">Full KERSIVO</span>
+              <span class="cw-bar__track" aria-hidden="true"><span class="cw-bar__fill" data-cw-fill="kersivo" style={`--cw-fill:${fill(r.kersivoMonthly)}`}></span></span>
+              <span class="cw-bar__value">£{SAAS_MONTHLY_GBP}</span>
+              <span class="cw-bar__detail">flat, per location, 0% KERSIVO commission, Stripe fees apply</span>
+            </li>
+            {r.competitors.map((c) => (
+              <li class="cw-bar" data-cw-row={c.id}>
+                <span class="cw-bar__name">{c.label}</span>
+                <span class="cw-bar__track" aria-hidden="true"><span class="cw-bar__fill" data-cw-fill={c.id} style={`--cw-fill:${fill(c.monthlyTotal)}`}></span></span>
+                <span class="cw-bar__value" data-cw={`${c.id}-total`}>{formatCityGbpRounded(c.monthlyTotal)}</span>
+                <span class="cw-bar__detail" data-cw={`${c.id}-detail`}>
+                  {c.subscription === null
+                    ? `${formatCityGbpRounded(c.newClientFeesPerMonth)} in new-client fees, plus a quoted subscription`
+                    : `${formatCityGbpRounded(c.subscription)} plan + ${formatCityGbpRounded(c.newClientFeesPerMonth)} new-client fees`}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <div class="cw-calc__tiles">
+          <section class="cw-card cw-tile" aria-labelledby="cw-cover-title">
+            <h3 id="cw-cover-title" class="cw-tile__kicker">£{SAAS_MONTHLY_GBP} a month is covered by</h3>
+            <ul class="cw-tile__list" role="list" aria-live="polite">
+              {r.competitors.map((c) => (
+                <li>
+                  <strong data-cw={`${c.id}-match`}>{c.feesToMatchKersivo}</strong>
+                  <span>{c.label.replace(' with Boost', ' Boost').replace(' Marketplace', '')} fees at <span data-cw={`${c.id}-fee`}>{formatCityGbp(c.feePerNewClient)}</span></span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section class="cw-card cw-tile cw-tile--noshow" aria-labelledby="cw-noshow-title">
+            <h3 id="cw-noshow-title" class="cw-tile__kicker">No-shows a month</h3>
+            <p class="cw-tile__big" aria-live="polite"><span data-cw="lost">{formatCityGbpRounded(r.noShow.lostPerMonth)}</span><span class="cw-tile__unit">in empty chair time</span></p>
+            <p class="cw-tile__line" aria-live="polite">
+              <span data-cw="kept">{formatCityGbpRounded(r.noShow.keptPerMonth)}</span> kept with
+              <span data-cw="mode">a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</span>. <span data-cw="cover">{r.noShow.toCoverKersivo}</span> no-shows cover £{SAAS_MONTHLY_GBP}.
+            </p>
+          </section>
+        </div>
+
+        <p class="cw-fine">
+          Competitor figures are ex VAT as published, checked against their UK pricing pages; Treatwell’s
+          subscription is quoted per shop, so only its commission is counted. Marketplaces can bring
+          you new clients and KERSIVO doesn’t run one: this compares what you pay, not how many clients
+          each brings. SQUIRE isn’t shown: its public prices are in US dollars and we couldn’t verify a
+          UK quote. Kept amounts are before Stripe fees. {STRIPE_FEES_NOTE}
+        </p>
+      </div>
+    </form>
+  </div>
+</section>

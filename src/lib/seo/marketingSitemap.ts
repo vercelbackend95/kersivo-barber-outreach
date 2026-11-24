@@ -23,6 +23,7 @@ import { getStaticPageLastModified } from './pageDates';
 import { PRICING_PAGE_PATH } from './pricingPage';
 import { STARTER_PAGE_PATH } from './starterPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from './barbershopWebsitesPage';
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from './cityPages';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from './barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
 import { FREE_PREVIEW_PAGE_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
@@ -55,6 +56,9 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(STARTER_PAGE_PATH),
   /** Published Websites pillar and supporting guides. */
   ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE ? [staticPage(BARBERSHOP_WEBSITES_PAGE_PATH)] : []),
+  /** City pages under the pillar (/barbershop-websites/{city}), one per published city research file. */
+  ...(BARBERSHOP_WEBSITES_PAGE_INDEXABLE
+    ? PUBLISHED_CITY_PAGES.map((city) => staticPage(getCityPagePath(city))) : []),
   ...(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
     ? [staticPage(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)] : []),
   ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE

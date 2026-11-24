@@ -1,0 +1,147 @@
+---
+/**
+ * "From a Maps search to a booking on your own domain": four steps as an accessible tab list driving a
+ * phone mock-up, plus the directory route for contrast. The shop is fictional and labelled as such.
+ * Google facts (ranking factors, owner-added booking links) come from Google's own help pages.
+ */
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+import { describeNewClientFees, formatCityGbp } from '@/lib/cityPages/marketplaceMath';
+import type { CityPage } from '@/lib/seo/cityPages';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const j = city.journey;
+const price = formatCityGbp(city.calculator.price);
+const steps = [
+  {
+    id: 'search',
+    title: 'Search',
+    body: `Someone on ${j.near} in ${j.district} types “${j.query}”. Google picks the local results mainly on relevance, distance and prominence; nobody can pay to rank higher.`,
+  },
+  {
+    id: 'profile',
+    title: 'Profile',
+    body: `Your Business Profile links to ${j.shopDomain} as your website and as your booking link, so the tap goes to your shop, not to a directory page of shops nearby.`,
+  },
+  {
+    id: 'book',
+    title: 'Book',
+    body: `${j.service}, ${j.slot}, with the barber they asked for. A £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit is taken by card; the rest is paid in the shop.`,
+  },
+  {
+    id: 'pickup',
+    title: 'Pick up',
+    body: `They add ${j.product.toLowerCase()} to collect at the appointment. Pomade, clay and beard oil sell from your own website, with 0% KERSIVO commission (Stripe fees apply).`,
+  },
+];
+---
+
+<section class="cw-section cw-route" aria-labelledby="cw-route-title">
+  <div class="cw-shell">
+    <div class="cw-route__grid" data-cw-route>
+      <div class="cw-head">
+        <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>Maps to booked</p>
+        <h2 id="cw-route-title" class="cw-h2">From a Maps search in {j.district} to a booking on your domain</h2>
+      </div>
+      <div class="cw-route__steps" role="tablist" aria-label="Steps from search to booking" aria-orientation="vertical">
+        {steps.map((step, index) => (
+          <button
+            type="button"
+            class="cw-step"
+            role="tab"
+            id={`cw-tab-${step.id}`}
+            aria-controls={`cw-screen-${step.id}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+            data-cw-tab={step.id}
+          >
+            <span class="cw-step__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+            <span class="cw-step__text">
+              <span class="cw-step__title">{step.title}</span>
+              <span class="cw-step__body">{step.body}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div class="cw-phone" aria-label={`Illustration of ${j.shopName}, a fictional ${j.district} shop`} role="group">
+        <div class="cw-phone__frame">
+          <div class="cw-phone__screen">
+            <div class="cw-screen" id="cw-screen-search" role="tabpanel" aria-labelledby="cw-tab-search" data-cw-panel="search">
+              <div class="cw-ui-search"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><circle cx="7" cy="7" r="4.25" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M10.2 10.2 13.5 13.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>{j.query}</div>
+              <div class="cw-ui-map" aria-hidden="true">
+                <svg viewBox="0 0 260 150" preserveAspectRatio="xMidYMid slice">
+                  <path d="M-10 40 L270 20 M-10 95 L270 120 M60 -10 L90 160 M170 -10 L150 160 M-10 140 L120 60 L270 70" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="7" />
+                  <path d="M-10 40 L270 20 M-10 95 L270 120 M60 -10 L90 160 M170 -10 L150 160" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="1" />
+                </svg>
+                <span class="cw-pin cw-pin--you" style="--x:52%;--y:52%"></span>
+                <span class="cw-pin" style="--x:28%;--y:30%"></span>
+                <span class="cw-pin" style="--x:74%;--y:70%"></span>
+                <span class="cw-pin cw-pin--here" style="--x:63%;--y:38%"></span>
+              </div>
+              <ul class="cw-ui-results" role="list">
+                <li class="is-yours"><b>{j.shopName}</b><span>Barber shop · {j.near}</span></li>
+                <li><b>Barber shop</b><span>{j.district}</span></li>
+                <li><b>Barber shop</b><span>{j.district}</span></li>
+              </ul>
+            </div>
+
+            <div class="cw-screen" id="cw-screen-profile" role="tabpanel" aria-labelledby="cw-tab-profile" data-cw-panel="profile" hidden>
+              <div class="cw-ui-photo" aria-hidden="true"></div>
+              <p class="cw-ui-name">{j.shopName}</p>
+              <p class="cw-ui-sub">Barber shop · {j.near}, {j.district}</p>
+              <ul class="cw-ui-links" role="list">
+                <li><span>Website</span><b>{j.shopDomain}</b></li>
+                <li><span>Booking</span><b>{j.shopDomain}/book</b></li>
+              </ul>
+            </div>
+
+            <div class="cw-screen" id="cw-screen-book" role="tabpanel" aria-labelledby="cw-tab-book" data-cw-panel="book" hidden>
+              <p class="cw-ui-url"><svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>{j.shopDomain}/book</p>
+              <ul class="cw-ui-rows" role="list">
+                <li><span>Service</span><b>{j.service} · {price}</b></li>
+                <li><span>Barber</span><b>First available</b></li>
+                <li><span>Time</span><b>{j.slot}</b></li>
+                <li class="is-pay"><span>Pay now</span><b>£{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</b></li>
+              </ul>
+              <span class="cw-ui-btn">Confirm booking</span>
+            </div>
+
+            <div class="cw-screen" id="cw-screen-pickup" role="tabpanel" aria-labelledby="cw-tab-pickup" data-cw-panel="pickup" hidden>
+              <p class="cw-ui-url"><svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M4.5 7V5.2a3.5 3.5 0 0 1 7 0V7" fill="none" stroke="currentColor" stroke-width="1.5" /><rect x="3" y="7" width="10" height="7" rx="1.6" fill="currentColor" /></svg>{j.shopDomain}/shop</p>
+              <p class="cw-ui-shelf">Pick up at your appointment</p>
+              <div class="cw-ui-product is-added">
+                <span class="cw-ui-tin" aria-hidden="true"></span>
+                <span><b>{j.product}</b><small>Added to your visit</small></span>
+                <b>{formatCityGbp(j.productPrice)}</b>
+              </div>
+              {j.shelf.map((item, index) => (
+                <div class="cw-ui-product">
+                  <span class:list={['cw-ui-tin', index === 1 && 'cw-ui-tin--bottle']} aria-hidden="true"></span>
+                  <span><b>{item.name}</b><small>Add to your visit</small></span>
+                  <b>{formatCityGbp(item.price)}</b>
+                </div>
+              ))}
+              <div class="cw-ui-done">
+                <span class="cw-ui-tick" aria-hidden="true"><svg viewBox="0 0 16 16" width="12" height="12"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+                <span><b>Booked: {j.slot}</b><small>{j.service} + {j.product.toLowerCase()} to collect</small></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="cw-card cw-route__detour" aria-labelledby="cw-detour-title">
+        <h3 id="cw-detour-title" class="cw-card__title">The directory route</h3>
+        <p>
+          A marketplace listing sends the same client to a page of shops near them. When they book you
+          as a new client there, the first visit can carry a fee: {describeNewClientFees()}, all ex VAT.
+        </p>
+        <p class="cw-route__note">{j.shopName} is a fictional {j.district} shop used to show the steps.</p>
+      </aside>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,97 @@
+---
+/**
+ * City hero: breadcrumb, H1, the offer in one paragraph, primary Full CTA + Starter as secondary,
+ * and the "one new client" card that prices a single new client four ways at the city's typical price.
+ * Competitor fees come from calculateCityScenario (verified *Facts.ts); nothing is typed in here.
+ */
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { calculateCityScenario, formatCityGbp } from '@/lib/cityPages/marketplaceMath';
+import { getCityBreadcrumbs } from '@/lib/seo/cityPages';
+import type { CityPage } from '@/lib/seo/cityPages';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const freePreview = isFreePreviewFlowEnabled();
+const placement = `city_${city.slug}_hero`;
+const crumbs = getCityBreadcrumbs(city);
+const scenario = calculateCityScenario({ ...city.calculator, paymentMode: 'deposit' });
+const rows = [...scenario.competitors].sort((a, b) => b.feePerNewClient - a.feePerNewClient);
+const maxFee = Math.max(...rows.map((row) => row.feePerNewClient));
+---
+
+<section class="cw-hero" aria-labelledby="cw-hero-title">
+  <div class="cw-shell cw-hero__inner">
+    <nav class="cw-crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        {crumbs.map((crumb, index) =>
+          index === crumbs.length - 1 ? (
+            <li><span aria-current="page">{crumb.name}</span></li>
+          ) : (
+            <li><a href={crumb.path}>{crumb.name}</a></li>
+          ),
+        )}
+      </ol>
+    </nav>
+
+    <div class="cw-hero__copy" data-cw-enter>
+      <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>{city.name} · Barbershop websites</p>
+      <h1 id="cw-hero-title" class="cw-hero__title">
+        {city.h1Lead} <span class="cw-hero__mark">{city.h1Mark}</span>
+      </h1>
+      <p class="cw-hero__lead">{city.heroLead}</p>
+
+      <div class="cw-hero__actions">
+        {freePreview ? (
+          <FullPlanCta part="primary" primaryClass="cw-btn cw-btn--primary" placement={placement} />
+        ) : (
+          <a href="/admin/launch" class="btn btn--primary btn--lg cw-btn cw-btn--primary" data-track="saas_subscribe_click" data-track-placement={placement}>
+            Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
+          </a>
+        )}
+        <a href="/starter" class="btn btn--outline btn--lg cw-btn cw-btn--ghost" data-track="starter_plan_explore_click" data-track-placement={placement}>
+          Or start on Starter — £0/month
+        </a>
+      </div>
+
+      <ul class="cw-facts" role="list" aria-label="Full KERSIVO terms">
+        <li>£{SAAS_MONTHLY_GBP}/month per location, not per barber</li>
+        <li>No setup fee</li>
+        <li>0% KERSIVO commission, Stripe fees apply</li>
+      </ul>
+    </div>
+
+    <figure class="cw-card cw-hero__card" data-cw-enter data-cw-hero-card aria-labelledby="cw-hero-card-title">
+      <span class="cw-card__edge" aria-hidden="true"></span>
+      <p class="cw-eyebrow cw-eyebrow--small"><span class="cw-dot" aria-hidden="true"></span>One new client</p>
+      <p id="cw-hero-card-title" class="cw-hero__card-title">
+        A {formatCityGbp(city.calculator.price)} {city.name} skin fade, booked four ways
+      </p>
+      <ul class="cw-feebars" role="list">
+        {rows.map((row) => (
+          <li class="cw-feebar">
+            <span class="cw-feebar__name">{row.label}</span>
+            <span class="cw-feebar__track" aria-hidden="true">
+              <span class="cw-feebar__fill" style={`--cw-fill:${(row.feePerNewClient / maxFee).toFixed(3)}`}></span>
+            </span>
+            <span class="cw-feebar__value">{formatCityGbp(row.feePerNewClient)}</span>
+          </li>
+        ))}
+        <li class="cw-feebar cw-feebar--own">
+          <span class="cw-feebar__name">Your own website on KERSIVO</span>
+          <span class="cw-feebar__track" aria-hidden="true"><span class="cw-feebar__fill" style="--cw-fill:0"></span></span>
+          <span class="cw-feebar__value">£0</span>
+        </li>
+      </ul>
+      <div class="cw-hero__card-foot">
+        <p>One-time new-client fees, ex VAT, at the typical independent {city.name} skin fade price. The £0 is KERSIVO commission; you pay £{SAAS_MONTHLY_GBP}/month flat.</p>
+        <a href="#cw-calculator" class="cw-textlink">Try it with your prices</a>
+      </div>
+    </figure>
+  </div>
+</section>
