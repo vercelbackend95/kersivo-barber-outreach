@@ -15,12 +15,12 @@ import CwCosts from '@/components/cityWebsite/CwCosts.astro';
 import CwFaq from '@/components/cityWebsite/CwFaq.astro';
 import CwClose from '@/components/cityWebsite/CwClose.astro';
 import '@/styles/city-website/page.css';
-import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import {
   buildCityBreadcrumbJsonLd,
   buildCityFaqJsonLd,
   buildCityPageDescription,
   buildCityPageTitle,
+  buildCitySoftwareApplicationJsonLd,
   buildCityWebPageJsonLd,
   getCityPage,
   getCityPagePath,
@@ -41,7 +41,7 @@ const currentYear = new Date().getFullYear();
   canonicalPath={getCityPagePath(city)}
   robotsFollow
   jsonLd={[
-    buildKersivoSoftwareApplicationJsonLd(),
+    buildCitySoftwareApplicationJsonLd(city),
     buildCityWebPageJsonLd(city),
     buildCityBreadcrumbJsonLd(city),
     buildCityFaqJsonLd(city),
