@@ -1,11 +1,11 @@
 ---
 /**
- * Closing CTA: Full KERSIVO first (free preview when the flow is on), Starter as the secondary text link,
- * and the way back into the Websites cluster (pillar, design guide).
+ * Closing CTA: Full KERSIVO first (free preview when the flow is on), Starter as the secondary button,
+ * the pricing micro-copy, then the shared city navigation back into the Websites cluster.
  */
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import CwCityNav from '@/components/cityWebsite/CwCityNav.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
-import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import type { CityPage } from '@/lib/seo/cityPages';
 
@@ -21,12 +21,9 @@ const placement = `city_${city.slug}_final`;
 <section class="cw-close" aria-labelledby="cw-close-title">
   <div class="cw-shell cw-close__inner">
     <p class="cw-close__domain" aria-hidden="true">{city.journey.shopDomain.replace(/^[^.]+/, 'yourshop')}</p>
-    <h2 id="cw-close-title" class="cw-h2 cw-close__title">Your {city.name} shop, booked on your own name</h2>
+    <h2 id="cw-close-title" class="cw-h2 cw-close__title">Ready to put your {city.name} shop on your own domain?</h2>
     <p class="cw-lead cw-close__lead">
-      A website in your shop’s brand on your own domain, online booking with deposits, a retail pickup
-      shop and the dashboard behind it, set up by KERSIVO for £{SAAS_MONTHLY_GBP}/month per location.
-      Typically ready in a few days once we receive all required information, and nothing goes live
-      until you approve it.
+      See a free working preview built around your barbershop before you pay a penny&nbsp;— or start free on Starter.
     </p>
     <div class="cw-close__actions">
       {freePreview ? (
@@ -36,17 +33,19 @@ const placement = `city_${city.slug}_final`;
           Start Full KERSIVO — £{SAAS_MONTHLY_GBP}/month
         </a>
       )}
+      <a href="/starter" class="btn btn--outline btn--lg cw-btn cw-btn--ghost" data-track="starter_plan_explore_click" data-track-placement={placement}>
+        Or start on Starter — £0/month
+      </a>
     </div>
-    {freePreview && <FullPlanCta part="subscribe" class="cw-close__subscribe" placement={placement} />}
-    <a href="/starter" class="cw-textlink cw-close__starter" data-track="starter_plan_explore_click" data-track-placement={placement}>
-      Only need bookings for up to 4 barbers? Starter is £0/month
-    </a>
-    <p class="cw-close__fine">No setup fee. No VAT added. 0% KERSIVO commission. {STRIPE_FEES_NOTE}</p>
-
-    <nav class="cw-close__more" aria-label="More on barbershop websites">
-      <a href="/barbershop-websites">What a barbershop website should include</a>
-      <a href="/barbershop-website-design">Barbershop website design guide</a>
-      {freePreview && <a href="/free-preview">See your free website preview</a>}
-    </nav>
+    <ul class="cw-facts cw-close__facts" role="list" aria-label="Full KERSIVO terms">
+      <li>£{SAAS_MONTHLY_GBP}/month per location, not per barber</li>
+      <li>No setup fee</li>
+      <li>0% KERSIVO commission, Stripe fees apply</li>
+    </ul>
+    <p class="cw-close__note">
+      Typically ready in a few days once we receive all required information, and nothing goes live until you approve it.
+    </p>
   </div>
 </section>
+
+<CwCityNav city={city} />
