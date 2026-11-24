@@ -1,6 +1,6 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const PHOREST_ALTERNATIVE_PAGE_PATH='/phorest-alternative';
-export const PHOREST_ALTERNATIVE_TITLE='Phorest Alternative UK for Barbershops | KERSIVO';
+export const PHOREST_ALTERNATIVE_TITLE='Phorest Alternative UK for Barbershops: £39/mo, 0% Fees';
 export const PHOREST_ALTERNATIVE_DESCRIPTION='Looking for a Phorest alternative in the UK? Compare KERSIVO and Phorest pricing, bookings, deposits, websites, client tools and switching for barbershops.';
 export const PHOREST_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const PHOREST_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';

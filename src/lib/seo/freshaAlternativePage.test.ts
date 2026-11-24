@@ -157,7 +157,7 @@ describe('fresha-alternative page SEO foundation', () => {
     expect(pageSource).toContain('description={FRESHA_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={FRESHA_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain(
-      'jsonLd={[buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeBreadcrumbJsonLd(), buildFreshaAlternativeFaqJsonLd()]}',
+      'jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildFreshaAlternativeWebPageJsonLd(), buildFreshaAlternativeBreadcrumbJsonLd(), buildFreshaAlternativeFaqJsonLd()]}',
     );
     expect(pageSource).not.toContain('noindex');
     expect(FRESHA_ALTERNATIVE_PAGE_PATH).toBe('/fresha-alternative');

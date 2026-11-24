@@ -7,10 +7,10 @@ export const BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH = '/barbershop-website-design';
 
 /** Design intent (layout, branding, mobile UX); "do I need a website" intent lives on /barbershop-websites. */
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE =
-  'Barbershop Website Design: Layout, Branding & UX | KERSIVO';
+  'Barbershop Website Design UK | Custom Sites £39/mo';
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION =
-  'Barbershop website design for UK shops: the layout, branding, photography and mobile UX that make a site look professional and turn visitors into bookings.';
+  'Custom barbershop website design for UK shops. Online booking, deposits, retail pickup shop and your own domain for £39/month. See a free preview first.';
 
 export const BARBERSHOP_WEBSITE_DESIGN_PAGE_H1 = WD_HERO_TITLE_LINES.join(' ');
 

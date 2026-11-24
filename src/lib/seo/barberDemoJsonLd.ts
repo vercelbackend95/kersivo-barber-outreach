@@ -82,53 +82,68 @@ export function buildBarberDemoJsonLd(freePreview = false): Record<string, unkno
         mainEntity: { '@id': softwareId },
         hasPart: { '@id': `${siteUrl}/#faq` },
       },
+      buildKersivoSoftwareApplicationNode(siteUrl),
+    ],
+  };
+}
+
+/**
+ * KERSIVO SoftwareApplication node (#software): Full KERSIVO (£39.00) and Starter (£0.00) offers in GBP.
+ * Shared by the homepage graph and the commercial pages (/pricing, /starter, /compare, /*-alternative).
+ * Never add aggregateRating or reviews: KERSIVO has no published ratings.
+ */
+export function buildKersivoSoftwareApplicationNode(siteUrl = getPublicSiteUrl()): Record<string, unknown> {
+  const organizationId = getKersivoOrganizationId(siteUrl);
+  return {
+    '@type': 'SoftwareApplication',
+    '@id': getKersivoSoftwareId(siteUrl),
+    name: KERSIVO_BRAND_SCHEMA_NAME,
+    url: `${siteUrl}/`,
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: 'Barbershop booking software and websites',
+    operatingSystem: 'Web',
+    inLanguage: 'en-GB',
+    description: SOFTWARE_DESCRIPTION,
+    provider: { '@id': organizationId },
+    featureList: [...KERSIVO_SOFTWARE_FEATURE_LIST],
+    offers: [
       {
-        '@type': 'SoftwareApplication',
-        '@id': softwareId,
-        name: KERSIVO_BRAND_SCHEMA_NAME,
-        url: `${siteUrl}/`,
-        applicationCategory: 'BusinessApplication',
-        applicationSubCategory: 'Barbershop booking software and websites',
-        operatingSystem: 'Web browser',
-        inLanguage: 'en-GB',
-        description: SOFTWARE_DESCRIPTION,
-        provider: { '@id': organizationId },
-        featureList: [...KERSIVO_SOFTWARE_FEATURE_LIST],
-        offers: [
-          {
-            '@type': 'Offer',
-            '@id': `${siteUrl}/#offer-full`,
-            name: 'Full KERSIVO',
-            description:
-              'Per physical location: branded website and standard domain, online booking with payment control, clients, reports, retail pickup and SMS reminders within a monthly allowance. No setup fee. Billed monthly from purchase. Cancel anytime.',
-            url: `${siteUrl}/pricing`,
-            price: SAAS_MONTHLY_GBP.toFixed(2),
-            priceCurrency: 'GBP',
-            availability: 'https://schema.org/InStock',
-            eligibleRegion: { '@type': 'Country', name: 'United Kingdom' },
-            seller: { '@id': organizationId },
-            priceSpecification: {
-              '@type': 'UnitPriceSpecification',
-              price: SAAS_MONTHLY_GBP.toFixed(2),
-              priceCurrency: 'GBP',
-              billingDuration: 'P1M',
-              unitText: 'per location per month',
-            },
-          },
-          {
-            '@type': 'Offer',
-            '@id': `${siteUrl}/#offer-starter`,
-            name: 'KERSIVO Starter',
-            description: `£0/month for one location and up to 4 bookable barbers. Public bookings require a connected Stripe account and are paid by a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or in full; Stripe fees apply.`,
-            url: `${siteUrl}/starter`,
-            price: '0',
-            priceCurrency: 'GBP',
-            availability: 'https://schema.org/InStock',
-            eligibleRegion: { '@type': 'Country', name: 'United Kingdom' },
-            seller: { '@id': organizationId },
-          },
-        ],
+        '@type': 'Offer',
+        '@id': `${siteUrl}/#offer-full`,
+        name: 'Full KERSIVO',
+        description:
+          'Per physical location: branded website and standard domain, online booking with payment control, clients, reports, retail pickup and SMS reminders within a monthly allowance. No setup fee. Billed monthly from purchase. Cancel anytime.',
+        url: `${siteUrl}/pricing`,
+        price: SAAS_MONTHLY_GBP.toFixed(2),
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
+        eligibleRegion: { '@type': 'Country', name: 'United Kingdom' },
+        seller: { '@id': organizationId },
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: SAAS_MONTHLY_GBP.toFixed(2),
+          priceCurrency: 'GBP',
+          billingDuration: 'P1M',
+          unitText: 'per location per month',
+        },
+      },
+      {
+        '@type': 'Offer',
+        '@id': `${siteUrl}/#offer-starter`,
+        name: 'KERSIVO Starter',
+        description: `£0/month for one location and up to 4 bookable barbers. Public bookings require a connected Stripe account and are paid by a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or in full; Stripe fees apply.`,
+        url: `${siteUrl}/starter`,
+        price: '0.00',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
+        eligibleRegion: { '@type': 'Country', name: 'United Kingdom' },
+        seller: { '@id': organizationId },
       },
     ],
   };
+}
+
+/** Standalone SoftwareApplication JSON-LD block for pages outside the homepage graph. */
+export function buildKersivoSoftwareApplicationJsonLd(): Record<string, unknown> {
+  return { '@context': 'https://schema.org', ...buildKersivoSoftwareApplicationNode() };
 }

@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -42,7 +43,7 @@ const currentYear = new Date().getFullYear();
   title={ALTERNATIVES_HUB_TITLE}
   description={ALTERNATIVES_HUB_DESCRIPTION}
   canonicalPath={ALTERNATIVES_HUB_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildAlternativesHubCollectionPageJsonLd(), buildAlternativesHubBreadcrumbJsonLd(), buildAlternativesHubItemListJsonLd(), buildAlternativesHubFaqJsonLd()]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildKersivoEntityJsonLd(), buildAlternativesHubCollectionPageJsonLd(), buildAlternativesHubBreadcrumbJsonLd(), buildAlternativesHubItemListJsonLd(), buildAlternativesHubFaqJsonLd()]}
 >
   <main class="alt-hub landing-overflow-guard">
     <HubHero />

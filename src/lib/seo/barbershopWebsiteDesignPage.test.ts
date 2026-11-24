@@ -21,7 +21,7 @@ const component = (name: string) => read(`../../components/websiteDesign/${name}
 
 describe('/barbershop-website-design — design-intent guide', () => {
   it('targets design intent and stays distinct from the /barbershop-websites pillar', () => {
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design: Layout, Branding & UX | KERSIVO');
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design UK | Custom Sites £39/mo');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE.length).toBeLessThanOrEqual(60);
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_H1).toBe(WD_HERO_TITLE_LINES.join(' '));

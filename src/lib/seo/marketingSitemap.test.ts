@@ -167,6 +167,8 @@ describe('marketing sitemap', () => {
     expect(xml).not.toContain('cmmj3fcis0005l1kt8ii5itvd');
     expect(xml).not.toMatch(/\/shop\//);
     expect(xml).not.toContain('/admin');
+    expect(xml).not.toContain('kersivo.co.uk/demo');
+    expect(xml).not.toContain('/seo-growth');
     expect(xml).not.toMatch(/\/book(?:\/|"|<|\s|$)/);
     expect(xml).not.toContain('/api');
     expect(xml).not.toContain('/setup');
