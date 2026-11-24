@@ -44,7 +44,7 @@ export const BARBER_COST_CALCULATOR_PAGE_PATH = '/barber-software-cost-calculato
 export const BARBER_COST_CALCULATOR_TITLE = 'Barber Booking Software Cost UK: Free Calculator | KERSIVO';
 
 export const BARBER_COST_CALCULATOR_DESCRIPTION =
-  'How much does barber booking software cost? Compare subscriptions, per-barber fees and commission across Booksy, Fresha, Treatwell and 7 more. No sign-up.';
+  'Estimate your monthly barber booking software cost by number of barbers. Interactive UK calculator comparing 10 systems and fees. No sign-up.';
 
 export const BARBER_COST_CALCULATOR_BREADCRUMB_NAME = 'Barber Software Cost Calculator';
 

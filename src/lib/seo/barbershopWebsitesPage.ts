@@ -21,7 +21,7 @@ export const BARBERSHOP_WEBSITES_PAGE_TITLE =
   `Barbershop Website UK with Online Booking – £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
 
 export const BARBERSHOP_WEBSITES_PAGE_DESCRIPTION =
-  `A barbershop website on your own domain with online booking, deposits and reminders built in. £${SAAS_MONTHLY_GBP}/month per location, no setup fee. Approve it before launch.`;
+  `Barbershop website on your own domain with online booking, deposits and a retail pickup shop built in. £${SAAS_MONTHLY_GBP}/month per location, no setup fee.`;
 
 /** Name of the service entity in JSON-LD and the visible topic of the page. */
 export const BARBERSHOP_WEBSITES_SERVICE_NAME = 'Barbershop website with online booking';
