@@ -14,6 +14,8 @@ import {
   toCitySlug,
 } from './cityPages';
 import { LONDON_CITY_PAGE as LONDON } from './cityPages/london';
+import { BOURNEMOUTH_CITY_PAGE as BOURNEMOUTH } from './cityPages/bournemouth';
+import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { MARKETING_SITEMAP_ENTRIES } from './marketingSitemap';
 import { getStaticPageLastModified } from './pageDates';
 import { calculateCityScenario, clampCityInput, describeNewClientFees } from '@/lib/cityPages/marketplaceMath';
@@ -244,8 +246,11 @@ describe('city page copy and links', () => {
   it('puts "Stripe fees apply" next to every 0% KERSIVO commission claim', () => {
     const texts = [
       ...COMPONENTS.map(component),
-      ...getCityFaqs(LONDON).map((faq) => faq.answer.join(' ')),
-      ...LONDON.costs.map((cost) => cost.body.join(' ')),
+      ...PUBLISHED_CITY_PAGES.flatMap((city) => [
+        city.heroLead,
+        ...getCityFaqs(city).map((faq) => faq.answer.join(' ')),
+        ...city.costs.map((cost) => cost.body.join(' ')),
+      ]),
     ];
     for (const text of texts) {
       const lines = text.split('\n');
@@ -258,7 +263,7 @@ describe('city page copy and links', () => {
   });
 
   it('never states a fixed setup time or an SMS number', () => {
-    const copy = [all, JSON.stringify(LONDON)].join('\n');
+    const copy = [all, ...PUBLISHED_CITY_PAGES.map((city) => JSON.stringify(city))].join('\n');
     expect(copy).not.toMatch(/\b\d+\s*(?:–|-|to)?\s*\d*\s*(?:working )?days? (?:to|until) (?:go )?live/i);
     expect(copy).not.toMatch(/1–2 weeks|\d+ SMS/i);
     expect(copy).toContain('Typically ready in a few days once we receive all required information');
@@ -276,5 +281,116 @@ describe('city pages in the sitemap', () => {
       expect(MARKETING_SITEMAP_ENTRIES.find((entry) => entry.path === path)?.lastmod).toBe(city.checkedIso);
       expect(getStaticPageLastModified(path)).toBe(city.checkedIso);
     }
+  });
+});
+
+describe('Bournemouth city page', () => {
+  it('is published at /barbershop-websites/bournemouth with its own research date', () => {
+    expect(getCityPage('bournemouth')).toBe(BOURNEMOUTH);
+    expect(getCityPagePath(BOURNEMOUTH)).toBe('/barbershop-websites/bournemouth');
+    expect(BOURNEMOUTH.nation).toBe('England');
+    expect(BOURNEMOUTH.checkedIso).toBe('2026-11-24');
+  });
+
+  it('uses the full title and the shorter description that fits 158 characters', () => {
+    expect(buildCityPageTitle('Bournemouth')).toBe('Barbershop Website Design Bournemouth | £39/mo | KERSIVO');
+    expect(buildCityPageDescription('Bournemouth')).toBe(
+      'Custom barbershop website design for Bournemouth shops. Own domain, online booking, deposits and a retail pickup shop for £39/month — 0% KERSIVO commission.',
+    );
+    expect(buildCityPageDescription('London')).toContain('£39/month flat');
+  });
+
+  it('builds Home > Barbershop Websites > Bournemouth', () => {
+    const crumbs = buildCityBreadcrumbJsonLd(BOURNEMOUTH);
+    expect((crumbs.itemListElement as Array<Record<string, unknown>>).map((item) => [item.name, item.item])).toEqual([
+      ['Home', 'https://kersivo.co.uk/'],
+      ['Barbershop Websites', 'https://kersivo.co.uk/barbershop-websites'],
+      ['Bournemouth', 'https://kersivo.co.uk/barbershop-websites/bournemouth'],
+    ]);
+  });
+
+  it('has five Bournemouth questions: switching, deposits, Google Maps, rates and price', () => {
+    const faqs = getCityFaqs(BOURNEMOUTH);
+    expect(faqs).toHaveLength(5);
+    const questions = faqs.map((faq) => faq.question);
+    for (const question of questions) expect(question).toContain('Bournemouth');
+    const joined = questions.join(' ');
+    for (const topic of [/Booksy or Fresha/, /deposits/, /Google Maps/, /business rates/, /KERSIVO/]) expect(joined).toMatch(topic);
+    const items = buildCityFaqJsonLd(BOURNEMOUTH).mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
+    expect(items).toHaveLength(5);
+    items.forEach((item, index) => {
+      expect(item.name).toBe(faqs[index].question);
+      expect(item.acceptedAnswer.text).toBe(faqs[index].answer.join(' '));
+    });
+  });
+
+  it('prices one new client at the £20 Bournemouth middle skin fade', () => {
+    expect(BOURNEMOUTH.calculator.price).toBe(20);
+    const r = calculateCityScenario({ ...BOURNEMOUTH.calculator, paymentMode: 'deposit' });
+    const byId = Object.fromEntries(r.competitors.map((c) => [c.id, c]));
+    expect(byId.booksy.feePerNewClient).toBe(6);
+    expect(byId.fresha.feePerNewClient).toBe(4);
+    expect(byId.treatwell.feePerNewClient).toBe(7);
+    expect(byId.booksy.feesToMatchKersivo).toBe(7);
+    expect(byId.fresha.feesToMatchKersivo).toBe(10);
+    expect(byId.treatwell.feesToMatchKersivo).toBe(6);
+  });
+
+  it('works out the Stripe fee examples from the verified Stripe facts', () => {
+    const cards = BOURNEMOUTH.costs.find((cost) => cost.id === 'cards')!;
+    expect(cards.figure).toBe('28p');
+    const body = cards.body.join(' ');
+    expect(body).toContain('1.5% + 20p');
+    expect(body).toContain('50p on a £20 fade');
+    expect(body).toContain(STRIPE_FEES_NOTE);
+  });
+
+  it('cites BCP Council and the HM Treasury qualifying-use guidance for business rates', () => {
+    const rates = BOURNEMOUTH.costs.find((cost) => cost.id === 'rates')!;
+    expect(rates.sourceIds).toEqual(expect.arrayContaining(['bcpRates2026', 'hmtRhlGuidance']));
+    expect(rates.body.join(' ')).toMatch(/BCP Council/);
+    expect(rates.body.join(' ')).toMatch(/38\.2p/);
+  });
+
+  it('sets the walkthrough in Winton and names real Bournemouth districts', () => {
+    expect(BOURNEMOUTH.journey.district).toBe('Winton');
+    const places = BOURNEMOUTH.areas.flatMap((area) => area.places);
+    for (const place of ['Boscombe', 'Southbourne', 'Winton', 'Charminster', 'Westbourne']) expect(places).toContain(place);
+  });
+});
+
+describe('city pages are written separately, not name-swapped', () => {
+  const splitSentences = (text: string) => text.split(/(?<=[.!?])\s+/).map((sentence) => sentence.trim());
+  /** Approved policy wording every city may share; everything else must be the city's own. */
+  const SHARED = new Set([
+    ...splitSentences(STRIPE_FEES_NOTE),
+    'We can help move eligible information exported from your current provider.',
+    'Some history may not transfer.',
+  ]);
+  const sentences = (city: typeof LONDON) =>
+    [
+      city.heroLead,
+      ...city.marketIntro,
+      ...city.areas.flatMap((area) => [area.pattern, ...area.setup]),
+      ...city.costs.flatMap((cost) => cost.body),
+      ...city.faqs.flatMap((faq) => [faq.question, ...faq.answer]),
+    ]
+      .flatMap(splitSentences)
+      .filter((sentence) => sentence.length > 25 && !SHARED.has(sentence));
+
+  it('shares no sentence of city copy between any two published cities', () => {
+    const cities = PUBLISHED_CITY_PAGES;
+    for (let a = 0; a < cities.length; a += 1) {
+      const own = new Set(sentences(cities[a]));
+      for (let b = a + 1; b < cities.length; b += 1) {
+        const shared = sentences(cities[b]).filter((sentence) => own.has(sentence));
+        expect(shared, `${cities[a].name} / ${cities[b].name}`).toEqual([]);
+      }
+    }
+  });
+
+  it('gives every city its own calculator default, walkthrough district and price source', () => {
+    const keys = PUBLISHED_CITY_PAGES.map((city) => `${city.calculator.price}|${city.journey.district}|${city.calculator.priceSourceId}`);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 });

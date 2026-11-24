@@ -17,6 +17,7 @@ import {
 } from '@/lib/seo/breadcrumbs';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { BOURNEMOUTH_CITY_PAGE } from './bournemouth';
 import { LONDON_CITY_PAGE } from './london';
 import type { CityFaq, CityPage, CitySource } from './types';
 
@@ -25,7 +26,7 @@ export type { CityPage, CityFaq, CitySource } from './types';
 export const CITY_PAGES_BASE_PATH = '/barbershop-websites';
 
 /** Published cities, in the order the hub lists them. */
-export const PUBLISHED_CITY_PAGES: readonly CityPage[] = [LONDON_CITY_PAGE];
+export const PUBLISHED_CITY_PAGES: readonly CityPage[] = [LONDON_CITY_PAGE, BOURNEMOUTH_CITY_PAGE];
 
 /** "St Albans" → "st-albans", "Newcastle upon Tyne" → "newcastle-upon-tyne". */
 export function toCitySlug(name: string): string {
@@ -56,8 +57,20 @@ export function buildCityPageTitle(name: string): string {
   return `Barbershop Websites ${name} | £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
 }
 
+export const CITY_DESCRIPTION_MAX_LENGTH = 158;
+
+/**
+ * Full form first. Longer city names drop "flat", then "Custom ", so the description stays within
+ * 158 characters (e.g. "Bournemouth" would be 161 with the full form).
+ */
 export function buildCityPageDescription(name: string): string {
-  return `Custom barbershop website design for ${name} shops. Own domain, online booking, deposits and a retail pickup shop for £${SAAS_MONTHLY_GBP}/month flat — 0% KERSIVO commission.`;
+  const offer = `Own domain, online booking, deposits and a retail pickup shop for £${SAAS_MONTHLY_GBP}/month`;
+  const candidates = [
+    `Custom barbershop website design for ${name} shops. ${offer} flat — 0% KERSIVO commission.`,
+    `Custom barbershop website design for ${name} shops. ${offer} — 0% KERSIVO commission.`,
+    `Barbershop website design for ${name} shops. ${offer} — 0% KERSIVO commission.`,
+  ];
+  return candidates.find((text) => text.length <= CITY_DESCRIPTION_MAX_LENGTH) ?? candidates[candidates.length - 1];
 }
 
 export function buildCityPageH1(city: CityPage): string {
