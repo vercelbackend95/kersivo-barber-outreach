@@ -31,6 +31,8 @@ export const LONDON_CITY_PAGE: CityPage = {
   h1Mark: 'for London shops',
   heroLead:
     `Your own domain, a website designed around your shop, online booking with deposits and a retail pickup shop for pomade, clay and beard oil. £${SAAS_MONTHLY_GBP}/month per location, flat, whether you run one chair in Walthamstow or six in Soho.`,
+  hubSummary:
+    'Fades from £20 to £42 at independent shops, a wider spread than in other UK cities, with set-ups for Soho, Walthamstow and the rest of the city.',
   targetQueries: [
     'barbershop website design London',
     'barber website London',

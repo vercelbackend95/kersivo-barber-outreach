@@ -1856,6 +1856,13 @@
   line-height: 1;
 }
 
+.bw-guides__summary {
+  max-width: 46ch;
+  color: var(--bw-soft);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .bw-guides__areas {
   color: var(--bw-sand);
   font-size: 0.82rem;

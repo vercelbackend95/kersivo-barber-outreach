@@ -99,6 +99,8 @@ export type CityPage = {
   h1Lead: string;
   h1Mark: string;
   heroLead: string;
+  /** One-sentence, city-specific summary shown on the /barbershop-websites hub card (no shared wording). */
+  hubSummary: string;
   /** High-intent queries this page targets (documentation; also checked in tests against the copy). */
   targetQueries: readonly string[];
   calculator: CityCalculatorDefaults;

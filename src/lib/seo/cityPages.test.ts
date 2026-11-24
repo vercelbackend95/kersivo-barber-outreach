@@ -370,6 +370,7 @@ describe('city pages are written separately, not name-swapped', () => {
   const sentences = (city: typeof LONDON) =>
     [
       city.heroLead,
+      city.hubSummary,
       ...city.marketIntro,
       ...city.areas.flatMap((area) => [area.pattern, ...area.setup]),
       ...city.costs.flatMap((cost) => cost.body),
