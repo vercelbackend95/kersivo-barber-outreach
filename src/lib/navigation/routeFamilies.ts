@@ -40,6 +40,8 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barbershop-price-list-template',
   '/barbershop-no-show-calculator',
   '/chair-rent-vs-commission-calculator',
+  '/barber-price-calculator',
+  '/free-tools',
   '/pricing',
   '/starter',
   '/about',

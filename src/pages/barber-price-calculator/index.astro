@@ -1,0 +1,315 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import PriceCalcField from '@/components/priceCalculator/PriceCalcField.astro';
+import PriceCalcServiceRow from '@/components/priceCalculator/PriceCalcServiceRow.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { DEFAULT_INPUTS, MAX_SERVICES, calculatePrices } from '@/lib/priceCalculator/engine';
+import { RESULTS_DISCLAIMER, buildResultView, formatClientPrice, formatMinutes, serviceLabel } from '@/lib/priceCalculator/view';
+import { FREE_TOOLS_PAGE_PATH } from '@/lib/seo/freeToolsPage';
+import {
+  PRICE_CALCULATOR_BREADCRUMB_NAME,
+  PRICE_CALCULATOR_DESCRIPTION,
+  PRICE_CALCULATOR_DIRECT_ANSWER,
+  PRICE_CALCULATOR_EYEBROW,
+  PRICE_CALCULATOR_FAQ_ITEMS,
+  PRICE_CALCULATOR_FORM_COPY as FORM,
+  PRICE_CALCULATOR_H1,
+  PRICE_CALCULATOR_HOW_TO_USE,
+  PRICE_CALCULATOR_LAST_UPDATED_ISO,
+  PRICE_CALCULATOR_LAST_UPDATED_LABEL,
+  PRICE_CALCULATOR_METHOD,
+  PRICE_CALCULATOR_PAGE_PATH,
+  PRICE_CALCULATOR_RELATED_LINKS,
+  PRICE_CALCULATOR_RESULTS_COPY as RESULTS,
+  PRICE_CALCULATOR_RISE_COPY as RISE,
+  PRICE_CALCULATOR_SENSITIVITY_COPY as SENS,
+  PRICE_CALCULATOR_TITLE,
+  PRICE_CALCULATOR_TRUST_SIGNALS,
+  buildPriceCalculatorJsonLd,
+} from '@/lib/seo/priceCalculatorPage';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+import '@/styles/components/price-calculator.css';
+
+const currentYear = new Date().getFullYear();
+const result = calculatePrices(DEFAULT_INPUTS);
+const { text, hidden } = buildResultView(result);
+const first = result.services[0];
+---
+
+<LandingLayout
+  title={PRICE_CALCULATOR_TITLE}
+  description={PRICE_CALCULATOR_DESCRIPTION}
+  canonicalPath={PRICE_CALCULATOR_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildPriceCalculatorJsonLd()]}
+>
+  <main class="dr-page pc-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href={FREE_TOOLS_PAGE_PATH}>Free tools</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{PRICE_CALCULATOR_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">{PRICE_CALCULATOR_EYEBROW}</p>
+        <h1 class="dr-hero__title">{PRICE_CALCULATOR_H1}</h1>
+        <p class="dr-hero__lead">{PRICE_CALCULATOR_DIRECT_ANSWER}</p>
+        <ul class="dr-hero__meta" aria-label="About this calculator">
+          {PRICE_CALCULATOR_TRUST_SIGNALS.map((signal) => <li>{signal}</li>)}
+        </ul>
+        <p class="dr-note">
+          Updated <time datetime={PRICE_CALCULATOR_LAST_UPDATED_ISO}>{PRICE_CALCULATOR_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </header>
+
+    <section id="calculator" class="dr-section" aria-label="Calculator">
+      <div class="dr-shell pc-tool">
+        <form id="pc-form" class="ks-glass-card pc-form" aria-labelledby="pc-form-title" data-pc-form novalidate>
+          <div class="pc-form__head">
+            <h2 id="pc-form-title" class="pc-form__title">Your numbers</h2>
+            <p class="pc-form__examples">{FORM.examples}</p>
+          </div>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.costsLegend}</legend>
+            <PriceCalcField name="rentMonthlyGbp" label={FORM.rentLabel} helper={FORM.rentHelper} prefix="£" step={10} />
+            <PriceCalcField name="otherCostsMonthlyGbp" label={FORM.otherLabel} helper={FORM.otherHelper} prefix="£" step={10} />
+            <PriceCalcField name="takeHomeMonthlyGbp" label={FORM.takeHomeLabel} prefix="£" step={50} />
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.timeLegend}</legend>
+            <div class="pc-pair">
+              <PriceCalcField name="weeklyHours" label={FORM.hoursLabel} suffix="hrs" step={0.5} />
+              <PriceCalcField name="weeksPerYear" label={FORM.weeksLabel} suffix="wks" helper={FORM.weeksHelper} />
+            </div>
+            <PriceCalcField name="bookedPercent" label={FORM.bookedLabel} suffix="%" helper={FORM.bookedHelper} />
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.servicesLegend}</legend>
+            <p id="pc-services-helper" class="pc-helper">{FORM.servicesHelper}</p>
+            <div class="pc-services__head" aria-hidden="true"><span>Service</span><span>Minutes</span><span></span></div>
+            <ol class="pc-services" data-pc-services aria-describedby="pc-services-helper">
+              {DEFAULT_INPUTS.services.map((service) => <PriceCalcServiceRow name={service.name} minutes={service.minutes} />)}
+            </ol>
+            <template data-pc-service-template>
+              <PriceCalcServiceRow name="" minutes={30} />
+            </template>
+            <button type="button" class="pc-add" data-pc-add data-max={MAX_SERVICES}>{FORM.addService}</button>
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.perServiceLegend}</legend>
+            <PriceCalcField name="productsPerServiceGbp" label={FORM.productsLabel} prefix="£" step={0.1} />
+            <div class="pc-grid">
+              <PriceCalcField name="cardSharePercent" label={FORM.cardShareLabel} suffix="%" compact />
+              <PriceCalcField name="cardFeePercent" label={FORM.cardFeeLabel} suffix="%" step={0.05} compact />
+              <PriceCalcField name="cardFeeFixedPence" label={FORM.cardFixedLabel} suffix="p" compact />
+            </div>
+            <label class="pc-check">
+              <input type="checkbox" name="vatRegistered" checked={DEFAULT_INPUTS.vatRegistered} />
+              <span>{FORM.vatLabel}</span>
+            </label>
+          </fieldset>
+        </form>
+
+        <section id="pc-results" class="ks-glass-card ks-glass-card--accent pc-results" aria-labelledby="pc-results-title">
+          <p class="ks-eyebrow">Your prices</p>
+          <h2 id="pc-results-title" class="pc-results__title">{RESULTS.heading}</h2>
+          <p class="sr-only" aria-live="polite" aria-atomic="true" data-pc-announce></p>
+
+          <dl class="ks-facts pc-facts">
+            <div class="ks-facts__value">
+              <dt>{RESULTS.perHourLabel}</dt>
+              <dd data-slot="target-hour">{text['target-hour']}</dd>
+            </div>
+            <div class="ks-facts__value">
+              <dt>{RESULTS.bookedHoursLabel}</dt>
+              <dd data-slot="booked-hours">{text['booked-hours']}</dd>
+            </div>
+          </dl>
+
+          <p class="pc-warning" data-hide="no-time" hidden={hidden['no-time']}>{text['no-time']}</p>
+
+          <table class="pc-table">
+            <caption class="sr-only">{RESULTS.tableCaption}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{RESULTS.serviceColumn}</th>
+                <th scope="col">{RESULTS.targetColumn}</th>
+                <th scope="col">{RESULTS.floorColumn}</th>
+              </tr>
+            </thead>
+            <tbody data-pc-rows>
+              {result.services.map((service, index) => (
+                <tr>
+                  <th scope="row">
+                    {serviceLabel(service.name, index)}
+                    <span class="pc-table__sub">{formatMinutes(service.minutes)}</span>
+                  </th>
+                  <td class="pc-table__price">{formatClientPrice(service.targetPriceGbp)}</td>
+                  <td class="pc-table__floor">{formatClientPrice(service.floorPriceGbp)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <p class="pc-small">{RESULTS.floorNote} <span data-slot="vat-note">{text['vat-note']}</span></p>
+          <p class="pc-small">
+            Costs alone come to <span data-slot="floor-hour">{text['floor-hour']}</span> per booked hour.
+          </p>
+
+          <div class="pc-actions">
+            <button type="button" class="btn btn--primary btn--md" data-pc-copy>{RESULTS.copy}</button>
+            <button type="button" class="btn btn--secondary btn--md" data-pc-print>{RESULTS.print}</button>
+            <p class="pc-status" data-pc-status role="status" aria-live="polite"></p>
+          </div>
+          <a class="dr-link pc-results__link" href="/barbershop-price-list-template">{RESULTS.priceListLink} <span aria-hidden="true">→</span></a>
+          <p class="pc-disclaimer">{RESULTS_DISCLAIMER}</p>
+        </section>
+      </div>
+
+      <div class="dr-shell dr-split pc-extras">
+        <article class="ks-glass-card dr-card pc-rise" aria-labelledby="pc-rise-title">
+          <p class="ks-eyebrow ks-eyebrow--neutral">Price rise</p>
+          <h3 id="pc-rise-title">{RISE.heading}</h3>
+          <p class="pc-card__lead">{RISE.lead}</p>
+          <div class="pc-pair">
+            <PriceCalcField name="currentPriceGbp" label={RISE.currentLabel} prefix="£" step={0.5} form="pc-form" />
+            <PriceCalcField name="newPriceGbp" label={RISE.newLabel} prefix="£" step={0.5} form="pc-form" />
+          </div>
+          <p class="pc-rise__result" data-slot="rise-result">{text['rise-result']}</p>
+          <p class="pc-small">{RISE.note}</p>
+        </article>
+
+        <article class="ks-glass-card dr-card pc-sens" aria-labelledby="pc-sens-title" data-hide="sens-table" hidden={hidden['sens-table']}>
+          <p class="ks-eyebrow ks-eyebrow--neutral">How busy you are</p>
+          <h3 id="pc-sens-title">{SENS.heading}</h3>
+          <p class="pc-card__lead">{SENS.lead}</p>
+          <table class="pc-table pc-table--compact">
+            <caption class="sr-only">Price of <span data-slot="sens-service">{text['sens-service']}</span> at different levels of booking</caption>
+            <thead>
+              <tr>
+                <th scope="col">{SENS.bookedColumn}</th>
+                <th scope="col"><span data-slot="sens-service" aria-hidden="true">{text['sens-service']}</span> <span class="sr-only">{SENS.priceColumn}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.sensitivity.map((row, index) => (
+                <tr data-current={String(row.bookedPercent === DEFAULT_INPUTS.bookedPercent)} data-sens-row={row.bookedPercent}>
+                  <th scope="row">{row.bookedPercent}%</th>
+                  <td data-slot={`sens-${index}`}>{text[`sens-${index}`]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </article>
+      </div>
+
+      <div class="pc-dock" data-pc-dock hidden>
+        <a href="#pc-results" class="pc-dock__link">
+          <span class="pc-dock__service" data-pc-dock-service>{serviceLabel(first?.name ?? '', 0)}</span>
+          <span class="pc-dock__price" data-pc-dock-price>{formatClientPrice(first?.targetPriceGbp ?? null)}</span>
+          <span class="pc-dock__more">All prices <span aria-hidden="true">↓</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section id="how-to-use" class="dr-section" aria-labelledby="pc-use-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Three steps</p>
+          <h2 id="pc-use-title" class="dr-h2">{PRICE_CALCULATOR_HOW_TO_USE.heading}</h2>
+        </div>
+        <ol class="dr-list dr-list--steps pc-steps">
+          {PRICE_CALCULATOR_HOW_TO_USE.steps.map((step) => <li>{step}</li>)}
+        </ol>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="dr-section" aria-labelledby="pc-method-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow ks-eyebrow--neutral">Method</p>
+          <h2 id="pc-method-title" class="dr-h2">{PRICE_CALCULATOR_METHOD.heading}</h2>
+        </div>
+        <dl class="pc-method">
+          {PRICE_CALCULATOR_METHOD.steps.map((step) => (
+            <div class="pc-method__row">
+              <dt>{step.title}</dt>
+              <dd>{step.body}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="dr-note">{PRICE_CALCULATOR_METHOD.limits}</p>
+      </div>
+    </section>
+
+    <section class="dr-section" aria-labelledby="pc-related-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Keep going</p>
+          <h2 id="pc-related-title" class="dr-h2">Related free tools</h2>
+        </div>
+        <ul class="dr-related">
+          {PRICE_CALCULATOR_RELATED_LINKS.map((link) => (
+            <li>
+              <a href={link.href}>
+                <span class="dr-related__label">{link.label}</span>
+                <span class="dr-related__desc">{link.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="dr-note"><a class="dr-link" href={FREE_TOOLS_PAGE_PATH}>See all free tools for barbershops</a></p>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Barber pricing questions"
+      subHeading="What to charge, how busy you are, VAT and price rises."
+      supportHeading="Want clients to book at these prices?"
+      supportText="Full KERSIVO puts your services and prices on your own website with online booking."
+      supportLinkLabel="See Full KERSIVO pricing"
+      supportLinkHref="/pricing#plan"
+      faqs={[...PRICE_CALCULATOR_FAQ_ITEMS]}
+    />
+
+    <ComparisonFinalCta placement="price_calculator" />
+
+    <div class="dr-end"></div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initPriceCalculator } from '@/lib/priceCalculator/initPriceCalculator';
+  import { onPageReady } from '@/lib/navigation/pageReady';
+
+  onPageReady(initPriceCalculator);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

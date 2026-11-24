@@ -19,6 +19,8 @@ import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
 import { NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
 import { CHAIR_RENT_CALCULATOR_PAGE_PATH } from './chairRentCalculatorPage';
+import { PRICE_CALCULATOR_PAGE_PATH } from './priceCalculatorPage';
+import { FREE_TOOLS_PAGE_PATH } from './freeToolsPage';
 import { buildInsightsSitemapEntries } from './insights';
 import { getStaticPageLastModified } from './pageDates';
 import { PRICING_PAGE_PATH } from './pricingPage';
@@ -87,6 +89,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(PRICE_LIST_PAGE_PATH),
   staticPage(NO_SHOW_CALCULATOR_PAGE_PATH),
   staticPage(CHAIR_RENT_CALCULATOR_PAGE_PATH),
+  staticPage(PRICE_CALCULATOR_PAGE_PATH),
+  staticPage(FREE_TOOLS_PAGE_PATH),
   staticPage('/privacy'),
   staticPage('/cookies'),
   staticPage('/dpa'),

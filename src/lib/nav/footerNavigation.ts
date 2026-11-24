@@ -55,6 +55,8 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
     title: 'Resources',
     links: [
       { name: 'Insights', href: '/insights' },
+      { name: 'Free tools', href: '/free-tools' },
+      { name: 'Barber price calculator', href: '/barber-price-calculator' },
       { name: 'Website design guide', href: '/barbershop-website-design' },
       { name: 'Cancellation policy template', href: '/barbershop-cancellation-policy-template' },
       { name: 'Chair rent vs commission calculator', href: '/chair-rent-vs-commission-calculator' },

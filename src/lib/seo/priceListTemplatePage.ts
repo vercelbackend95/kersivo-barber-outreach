@@ -6,8 +6,8 @@ import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivo
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const PRICE_LIST_PAGE_PATH = '/barbershop-price-list-template';
-export const PRICE_LIST_LAST_UPDATED_ISO = '2026-11-15';
-export const PRICE_LIST_LAST_UPDATED_LABEL = '15 November 2026';
+export const PRICE_LIST_LAST_UPDATED_ISO = '2026-11-24';
+export const PRICE_LIST_LAST_UPDATED_LABEL = '24 November 2026';
 export const PRICE_LIST_BREADCRUMB_NAME = 'Price list template';
 export const PRICE_LIST_TITLE = 'Free Barber Price List Template (Print or Copy) | KERSIVO';
 export const PRICE_LIST_DESCRIPTION =
@@ -82,15 +82,15 @@ export const PRICE_LIST_FAQ_ITEMS: readonly PriceListFaqItem[] = [
   {
     question: 'How do I work out what to charge?',
     answer:
-      'Start from what each chair hour has to earn to cover rent, wages and costs, then check local prices. The KERSIVO Insights guide on pricing a haircut in the UK walks through the sums.',
+      'Start from what each chair hour has to earn to cover rent, wages and costs, then check local prices. The free KERSIVO barber price calculator does the sums for each service from your own costs and hours.',
   },
 ];
 
 export const PRICE_LIST_RELATED_LINKS: readonly { href: string; label: string; description: string }[] = [
   {
-    href: '/insights/how-to-price-haircut-uk-barber',
-    label: 'How to price a haircut',
-    description: 'Work out what each chair hour needs to earn before you set prices.',
+    href: '/barber-price-calculator',
+    label: 'Barber price calculator',
+    description: 'Work out what to charge for each service before you fill in the list.',
   },
   {
     href: '/barbershop-cancellation-policy-template',

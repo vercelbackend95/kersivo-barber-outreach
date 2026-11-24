@@ -1,0 +1,25 @@
+---
+import { SERVICE_MINUTES, SERVICE_NAME_MAX } from '@/lib/priceCalculator/engine';
+
+interface Props {
+  name: string;
+  minutes: number;
+}
+
+const { name, minutes } = Astro.props;
+---
+
+<li class="pc-service" data-pc-service>
+  <label class="pc-service__name">
+    <span class="sr-only">Service name</span>
+    <input type="text" data-pc-service-name value={name} maxlength={SERVICE_NAME_MAX} placeholder="New service" autocomplete="off" />
+  </label>
+  <label class="pc-service__minutes pc-input pc-input--suffix">
+    <span class="sr-only">Minutes in the chair</span>
+    <input type="number" inputmode="numeric" data-pc-service-minutes value={minutes} min={SERVICE_MINUTES.min} max={SERVICE_MINUTES.max} step="5" />
+    <span class="pc-input__affix pc-input__affix--suffix" aria-hidden="true">min</span>
+  </label>
+  <button type="button" class="pc-service__remove" data-pc-remove aria-label="Remove this service">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+  </button>
+</li>
