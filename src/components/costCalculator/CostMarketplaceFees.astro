@@ -4,6 +4,7 @@ import {
   MARKETPLACE_KERSIVO_NOTE,
   MARKETPLACE_POINTS,
 } from '@/lib/seo/barberCostCalculatorPage';
+import { FEES_REPORT_PAGE_PATH } from '@/lib/seo/feesReport';
 ---
 
 <section id="marketplace-fees" class="cost-calc__section" aria-labelledby="cost-calc-marketplace-title">
@@ -29,5 +30,9 @@ import {
       <p class="cost-calc-callout__kicker">KERSIVO</p>
       <p class="cost-calc-callout__body">{MARKETPLACE_KERSIVO_NOTE}</p>
     </aside>
+
+    <p class="cost-calc__crosslink">
+      <a href={FEES_REPORT_PAGE_PATH}>Read the UK barber booking software fees report: every platform's fees side by side</a>
+    </p>
   </div>
 </section>

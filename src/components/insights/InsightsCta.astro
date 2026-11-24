@@ -1,0 +1,36 @@
+---
+import type { InsightsCta } from '@/lib/insights/insightsCta';
+
+interface Props {
+  cta: InsightsCta;
+}
+
+const { cta } = Astro.props;
+const headingId = `insights-cta-${cta.placement}-heading`;
+---
+
+<aside class={`insights-cta insights-cta--${cta.placement}`} aria-labelledby={headingId}>
+  <p class="insights-cta__kicker"><span class="insights-cta__dot" aria-hidden="true"></span>{cta.kicker}</p>
+  <p id={headingId} class="insights-cta__heading">{cta.heading}</p>
+  <p class="insights-cta__body">{cta.body}</p>
+  <div class="insights-cta__actions">
+    <a
+      class="insights-cta__primary"
+      href={cta.primary.href}
+      data-track={cta.primary.track}
+      data-track-placement={`insights_${cta.placement}`}
+    >
+      {cta.primary.label} <span aria-hidden="true">→</span>
+    </a>
+    {cta.secondary && (
+      <a
+        class="insights-cta__secondary"
+        href={cta.secondary.href}
+        data-track={cta.secondary.track}
+        data-track-placement={`insights_${cta.placement}`}
+      >
+        {cta.secondary.label}
+      </a>
+    )}
+  </div>
+</aside>

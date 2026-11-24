@@ -5,7 +5,7 @@ export { SQUIRE_FACTS_CHECKED_DATE, SQUIRE_OFFICIAL_SOURCES } from './squireFact
 export const SQUIRE_ALTERNATIVE_PAGE_PATH='/squire-alternative';
 export const SQUIRE_ALTERNATIVE_TITLE='SQUIRE Alternative UK for Barbershops: £39/mo, 0% Fees';
 export const SQUIRE_ALTERNATIVE_DESCRIPTION=
-  'Compare SQUIRE vs KERSIVO for UK barbershops: pricing, bookings, POS, deposits, own-domain websites, payment fees and switching.';
+  'SQUIRE alternative for UK barbershops: custom website on your domain, online booking, deposits and a retail pickup shop for £39/month flat. No lock-in.';
 export const SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const SQUIRE_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';
 

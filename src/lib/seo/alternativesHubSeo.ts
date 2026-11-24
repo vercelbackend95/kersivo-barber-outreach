@@ -16,7 +16,7 @@ import {
 
 export const ALTERNATIVES_HUB_PAGE_PATH = '/compare';
 
-export const ALTERNATIVES_HUB_TITLE = 'Best Barber Software UK 2026: Prices & Fees Compared';
+export const ALTERNATIVES_HUB_TITLE = 'Best Barber Booking Software UK (2026): Prices & Fees';
 
 export const ALTERNATIVES_HUB_DESCRIPTION =
   'KERSIVO vs Booksy, Fresha, Nearcut and 7 more for UK barbershops: monthly cost by team size, new-client fees, your own website and client data.';
