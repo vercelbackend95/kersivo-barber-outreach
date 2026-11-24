@@ -124,9 +124,15 @@ describe('marketing navigation config', () => {
       '/insights',
     ]);
     const tools = groups.find((group) => group.id === 'tools')!;
-    expect(tools).toMatchObject({ label: 'Free tools', tabLabel: 'Tools' });
+    expect(tools).toMatchObject({
+      label: 'Free tools',
+      tabLabel: 'Tools',
+      featuredAction: { label: 'See all free tools', href: '/free-tools' },
+      currentPrefixes: ['/free-tools'],
+    });
     expect(tools.featured.map((item) => item.href)).toEqual(['/barber-software-cost-calculator']);
     expect(tools.sections.find((section) => section.id === 'calculators')?.items.map((item) => item.href)).toEqual([
+      '/barber-price-calculator',
       '/barbershop-no-show-calculator',
       '/chair-rent-vs-commission-calculator',
     ]);

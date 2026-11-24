@@ -124,6 +124,8 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     eyebrow: 'FREE TOOLS',
     heading: 'Run the numbers on your shop.',
     description: 'Free calculators and templates for UK barbershops.',
+    featuredAction: { label: 'See all free tools', href: '/free-tools' },
+    currentPrefixes: ['/free-tools'],
     sections: [
       { id: 'calculators', label: 'Calculators' },
       { id: 'templates', label: 'Templates' },
@@ -396,6 +398,16 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     icon: 'guide',
     keywords: ['blog', 'articles', 'news'],
     matchPrefix: '/insights',
+  },
+  {
+    id: 'tools-price-calculator',
+    label: 'Barber price calculator',
+    description: 'Work out what to charge for each service and test a price rise.',
+    href: '/barber-price-calculator',
+    group: 'tools',
+    section: 'calculators',
+    icon: 'calculator',
+    keywords: ['haircut price', 'what to charge', 'pricing', 'price rise', 'rates'],
   },
   {
     id: 'resources-no-show-calculator',

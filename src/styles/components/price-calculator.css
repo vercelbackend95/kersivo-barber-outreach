@@ -1,0 +1,616 @@
+/* ============================================================
+   /barber-price-calculator: form on the shared dark card, results on the
+   accent card (the /starter glance-card look) with large Inter numerals.
+   Red stays decorative (eyebrow dot, top line, current row marker).
+   ============================================================ */
+
+.pc-tool {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ------------------------------- Form ------------------------------- */
+
+.pc-form {
+  --ks-glass-pad: 1.5rem;
+  display: grid;
+  gap: 1.75rem;
+  padding: 1.5rem;
+}
+
+.pc-form__head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pc-form__title,
+.pc-results__title {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pc-form__examples,
+.pc-helper,
+.pc-small {
+  margin: 0;
+  color: var(--dr-small);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.pc-fieldset {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin: 0;
+  padding: 1.5rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--dr-line);
+}
+
+.pc-legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 0.25rem;
+  padding: 0;
+  color: #8e8e92;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pc-legend + * {
+  clear: both;
+}
+
+.pc-field {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.pc-label {
+  color: var(--fg);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pc-field--compact .pc-label {
+  font-size: 0.78rem;
+}
+
+.pc-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.pc-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pc-page :is(.pc-input input, .pc-service__name input) {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.6rem;
+  background: #050506;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 160ms ease;
+}
+
+.pc-page :is(.pc-input input, .pc-service__name input):hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.pc-page :is(.pc-input input, .pc-service__name input):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.pc-page input::placeholder {
+  color: #6e6e72;
+}
+
+.pc-page .pc-input--prefix input {
+  padding-left: 1.75rem;
+}
+
+.pc-page .pc-input--suffix input {
+  padding-right: 2.75rem;
+}
+
+.pc-input__affix {
+  position: absolute;
+  color: #8e8e92;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.pc-input__affix--prefix {
+  left: 0.75rem;
+}
+
+.pc-input__affix--suffix {
+  right: 0.75rem;
+}
+
+/* Hide number spinners: they crowd the affixes and are tiny touch targets. */
+.pc-input input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.pc-input input[type='number']::-webkit-inner-spin-button,
+.pc-input input[type='number']::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.pc-check {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  color: var(--fg);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.pc-check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--color-brand);
+}
+
+.pc-check input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ----------------------------- Services ----------------------------- */
+
+.pc-services__head,
+.pc-service {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.75rem 2.75rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pc-services__head {
+  color: var(--dr-small);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.pc-services {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pc-service__name {
+  display: block;
+  min-width: 0;
+}
+
+.pc-service__remove {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #8e8e92;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.pc-service__remove:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.pc-service__remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pc-add {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.pc-add:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pc-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ------------------------------ Results ------------------------------ */
+
+.pc-results {
+  --ks-glass-pad: 1.5rem;
+  position: sticky;
+  top: 6rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  scroll-margin-top: 6rem;
+}
+
+.pc-results__title {
+  margin-top: -0.25rem;
+}
+
+.pc-facts {
+  border-bottom: 1px solid var(--ks-glass-line);
+}
+
+.pc-facts .ks-facts__value {
+  padding-top: 0.75rem;
+}
+
+.pc-warning {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fg);
+  font-size: 0.88rem;
+}
+
+.pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-table th,
+.pc-table td {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--dr-line);
+  text-align: right;
+  vertical-align: baseline;
+}
+
+.pc-table :is(th, td) + :is(th, td) {
+  padding-left: 0.75rem;
+}
+
+.pc-table :is(th, td):first-child {
+  text-align: left;
+}
+
+.pc-table thead th {
+  padding-top: 0;
+  color: var(--dr-small);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.pc-table tbody th {
+  color: var(--fg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pc-table__sub {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--dr-small);
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+
+.pc-table__price {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pc-table__floor {
+  color: var(--dr-small);
+}
+
+.pc-table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.pc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.pc-status {
+  flex-basis: 100%;
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.pc-status:empty {
+  display: none;
+}
+
+.pc-results__link {
+  justify-self: start;
+  font-size: 0.9rem;
+}
+
+.pc-disclaimer {
+  margin: 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--dr-line);
+  color: #6f6f74;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* ------------------------ Price rise + busy table ------------------------ */
+
+.pc-extras {
+  margin-top: 1.25rem;
+  align-items: start;
+}
+
+.pc-card__lead {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.pc-rise__result {
+  margin: 1.1rem 0 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.025);
+  color: #f2f2f2;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.pc-table--compact tbody tr[data-current='true'] th::before {
+  content: '';
+  display: inline-block;
+  width: 0.36rem;
+  height: 0.36rem;
+  margin-right: 0.55rem;
+  border-radius: 999px;
+  background: var(--color-brand);
+  vertical-align: 0.15em;
+}
+
+.pc-table--compact tbody tr[data-current='true'] :is(th, td) {
+  color: #fff;
+}
+
+.pc-table--compact .pc-table__price,
+.pc-table--compact td {
+  font-size: 0.98rem;
+}
+
+/* ------------------------------ Method ------------------------------ */
+
+.pc-steps {
+  max-width: 46rem;
+  font-size: 1rem;
+}
+
+.pc-method {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--dr-line);
+}
+
+.pc-method__row {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--dr-line);
+}
+
+.pc-method dt {
+  color: #fff;
+  font-weight: 600;
+}
+
+.pc-method dd {
+  max-width: 46rem;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* --------------------------- Mobile price dock --------------------------- */
+
+.pc-dock {
+  position: fixed;
+  right: 0.75rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  left: 0.75rem;
+  z-index: 40;
+}
+
+.pc-dock[hidden] {
+  display: none;
+}
+
+.pc-dock__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.9rem;
+  background: rgba(8, 8, 9, 0.94);
+  box-shadow: 0 18px 40px -20px #000;
+  color: var(--fg);
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.pc-dock__service {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pc-dock__price {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-dock__more {
+  margin-left: auto;
+  color: #8e8e92;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* ---------------------------- Breakpoints ---------------------------- */
+
+@media (max-width: 1023px) {
+  .pc-tool {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pc-results {
+    position: static;
+  }
+
+  .pc-method__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .pc-form,
+  .pc-results {
+    --ks-glass-pad: 1.1rem;
+    padding: 1.1rem;
+  }
+
+  .pc-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pc-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .pc-services__head,
+  .pc-service {
+    grid-template-columns: minmax(0, 1fr) 5.75rem 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-page :is(.pc-input input, .pc-service__name input),
+  .pc-service__remove,
+  .pc-add {
+    transition: none;
+  }
+}
+
+/* ------------------------------- Print ------------------------------- */
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .pc-results,
+  .pc-results * {
+    visibility: visible;
+  }
+
+  .pc-results {
+    position: absolute;
+    inset: 0 0 auto;
+    border: 0;
+    background: #fff;
+    box-shadow: none;
+    color: #111;
+  }
+
+  .pc-results :is(.ks-eyebrow, .pc-results__title, .ks-facts dd, .pc-table th, .pc-table td, .pc-small, .pc-disclaimer) {
+    color: #111 !important;
+  }
+
+  .pc-results::before,
+  .pc-actions,
+  .pc-results__link,
+  .pc-dock {
+    display: none !important;
+  }
+}

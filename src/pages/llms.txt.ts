@@ -54,6 +54,12 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/setora-alternative', 'Setora alternative', 'KERSIVO compared with Setora'),
     '',
     '## Free tools',
+    link('/free-tools', 'All free tools', 'every free KERSIVO calculator and template for UK barbershops on one page, grouped by pricing, no-shows, taking on a barber and booking software'),
+    link(
+      '/barber-price-calculator',
+      'Barber price calculator',
+      'free barber price calculator: what to charge for each service from rent, costs, take-home target, working hours and how busy the chair is, including card fees and VAT, plus a price rise check showing how many clients a rise can lose, with nothing stored',
+    ),
     link(
       '/barbershop-cancellation-policy-template',
       'Cancellation policy template',

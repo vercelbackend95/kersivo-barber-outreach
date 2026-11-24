@@ -214,15 +214,15 @@ export const PRICE_LIST_FAQ_ITEMS: readonly PriceListFaqItem[] = [
   {
     question: 'How do I work out what to charge?',
     answer:
-      'Start from what each chair hour has to earn to cover rent, wages and costs, then check local prices. When you add times, the tool shows what each service earns per hour in the chair. The KERSIVO Insights guide on pricing a haircut in the UK walks through the sums.',
+      'Start from what each chair hour has to earn to cover rent, wages and costs, then check local prices. When you add times, the tool shows what each service earns per hour in the chair. The free KERSIVO barber price calculator works out what to charge for each service from your own costs and hours.',
   },
 ];
 
 export const PRICE_LIST_RELATED_LINKS: readonly { href: string; label: string; description: string }[] = [
   {
-    href: '/insights/how-to-price-haircut-uk-barber',
-    label: 'How to price a haircut',
-    description: 'Work out what each chair hour needs to earn before you set prices.',
+    href: '/barber-price-calculator',
+    label: 'Barber price calculator',
+    description: 'Work out what to charge for each service before you fill in the list.',
   },
   {
     href: '/barbershop-cancellation-policy-template',

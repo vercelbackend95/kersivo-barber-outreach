@@ -1,0 +1,179 @@
+/* ============================================================
+   /free-tools: one index of every free calculator and template,
+   grouped by the job the barber is doing. Cards use the shared
+   .ks-glass-card surface; red stays decorative.
+   ============================================================ */
+
+.ft-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.75rem;
+}
+
+.ft-jump__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.ft-jump__link:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ft-page .ft-group:first-of-type {
+  padding-top: clamp(2rem, 4vw, 3rem);
+}
+
+.ft-group__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--dr-line);
+}
+
+.ft-group__title {
+  margin: 0.8rem 0 0;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.ft-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ft-card {
+  --ks-glass-pad: 1.4rem;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.55rem;
+  height: 100%;
+  padding: 1.4rem;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 180ms ease, transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ft-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: var(--ks-glass-pad);
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 85%, transparent), transparent);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.ft-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.ft-card:hover::before,
+.ft-card:focus-visible::before {
+  opacity: 1;
+}
+
+.ft-card__kind {
+  color: #8e8e92;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ft-card__label {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ft-card__desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.ft-card__go {
+  margin-top: 0.6rem;
+  color: var(--fg);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ft-why {
+  --ks-glass-pad: 1.75rem;
+  display: grid;
+  gap: 0.9rem;
+  max-width: 52rem;
+  padding: 1.75rem;
+}
+
+.ft-why__title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.3rem, 2.4vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.ft-why__body {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .ft-group__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ft-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ft-card,
+  .ft-why {
+    --ks-glass-pad: 1.15rem;
+    padding: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ft-jump__link,
+  .ft-card,
+  .ft-card::before {
+    transition: none;
+  }
+
+  .ft-card:hover {
+    transform: none;
+  }
+}

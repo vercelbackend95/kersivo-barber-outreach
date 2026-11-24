@@ -8,6 +8,7 @@ import {
 } from './cancellationPolicyTemplatePage';
 import { NO_SHOW_CALCULATOR_TITLE, NO_SHOW_HERO, NO_SHOW_HOW_TO_USE } from './noShowCalculatorPage';
 import { CHAIR_RENT_CALCULATOR_TITLE, CHAIR_RENT_HERO, HOW_TO_USE_SECTION } from './chairRentCalculatorPage';
+import { PRICE_CALCULATOR_DIRECT_ANSWER, PRICE_CALCULATOR_HOW_TO_USE, PRICE_CALCULATOR_TITLE } from './priceCalculatorPage';
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8');
 const words = (text: string) => text.trim().split(/\s+/).length;
@@ -52,6 +53,17 @@ const TOOLS = [
     steps: HOW_TO_USE_SECTION,
     stepsTemplate: 'src/components/chairRentCalculator/ChairRentSections.astro',
     stepsExpression: '{HOW_TO_USE_SECTION.steps.map(',
+  },
+  {
+    name: 'barber price calculator',
+    title: PRICE_CALCULATOR_TITLE,
+    search: /barber price calculator/i,
+    answer: PRICE_CALCULATOR_DIRECT_ANSWER,
+    template: 'src/pages/barber-price-calculator/index.astro',
+    expression: '{PRICE_CALCULATOR_DIRECT_ANSWER}',
+    steps: PRICE_CALCULATOR_HOW_TO_USE,
+    stepsTemplate: 'src/pages/barber-price-calculator/index.astro',
+    stepsExpression: '{PRICE_CALCULATOR_HOW_TO_USE.steps.map(',
   },
 ] as const;
 
