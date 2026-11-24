@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { PRICE_LIST_LLMS_SUMMARY } from '@/lib/seo/priceListTemplatePage';
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
@@ -67,7 +68,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     link(
       '/barbershop-price-list-template',
       'Price list template',
-      'free barber price list template: add services, prices and times, then print on A4 or copy as text for Instagram and Google, with nothing stored',
+      PRICE_LIST_LLMS_SUMMARY,
     ),
     link(
       '/barbershop-no-show-calculator',

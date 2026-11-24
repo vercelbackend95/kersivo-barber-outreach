@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   PRICE_LIST_MAX_ITEMS,
+  PRICE_LIST_QUICK_ADD,
   PRICE_LIST_SUGGESTED_SERVICES,
   buildPriceListText,
   formatMinutes,
+  hourlyRateGbp,
   itemsMissingPrice,
   normalisePriceList,
   parsePriceGbp,
+  pricedCount,
   type PriceListItem,
 } from './priceListText';
 
@@ -55,5 +58,30 @@ describe('price list text', () => {
 
   it('suggests service names only, never prices', () => {
     expect(PRICE_LIST_SUGGESTED_SERVICES.every((name) => !name.includes('£'))).toBe(true);
+  });
+});
+
+describe('price list helpers for the redesigned tool', () => {
+  it('works out what a service earns per hour from its own price and time', () => {
+    expect(hourlyRateGbp({ priceGbp: 22, minutes: 30 })).toBe(44);
+    expect(hourlyRateGbp({ priceGbp: 25, minutes: 45 })).toBe(33);
+    expect(hourlyRateGbp({ priceGbp: 22, minutes: null })).toBeNull();
+    expect(hourlyRateGbp({ priceGbp: null, minutes: 30 })).toBeNull();
+  });
+
+  it('counts priced rows among named rows only', () => {
+    const options = {
+      shopName: '',
+      showDuration: false,
+      footer: '',
+      items: [item('Haircut', 20), item('Skin fade', null), item('   ', 9)],
+    };
+    expect(pricedCount(options)).toEqual({ priced: 1, total: 2 });
+  });
+
+  it('quick-add suggestions are names only and not already in the starting rows', () => {
+    expect(PRICE_LIST_QUICK_ADD.every((name) => !/[£\d]/.test(name))).toBe(true);
+    const starting = new Set(PRICE_LIST_SUGGESTED_SERVICES.map((name) => name.toLowerCase()));
+    expect(PRICE_LIST_QUICK_ADD.some((name) => starting.has(name.toLowerCase()))).toBe(false);
   });
 });
