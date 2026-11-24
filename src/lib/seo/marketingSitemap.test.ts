@@ -42,6 +42,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barber-software-cost-calculator',
   'https://kersivo.co.uk/barber-booking-fees-uk',
   'https://kersivo.co.uk/booksy-vs-fresha',
+  'https://kersivo.co.uk/kersivo-vs-booksy',
   'https://kersivo.co.uk/barbershop-cancellation-policy-template',
   'https://kersivo.co.uk/barbershop-price-list-template',
   'https://kersivo.co.uk/barbershop-no-show-calculator',

@@ -340,6 +340,17 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     shortLabel: 'Booksy vs Fresha',
   },
   {
+    id: 'compare-kersivo-vs-booksy',
+    label: 'KERSIVO vs Booksy',
+    description: 'An interactive walk through your own branded site against a marketplace profile.',
+    href: '/kersivo-vs-booksy',
+    group: 'compare',
+    section: 'alternatives',
+    icon: 'compare',
+    keywords: ['kersivo or booksy', 'own website', 'marketplace'],
+    shortLabel: 'KERSIVO vs Booksy',
+  },
+  {
     id: 'compare-fees-report',
     label: 'Booking software fees report',
     description: 'Monthly cost, new-client fees and card fees for 10 UK systems, with dates.',

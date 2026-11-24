@@ -35,6 +35,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barber-software-cost-calculator',
   '/barber-booking-fees-uk',
   '/booksy-vs-fresha',
+  '/kersivo-vs-booksy',
   '/barbershop-cancellation-policy-template',
   '/barbershop-price-list-template',
   '/barbershop-no-show-calculator',

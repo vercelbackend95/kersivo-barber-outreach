@@ -1,0 +1,383 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { buildKersivoVsBooksyWebPageJsonLd } from '@/lib/seo/kersivoVsBooksyJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { FREE_PREVIEW_CTA_HREF } from '@/lib/freePreview/fullPlanCta';
+import { BK_TEAM_MAX, BK_TEAM_MIN, estimateBill, formatGbp } from '@/lib/landing/booksyMath';
+import { BOOKSY_TRADEMARK_DISCLAIMER } from '@/lib/seo/booksyFacts';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  KVB_BILL_BOOST_LABEL,
+  KVB_BILL_LEAD,
+  KVB_BILL_NOTE,
+  KVB_BILL_STARTER,
+  KVB_BILL_TITLE,
+  KVB_CHAPTERS,
+  KVB_CHAPTERS_LEAD,
+  KVB_CHAPTERS_TITLE,
+  KVB_CLOSE_FULL_COMPARISON,
+  KVB_CLOSE_LEAD,
+  KVB_CLOSE_STARTER,
+  KVB_CLOSE_TITLE,
+  KVB_DESCRIPTION,
+  KVB_FAIR_BODY,
+  KVB_FAIR_TITLE,
+  KVB_FEATURES,
+  KVB_FEATURES_TITLE,
+  KVB_HERO,
+  KVB_LEDGER_ROWS,
+  KVB_LEDGER_TITLE,
+  KVB_PAGE_PATH,
+  KVB_SOURCES_NOTE,
+  KVB_STATEMENT,
+  KVB_TITLE,
+} from '@/lib/seo/kersivoVsBooksyExperience';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/kersivo-vs-booksy.css';
+
+const currentYear = new Date().getFullYear();
+const START_TEAM = 3;
+const bill = estimateBill(START_TEAM);
+const statementWords = KVB_STATEMENT.split(' ');
+---
+
+<LandingLayout
+  title={KVB_TITLE}
+  description={KVB_DESCRIPTION}
+  canonicalPath={KVB_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), buildKersivoVsBooksyWebPageJsonLd()]}
+>
+  <main class="kvb landing-overflow-guard" data-kvb>
+    <script is:inline>
+      // Hide the hero lines before first paint only when they will animate; a failsafe shows them.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('kvb-js');
+        window.setTimeout(function () {
+          var hero = document.querySelector('[data-kvb-hero]');
+          if (hero) hero.classList.add('is-in');
+        }, 2500);
+      }
+    </script>
+    <!-- 1 · Hero: the marketplace globe (three.js) -->
+    <section class="kvb-hero" aria-labelledby="kvb-hero-title" data-kvb-hero>
+      <div class="kvb-hero__visual" aria-hidden="true" data-kvb-visual>
+        <canvas class="kvb-hero__canvas" data-kvb-canvas></canvas>
+      </div>
+      <div class="kvb-wrap kvb-hero__inner">
+        <p class="ks-eyebrow" data-kvb-enter>{KVB_HERO.eyebrow}</p>
+        <h1 id="kvb-hero-title" class="kvb-hero__title">
+          {KVB_HERO.titleLines.map((line, i) => (
+            <span class="kvb-hero__line">
+              <span class:list={['kvb-hero__line-inner', { 'kvb-red': i === 1 }]} data-kvb-rise>{line}</span>
+            </span>
+          ))}
+        </h1>
+        <p class="kvb-hero__lead" data-kvb-enter>{KVB_HERO.lead}</p>
+        <ul class="kvb-hero__facts" data-kvb-enter>
+          {KVB_HERO.facts.map((fact) => <li>{fact}</li>)}
+        </ul>
+        <div class="kvb-hero__actions" data-kvb-enter>
+          <a class="btn btn--primary kvb-btn" href={FREE_PREVIEW_CTA_HREF} data-track="build_preview_click">
+            {KVB_HERO.primary}
+            <span class="kvb-btn__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn--outline kvb-btn" href="#model">{KVB_HERO.secondary}</a>
+        </div>
+      </div>
+      <a class="kvb-hero__cue" href="#model" aria-label="Scroll to the two models" data-kvb-enter>
+        <span class="kvb-hero__cue-line" aria-hidden="true"></span>
+      </a>
+    </section>
+
+    <!-- 2 · Two models: pinned chapters (moment 1) -->
+    <section class="kvb-model" id="model" aria-labelledby="kvb-model-title" data-kvb-chapters>
+      <div class="kvb-model__pin" data-kvb-pin>
+        <div class="kvb-wrap kvb-model__grid">
+          <div class="kvb-model__copy">
+            <p class="ks-eyebrow">The model</p>
+            <h2 id="kvb-model-title" class="kvb-h2">{KVB_CHAPTERS_TITLE}</h2>
+            <p class="kvb-lead">{KVB_CHAPTERS_LEAD}</p>
+
+            <div class="kvb-model__tabs" role="group" aria-label="Choose a chapter">
+              {KVB_CHAPTERS.map((chapter, i) => (
+                <button
+                  type="button"
+                  class="kvb-model__tab"
+                  data-kvb-tab={i}
+                  aria-pressed={i === 0 ? 'true' : 'false'}
+                >
+                  <span class="kvb-model__tab-index">{chapter.index}</span>
+                  <span class="kvb-model__tab-title">{chapter.title}</span>
+                  <span class="kvb-model__tab-bar" aria-hidden="true"><span data-kvb-tab-fill></span></span>
+                </button>
+              ))}
+            </div>
+
+            <div class="kvb-model__panels" aria-live="polite">
+              {KVB_CHAPTERS.map((chapter, i) => (
+                <div class="kvb-model__panel" data-kvb-panel={i} hidden={i !== 0}>
+                  <dl class="kvb-model__pair">
+                    <div class="kvb-model__side kvb-model__side--booksy">
+                      <dt>On Booksy</dt>
+                      <dd>{chapter.booksy}</dd>
+                    </div>
+                    <div class="kvb-model__side kvb-model__side--kersivo">
+                      <dt>With KERSIVO</dt>
+                      <dd>{chapter.kersivo}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div class="kvb-model__stage" aria-hidden="true" data-kvb-stage data-chapter="0">
+            <!-- Marketplace phone: a neutral, unbranded marketplace app -->
+            <div class="kvb-phone kvb-phone--market">
+              <div class="kvb-phone__bar">
+                <span class="kvb-phone__app">Marketplace app</span>
+                <span class="kvb-phone__dots"><i></i><i></i><i></i></span>
+              </div>
+              <div class="kvb-phone__search">Barbers near you</div>
+              <ul class="kvb-market">
+                <li class="kvb-market__row"><span class="kvb-market__thumb"></span><span class="kvb-market__lines"><b></b><i></i></span></li>
+                <li class="kvb-market__row kvb-market__row--you"><span class="kvb-market__thumb"></span><span class="kvb-market__lines"><b>Your shop</b><i></i></span></li>
+                <li class="kvb-market__row"><span class="kvb-market__thumb"></span><span class="kvb-market__lines"><b></b><i></i></span></li>
+                <li class="kvb-market__row"><span class="kvb-market__thumb"></span><span class="kvb-market__lines"><b></b><i></i></span></li>
+              </ul>
+              <div class="kvb-phone__foot">
+                <span class="kvb-chip kvb-chip--grey" data-kvb-market-chip>{KVB_CHAPTERS[0].marketChip}</span>
+              </div>
+            </div>
+
+            <!-- Own-brand phone: your website on your domain -->
+            <div class="kvb-phone kvb-phone--own">
+              <div class="kvb-phone__url"><span class="kvb-phone__lock"></span><span data-kvb-url>yourshop.co.uk</span></div>
+              <div class="kvb-own__hero">
+                <span class="kvb-own__logo">Your Shop</span>
+                <span class="kvb-own__tag">Est. on your high street</span>
+              </div>
+              <ul class="kvb-own__services">
+                <li><span>Skin fade</span><i>45 min</i></li>
+                <li><span>Beard trim</span><i>20 min</i></li>
+                <li><span>Cut &amp; beard</span><i>60 min</i></li>
+              </ul>
+              <div class="kvb-own__team">
+                <span class="kvb-own__team-label">Choose your barber</span>
+                <span class="kvb-own__avatars"><i>J</i><i>M</i><i>A</i></span>
+              </div>
+              <div class="kvb-own__cta">
+                <span class="kvb-own__cta-book">Book with Your Shop</span>
+                <span class="kvb-own__cta-done">Booked · Fri 10:30</span>
+              </div>
+              <div class="kvb-phone__foot">
+                <span class="kvb-chip kvb-chip--red" data-kvb-own-chip>{KVB_CHAPTERS[0].ownChip}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · The bill: interactive -->
+    <section class="kvb-bill" id="bill" aria-labelledby="kvb-bill-title" data-kvb-bill>
+      <div class="kvb-wrap">
+        <p class="ks-eyebrow">The bill</p>
+        <h2 id="kvb-bill-title" class="kvb-h2">{KVB_BILL_TITLE}</h2>
+        <p class="kvb-lead">{KVB_BILL_LEAD}</p>
+
+        <div class="kvb-bill__grid">
+          <form class="kvb-bill__controls ks-glass-card ks-glass-card--accent" onsubmit="return false" aria-label="Your shop">
+            <div class="kvb-field">
+              <label for="kvb-team" class="kvb-field__label">Barbers taking bookings</label>
+              <output class="kvb-field__value" for="kvb-team" data-kvb-team-out>{START_TEAM}</output>
+              <input id="kvb-team" class="kvb-range" type="range" min={BK_TEAM_MIN} max={BK_TEAM_MAX} step="1" value={START_TEAM} data-kvb-team />
+            </div>
+
+            <label class="kvb-switch">
+              <input type="checkbox" data-kvb-boost-toggle />
+              <span class="kvb-switch__track" aria-hidden="true"><span class="kvb-switch__thumb"></span></span>
+              <span class="kvb-switch__label">{KVB_BILL_BOOST_LABEL}</span>
+            </label>
+
+            <div class="kvb-bill__boost" data-kvb-boost hidden>
+              <div class="kvb-field">
+                <label for="kvb-new" class="kvb-field__label">New Boost clients a month</label>
+                <output class="kvb-field__value" for="kvb-new" data-kvb-new-out>6</output>
+                <input id="kvb-new" class="kvb-range" type="range" min="0" max="30" step="1" value="6" data-kvb-new />
+              </div>
+              <div class="kvb-field">
+                <label for="kvb-visit" class="kvb-field__label">Their first visit</label>
+                <output class="kvb-field__value" for="kvb-visit" data-kvb-visit-out>£25</output>
+                <input id="kvb-visit" class="kvb-range" type="range" min="10" max="60" step="1" value="25" data-kvb-visit />
+              </div>
+            </div>
+          </form>
+
+          <div class="kvb-bill__result ks-glass-card">
+            <div class="kvb-meter">
+              <div class="kvb-meter__head">
+                <span class="kvb-meter__name">Booksy</span>
+                <span class="kvb-meter__sum"><span data-kvb-booksy-total>{formatGbp(bill.booksyIncVatGbp)}</span><small>/month incl. VAT</small></span>
+              </div>
+              <div class="kvb-meter__track" data-kvb-booksy-track>
+                <div class="kvb-meter__segments" data-kvb-segments></div>
+              </div>
+              <p class="kvb-meter__detail" data-kvb-booksy-detail>
+                {formatGbp(bill.booksyExVatGbp)} + VAT · base + {bill.additionalUsers} extra {bill.additionalUsers === 1 ? 'user' : 'users'}
+              </p>
+            </div>
+
+            <div class="kvb-meter kvb-meter--kersivo">
+              <div class="kvb-meter__head">
+                <span class="kvb-meter__name">Full KERSIVO</span>
+                <span class="kvb-meter__sum"><span>{formatGbp(SAAS_MONTHLY_GBP)}</span><small>/month per location</small></span>
+              </div>
+              <div class="kvb-meter__track">
+                <div class="kvb-meter__flat" data-kvb-kersivo-bar></div>
+              </div>
+              <p class="kvb-meter__detail">No per-barber fees · no VAT added</p>
+            </div>
+
+            <div class="kvb-bill__diff">
+              <span class="kvb-bill__diff-label" data-kvb-diff-label>Difference over 12 months</span>
+              <span class="kvb-bill__diff-value" data-kvb-diff>{formatGbp(Math.abs(bill.yearlyDifferenceGbp))}</span>
+            </div>
+            <p class="kvb-bill__starter" data-kvb-starter hidden={!bill.starterEligible}>
+              {KVB_BILL_STARTER} <a href="/starter" data-track="starter_plan_explore_click">See Starter</a>
+            </p>
+          </div>
+        </div>
+        <p class="kvb-note">{KVB_BILL_NOTE}</p>
+      </div>
+    </section>
+
+    <!-- 4 · Statement: words light up with the scroll (moment 2) -->
+    <section class="kvb-statement" aria-label="The own-brand model in one sentence" data-kvb-statement>
+      <div class="kvb-wrap">
+        <p class="kvb-statement__text">
+          {statementWords.map((word) => (
+            <span class:list={['kvb-word', { 'kvb-word--key': word === 'own' }]} data-kvb-word>{word} </span>
+          ))}
+        </p>
+      </div>
+    </section>
+
+    <!-- 5 · What's new: cards with short loops -->
+    <section class="kvb-features" aria-labelledby="kvb-features-title" data-kvb-features>
+      <div class="kvb-wrap">
+        <div class="kvb-features__head">
+          <div>
+            <p class="ks-eyebrow">What’s different</p>
+            <h2 id="kvb-features-title" class="kvb-h2">{KVB_FEATURES_TITLE}</h2>
+          </div>
+          <button type="button" class="kvb-pause" aria-pressed="false" data-kvb-pause>
+            <span class="kvb-pause__icon" aria-hidden="true"></span>
+            <span data-kvb-pause-label>Pause animations</span>
+          </button>
+        </div>
+        <ul class="kvb-features__grid">
+          {KVB_FEATURES.map((feature) => (
+            <li class="kvb-card ks-glass-card" data-kvb-card={feature.id}>
+              <div class="kvb-card__visual" aria-hidden="true">
+                {feature.id === 'domain' && (
+                  <div class="kvb-vis-domain">
+                    <div class="kvb-vis-domain__bar"><span class="kvb-phone__lock"></span><span class="kvb-vis-domain__text">yourshop.co.uk</span><span class="kvb-vis-domain__caret"></span></div>
+                    <div class="kvb-vis-domain__page"><b>Your Shop</b><i></i><i></i></div>
+                  </div>
+                )}
+                {feature.id === 'deposit' && (
+                  <div class="kvb-vis-deposit">
+                    <div class="kvb-vis-deposit__slot">Fri · 10:30</div>
+                    <div class="kvb-vis-deposit__btn"><span class="kvb-vis-deposit__label">Pay £5 deposit</span><span class="kvb-vis-deposit__done">Booking secured</span></div>
+                  </div>
+                )}
+                {feature.id === 'retail' && (
+                  <div class="kvb-vis-retail">
+                    <div class="kvb-vis-retail__item"><span class="kvb-vis-retail__tub"></span><span>Matte clay</span></div>
+                    <div class="kvb-vis-retail__status"><span class="kvb-vis-retail__dot"></span><span>Ready for pickup</span></div>
+                  </div>
+                )}
+                {feature.id === 'dashboard' && (
+                  <div class="kvb-vis-dash">
+                    {[38, 62, 48, 80, 56, 92, 70].map((h) => <span style={`--h:${h}%`}></span>)}
+                  </div>
+                )}
+              </div>
+              <p class="kvb-card__kicker">{feature.kicker}</p>
+              <h3 class="kvb-card__title">{feature.title}</h3>
+              <p class="kvb-card__body">{feature.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- 6 · Ledger: line by line, and the fair view -->
+    <section class="kvb-ledger" aria-labelledby="kvb-ledger-title">
+      <div class="kvb-wrap">
+        <p class="ks-eyebrow">Side by side</p>
+        <h2 id="kvb-ledger-title" class="kvb-h2">{KVB_LEDGER_TITLE}</h2>
+        <div class="kvb-ledger__table" role="table" aria-label={KVB_LEDGER_TITLE}>
+          <div class="kvb-ledger__row kvb-ledger__row--head" role="row">
+            <span role="columnheader">What you compare</span>
+            <span role="columnheader">Booksy</span>
+            <span role="columnheader">KERSIVO</span>
+          </div>
+          {KVB_LEDGER_ROWS.map((row) => (
+            <div class="kvb-ledger__row" role="row">
+              <span class="kvb-ledger__label" role="rowheader">{row.label}</span>
+              <span class="kvb-ledger__cell kvb-ledger__cell--booksy" role="cell"><em class="kvb-ledger__tag">Booksy</em>{row.booksy}</span>
+              <span class="kvb-ledger__cell kvb-ledger__cell--kersivo" role="cell"><em class="kvb-ledger__tag">KERSIVO</em>{row.kersivo}</span>
+            </div>
+          ))}
+        </div>
+        <aside class="kvb-fair ks-glass-card" aria-labelledby="kvb-fair-title">
+          <h3 id="kvb-fair-title" class="kvb-fair__title">{KVB_FAIR_TITLE}</h3>
+          <p>{KVB_FAIR_BODY}</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 7 · Close -->
+    <section class="kvb-close" aria-labelledby="kvb-close-title">
+      <div class="kvb-wrap kvb-close__inner">
+        <h2 id="kvb-close-title" class="kvb-close__title">{KVB_CLOSE_TITLE}</h2>
+        <p class="kvb-lead kvb-close__lead">{KVB_CLOSE_LEAD}</p>
+        <div class="kvb-hero__actions kvb-close__actions">
+          <a class="btn btn--primary kvb-btn" href={FREE_PREVIEW_CTA_HREF} data-track="build_preview_click">
+            {KVB_HERO.primary}
+            <span class="kvb-btn__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="kvb-link" href="/starter" data-track="starter_plan_explore_click">{KVB_CLOSE_STARTER}</a>
+        </div>
+        <p class="kvb-close__more"><a class="kvb-link" href="/booksy-alternative">{KVB_CLOSE_FULL_COMPARISON}</a></p>
+        <p class="kvb-note kvb-close__legal">{KVB_SOURCES_NOTE} {BOOKSY_TRADEMARK_DISCLAIMER}</p>
+      </div>
+    </section>
+
+    <Footer50
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initKersivoVsBooksy } from '@/lib/landing/kvb/experience';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main[data-kvb]');
+    if (!root || root.dataset.kvbBound === 'true') return;
+    root.dataset.kvbBound = 'true';
+    const cleanup = initKersivoVsBooksy(root);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
