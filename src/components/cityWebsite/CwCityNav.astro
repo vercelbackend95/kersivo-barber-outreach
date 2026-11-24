@@ -1,0 +1,43 @@
+---
+/**
+ * Shared city-page navigation, rendered under the closing CTA on every /barbershop-websites/{city} page:
+ * the way back into the Websites cluster, plus "Other UK cities" built from PUBLISHED_CITY_PAGES
+ * (shown automatically once a second city is published).
+ */
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from '@/lib/seo/cityPages';
+import type { CityPage } from '@/lib/seo/cityPages';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const otherCities = PUBLISHED_CITY_PAGES.filter((other) => other.slug !== city.slug);
+---
+
+<nav class="cw-citynav" aria-label="Barbershop website guides">
+  <div class="cw-shell cw-citynav__inner">
+    <ul class="cw-citynav__links" role="list">
+      <li>
+        <a class="cw-citynav__link cw-citynav__link--back" href="/barbershop-websites">
+          <span aria-hidden="true">←</span> All UK Barbershop Website Guides
+        </a>
+      </li>
+      <li><a class="cw-citynav__link" href="/barbershop-website-design">Barbershop Website Design UK</a></li>
+      <li><a class="cw-citynav__link" href="/compare">Compare Booking Systems</a></li>
+    </ul>
+
+    {otherCities.length > 0 && (
+      <div class="cw-citynav__cities">
+        <h2 class="cw-citynav__title" id="cw-citynav-cities">Other UK Cities</h2>
+        <ul class="cw-citynav__links" role="list" aria-labelledby="cw-citynav-cities">
+          {otherCities.map((other) => (
+            <li>
+              <a class="cw-citynav__link" href={getCityPagePath(other)}>Barbershop websites in {other.name}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+</nav>

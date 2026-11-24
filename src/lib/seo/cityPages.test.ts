@@ -20,7 +20,7 @@ import { calculateCityScenario, clampCityInput, describeNewClientFees } from '@/
 
 const read = (path: string) => readFileSync(path, 'utf8');
 const PAGE = read('src/pages/barbershop-websites/[city].astro');
-const COMPONENTS = ['CwHero', 'CwCalculator', 'CwRoute', 'CwMarket', 'CwCosts', 'CwFaq', 'CwClose'];
+const COMPONENTS = ['CwHero', 'CwCalculator', 'CwRoute', 'CwMarket', 'CwCosts', 'CwFaq', 'CwClose', 'CwCityNav'];
 const component = (name: string) => read(`src/components/cityWebsite/${name}.astro`);
 
 const daysBetween = (a: string, b: string) => Math.abs(Date.parse(a) - Date.parse(b)) / 86_400_000;
@@ -213,11 +213,26 @@ describe('city page copy and links', () => {
     expect(hero).toContain('Or start on Starter — £0/month');
   });
 
-  it('links back into the websites cluster and to the free preview', () => {
+  it('closes on the free preview with Starter as the secondary button', () => {
     const close = component('CwClose');
-    expect(close).toContain('href="/barbershop-websites"');
-    expect(close).toContain('href="/barbershop-website-design"');
-    expect(close).toContain('href="/free-preview"');
+    expect(close).toContain('Ready to put your {city.name} shop on your own domain?');
+    expect(close).toContain('See a free working preview built around your barbershop before you pay a penny&nbsp;— or start free on Starter.');
+    expect(close.indexOf('<FullPlanCta part="primary"')).toBeLessThan(close.indexOf('href="/starter"'));
+    expect(close).toContain('Or start on Starter — £0/month');
+    expect(close).toContain('<li>£{SAAS_MONTHLY_GBP}/month per location, not per barber</li>');
+    expect(close).toContain('<li>No setup fee</li>');
+    expect(close).toContain('<li>0% KERSIVO commission, Stripe fees apply</li>');
+    expect(close).toContain('<CwCityNav city={city} />');
+  });
+
+  it('links back into the websites cluster and lists other published cities', () => {
+    const nav = component('CwCityNav');
+    expect(nav).toContain('href="/barbershop-websites"');
+    expect(nav).toContain('All UK Barbershop Website Guides');
+    expect(nav).toContain('href="/barbershop-website-design"');
+    expect(nav).toContain('href="/compare"');
+    expect(nav).toContain('PUBLISHED_CITY_PAGES.filter((other) => other.slug !== city.slug)');
+    expect(nav).toContain('Other UK Cities');
     expect(component('CwHero')).toContain('getCityBreadcrumbs(city)');
   });
 

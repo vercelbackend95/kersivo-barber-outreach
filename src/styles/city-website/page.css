@@ -1542,30 +1542,65 @@
   margin-top: 0.75rem;
 }
 
-.cw-close__starter,
 .cw-close__actions .cw-textlink {
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
 }
 
-.cw .cw-close__fine {
+.cw-close__facts {
+  justify-content: center;
+  margin: 0;
+}
+
+.cw .cw-close__note {
+  max-width: 34rem;
   margin: 0;
   color: var(--cw-quiet);
   font-size: 0.8rem;
 }
 
-.cw-close__more {
+/* ---------- City navigation (shared by every city page) ---------- */
+.cw-citynav {
+  padding-block: clamp(2rem, 4vw, 2.75rem);
+  border-top: 1px solid var(--cw-line);
+}
+
+.cw-citynav__inner {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+}
+
+.cw-citynav__cities {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+}
+
+.cw .cw-citynav__title {
+  margin: 0;
+  color: var(--cw-quiet);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cw-citynav__links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.cw.cw .cw-close__more a {
+.cw.cw .cw-citynav__link {
   display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
   min-height: 2.75rem;
   padding-inline: 1rem;
   border: 1px solid var(--cw-k-line-2);
@@ -1575,10 +1610,26 @@
   transition: border-color 180ms ease, color 180ms ease, transform 180ms var(--cw-ease);
 }
 
-.cw.cw .cw-close__more a:hover {
-  border-color: rgba(215, 38, 56, 0.55);
+.cw.cw .cw-citynav__link--back {
   color: var(--cw-ink);
-  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .cw.cw .cw-citynav__link:hover {
+    border-color: rgba(215, 38, 56, 0.55);
+    color: var(--cw-ink);
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw.cw .cw-citynav__link {
+    transition: border-color 180ms ease, color 180ms ease;
+  }
+
+  .cw.cw .cw-citynav__link:hover {
+    transform: none;
+  }
 }
 
 /* ---------- Motion: one hero entrance, bars grow once ---------- */
@@ -1708,8 +1759,4 @@
   min-height: 1.5rem;
 }
 
-.cw .cw-close__subscribe a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-}
+
