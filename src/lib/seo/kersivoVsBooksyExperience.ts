@@ -2,8 +2,10 @@
  * Copy for /kersivo-vs-booksy, the interactive "new model" explainer.
  * Every Booksy figure is interpolated from verified facts in booksyFacts.ts (via the approved
  * /booksy-alternative copy); every KERSIVO claim follows src/lib/pricing/claimsPolicy.ts.
- * Indexable and in the sitemap; it targets the head-to-head "KERSIVO vs Booksy" query, while
- * /booksy-alternative stays the page for "Booksy alternative" searches.
+ * Indexable and in the sitemap. Search intents are split so the two Booksy pages never compete:
+ * - /kersivo-vs-booksy: "Booksy vs your own website" (marketplace profile against an own-brand site);
+ * - /booksy-alternative: "Booksy alternative" / "leaving Booksy" (the money page).
+ * Keep titles, H1-level eyebrows and ledger headings distinct from /booksy-alternative.
  */
 import { offer } from '@/content/offer';
 import { BK_STARTER_MAX_BARBERS, BK_SCOREBOARD } from '@/lib/seo/booksyAlternativeContent';
@@ -13,9 +15,12 @@ import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/default
 
 export const KVB_PAGE_PATH = '/kersivo-vs-booksy';
 /** Date the page content last changed (sitemap lastmod and JSON-LD dateModified). */
-export const KVB_LAST_UPDATED_ISO = '2026-11-24';
-export const KVB_TITLE = 'KERSIVO vs Booksy: the own-brand model, explained | KERSIVO';
-export const KVB_DESCRIPTION = `See how KERSIVO differs from Booksy: your own branded website and booking on your own domain, ${formatGbp(SAAS_MONTHLY_GBP)}/month per location with no per-barber fees, and 0% KERSIVO commission (Stripe fees apply).`;
+export const KVB_LAST_UPDATED_ISO = '2026-11-25';
+export const KVB_PUBLISHED_ISO = '2026-11-24';
+export const KVB_TITLE = 'Booksy vs Your Own Booking Website for UK Barbers | KERSIVO';
+export const KVB_DESCRIPTION = `A Booksy profile or your own booking website? Your own site and domain, ${formatGbp(SAAS_MONTHLY_GBP)}/month per location, 0% KERSIVO commission (Stripe fees apply).`;
+/** Breadcrumb trail (JSON-LD), matching /booksy-vs-fresha: Home › Compare › this page. */
+export const KVB_BREADCRUMB_NAME = 'Booksy vs your own website';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 const DEPOSIT = formatGbp(KERSIVO_BOOKING_DEPOSIT_GBP);
@@ -30,7 +35,7 @@ const BOOST_MIN = formatGbp(boost.minimumGbp!);
 /* ---------- Hero ---------- */
 
 export const KVB_HERO = {
-  eyebrow: 'KERSIVO vs Booksy',
+  eyebrow: 'Booksy vs your own website',
   titleLines: ['Booksy lists your shop.', 'KERSIVO builds it.'],
   lead: `Booksy puts your profile inside its own app and marketplace. KERSIVO gives your barbershop its own branded website and booking on your own domain, for one flat ${PRICE} a month per location, however many barbers you have.`,
   facts: [
@@ -142,7 +147,7 @@ export const KVB_FEATURES: readonly KvbFeature[] = [
 
 /* ---------- Ledger ---------- */
 
-export const KVB_LEDGER_TITLE = 'Booksy vs KERSIVO, line by line';
+export const KVB_LEDGER_TITLE = 'A Booksy profile against your own site';
 export const KVB_LEDGER_ROWS = BK_SCOREBOARD.filter((row) =>
   ['Monthly price', 'Extra barbers', 'Commission on bookings', 'Your own website and domain', 'Where clients book', 'Customer app and marketplace', 'Deposits and no-shows', 'Retail'].includes(row.label),
 );
@@ -157,6 +162,6 @@ export const KVB_CLOSE_TITLE = 'See your own shop first';
 export const KVB_CLOSE_LEAD =
   'We build a free preview of your branded website. Booksy keeps taking bookings while your setup is prepared, and nothing goes public until you approve it.';
 export const KVB_CLOSE_STARTER = 'Or start with KERSIVO Starter, £0/month';
-export const KVB_CLOSE_FULL_COMPARISON = 'Read the full Booksy comparison';
+export const KVB_CLOSE_FULL_COMPARISON = 'Read the full Booksy alternative guide';
 
 export const KVB_SOURCES_NOTE = `Booksy figures were checked against Booksy’s official UK pricing, Boost and payments pages on ${BOOKSY_FACTS_CHECKED_DATE} and may change.`;

@@ -173,7 +173,7 @@ describe('booksy-alternative: metadata and URL', () => {
     expect(BOOKSY_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
     expect(BOOKSY_ALTERNATIVE_H1).toBe('The Booksy alternative with your name on the door');
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
-    expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
+    expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
     for (const phrase of ['Booksy', 'domain', `£${SAAS_MONTHLY_GBP}/month per location`, 'no per-barber fees', 'moving clients', '0% KERSIVO commission', 'Stripe fees apply']) {
       expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toContain(phrase);
     }

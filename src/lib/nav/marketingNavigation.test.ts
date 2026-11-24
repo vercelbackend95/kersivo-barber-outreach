@@ -283,12 +283,26 @@ describe('marketing navigation config', () => {
     expect(compareHrefs).toEqual(
       expect.arrayContaining(['/booksy-alternative', '/fresha-alternative', '/nearcut-alternative', '/setora-alternative']),
     );
-    expect(compare.featured.map((item) => item.id)).toEqual(['compare-hub']);
-    expect(compare).toMatchObject({ layout: 'compact', featuredAction: { href: '/barber-software-cost-calculator' } });
-    const alternatives = compare.sections.flatMap((section) => section.items);
+    expect(compare.featured.map((item) => item.id)).toEqual(['compare-hub', 'compare-kersivo-vs-booksy']);
+    expect(compare).toMatchObject({ featuredAction: { href: '/barber-software-cost-calculator' } });
+    expect(compare.sections.map((section) => [section.id, section.layout])).toEqual([
+      ['alternatives', 'compact'],
+      ['reports', undefined],
+    ]);
+    // The compact grid prefixes every tile with "vs" under "KERSIVO vs": only KERSIVO-vs-competitor pages belong there,
+    // each with a short name, and each competitor appears once.
+    const alternatives = compare.sections.find((section) => section.id === 'alternatives')!.items;
     expect(alternatives.map((item) => item.id)).not.toContain('compare-hub');
-    // The compact grid shows short names, so every comparison needs one.
-    for (const item of alternatives) expect(item.shortLabel, item.id).toBeTruthy();
+    for (const item of alternatives) {
+      expect(item.shortLabel, item.id).toBeTruthy();
+      expect(item.href, item.id).toMatch(/-alternative$/);
+      expect(item.shortLabel, item.id).not.toMatch(/vs|report/i);
+    }
+    expect(new Set(alternatives.map((item) => item.shortLabel)).size).toBe(alternatives.length);
+    expect(compare.sections.find((section) => section.id === 'reports')!.items.map((item) => item.href)).toEqual([
+      '/booksy-vs-fresha',
+      '/barber-booking-fees-uk',
+    ]);
     const guides = resources.sections.find((section) => section.id === 'guides');
     const guideReady = BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE;
     expect(guides?.items.some((item) => item.href === '/barbershop-website-design') ?? false).toBe(guideReady);

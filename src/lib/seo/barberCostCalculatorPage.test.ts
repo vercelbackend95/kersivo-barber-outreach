@@ -166,7 +166,7 @@ describe('barber software cost calculator SEO foundation', () => {
       '<a href="/fresha-alternative">See the full KERSIVO vs Fresha comparison</a>',
     );
     expect(components['CostBooksy.astro']).toContain(
-      '<a href="/booksy-alternative">See the full KERSIVO vs Booksy comparison</a>',
+      '<a href="/booksy-alternative">See the full Booksy alternative comparison</a>',
     );
     expect(components['CostNearcut.astro']).toContain('<a href="/nearcut-alternative">See the full KERSIVO vs Nearcut comparison</a>');
     expect(components['CostTreatwell.astro']).toContain('<a href="/treatwell-alternative">See the full KERSIVO vs Treatwell comparison</a>');

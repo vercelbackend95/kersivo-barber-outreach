@@ -18,7 +18,7 @@ export const BOOKSY_ALTERNATIVE_PAGE_PATH = '/booksy-alternative';
 /** Search title: the query first, then the two things a Booksy user is weighing (own site, flat price). */
 export const BOOKSY_ALTERNATIVE_TITLE = `Booksy Alternative UK for Barbers: Own Site, £${SAAS_MONTHLY_GBP}/Month`;
 
-export const BOOKSY_ALTERNATIVE_DESCRIPTION = `Leaving Booksy? Own booking site and domain, £${SAAS_MONTHLY_GBP}/month per location with no per-barber fees, help moving clients and 0% KERSIVO commission (Stripe fees apply).`;
+export const BOOKSY_ALTERNATIVE_DESCRIPTION = `Leaving Booksy? Your own site and domain, £${SAAS_MONTHLY_GBP}/month per location, no per-barber fees, help moving clients, 0% KERSIVO commission (Stripe fees apply).`;
 
 /** Visual line breaks of the hero H1; joined with spaces they form the exact H1 text. */
 export const BOOKSY_ALTERNATIVE_H1_LINES = [
