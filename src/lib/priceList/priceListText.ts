@@ -38,6 +38,18 @@ export const PRICE_LIST_SUGGESTED_SERVICES: readonly string[] = [
   'Kids cut (under 12)',
 ];
 
+/** One-tap extra rows (names only, never prices). */
+export const PRICE_LIST_QUICK_ADD: readonly string[] = [
+  'Line up',
+  'Buzz cut',
+  'Beard shape-up',
+  'Eyebrow tidy',
+  'Wash and style',
+  'Hair design',
+  'Student cut',
+  'Senior cut',
+];
+
 export const PRICE_LIST_DURATION_OPTIONS: readonly number[] = [15, 20, 30, 45, 60, 75, 90];
 
 /** Parses a typed price ("12", "£12.50", "12.5") into pounds with at most 2 decimals. */
@@ -105,4 +117,16 @@ export function itemsMissingPrice(input: PriceListOptions): string[] {
   return normalisePriceList(input)
     .items.filter((item) => item.priceGbp === null)
     .map((item) => item.name);
+}
+
+/** What a service earns per hour in the chair, from the owner's own price and time. Null without both. */
+export function hourlyRateGbp(item: Pick<PriceListItem, 'priceGbp' | 'minutes'>): number | null {
+  if (item.priceGbp === null || item.minutes === null || item.minutes <= 0) return null;
+  return Math.round((item.priceGbp / item.minutes) * 60);
+}
+
+/** Rows with a name, and how many of them have a price: drives the progress ring. */
+export function pricedCount(input: PriceListOptions): { priced: number; total: number } {
+  const items = normalisePriceList(input).items;
+  return { priced: items.filter((item) => item.priceGbp !== null).length, total: items.length };
 }

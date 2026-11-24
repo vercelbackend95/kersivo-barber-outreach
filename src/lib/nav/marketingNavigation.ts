@@ -425,7 +425,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   {
     id: 'resources-price-list',
     label: 'Price list template',
-    description: 'Lay out your prices to print for the wall or copy for Instagram.',
+    description: 'Lay out your prices to print, post on Instagram or copy for Google.',
     href: '/barbershop-price-list-template',
     group: 'tools',
     section: 'templates',
