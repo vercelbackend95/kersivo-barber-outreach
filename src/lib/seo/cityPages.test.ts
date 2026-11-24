@@ -7,6 +7,7 @@ import {
   buildCityPageH1,
   buildCityPageDescription,
   buildCityPageTitle,
+  buildCitySoftwareApplicationJsonLd,
   buildCityWebPageJsonLd,
   getCityFaqs,
   getCityPage,
@@ -85,12 +86,28 @@ describe('city page metadata', () => {
 describe('city page JSON-LD', () => {
   it('renders the shared SoftwareApplication, WebPage, BreadcrumbList and FAQPage blocks', () => {
     for (const builder of [
-      'buildKersivoSoftwareApplicationJsonLd()',
+      'buildCitySoftwareApplicationJsonLd(city)',
       'buildCityWebPageJsonLd(city)',
       'buildCityBreadcrumbJsonLd(city)',
       'buildCityFaqJsonLd(city)',
     ]) {
       expect(PAGE).toContain(builder);
+    }
+  });
+
+  it('points the SoftwareApplication block at the city page with Starter and Full KERSIVO offers', () => {
+    for (const city of PUBLISHED_CITY_PAGES) {
+      const app = buildCitySoftwareApplicationJsonLd(city);
+      expect(app['@type']).toBe('SoftwareApplication');
+      expect(app.applicationCategory).toBe('BusinessApplication');
+      expect(app.operatingSystem).toBe('Web');
+      expect(app.url).toBe(`https://kersivo.co.uk/barbershop-websites/${city.slug}`);
+      const offers = app.offers as Array<{ price: string; priceCurrency: string }>;
+      expect(offers.map((offer) => [offer.price, offer.priceCurrency]).sort()).toEqual([
+        ['0.00', 'GBP'],
+        ['39.00', 'GBP'],
+      ]);
+      expect(JSON.stringify(app)).not.toMatch(/aggregateRating|AggregateRating|ratingValue/);
     }
   });
 

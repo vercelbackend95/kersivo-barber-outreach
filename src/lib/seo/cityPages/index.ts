@@ -15,6 +15,7 @@ import {
   buildBreadcrumbListJsonLd,
   type BreadcrumbTrailItem,
 } from '@/lib/seo/breadcrumbs';
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { BIRMINGHAM_CITY_PAGE } from './birmingham';
@@ -130,6 +131,15 @@ export function buildCityWebPageJsonLd(city: CityPage): Record<string, unknown> 
     breadcrumb: { '@id': `${url}#breadcrumb` },
     spatialCoverage: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'Country', name: 'United Kingdom' } },
   };
+}
+
+/**
+ * The shared KERSIVO SoftwareApplication block (Starter £0.00 and Full KERSIVO £39.00 offers, no ratings)
+ * with `url` set to the city page, so the page's software block points at the page it is on.
+ * The @id stays the shared #software node that WebPage.about references.
+ */
+export function buildCitySoftwareApplicationJsonLd(city: CityPage): Record<string, unknown> {
+  return { ...buildKersivoSoftwareApplicationJsonLd(), url: pageUrl(city) };
 }
 
 export function buildCityBreadcrumbJsonLd(city: CityPage): Record<string, unknown> {
