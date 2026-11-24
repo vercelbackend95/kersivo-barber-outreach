@@ -2,7 +2,8 @@
  * Copy for /kersivo-vs-booksy, the interactive "new model" explainer.
  * Every Booksy figure is interpolated from verified facts in booksyFacts.ts (via the approved
  * /booksy-alternative copy); every KERSIVO claim follows src/lib/pricing/claimsPolicy.ts.
- * The page is noindex, follow so it never competes with /booksy-alternative in search.
+ * Indexable and in the sitemap; it targets the head-to-head "KERSIVO vs Booksy" query, while
+ * /booksy-alternative stays the page for "Booksy alternative" searches.
  */
 import { offer } from '@/content/offer';
 import { BK_STARTER_MAX_BARBERS, BK_SCOREBOARD } from '@/lib/seo/booksyAlternativeContent';
@@ -11,6 +12,8 @@ import { formatGbp, formatPercent } from '@/lib/seo/freshaFacts';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 export const KVB_PAGE_PATH = '/kersivo-vs-booksy';
+/** Date the page content last changed (sitemap lastmod and JSON-LD dateModified). */
+export const KVB_LAST_UPDATED_ISO = '2026-11-24';
 export const KVB_TITLE = 'KERSIVO vs Booksy: the own-brand model, explained | KERSIVO';
 export const KVB_DESCRIPTION = `See how KERSIVO differs from Booksy: your own branded website and booking on your own domain, ${formatGbp(SAAS_MONTHLY_GBP)}/month per location with no per-barber fees, and 0% KERSIVO commission (Stripe fees apply).`;
 

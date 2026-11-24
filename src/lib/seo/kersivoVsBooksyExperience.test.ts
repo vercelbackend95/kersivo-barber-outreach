@@ -11,16 +11,21 @@ import {
   KVB_LEDGER_ROWS,
   KVB_PAGE_PATH,
 } from './kersivoVsBooksyExperience';
+import { MARKETING_SITEMAP_ENTRIES } from './marketingSitemap';
+import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 
 const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
 const page = read('../../pages/kersivo-vs-booksy/index.astro');
 const content = read('./kersivoVsBooksyExperience.ts');
 
 describe('/kersivo-vs-booksy experience', () => {
-  it('stays out of search so it never competes with /booksy-alternative', () => {
+  it('is indexable, in the sitemap and in the Compare menu', () => {
     expect(KVB_PAGE_PATH).toBe('/kersivo-vs-booksy');
-    expect(page).toMatch(/^\s+noindex$/m);
-    expect(page).toMatch(/^\s+robotsFollow$/m);
+    expect(page).not.toMatch(/noindex/);
+    expect(page).toContain('canonicalPath={KVB_PAGE_PATH}');
+    expect(page).toContain('buildKersivoVsBooksyWebPageJsonLd()');
+    expect(MARKETING_SITEMAP_ENTRIES.some((entry) => entry.path === KVB_PAGE_PATH)).toBe(true);
+    expect(MARKETING_NAV_ITEMS.some((item) => item.href === KVB_PAGE_PATH && item.group === 'compare')).toBe(true);
   });
 
   it('leads with Full KERSIVO and the free preview CTA; Starter stays secondary', () => {

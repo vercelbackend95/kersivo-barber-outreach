@@ -1,6 +1,8 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { buildKersivoVsBooksyWebPageJsonLd } from '@/lib/seo/kersivoVsBooksyJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { FREE_PREVIEW_CTA_HREF } from '@/lib/freePreview/fullPlanCta';
 import { BK_TEAM_MAX, BK_TEAM_MIN, estimateBill, formatGbp } from '@/lib/landing/booksyMath';
@@ -45,8 +47,7 @@ const statementWords = KVB_STATEMENT.split(' ');
   title={KVB_TITLE}
   description={KVB_DESCRIPTION}
   canonicalPath={KVB_PAGE_PATH}
-  noindex
-  robotsFollow
+  jsonLd={[buildKersivoEntityJsonLd(), buildKersivoVsBooksyWebPageJsonLd()]}
 >
   <main class="kvb landing-overflow-guard" data-kvb>
     <script is:inline>
