@@ -12,6 +12,9 @@
  *   - navbar WebPs at their existing sizes
  *   - brand/kersivo-logo-512.png for directory listings (G2, Capterra)
  *   - og/kersivo-og.jpg: the existing OG photo with the new lockup
+ *   - og/barbershop-cancellation-policy-template.jpg: the existing OG card with the new lockup
+ *   - hero/iphonemockup.jpg + .webp: the admin phone screenshot (Facebook cover) with the new header logo
+ * Logo-free bases for the last three live in scripts/brand-assets/.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -106,6 +109,28 @@ async function main() {
     pub('images', 'og', 'kersivo-og.jpg'),
     await sharp(base).resize(1200, 630).composite([{ input: lockup, left: 80, top: 630 - 56 - 64 }]).jpeg({ quality: 88, mozjpeg: true }).toBuffer(),
   );
+
+  // Cancellation policy template OG: same layout as before, with the horizontal lockup where the old raster logo sat.
+  const policyLockup = await (await load('kersivo-lockup-horizontal-reversed.svg', undefined, 32))
+    .resize({ height: 32, kernel: 'lanczos3' })
+    .png()
+    .toBuffer();
+  await write(
+    pub('images', 'og', 'barbershop-cancellation-policy-template.jpg'),
+    await sharp(path.join(root, 'scripts', 'brand-assets', 'cancellation-policy-og-base.jpg'))
+      .composite([{ input: policyLockup, left: 72, top: 579 - 32 }])
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toBuffer(),
+  );
+
+  // Admin phone screenshot (Facebook cover): stacked lockup centred where the old header logo sat.
+  const headerLogo = await render('kersivo-lockup-stacked-reversed.svg', { width: 124, height: 122 });
+  const hm = await sharp(headerLogo).metadata();
+  const phone = sharp(path.join(root, 'scripts', 'brand-assets', 'iphonemockup-base.png')).composite([
+    { input: headerLogo, left: Math.round(150 - hm.width / 2), top: Math.round(280 - hm.height / 2) },
+  ]);
+  await write(pub('images', 'hero', 'iphonemockup.jpg'), await phone.clone().jpeg({ quality: 90, mozjpeg: true }).toBuffer());
+  await write(pub('images', 'hero', 'iphonemockup.webp'), await phone.clone().webp({ quality: 88, effort: 6 }).toBuffer());
 }
 
 main().catch((error) => {
