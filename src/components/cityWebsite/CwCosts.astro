@@ -1,0 +1,45 @@
+---
+/** Running costs and rules for the city's nation (rates, Making Tax Digital, card fees), each sourced. */
+import type { CityPage } from '@/lib/seo/cityPages/types';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+---
+
+<section class="cw-section cw-costs" aria-labelledby="cw-costs-title">
+  <div class="cw-shell">
+    <div class="cw-head cw-head--split">
+      <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>{city.nation} · 2026/27</p>
+      <h2 id="cw-costs-title" class="cw-h2">The rules and costs around a {city.name} shop</h2>
+      <p class="cw-lead">General information checked on {city.checkedDate}, not tax or legal advice. Your council and HMRC have the final word.</p>
+    </div>
+
+    <ul class="cw-costs__grid" role="list">
+      {city.costs.map((cost) => (
+        <li class="cw-card cw-cost">
+          <span class="cw-card__edge" aria-hidden="true"></span>
+          <h3 class="cw-cost__title">{cost.title}</h3>
+          <p class="cw-cost__figure">{cost.figure}</p>
+          <p class="cw-cost__label">{cost.figureLabel}</p>
+          <div class="cw-cost__body">
+            {cost.body.map((paragraph) => <p>{paragraph}</p>)}
+          </div>
+          <p class="cw-cost__src">
+            {cost.sourceIds
+              .map((id) => city.sources.find((s) => s.id === id))
+              .filter((s) => s !== undefined)
+              .map((s, i) => (
+                <>
+                  {i > 0 && ' · '}
+                  <a href={s!.url} rel="noopener" target="_blank">{s!.label.split(':')[0]}</a>
+                </>
+              ))}
+          </p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

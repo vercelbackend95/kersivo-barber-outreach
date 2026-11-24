@@ -1,0 +1,35 @@
+---
+/**
+ * Local guides band on /barbershop-websites: one card per published city page
+ * (src/lib/seo/cityPages, PUBLISHED_CITY_PAGES), so a new city appears here when it is published.
+ */
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from '@/lib/seo/cityPages';
+
+const cities = PUBLISHED_CITY_PAGES;
+---
+
+{cities.length > 0 && (
+  <section class="bw-section bw-guides" aria-labelledby="bw-guides-title">
+    <div class="bw-shell bw-guides__inner">
+      <div class="bw-guides__head">
+        <p class="bw-eyebrow"><span class="bw-eyebrow__dot" aria-hidden="true"></span>Local guides</p>
+        <h2 id="bw-guides-title" class="bw-guides__title">Barbershop websites in UK cities</h2>
+        <p class="bw-guides__lead">
+          Local prices, chair rent, business rates and how clients find shops on Maps, with a calculator
+          set to the city’s typical cut price.
+        </p>
+      </div>
+      <ul class="bw-guides__list" role="list">
+        {cities.map((city) => (
+          <li>
+            <a class="bw-guides__card" href={getCityPagePath(city)}>
+              <span class="bw-guides__city">{city.name}</span>
+              <span class="bw-guides__areas">{city.areas.flatMap((area) => area.places.slice(0, 1)).join(' · ')}</span>
+              <span class="bw-guides__cta">Barbershop websites in {city.name}<span aria-hidden="true"> →</span></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}

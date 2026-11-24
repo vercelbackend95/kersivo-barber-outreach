@@ -1,0 +1,84 @@
+---
+/**
+ * /barbershop-websites/{city} — local landing pages for the Websites pillar.
+ * Only cities in PUBLISHED_CITY_PAGES render; anything else is a 404. Each city brings its own research
+ * file (src/lib/seo/cityPages/<city>.ts); see docs/seo/city-pages-playbook.md before adding one.
+ * Rendered per request like the pillar, so the free-preview CTA follows FREE_PREVIEW_FLOW_ENABLED.
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import CwHero from '@/components/cityWebsite/CwHero.astro';
+import CwCalculator from '@/components/cityWebsite/CwCalculator.astro';
+import CwRoute from '@/components/cityWebsite/CwRoute.astro';
+import CwMarket from '@/components/cityWebsite/CwMarket.astro';
+import CwCosts from '@/components/cityWebsite/CwCosts.astro';
+import CwFaq from '@/components/cityWebsite/CwFaq.astro';
+import CwClose from '@/components/cityWebsite/CwClose.astro';
+import '@/styles/city-website/page.css';
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
+import {
+  buildCityBreadcrumbJsonLd,
+  buildCityFaqJsonLd,
+  buildCityPageDescription,
+  buildCityPageTitle,
+  buildCityWebPageJsonLd,
+  getCityPage,
+  getCityPagePath,
+} from '@/lib/seo/cityPages';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+
+const city = getCityPage(Astro.params.city);
+if (!city) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const currentYear = new Date().getFullYear();
+---
+
+<LandingLayout
+  title={buildCityPageTitle(city.name)}
+  description={buildCityPageDescription(city.name)}
+  canonicalPath={getCityPagePath(city)}
+  robotsFollow
+  jsonLd={[
+    buildKersivoSoftwareApplicationJsonLd(),
+    buildCityWebPageJsonLd(city),
+    buildCityBreadcrumbJsonLd(city),
+    buildCityFaqJsonLd(city),
+  ]}
+>
+  <main class="cw" data-city={city.slug}>
+    <CwHero city={city} />
+    <CwCalculator city={city} />
+    <CwRoute city={city} />
+    <CwMarket city={city} />
+    <CwCosts city={city} />
+    <CwFaq city={city} />
+    <CwClose city={city} />
+  </main>
+
+  <Footer50
+    showIntro={false}
+    brandLine="Own your brand. Own your bookings."
+    contactEmail={KERSIVO_CONTACT_EMAIL}
+    brandName="KERSIVO"
+    copyright={`© ${currentYear} KERSIVO`}
+    social={getFooterSocialLinks()}
+  />
+</LandingLayout>
+
+<script>
+  import { initCityPage } from '@/lib/cityPages/initCityPage';
+
+  let cleanup: (() => void) | null = null;
+  const start = () => {
+    cleanup?.();
+    const root = document.querySelector<HTMLElement>('.cw');
+    cleanup = root ? initCityPage(root) : null;
+  };
+  document.addEventListener('astro:page-load', start);
+  document.addEventListener('astro:before-swap', () => {
+    cleanup?.();
+    cleanup = null;
+  });
+</script>

@@ -1,0 +1,60 @@
+---
+/**
+ * City FAQ (the FAQPage JSON-LD is built from the same getCityFaqs list, word for word) and the
+ * full list of dated sources behind every figure on the page.
+ */
+import { getCityFaqs, getCityPageSources } from '@/lib/seo/cityPages';
+import type { CityPage } from '@/lib/seo/cityPages';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const faqs = getCityFaqs(city);
+const sources = getCityPageSources(city);
+const formatIso = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+---
+
+<section class="cw-section cw-faq" aria-labelledby="cw-faq-title">
+  <div class="cw-shell cw-faq__grid">
+    <div class="cw-head">
+      <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>{city.name} questions</p>
+      <h2 id="cw-faq-title" class="cw-h2">What {city.name} shop owners ask us</h2>
+      <p class="cw-lead">Switching, deposits, Google and running costs, answered for {city.name}.</p>
+    </div>
+    <div class="cw-faq__list">
+      {faqs.map((faq) => (
+        <details class="cw-faq__item" id={`cw-faq-${faq.id}`}>
+          <summary>
+            <h3 class="cw-faq__q">{faq.question}</h3>
+            <span class="cw-faq__icon" aria-hidden="true"></span>
+          </summary>
+          <div class="cw-faq__a">
+            {faq.answer.map((paragraph) => <p>{paragraph}</p>)}
+          </div>
+        </details>
+      ))}
+
+      <details class="cw-faq__item cw-sources" id="cw-sources">
+        <summary>
+          <h3 class="cw-faq__q">Sources and dates</h3>
+          <span class="cw-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <div class="cw-faq__a">
+          <p>{city.name} research checked on {city.checkedDate}. Prices and rules change, so check the source before relying on a figure.</p>
+          <ol class="cw-sources__list">
+            {sources.map((source) => (
+              <li>
+                <a href={source.url} rel="noopener" target="_blank">{source.label}</a>
+                <span>{source.supports}. Checked {formatIso(source.checkedIso)}{source.pageDate ? `; page ${source.pageDate}` : ''}.</span>
+              </li>
+            ))}
+          </ol>
+          <p>Booksy, Fresha, Treatwell and SQUIRE are trademarks of their respective owners. KERSIVO is not affiliated with, endorsed by or sponsored by them.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>

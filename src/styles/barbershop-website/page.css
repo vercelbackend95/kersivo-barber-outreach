@@ -1780,3 +1780,109 @@
     display: none;
   }
 }
+
+/* ---------- Local guides (city pages) ---------- */
+.bw-guides {
+  padding-block: clamp(3.5rem, 6vw, 5rem);
+}
+
+.bw-guides__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.bw-guides__head {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.bw .bw-guides__title {
+  margin: 0;
+  color: var(--bw-ink);
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.bw .bw-guides__lead {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--bw-muted);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.bw-guides__list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bw.bw .bw-guides__card {
+  position: relative;
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 80px -40px rgba(0, 0, 0, 0.9);
+  color: var(--bw-ink);
+  text-decoration: none;
+  transition: transform 220ms var(--bw-ease), border-color 220ms ease;
+}
+
+.bw-guides__card::before {
+  content: '';
+  position: absolute;
+  inset: -1px 1.5rem auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(215, 38, 56, 0.9) 30%, rgba(215, 38, 56, 0) 85%);
+}
+
+.bw.bw .bw-guides__card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+}
+
+.bw-guides__city {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.bw-guides__areas {
+  color: var(--bw-sand);
+  font-size: 0.82rem;
+}
+
+.bw-guides__cta {
+  margin-top: 0.5rem;
+  color: var(--bw-soft);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(220, 197, 160, 0.4);
+  text-underline-offset: 0.22em;
+}
+
+.bw.bw .bw-guides__card:hover .bw-guides__cta {
+  text-decoration-color: var(--bw-red);
+}
+
+@media (max-width: 860px) {
+  .bw-guides__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bw.bw .bw-guides__card {
+    transition: none;
+  }
+}

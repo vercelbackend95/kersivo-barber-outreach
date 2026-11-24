@@ -1,0 +1,56 @@
+---
+/**
+ * City market deep-dive: published price bands and chair rent (each with its source), then the parts of
+ * the city with how a shop there would set up its website and booking. Advice, not statistics.
+ */
+import type { CityBand, CityPage } from '@/lib/seo/cityPages/types';
+
+interface Props {
+  city: CityPage;
+}
+
+const { city } = Astro.props;
+const sourceName = (band: CityBand) => city.sources.find((s) => s.id === band.sourceId)?.label.split(':')[0] ?? '';
+const bands = [...city.prices, ...city.chairRent];
+---
+
+<section class="cw-section cw-market" aria-labelledby="cw-market-title">
+  <div class="cw-shell">
+    <div class="cw-market__top">
+      <div class="cw-head">
+        <p class="cw-eyebrow"><span class="cw-dot" aria-hidden="true"></span>{city.name} market</p>
+        <h2 id="cw-market-title" class="cw-h2">What a {city.name} chair earns and costs</h2>
+        {city.marketIntro.map((paragraph) => <p class="cw-lead">{paragraph}</p>)}
+      </div>
+
+      <dl class="cw-bands">
+        {bands.map((band) => (
+          <div class="cw-band">
+            <dt>{band.label}</dt>
+            <dd>
+              <span class="cw-band__value">{band.value}</span>
+              {band.detail && <span class="cw-band__detail">{band.detail}</span>}
+              <span class="cw-band__src">{sourceName(band)}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <ul class="cw-areas" role="list">
+      {city.areas.map((area, index) => (
+        <li class="cw-card cw-area">
+          <span class="cw-card__edge" aria-hidden="true"></span>
+          <p class="cw-area__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</p>
+          <h3 class="cw-area__name">{area.name}</h3>
+          <p class="cw-area__places">{area.places.join(' · ')}</p>
+          <p class="cw-area__pattern">{area.pattern}</p>
+          <p class="cw-area__setup-title">How we’d set it up</p>
+          <ul class="cw-area__setup" role="list">
+            {area.setup.map((line) => <li>{line}</li>)}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
