@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -31,7 +32,7 @@ const path = TIMELY_ALTERNATIVE_PAGE_PATH;
 const title = TIMELY_ALTERNATIVE_TITLE;
 const description = TIMELY_ALTERNATIVE_DESCRIPTION;
 const faqs = TIMELY_ALTERNATIVE_FAQ_ITEMS;
-const ld = [buildTimelyAlternativeWebPageJsonLd(), buildTimelyAlternativeBreadcrumbJsonLd(), buildTimelyAlternativeFaqJsonLd()];
+const ld = [buildKersivoSoftwareApplicationJsonLd(), buildTimelyAlternativeWebPageJsonLd(), buildTimelyAlternativeBreadcrumbJsonLd(), buildTimelyAlternativeFaqJsonLd()];
 const currentYear = new Date().getFullYear();
 ---
 

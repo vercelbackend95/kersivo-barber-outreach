@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -27,7 +28,7 @@ const currentYear = new Date().getFullYear();
 ---
 <LandingLayout title={SQUIRE_ALTERNATIVE_TITLE} description={SQUIRE_ALTERNATIVE_DESCRIPTION}
   canonicalPath={SQUIRE_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()]}>
   <main class="fresha-alt squire-alt landing-overflow-guard">
     <SquireHero />
     <InShort competitor="Squire" />

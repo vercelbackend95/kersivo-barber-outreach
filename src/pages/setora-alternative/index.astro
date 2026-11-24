@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -40,7 +41,7 @@ const currentYear = new Date().getFullYear();
   title={SETORA_ALTERNATIVE_TITLE}
   description={SETORA_ALTERNATIVE_DESCRIPTION}
   canonicalPath={SETORA_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildSetoraAlternativeWebPageJsonLd(), buildSetoraAlternativeBreadcrumbJsonLd(), buildSetoraAlternativeFaqJsonLd()]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildSetoraAlternativeWebPageJsonLd(), buildSetoraAlternativeBreadcrumbJsonLd(), buildSetoraAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <SetoraHero />

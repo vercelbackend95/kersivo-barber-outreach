@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -50,7 +51,7 @@ const currentYear = new Date().getFullYear();
   title={PRICING_PAGE_TITLE}
   description={PRICING_PAGE_DESCRIPTION}
   canonicalPath={PRICING_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildPricingWebPageJsonLd(), buildPricingBreadcrumbJsonLd(), buildPricingFaqJsonLd(freePreview)]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildKersivoEntityJsonLd(), buildPricingWebPageJsonLd(), buildPricingBreadcrumbJsonLd(), buildPricingFaqJsonLd(freePreview)]}
 >
   <main class="pr landing-overflow-guard">
     <PricingHero freePreview={freePreview} />

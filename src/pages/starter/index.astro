@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -85,7 +86,7 @@ const starterFeatures = [
   title={STARTER_PAGE_TITLE}
   description={STARTER_PAGE_DESCRIPTION}
   canonicalPath={STARTER_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterBreadcrumbJsonLd(), buildStarterFaqJsonLd()]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildKersivoEntityJsonLd(), buildStarterWebPageJsonLd(), buildStarterBreadcrumbJsonLd(), buildStarterFaqJsonLd()]}
 >
   <main class="starter-landing">
     <section class="starter-hero" aria-labelledby="starter-hero-title">

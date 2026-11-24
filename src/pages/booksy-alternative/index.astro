@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
@@ -46,7 +47,7 @@ const currentYear = new Date().getFullYear();
   title={BOOKSY_ALTERNATIVE_TITLE}
   description={BOOKSY_ALTERNATIVE_DESCRIPTION}
   canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt bk landing-overflow-guard">
     <BooksyHero />

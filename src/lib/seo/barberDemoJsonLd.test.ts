@@ -109,14 +109,14 @@ describe('buildBarberDemoJsonLd', () => {
     expect(software.name).toBe('KERSIVO');
     expect(software.url).toBe(`${siteUrl}/`);
     expect(software.applicationCategory).toBe('BusinessApplication');
-    expect(software.operatingSystem).toBe('Web browser');
+    expect(software.operatingSystem).toBe('Web');
     expect(software.applicationSubCategory).toBe('Barbershop booking software and websites');
     expect(software.description).toContain('0% KERSIVO commission');
     expect(software.provider).toEqual({ '@id': getKersivoOrganizationId(siteUrl) });
     expect(software.featureList).toEqual([...KERSIVO_SOFTWARE_FEATURE_LIST]);
     expect(software.offers).toMatchObject([
       { name: 'Full KERSIVO', price: SAAS_MONTHLY_GBP.toFixed(2), priceCurrency: 'GBP' },
-      { name: 'KERSIVO Starter', price: '0', priceCurrency: 'GBP' },
+      { name: 'KERSIVO Starter', price: '0.00', priceCurrency: 'GBP' },
     ]);
 
     const serialized = JSON.stringify(jsonLd);

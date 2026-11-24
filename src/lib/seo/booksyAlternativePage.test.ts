@@ -184,7 +184,7 @@ describe('booksy-alternative: metadata and URL', () => {
     expect(pageSource).toContain('description={BOOKSY_ALTERNATIVE_DESCRIPTION}');
     expect(pageSource).toContain('canonicalPath={BOOKSY_ALTERNATIVE_PAGE_PATH}');
     expect(pageSource).toContain(
-      'jsonLd={[buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
+      'jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildKersivoEntityJsonLd(), buildBooksyAlternativeWebPageJsonLd(), buildBooksyAlternativeBreadcrumbJsonLd(), buildBooksyAlternativeFaqJsonLd()]}',
     );
     expect(pageSource).not.toMatch(/noindex|Astro\.redirect/);
     expect(resolveCanonicalUrl(BOOKSY_ALTERNATIVE_PAGE_PATH)).toBe(

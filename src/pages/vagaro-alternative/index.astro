@@ -1,4 +1,5 @@
 ---
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import InShort from '@/components/seo/InShort.astro';
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Faq4 from '@/components/faq4.astro';
@@ -40,7 +41,7 @@ const currentYear = new Date().getFullYear();
   title={VAGARO_ALTERNATIVE_TITLE}
   description={VAGARO_ALTERNATIVE_DESCRIPTION}
   canonicalPath={VAGARO_ALTERNATIVE_PAGE_PATH}
-  jsonLd={[buildVagaroAlternativeWebPageJsonLd(), buildVagaroAlternativeBreadcrumbJsonLd(), buildVagaroAlternativeFaqJsonLd()]}
+  jsonLd={[buildKersivoSoftwareApplicationJsonLd(), buildVagaroAlternativeWebPageJsonLd(), buildVagaroAlternativeBreadcrumbJsonLd(), buildVagaroAlternativeFaqJsonLd()]}
 >
   <main class="fresha-alt landing-overflow-guard">
     <VagaroHero />
