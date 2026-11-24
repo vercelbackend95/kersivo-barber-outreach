@@ -1,7 +1,7 @@
 # City pages playbook — `/barbershop-websites/{city}`
 
-Published: London (`src/lib/seo/cityPages/london.ts`) and Bournemouth (`src/lib/seo/cityPages/bournemouth.ts`),
-both researched and checked 24 November 2026.
+Published: London (`src/lib/seo/cityPages/london.ts`), Birmingham (`src/lib/seo/cityPages/birmingham.ts`) and
+Bournemouth (`src/lib/seo/cityPages/bournemouth.ts`), all researched and checked 24 November 2026.
 This is the workflow for adding the next city. A city ships only with its own research file; there is no
 way to publish a city by name alone, so we never end up with thin, name-swapped pages.
 
@@ -46,7 +46,7 @@ way to publish a city by name alone, so we never end up with thin, name-swapped 
    sitemap, lastmod and hub band follow. Add the URL to `EXPECTED_LOCS` in `marketingSitemap.test.ts`.
 4. **Check the title length.** `buildCityPageTitle` switches to "Barbershop Websites {City} | £39/mo | KERSIVO"
    when the full form passes 60 characters. `buildCityPageDescription` drops "flat", then "Custom ", when a long
-   name pushes it past 158 characters (Bournemouth uses the first fallback); it must stay within 145–158 (tested).
+   name pushes it past 160 characters (Bournemouth uses the first fallback; Birmingham fits the full form at 160); it must stay within 145–160 (tested).
    `cityPages.test.ts` also fails if any sentence of city copy (outside approved policy wording) is shared by two
    cities, so a new city cannot be a reworded copy of an existing one.
 5. **Verify:** `npm run claims:check`, `npm test`, `npm run typecheck`, `npm run build`; screenshots at 375,
@@ -87,3 +87,21 @@ the targeting follows the query pattern, title and H1. Confirm volumes in Search
   Profile Help pages, Stripe UK pricing (`stripeFacts.ts`).
 - Not usable: Treatwell's Bournemouth listing pages returned empty responses; Fresha's Bournemouth page showed
   no shop prices. Search volumes not checked (no keyword tool connected).
+
+## Birmingham sources (checked 24 November 2026)
+
+- Booksy, "Skin Fade in Birmingham" search (45 results; our read of the 15 barbershops on page 1 with a stand-alone
+  adult fade, list prices, full fade used where a back-and-sides-only price is also listed, kids' and student prices
+  left out): £15–£38, middle price £25 (calculator default). B1–B5 (7 shops) £23–£38; outside B1–B5 (8 shops,
+  Bradford Street in Digbeth to Kings Heath and Acocks Green) £15–£25.
+- The Barber Board guide: UK big-city fade band (£16–£30, typical £22), for comparison.
+- TrimCheck chair-rental guide: Manchester/Birmingham/Leeds/Glasgow band, £90–£150 a week, £20–£35 a day, 60/40
+  split (adverts sampled 23 Sept 2026). No Birmingham chair advert with a readable price was found: the Hockley
+  "£300 a week" advert in search results had been taken down, and Gumtree cannot be opened in our browser.
+- Birmingham City Council, "How we work out your business rates" (updated 21 Nov 2025): the five 2026/27 multipliers.
+- Birmingham City Council, "Reductions for small businesses" (updated 6 Mar 2026): SBRR £12,000 / taper to £14,999,
+  apply online; 2026 supporting small business relief caps bill rises at £800 a year to 2028/29, automatic.
+- Shared with London and Bournemouth (read the same day): HM Treasury qualifying-use guidance, GOV.UK multipliers
+  notice, MTD press release, Google Business Profile Help pages, Stripe UK pricing (`stripeFacts.ts`).
+- The walkthrough is set on Alcester Road in Moseley; its service (skin fade + beard trim) shows a fictional £32 via `journey.servicePrice`; the calculator
+  keeps the £25 fade. Search volumes not checked (no keyword tool connected).

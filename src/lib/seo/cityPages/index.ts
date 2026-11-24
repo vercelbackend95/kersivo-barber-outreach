@@ -17,6 +17,7 @@ import {
 } from '@/lib/seo/breadcrumbs';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { BIRMINGHAM_CITY_PAGE } from './birmingham';
 import { BOURNEMOUTH_CITY_PAGE } from './bournemouth';
 import { LONDON_CITY_PAGE } from './london';
 import type { CityFaq, CityPage, CitySource } from './types';
@@ -26,7 +27,7 @@ export type { CityPage, CityFaq, CitySource } from './types';
 export const CITY_PAGES_BASE_PATH = '/barbershop-websites';
 
 /** Published cities, in the order the hub lists them. */
-export const PUBLISHED_CITY_PAGES: readonly CityPage[] = [LONDON_CITY_PAGE, BOURNEMOUTH_CITY_PAGE];
+export const PUBLISHED_CITY_PAGES: readonly CityPage[] = [LONDON_CITY_PAGE, BIRMINGHAM_CITY_PAGE, BOURNEMOUTH_CITY_PAGE];
 
 /** "St Albans" → "st-albans", "Newcastle upon Tyne" → "newcastle-upon-tyne". */
 export function toCitySlug(name: string): string {
@@ -57,11 +58,11 @@ export function buildCityPageTitle(name: string): string {
   return `Barbershop Websites ${name} | £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
 }
 
-export const CITY_DESCRIPTION_MAX_LENGTH = 158;
+export const CITY_DESCRIPTION_MAX_LENGTH = 160;
 
 /**
  * Full form first. Longer city names drop "flat", then "Custom ", so the description stays within
- * 158 characters (e.g. "Bournemouth" would be 161 with the full form).
+ * 160 characters (e.g. "Bournemouth" would be 161 with the full form; "Birmingham" fits at 160).
  */
 export function buildCityPageDescription(name: string): string {
   const offer = `Own domain, online booking, deposits and a retail pickup shop for £${SAAS_MONTHLY_GBP}/month`;

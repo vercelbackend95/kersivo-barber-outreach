@@ -14,7 +14,7 @@ interface Props {
 
 const { city } = Astro.props;
 const j = city.journey;
-const price = formatCityGbp(city.calculator.price);
+const price = formatCityGbp(j.servicePrice ?? city.calculator.price);
 const steps = [
   {
     id: 'search',
