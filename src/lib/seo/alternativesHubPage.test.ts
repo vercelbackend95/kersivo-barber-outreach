@@ -61,7 +61,7 @@ describe('Alternatives hub: metadata and indexability', () => {
   it('uses /compare as the canonical with unique title, description and H1', () => {
     expect(ALTERNATIVES_HUB_PAGE_PATH).toBe('/compare');
     expect(resolveCanonicalUrl(ALTERNATIVES_HUB_PAGE_PATH)).toBe(pageUrl);
-    expect(ALTERNATIVES_HUB_TITLE).toBe('Best Barber Software UK 2026: Prices & Fees Compared');
+    expect(ALTERNATIVES_HUB_TITLE).toBe('Best Barber Booking Software UK (2026): Prices & Fees');
     expect(ALTERNATIVES_HUB_TITLE.length).toBeLessThanOrEqual(60);
     expect(ALTERNATIVES_HUB_DESCRIPTION.length).toBeLessThanOrEqual(155);
     expect(ALTERNATIVES_HUB_H1).toBe('Best barber software UK: cost, fees and control compared');

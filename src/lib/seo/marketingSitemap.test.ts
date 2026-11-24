@@ -168,6 +168,8 @@ describe('marketing sitemap', () => {
     expect(xml).not.toMatch(/\/shop\//);
     expect(xml).not.toContain('/admin');
     expect(xml).not.toContain('kersivo.co.uk/demo');
+    for (const loc of locMatches) expect(loc).toMatch(/^https:\/\/kersivo\.co\.uk\//);
+    expect(xml).not.toContain('www.kersivo');
     expect(xml).not.toContain('/seo-growth');
     expect(xml).not.toMatch(/\/book(?:\/|"|<|\s|$)/);
     expect(xml).not.toContain('/api');

@@ -6,6 +6,7 @@ import InsightsDataTables from '@/components/insights/InsightsDataTables.astro';
 import InsightsRelatedReading from '@/components/insights/InsightsRelatedReading.astro';
 import InsightsCommercialNext from '@/components/insights/InsightsCommercialNext.astro';
 import InsightsOwnerNote from '@/components/insights/InsightsOwnerNote.astro';
+import InsightsCta from '@/components/insights/InsightsCta.astro';
 import '@/styles/components/insights-preview.css';
 import {
   buildInsightsArticleJsonLd,
@@ -19,6 +20,13 @@ import {
   getInsightsOwnerNote,
   getInsightsRelatedLinks,
 } from '@/lib/insights/insightsLinking';
+import {
+  findInsightsReferencesStart,
+  getInsightsCta,
+  hasInsightsCta,
+  splitInsightsBodyAtMiddle,
+} from '@/lib/insights/insightsCta';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 
 interface Props {
   title: string;
@@ -71,20 +79,25 @@ const commercialNext = getInsightsCommercialNext(slug);
 const ownerNote = getInsightsOwnerNote(slug);
 const audience = getInsightsAudience(slug);
 /**
- * The owner note sits at the end of the article text, before the References/Sources list
- * (and the rule above it), so readers meet it before the citations rather than after them.
+ * The owner note and the end CTA sit at the end of the article text, before the References/Sources list
+ * (and the rule above it), so readers meet them before the citations. Owner-facing articles also get a
+ * compact CTA before the middle section heading.
  */
-let bodyBeforeRefs: string | undefined;
+const showCta = isPublic && hasInsightsCta(slug);
+const freePreviewEnabled = isFreePreviewFlowEnabled();
+const midCta = showCta ? getInsightsCta('mid', freePreviewEnabled) : undefined;
+const endCta = showCta ? getInsightsCta('end', freePreviewEnabled) : undefined;
+let bodyMain: string | undefined;
+let bodyMid = '';
 let bodyRefs = '';
-if (isPublic && ownerNote) {
+if (isPublic && (ownerNote || showCta)) {
   const html = await Astro.slots.render('default');
-  const refsAt = html.search(/<h2[^>]*>\s*(?:References|Sources)\b/);
-  if (refsAt >= 0) {
-    const hrAt = html.slice(0, refsAt).search(/<hr\s*\/?>\s*$/);
-    const splitAt = hrAt >= 0 ? hrAt : refsAt;
-    bodyBeforeRefs = html.slice(0, splitAt);
-    bodyRefs = html.slice(splitAt);
-  }
+  const refsStart = findInsightsReferencesStart(html);
+  const main = refsStart >= 0 ? html.slice(0, refsStart) : html;
+  bodyRefs = refsStart >= 0 ? html.slice(refsStart) : '';
+  const split = midCta ? splitInsightsBodyAtMiddle(main) : undefined;
+  bodyMain = split ? split.before : main;
+  bodyMid = split ? split.after : '';
 }
 const resolvedDateLabel = dateLabel ?? formatInsightsDateLabel(publishedDate);
 /** Visible only when an editorial revision date differs from the publication date. */
@@ -142,10 +155,13 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
       <article class="insights-article" aria-label={headline}>
         {audience && <p class="insights-article__audience">{audience}</p>}
         <div class="insights-article__body">
-          {bodyBeforeRefs !== undefined ? (
+          {bodyMain !== undefined ? (
             <Fragment>
-              <Fragment set:html={bodyBeforeRefs} />
-              <InsightsOwnerNote note={ownerNote!} />
+              <Fragment set:html={bodyMain} />
+              {midCta && bodyMid && <InsightsCta cta={midCta} />}
+              {bodyMid && <Fragment set:html={bodyMid} />}
+              {ownerNote && <InsightsOwnerNote note={ownerNote} />}
+              {endCta && <InsightsCta cta={endCta} />}
               <Fragment set:html={bodyRefs} />
             </Fragment>
           ) : (
@@ -159,8 +175,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
             <a href={sourceUrl} target="_blank" rel="noopener noreferrer">Open editorial record <span aria-hidden="true">↗</span></a>
           </div>
         )}
-        {isPublic && ownerNote && bodyBeforeRefs === undefined && <InsightsOwnerNote note={ownerNote} />}
-        {isPublic && <InsightsRelatedReading links={related} />}
+                {isPublic && <InsightsRelatedReading links={related} />}
         {isPublic && commercialNext && <InsightsCommercialNext next={commercialNext} />}
       </article>
       <aside class="insights-read-next" aria-label="About KERSIVO Insights">
