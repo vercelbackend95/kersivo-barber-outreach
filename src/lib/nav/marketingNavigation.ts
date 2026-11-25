@@ -10,6 +10,7 @@ import type { MarketingNavIcon } from './marketingNavIcons';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { KAR_PAGE_PATH } from '@/lib/seo/adminReportsExperience';
 import {
   HERITAGE_ADMIN_DASHBOARD_HREF,
   HERITAGE_ADMIN_DEMO_PATH,
@@ -168,11 +169,11 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-admin',
     label: 'Admin & reports',
     description: 'Bookings, clients, team and performance.',
-    href: HERITAGE_ADMIN_DASHBOARD_HREF,
+    href: KAR_PAGE_PATH,
     group: 'product',
     section: 'included',
     icon: 'admin',
-    matchPrefix: HERITAGE_ADMIN_DEMO_PATH,
+    keywords: ['dashboard', 'reports', 'analytics', 'utilisation', 'no-show'],
   },
   {
     id: 'platform-retail',
@@ -213,6 +214,16 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     section: 'demo',
     icon: 'booking',
       },
+  {
+    id: 'platform-admin-demo',
+    label: 'Owner dashboard demo',
+    description: 'Open the demo shop’s dashboard and reports.',
+    href: HERITAGE_ADMIN_DASHBOARD_HREF,
+    group: 'product',
+    section: 'demo',
+    icon: 'admin',
+    matchPrefix: HERITAGE_ADMIN_DEMO_PATH,
+  },
   {
     id: 'compare-booksy',
     label: 'Booksy Alternative',

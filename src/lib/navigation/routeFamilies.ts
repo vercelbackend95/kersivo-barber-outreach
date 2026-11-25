@@ -48,6 +48,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barbershop-websites',
   '/barbershop-website-design',
   '/barbershop-online-booking',
+  '/barbershop-reports',
   '/free-preview',
   '/dpa',
   '/seo-growth',
