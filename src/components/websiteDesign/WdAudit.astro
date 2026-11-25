@@ -1,40 +1,49 @@
 ---
+/**
+ * Self-check. Native checkboxes in four groups; the score, the verdict and the fix list follow them.
+ * Every item that is not ticked keeps its fix in the list: a link to the part of this guide, or the free
+ * KERSIVO tool, that helps with it. Without the script the whole fix list shows.
+ */
 import WdPrimaryCta from './WdPrimaryCta.astro';
-import { WD_AUDIT } from '@/lib/seo/barbershopWebsiteDesignContent';
+import { WD_AUDIT, WD_AUDIT_ITEMS } from '@/lib/seo/barbershopWebsiteDesignContent';
 
-const total = WD_AUDIT.items.length;
-const circumference = 2 * Math.PI * 52;
+const total = WD_AUDIT_ITEMS.length;
+const isTool = (href: string) => !href.startsWith('#');
 ---
 
 <section class="wd-section wd-audit" id="self-check" aria-labelledby="wd-audit-heading" data-wd-audit>
   <div class="wd-wrap">
-    <header class="wd-head wd-head--center">
-      <p class="wd-eyebrow">{WD_AUDIT.kicker}</p>
-      <h2 id="wd-audit-heading" class="wd-h2">{WD_AUDIT.heading}</h2>
+    <header class="wd-head wd-head--split">
+      <div>
+        <p class="wd-eyebrow"><span class="wd-eyebrow__scene">05</span>{WD_AUDIT.kicker}</p>
+        <h2 id="wd-audit-heading" class="wd-h2" data-wd-reveal>{WD_AUDIT.heading}</h2>
+      </div>
       <p class="wd-lede">{WD_AUDIT.lede}</p>
     </header>
 
     <div class="wd-audit__grid">
-      <fieldset class="wd-audit__list">
-        <legend class="wd-sr">Design details on your current website</legend>
-        {WD_AUDIT.items.map((item, index) => (
-          <label class="wd-check">
-            <input type="checkbox" value={String(index)} data-wd-audit-item />
-            <span class="wd-check__box" aria-hidden="true">
-              <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </span>
-            <span class="wd-check__text">{item}</span>
-          </label>
+      <div class="wd-audit__groups">
+        {WD_AUDIT.groups.map((group) => (
+          <fieldset class="wd-audit__group">
+            <legend class="wd-audit__legend">{group.title}</legend>
+            {group.items.map((item) => (
+              <label class="wd-check">
+                <input type="checkbox" value={item.id} data-wd-audit-item />
+                <span class="wd-check__text">{item.text}</span>
+                <span class="wd-check__switch" aria-hidden="true"><i></i></span>
+              </label>
+            ))}
+          </fieldset>
         ))}
-      </fieldset>
+      </div>
 
-      <div class="wd-score" style={`--c: ${circumference.toFixed(2)}; --p: 0`} data-wd-score>
-        <div class="wd-score__ring">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="wd-score__track" cx="60" cy="60" r="52"></circle>
-            <circle class="wd-score__value" cx="60" cy="60" r="52"></circle>
-          </svg>
+      <div class="wd-score" data-wd-score data-level="0" style="--p: 0">
+        <div class="wd-score__head">
+          <p class="wd-score__label">Your score</p>
           <p class="wd-score__count"><span data-wd-score-count>0</span><small>/{total}</small></p>
+        </div>
+        <div class="wd-score__meter" aria-hidden="true">
+          {WD_AUDIT_ITEMS.map((_, index) => <i style={`--i: ${index}`}></i>)}
         </div>
         <div class="wd-score__result" aria-live="polite">
           {WD_AUDIT.results.map((result, index) => (
@@ -44,8 +53,44 @@ const circumference = 2 * Math.PI * 52;
             </div>
           ))}
         </div>
+
+        <div class="wd-fixes">
+          <p class="wd-fixes__title">{WD_AUDIT.fixHeading}</p>
+          <ul class="wd-fixes__list">
+            {WD_AUDIT_ITEMS.map((item) => (
+              <li class="wd-fix" data-fix={item.id}>
+                <a
+                  href={item.fix.href}
+                  class="wd-fix__link"
+                  data-track={isTool(item.fix.href) ? 'free_tool_link_click' : undefined}
+                  data-track-placement={isTool(item.fix.href) ? `barbershop_website_design_self_check_${item.id}` : undefined}
+                >
+                  <span>{item.fix.label}</span>
+                  <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="wd-fixes__empty" data-wd-fixes-empty hidden>{WD_AUDIT.fixEmpty}</p>
+        </div>
+
         <WdPrimaryCta placement="barbershop_website_design_self_check" class="wd-btn--block" />
       </div>
     </div>
+
+    <nav class="wd-tools" aria-labelledby="wd-tools-title">
+      <p class="wd-tools__title" id="wd-tools-title">{WD_AUDIT.toolsHeading}</p>
+      <ul class="wd-tools__list">
+        {WD_AUDIT.tools.map((tool) => (
+          <li>
+            <a class="wd-tool" href={tool.href} data-track="free_tool_link_click" data-track-placement="barbershop_website_design_tools">
+              <span class="wd-tool__name">{tool.label}</span>
+              <span class="wd-tool__note">{tool.note}</span>
+              <svg class="wd-tool__arrow" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   </div>
 </section>
