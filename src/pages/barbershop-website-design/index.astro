@@ -7,6 +7,7 @@
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import WdHero from '@/components/websiteDesign/WdHero.astro';
+import WdAnswer from '@/components/websiteDesign/WdAnswer.astro';
 import WdGlance from '@/components/websiteDesign/WdGlance.astro';
 import WdMobile from '@/components/websiteDesign/WdMobile.astro';
 import WdBrand from '@/components/websiteDesign/WdBrand.astro';
@@ -21,7 +22,9 @@ import {
   BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
   buildBarbershopWebsiteDesignFaqJsonLd,
   buildBarbershopWebsiteDesignJsonLd,
+  buildBarbershopWebsiteDesignServiceJsonLd,
 } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO } from '@/lib/seo/pageDates';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -37,11 +40,16 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={[buildBarbershopWebsiteDesignJsonLd(), buildBarbershopWebsiteDesignFaqJsonLd()]}
+  jsonLd={[
+    buildBarbershopWebsiteDesignJsonLd(BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO),
+    buildBarbershopWebsiteDesignServiceJsonLd(),
+    buildBarbershopWebsiteDesignFaqJsonLd(),
+  ]}
 >
-  <link slot="head" rel="preload" as="image" href="/demo/heritage-grooming/assets/img/work-arthur-mirror-960.webp" fetchpriority="high" />
+  <link slot="head" rel="preload" as="image" href="/images/website-design/inspector-phone-top.webp" fetchpriority="high" />
   <main class="wd">
     <WdHero />
+    <WdAnswer />
     <WdGlance />
     <WdMobile />
     <WdBrand />

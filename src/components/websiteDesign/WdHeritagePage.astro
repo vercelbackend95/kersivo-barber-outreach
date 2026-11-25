@@ -1,0 +1,38 @@
+---
+/**
+ * The real Heritage Grooming (fictional demo shop) home page on a phone, as captured by
+ * scripts/capture-website-design-inspector.mjs, for use inside WdDevice. The page scrolls by setting
+ * --scroll (page px) on the root; the floating "Book a chair" bar is drawn here, fixed to the bottom of
+ * the phone, and shows once the page has scrolled past the first screen, as on the real site.
+ */
+import capture from '@/lib/websiteDesign/inspectorCapture.json';
+
+interface Props {
+  eager?: boolean;
+  scroll?: number;
+  class?: string;
+  [key: `data-${string}`]: string | undefined;
+}
+
+const { eager = false, scroll = 0, class: className, ...rest } = Astro.props;
+const restHeight = capture.height - capture.fold;
+---
+
+<div class:list={['wd-hpage', className]} style={`--scroll: ${scroll}; --page-h: ${capture.height}`} data-bar={scroll > 600 ? 'on' : 'off'} {...rest}>
+  <div class="wd-hpage__track">
+    <img
+      class="wd-hpage__shot"
+      src="/images/website-design/inspector-phone-top.webp"
+      width="780"
+      height={capture.fold * 2}
+      alt=""
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
+      decoding="async"
+    />
+    <img class="wd-hpage__shot" src="/images/website-design/inspector-phone-rest.webp" width="780" height={restHeight * 2} alt="" loading="lazy" decoding="async" />
+    <slot name="page" />
+  </div>
+  <span class="wd-hpage__bar" aria-hidden="true"><span>Book a chair</span></span>
+  <slot />
+</div>

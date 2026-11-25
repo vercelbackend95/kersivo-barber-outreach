@@ -1,40 +1,112 @@
 ---
-import WdPhoneScreen from './WdPhoneScreen.astro';
+/**
+ * Mobile UX. Two phones built from the real frames: a generic template (black, drawn) and the real
+ * Heritage Grooming page (gold). Three layers (thumb zone, tap targets, hierarchy) draw over both.
+ * On wide screens the section holds still while the scroll walks the three layers; elsewhere the
+ * layer buttons switch them. Tap targets and hierarchy marks come from the measured real page.
+ */
+import WdDevice from './WdDevice.astro';
+import WdHeritagePage from './WdHeritagePage.astro';
 import { WD_MOBILE } from '@/lib/seo/barbershopWebsiteDesignContent';
+import { BOOK_BAR, GOLD_VIEWPORT, HIERARCHY_MARKS, TAP_TARGETS } from '@/lib/websiteDesign/inspectorRegions';
+
+/** Page scroll of the designed phone for each layer: the thumb layer shows the page mid-scroll, Book bar up. */
+const LAYER_SCROLL = { thumb: 1180, targets: 0, hierarchy: 0 } as const;
+const box = (r: { x: number; y: number; w: number; h: number }) => `--x: ${r.x}; --y: ${r.y}; --w: ${r.w}; --h: ${r.h}`;
 ---
 
-<section class="wd-section wd-mobile" id="mobile-ux" aria-labelledby="wd-mobile-heading" data-wd-mobile data-layer="thumb">
-  <div class="wd-wrap wd-split">
-    <div class="wd-mobile__stage">
-      <div class="wd-phone wd-phone--layers">
-        <WdPhoneScreen photo="/demo/heritage-grooming/assets/img/chair-960.webp" photoPosition="center 40%" />
-        <div class="wd-layer wd-layer--thumb" aria-hidden="true">
-          <span class="wd-layer__arc"></span>
-          <span class="wd-layer__tag wd-layer__tag--easy">Easy reach</span>
-          <span class="wd-layer__tag wd-layer__tag--hard">Stretch</span>
+<section
+  class="wd-section wd-mobile"
+  id="mobile-ux"
+  aria-labelledby="wd-mobile-heading"
+  data-wd-mobile
+  data-layer="thumb"
+  data-scrolls={JSON.stringify(LAYER_SCROLL)}
+>
+  <div class="wd-mobile__pin" data-wd-mobile-pin>
+    <div class="wd-wrap wd-mobile__grid">
+      <div class="wd-mobile__copy">
+        <header class="wd-head">
+          <p class="wd-eyebrow"><span class="wd-eyebrow__scene">02</span>{WD_MOBILE.kicker}</p>
+          <h2 id="wd-mobile-heading" class="wd-h2" data-wd-reveal>{WD_MOBILE.heading}</h2>
+          <p class="wd-lede">{WD_MOBILE.lede}</p>
+        </header>
+
+        <p class="wd-sr" id="wd-mobile-hint">Choose a layer to see it on the phones.</p>
+        <ol class="wd-layers" aria-describedby="wd-mobile-hint">
+          {WD_MOBILE.layers.map((layer, index) => (
+            <li>
+              <button type="button" class="wd-layer-card" data-layer-button={layer.id} aria-pressed={index === 0 ? 'true' : 'false'}>
+                <span class="wd-layer-card__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="wd-layer-card__text">
+                  <span class="wd-layer-card__label">{layer.label}</span>
+                  <span class="wd-layer-card__title">{layer.title}</span>
+                  <span class="wd-layer-card__body">{layer.body}</span>
+                </span>
+                <span class="wd-layer-card__meter" aria-hidden="true"><i data-wd-layer-meter></i></span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div class="wd-mobile__stage" aria-hidden="true">
+        <div class="wd-mobile__floor"></div>
+
+        <!-- Generic template, drawn -->
+        <div class="wd-mobile__phone wd-mobile__phone--template">
+          <span class="wd-mobile__chip wd-mobile__chip--no">Template</span>
+          <WdDevice finish="black">
+            <div class="wd-tpl">
+              <div class="wd-tpl__top">
+                <span class="wd-tpl__logo">BARBERS</span>
+                <span class="wd-tpl__book wd-tpl__hit wd-tpl__hit--book">Book</span>
+              </div>
+              <div class="wd-tpl__links">
+                <span class="wd-tpl__hit">Home</span><span class="wd-tpl__hit">About</span><span class="wd-tpl__hit">Gallery</span><span class="wd-tpl__hit">Prices</span><span class="wd-tpl__hit">Contact</span>
+              </div>
+              <div class="wd-tpl__banner"><span>WELCOME!!</span></div>
+              <p class="wd-tpl__h">Welcome to our shop</p>
+              <p class="wd-tpl__p">We are a friendly barbershop for all the family. Walk-ins welcome. See our prices page for more info.</p>
+              <p class="wd-tpl__p">Opening times vary, please call ahead or message us on social media.</p>
+              <div class="wd-tpl__grid"><i></i><i></i><i></i><i></i></div>
+              <p class="wd-tpl__p">Follow us! <u>Facebook</u> <u>Instagram</u> <u>TikTok</u></p>
+              <!-- Layer marks on the template -->
+              <span class="wd-tpl__flag wd-tpl__flag--thumb">{WD_MOBILE.zones.hard}</span>
+              <span class="wd-tpl__flag wd-tpl__flag--targets">18 px</span>
+              <span class="wd-tpl__flag wd-tpl__flag--hierarchy">Everything shouts</span>
+            </div>
+          </WdDevice>
+        </div>
+
+        <!-- The real Heritage Grooming page -->
+        <div class="wd-mobile__phone wd-mobile__phone--designed">
+          <span class="wd-mobile__chip">Designed to book</span>
+          <WdDevice finish="gold">
+            <WdHeritagePage scroll={LAYER_SCROLL.thumb} data-wd-mobile-page>
+              <div slot="page" class="wd-ov wd-ov--targets">
+                {TAP_TARGETS.map((target) => (
+                  <span class="wd-target" style={box(target.rect)}><b>{target.rect.h} px</b></span>
+                ))}
+              </div>
+              <div slot="page" class="wd-ov wd-ov--hierarchy">
+                {HIERARCHY_MARKS.map((mark, index) => (
+                  <span class="wd-rank" style={`--x: ${mark.x}; --y: ${mark.y}`}><b>{index + 1}</b><span>{WD_MOBILE.hierarchy[index]}</span></span>
+                ))}
+              </div>
+            </WdHeritagePage>
+            <div class="wd-ov wd-ov--thumb" style={`--vh: ${GOLD_VIEWPORT}`}>
+              <span class="wd-zone wd-zone--hard"></span>
+              <span class="wd-zone wd-zone--ok"></span>
+              <span class="wd-zone wd-zone--easy"></span>
+              <span class="wd-zone__label wd-zone__label--hard">{WD_MOBILE.zones.hard}</span>
+              <span class="wd-zone__label wd-zone__label--ok">{WD_MOBILE.zones.ok}</span>
+              <span class="wd-zone__label wd-zone__label--easy">{WD_MOBILE.zones.easy}</span>
+              <span class="wd-pulse" style={box(BOOK_BAR)}></span>
+            </div>
+          </WdDevice>
         </div>
       </div>
-    </div>
-
-    <div class="wd-mobile__copy">
-      <header class="wd-head">
-        <p class="wd-eyebrow">{WD_MOBILE.kicker}</p>
-        <h2 id="wd-mobile-heading" class="wd-h2">{WD_MOBILE.heading}</h2>
-        <p class="wd-lede">{WD_MOBILE.lede}</p>
-      </header>
-
-      <p class="wd-mobile__hint" id="wd-mobile-hint">Choose a layer to see it on the phone.</p>
-      <ul class="wd-layers" aria-describedby="wd-mobile-hint">
-        {WD_MOBILE.layers.map((layer, index) => (
-          <li>
-            <button type="button" class="wd-layer-card" data-layer-button={layer.id} aria-pressed={index === 0 ? 'true' : 'false'}>
-              <span class="wd-layer-card__label">{layer.label}</span>
-              <span class="wd-layer-card__title">{layer.title}</span>
-              <span class="wd-layer-card__body">{layer.body}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   </div>
 </section>

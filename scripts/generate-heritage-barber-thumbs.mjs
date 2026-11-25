@@ -17,7 +17,7 @@ mkdirSync(out, { recursive: true });
 /** slug → [team-page photo, square crop of the 960×1286 portrait: left, top, size]. */
 const BARBERS = {
   arthur: ['work-arthur-fade', 170, 230, 400],
-  kit: ['work-kit-scissors', 450, 200, 400],
+  kit: ['work-kit-scissors', 440, 200, 400],
   rafi: ['work-rafi-neckline', 250, 380, 400],
   owen: ['work-owen-razor', 250, 350, 400],
 };

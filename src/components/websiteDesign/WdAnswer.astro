@@ -1,0 +1,31 @@
+---
+/**
+ * The short answer under the hero: one self-contained paragraph that answers the page's main question
+ * (quoted word for word in the FAQ and its FAQPage schema), and the guide's chapters as jump links.
+ */
+import { WD_CHAPTERS, WD_SHORT_ANSWER } from '@/lib/seo/barbershopWebsiteDesignContent';
+---
+
+<section class="wd-answer" id="short-answer" aria-labelledby="wd-answer-heading">
+  <div class="wd-wrap wd-answer__grid">
+    <div class="wd-answer__card">
+      <p class="wd-answer__eyebrow"><span aria-hidden="true"></span>In short</p>
+      <h2 id="wd-answer-heading" class="wd-answer__question">{WD_SHORT_ANSWER.question}</h2>
+      <p class="wd-answer__text" data-speakable>{WD_SHORT_ANSWER.answer}</p>
+    </div>
+    <nav class="wd-chapters" aria-label="In this guide">
+      <p class="wd-chapters__title">In this guide</p>
+      <ol class="wd-chapters__list">
+        {WD_CHAPTERS.map((chapter, index) => (
+          <li>
+            <a class="wd-chapters__link" href={`#${chapter.id}`}>
+              <span class="wd-chapters__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <span class="wd-chapters__label">{chapter.label}</span>
+              <svg class="wd-chapters__arrow" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 3v9M4.5 8.5 8 12l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  </div>
+</section>

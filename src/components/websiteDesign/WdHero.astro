@@ -1,8 +1,10 @@
 ---
-import WdPhoneScreen from './WdPhoneScreen.astro';
+import WdDevice from './WdDevice.astro';
+import WdHeritagePage from './WdHeritagePage.astro';
 import WdPrimaryCta from './WdPrimaryCta.astro';
 import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
 import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { INSPECTOR_SHOTS } from '@/lib/websiteDesign/inspectorRegions';
 import {
   WD_HERO_EYEBROW,
   WD_HERO_FACTS,
@@ -12,10 +14,16 @@ import {
 } from '@/lib/seo/barbershopWebsiteDesignContent';
 
 const lastIndex = WD_HERO_TITLE_LINES.length - 1;
+const first = INSPECTOR_SHOTS[0];
+const shots = INSPECTOR_SHOTS.map((shot) => {
+  const point = WD_INSPECTOR_POINTS.find((item) => item.id === shot.id)!;
+  return { ...shot, layer: point.layer };
+});
 ---
 
 <section class="wd-hero" aria-labelledby="wd-hero-title" data-enter>
   <div class="wd-hero__glow" aria-hidden="true"></div>
+  <div class="wd-hero__grid-lines" aria-hidden="true"></div>
   <div class="wd-wrap wd-hero__grid">
     <div class="wd-hero__copy">
       <nav class="wd-breadcrumb" aria-label="Breadcrumb">
@@ -32,8 +40,10 @@ const lastIndex = WD_HERO_TITLE_LINES.length - 1;
 
       <h1 id="wd-hero-title" class="wd-hero__title">
         {WD_HERO_TITLE_LINES.map((line, index) => (
-          <span class:list={['wd-hero__line wd-enter', { 'wd-hero__line--accent': index === lastIndex }]} style={`--i: ${index + 1}`}>
-            {line}
+          <span class="wd-hero__mask">
+            <span class:list={['wd-hero__line wd-enter', { 'wd-hero__line--accent': index === lastIndex }]} style={`--i: ${index + 1}`}>
+              {line}
+            </span>
           </span>
         ))}
       </h1>
@@ -57,29 +67,54 @@ const lastIndex = WD_HERO_TITLE_LINES.length - 1;
       </ul>
     </div>
 
-    <div class="wd-inspector wd-enter" style="--i: 3" data-wd-inspector data-active={WD_INSPECTOR_POINTS[0].id}>
+    <div
+      class="wd-inspector wd-enter"
+      style="--i: 3"
+      data-wd-inspector
+      data-active={first.id}
+      data-shots={JSON.stringify(shots)}
+    >
       <div class="wd-inspector__stage">
-        <div class="wd-phone">
-          <WdPhoneScreen photo="/demo/heritage-grooming/assets/img/work-arthur-mirror-960.webp" photoPosition="center 25%" eager />
-          {WD_INSPECTOR_POINTS.map((point, index) => (
-            <span class={`wd-inspector__pin wd-inspector__pin--${point.id}`} data-pin={point.id} aria-hidden="true">
-              {index + 1}
+        <div class="wd-inspector__halo" aria-hidden="true"></div>
+        <WdDevice finish="gold" eager class="wd-inspector__device">
+          <WdHeritagePage eager scroll={first.scroll} data-wd-hpage />
+          <div
+            class="wd-reticle"
+            data-wd-reticle
+            aria-hidden="true"
+            style={`--rx: ${first.rect.x}; --ry: ${first.rect.y - first.scroll}; --rw: ${first.rect.w}; --rh: ${first.rect.h}`}
+          >
+            <i class="wd-reticle__corner wd-reticle__corner--tl"></i>
+            <i class="wd-reticle__corner wd-reticle__corner--tr"></i>
+            <i class="wd-reticle__corner wd-reticle__corner--bl"></i>
+            <i class="wd-reticle__corner wd-reticle__corner--br"></i>
+            <span class="wd-reticle__tag">
+              <b data-wd-reticle-layer>{shots[0].layer}</b>
+              <span data-wd-reticle-size>{first.rect.w} × {first.rect.h}</span>
             </span>
-          ))}
-        </div>
+          </div>
+          <div class="wd-scan" data-wd-scan aria-hidden="true"></div>
+        </WdDevice>
       </div>
 
       <div class="wd-inspector__panel">
-        <p class="wd-inspector__title" id="wd-inspector-title">Inspect the design</p>
+        <div class="wd-inspector__head">
+          <p class="wd-inspector__title" id="wd-inspector-title">Inspect the design</p>
+          <button type="button" class="wd-inspector__pause" data-wd-inspector-pause aria-pressed="false" hidden>
+            <span class="wd-inspector__pause-icon" aria-hidden="true"></span>
+            <span data-wd-inspector-pause-label>Pause</span>
+          </button>
+        </div>
         <ol class="wd-inspector__list" aria-labelledby="wd-inspector-title">
           {WD_INSPECTOR_POINTS.map((point, index) => (
             <li>
               <button type="button" class="wd-inspector__item" data-point={point.id} aria-pressed={index === 0 ? 'true' : 'false'}>
-                <span class="wd-inspector__num" aria-hidden="true">{index + 1}</span>
+                <span class="wd-inspector__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
                 <span class="wd-inspector__text">
                   <span class="wd-inspector__label">{point.label}</span>
                   <span class="wd-inspector__body">{point.body}</span>
                 </span>
+                <span class="wd-inspector__progress" aria-hidden="true"><i data-wd-progress></i></span>
               </button>
             </li>
           ))}

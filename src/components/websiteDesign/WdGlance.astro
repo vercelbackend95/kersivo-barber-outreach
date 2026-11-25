@@ -1,97 +1,115 @@
 ---
-import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES, HERITAGE_DEMO_LOCATION as DEMO_LOCATION } from '@/lib/demo/heritage/demoShapes';
-import { formatDemoPriceGbp } from '@/lib/demo/services';
+/**
+ * The first-glance test. Behind the divider: a generic template (drawn). In front: the real Heritage
+ * Grooming home page (the same screenshot as the homepage stage, scripts/capture-heritage-stage.mjs).
+ * Each question has a mark at the exact spot on the real page that answers it (1600 × 1000 screenshot
+ * px, as % of the frame). A question counts as answered once the divider has uncovered its mark.
+ */
 import { WD_GLANCE } from '@/lib/seo/barbershopWebsiteDesignContent';
 
-const fade = DEMO_SERVICES.find((service) => service.name === 'Skin fade');
-const cut = DEMO_SERVICES.find((service) => service.name === 'Haircut');
-const beard = DEMO_SERVICES.find((service) => service.name === 'Beard trim');
-const chips = [fade, cut, beard].filter(Boolean).map((service) => ({
-  name: service!.name,
-  price: formatDemoPriceGbp(service!.pricePence),
-}));
+/** Boxes around the answering element on the real page, and where its mark sits. */
+const SPOTS = [
+  { box: [4.6, 2.2, 19.4, 7.8], mark: [24.8, 2.4] },
+  { box: [31.2, 89.6, 9.6, 7.2], mark: [41.6, 89.4] },
+  { box: [13.2, 89.6, 14, 7.2], mark: [27.8, 89.4] },
+  { box: [64.8, 74.2, 15.7, 7.6], mark: [81.2, 73.8] },
+] as const;
+
+const START = 50;
+const questions = WD_GLANCE.questions.map((item, index) => ({ ...item, ...SPOTS[index], n: String(index + 1).padStart(2, '0') }));
 ---
 
 <section class="wd-section wd-glance" id="first-glance" aria-labelledby="wd-glance-heading">
   <div class="wd-wrap">
-    <header class="wd-head">
-      <p class="wd-eyebrow">{WD_GLANCE.kicker}</p>
-      <h2 id="wd-glance-heading" class="wd-h2">{WD_GLANCE.heading}</h2>
+    <header class="wd-head wd-head--split">
+      <div>
+        <p class="wd-eyebrow"><span class="wd-eyebrow__scene">01</span>{WD_GLANCE.kicker}</p>
+        <h2 id="wd-glance-heading" class="wd-h2" data-wd-reveal>{WD_GLANCE.heading}</h2>
+      </div>
       <p class="wd-lede">{WD_GLANCE.lede}</p>
     </header>
 
-    <div class="wd-glance__grid">
-      <div class="wd-compare" data-wd-compare style="--pos: 50%">
-        <div class="wd-compare__frame">
-          <div class="wd-compare__bar" aria-hidden="true"><i></i><i></i><i></i><span>yourbarbershop.co.uk</span></div>
-          <div class="wd-compare__view" aria-hidden="true">
-            <!-- Before: the generic template look -->
-            <div class="wd-before">
-              <div class="wd-before__top">
-                <span class="wd-before__logo">Welcome To Our Barbers!!</span>
-                <span class="wd-before__links"><u>Home</u> <u>About Us</u> <u>Gallery</u> <u>News</u> <u>Links</u> <u>Contact</u></span>
-              </div>
-              <div class="wd-before__slider">
-                <span class="wd-before__slide">Image slideshow</span>
-                <span class="wd-before__dots"><i></i><i></i><i></i><i></i><i></i></span>
-              </div>
-              <div class="wd-before__body">
+    <div class="wd-compare" data-wd-compare style={`--pos: ${START}%`}>
+      <div class="wd-compare__frame">
+        <div class="wd-compare__bar" aria-hidden="true">
+          <span class="wd-compare__dots"><i></i><i></i><i></i></span>
+          <span class="wd-compare__url"><svg viewBox="0 0 16 16" width="11" height="11"><path d="M5 7V5a3 3 0 0 1 6 0v2M4 7h8v6H4z" fill="none" stroke="currentColor" stroke-width="1.5"></path></svg>yourbarbershop.co.uk</span>
+        </div>
+        <div class="wd-compare__view" aria-hidden="true">
+          <!-- Designed to book: the real Heritage Grooming home page -->
+          <div class="wd-after">
+            <img src="/images/home-v2/heritage-stage-desktop-top.webp" alt="" width="1600" height="1000" loading="lazy" decoding="async" />
+            {questions.map((item) => (
+              <>
+                <span class="wd-spot" style={`left: ${item.box[0]}%; top: ${item.box[1]}%; width: ${item.box[2]}%; height: ${item.box[3]}%`}></span>
+                <span class="wd-mark wd-mark--yes" style={`left: ${item.mark[0]}%; top: ${item.mark[1]}%`}>{item.n}</span>
+              </>
+            ))}
+          </div>
+
+          <!-- Generic template -->
+          <div class="wd-before">
+            <div class="wd-before__top">
+              <span class="wd-before__logo">Welcome To Our Barbers!!</span>
+              <span class="wd-before__links"><u>Home</u> <u>About Us</u> <u>Gallery</u> <u>News</u> <u>Links</u> <u>Contact</u></span>
+            </div>
+            <div class="wd-before__slider">
+              <span class="wd-before__slide">Image 1 of 5</span>
+              <span class="wd-before__arrow wd-before__arrow--l">‹</span>
+              <span class="wd-before__arrow wd-before__arrow--r">›</span>
+              <span class="wd-before__dots"><i></i><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="wd-before__body">
+              <div>
                 <p class="wd-before__h">About Us</p>
-                <p>We are a friendly barbershop offering a wide range of services for all the family. Please see our services page for more information and prices on request.</p>
+                <p>We are a friendly barbershop offering a wide range of services for all the family. Please see our services page for more information.</p>
+              </div>
+              <div>
+                <p class="wd-before__h">Our Services</p>
+                <p>Prices on request. Please ask in store.</p>
+              </div>
+              <div>
+                <p class="wd-before__h">Contact</p>
                 <p class="wd-before__small">For bookings please call or message us on social media. <u>Click here</u></p>
               </div>
             </div>
-
-            <!-- After: designed to book -->
-            <div class="wd-after">
-              <img src="/demo/heritage-grooming/assets/img/chair-960.webp" alt="" width="960" height="1192" loading="lazy" decoding="async" />
-              <div class="wd-after__shade"></div>
-              <div class="wd-after__top">
-                <span class="wd-after__logo">Heritage Grooming</span>
-                <span class="wd-after__nav">Services · Barbers · Visit</span>
-                <span class="wd-after__cta">Book</span>
-              </div>
-              <div class="wd-after__copy">
-                <span class="wd-after__area">{DEMO_LOCATION} · Tuesday to Saturday</span>
-                <span class="wd-after__title">A barbershop that<br /><em>takes its time.</em></span>
-                <span class="wd-after__chips">
-                  {chips.map((chip) => <span><b>{chip.price}</b> {chip.name}</span>)}
-                </span>
-                <span class="wd-after__book">Book a chair</span>
-              </div>
-            </div>
+            <div class="wd-before__foot">Copyright · All rights reserved · Site by WebBuilder</div>
+            {questions.map((item) => (
+              <span class="wd-mark wd-mark--no" style={`left: ${item.mark[0]}%; top: ${item.mark[1]}%`}>?</span>
+            ))}
           </div>
-
-          <span class="wd-compare__tag wd-compare__tag--before" aria-hidden="true">{WD_GLANCE.beforeLabel}</span>
-          <span class="wd-compare__tag wd-compare__tag--after" aria-hidden="true">{WD_GLANCE.afterLabel}</span>
-          <span class="wd-compare__handle" aria-hidden="true"><span></span></span>
-          <input
-            class="wd-compare__range"
-            type="range"
-            min="0"
-            max="100"
-            step="1"
-            value="50"
-            aria-label="Compare a generic template with a website designed to book"
-            aria-valuetext="Halfway"
-            data-wd-compare-range
-          />
         </div>
-      </div>
 
-      <ol class="wd-glance__questions" data-wd-glance-questions>
-        {WD_GLANCE.questions.map((item, index) => (
-          <li class="wd-question" data-step={index}>
-            <span class="wd-question__check" aria-hidden="true">
-              <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-            </span>
-            <span>
-              <span class="wd-question__q">{item.q}</span>
-              <span class="wd-question__a">{item.a}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
+        <span class="wd-compare__tag wd-compare__tag--before" aria-hidden="true">{WD_GLANCE.beforeLabel}</span>
+        <span class="wd-compare__tag wd-compare__tag--after" aria-hidden="true">{WD_GLANCE.afterLabel}</span>
+        <span class="wd-compare__handle" aria-hidden="true"><span></span></span>
+        <input
+          class="wd-compare__range"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={START}
+          aria-label="Compare a generic template with a website designed to book"
+          aria-valuetext="Halfway"
+          data-wd-compare-range
+        />
+      </div>
     </div>
+
+    <ol class="wd-glance__questions" data-wd-glance-questions>
+      {questions.map((item) => (
+        <li class="wd-question" data-mark-x={item.mark[0]} data-on={item.mark[0] > START ? 'true' : 'false'}>
+          <span class="wd-question__num" aria-hidden="true">{item.n}</span>
+          <h3 class="wd-question__q">{item.q}</h3>
+          <p class="wd-question__a">{item.a}</p>
+          <p class="wd-question__status">
+            <span class="wd-question__icon" aria-hidden="true"></span>
+            <span class="wd-question__state wd-question__state--no">{WD_GLANCE.missing}</span>
+            <span class="wd-question__state wd-question__state--yes">{WD_GLANCE.answered}</span>
+          </p>
+        </li>
+      ))}
+    </ol>
   </div>
 </section>

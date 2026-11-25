@@ -1,29 +1,47 @@
 ---
+/**
+ * Photography. The shot list picks the frame shown in the lightbox; the contact sheet below is the
+ * photographer's edit: keepers circled in red grease pencil, rejects (too dark, tilted) struck through.
+ * Photos are the Heritage Grooming demo shop's (stand-ins, labelled as such on the demo).
+ */
 import { HERITAGE_DEMO_BARBERS as DEMO_BARBERS } from '@/lib/demo/heritage/demoShapes';
 import { WD_PHOTO } from '@/lib/seo/barbershopWebsiteDesignContent';
 
 const IMG = '/demo/heritage-grooming/assets/img';
-const shots: Record<string, { src: string; width: number; height: number; alt: string }> = {
-  chair: { src: `${IMG}/chair-960.webp`, width: 960, height: 1192, alt: 'A black leather chair in front of a brass-framed mirror at Heritage Grooming, the demo shop.' },
-  work: { src: `${IMG}/work-arthur-fade-960.webp`, width: 960, height: 1286, alt: 'A fresh fade, finished and photographed in the shop.' },
-  hands: { src: `${IMG}/work-rafi-beard-960.webp`, width: 960, height: 717, alt: 'A barber shaping a client’s beard in the demo shop.' },
-  detail: { src: `${IMG}/tools-960.webp`, width: 960, height: 644, alt: 'Scissors, combs and an open razor laid out on the counter, close up.' },
+const shots: Record<string, { src: string; width: number; height: number; alt: string; light: string; focus: string }> = {
+  chair: { src: `${IMG}/chair-960.webp`, width: 960, height: 1192, alt: 'A black leather chair in front of a brass-framed mirror at Heritage Grooming, the demo shop.', light: '#d79a4a', focus: '50% 45%' },
+  work: { src: `${IMG}/work-arthur-fade-960.webp`, width: 960, height: 1286, alt: 'A barber finishing a fade on a client in the shop.', light: '#c8894a', focus: '55% 35%' },
+  hands: { src: `${IMG}/work-kit-scissors-960.webp`, width: 960, height: 1286, alt: 'A barber taking a fade up with clippers at the mirror.', light: '#7f9a62', focus: '55% 45%' },
+  detail: { src: `${IMG}/tools-960.webp`, width: 960, height: 644, alt: 'Scissors, combs and an open razor laid out on the counter, close up.', light: '#b07a43', focus: '50% 50%' },
 };
+
+/** The contact sheet: the photographer's edit of one session. */
+const SHEET = [
+  { src: `${IMG}/chairs-960.webp`, mark: 'keep' },
+  { src: `${IMG}/tools-960.webp`, mark: 'dark' },
+  { src: `${IMG}/work-arthur-fade-500.webp`, mark: 'keep' },
+  { src: `${IMG}/shelf-960.webp`, mark: 'tilt' },
+  { src: `${IMG}/work-kit-scissors-500.webp`, mark: 'keep' },
+  { src: `${IMG}/work-rafi-beard-500.webp`, mark: 'none' },
+  { src: `${IMG}/chair-960.webp`, mark: 'keep' },
+  { src: `${IMG}/work-lineup-mirror-500.webp`, mark: 'none' },
+] as const;
 
 const team = DEMO_BARBERS.slice(0, 3).map((barber) => ({
   name: barber.name,
   first: barber.name.split(' ')[0],
+  role: barber.specialisation,
   src: barber.image.src,
 }));
 ---
 
 <section class="wd-section wd-photo" id="photography" aria-labelledby="wd-photo-heading" data-wd-photo data-shot="chair">
   <div class="wd-wrap">
-    <div class="wd-split wd-split--top">
+    <div class="wd-photo__grid">
       <div class="wd-photo__copy">
         <header class="wd-head">
-          <p class="wd-eyebrow">{WD_PHOTO.kicker}</p>
-          <h2 id="wd-photo-heading" class="wd-h2">{WD_PHOTO.heading}</h2>
+          <p class="wd-eyebrow"><span class="wd-eyebrow__scene">04</span>{WD_PHOTO.kicker}</p>
+          <h2 id="wd-photo-heading" class="wd-h2" data-wd-reveal>{WD_PHOTO.heading}</h2>
           <p class="wd-lede">{WD_PHOTO.lede}</p>
         </header>
 
@@ -32,9 +50,9 @@ const team = DEMO_BARBERS.slice(0, 3).map((barber) => ({
           {WD_PHOTO.shotList.map((shot, index) => (
             <li>
               <button type="button" class="wd-shot" data-shot-button={shot.id} aria-pressed={index === 0 ? 'true' : 'false'}>
-                <span class="wd-shot__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                <span class="wd-shot__thumb" aria-hidden="true"><img src={shots[shot.id].src} alt="" width="96" height="96" loading="lazy" decoding="async" style={`object-position: ${shots[shot.id].focus}`} /></span>
                 <span class="wd-shot__text">
-                  <span class="wd-shot__title">{shot.title}</span>
+                  <span class="wd-shot__title"><span class="wd-shot__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{shot.title}</span>
                   <span class="wd-shot__body">{shot.body}</span>
                 </span>
               </button>
@@ -43,14 +61,60 @@ const team = DEMO_BARBERS.slice(0, 3).map((barber) => ({
         </ol>
       </div>
 
-      <div class="wd-mosaic">
-        {WD_PHOTO.shotList.map((shot) => (
-          <div class={`wd-mosaic__cell wd-mosaic__cell--${shot.id}`} data-shot-cell={shot.id}>
-            <img src={shots[shot.id].src} alt={shots[shot.id].alt} width={shots[shot.id].width} height={shots[shot.id].height} loading="lazy" decoding="async" />
+      <div class="wd-lightbox" data-wd-lightbox>
+        <div class="wd-lightbox__spill" aria-hidden="true"></div>
+        <div class="wd-lightbox__frame">
+          {WD_PHOTO.shotList.map((shot) => (
+            <figure class="wd-lightbox__shot" data-shot-cell={shot.id} style={`--light: ${shots[shot.id].light}`}>
+              <img
+                src={shots[shot.id].src}
+                alt={shots[shot.id].alt}
+                width={shots[shot.id].width}
+                height={shots[shot.id].height}
+                loading="lazy"
+                decoding="async"
+                style={`object-position: ${shots[shot.id].focus}`}
+              />
+            </figure>
+          ))}
+          <div class="wd-lightbox__grade" aria-hidden="true"></div>
+          <div class="wd-lightbox__rebate" aria-hidden="true">
+            <span>KERSIVO 400</span><span class="wd-lightbox__frame-no" data-wd-frame-no>01A</span><span>▸</span>
           </div>
-        ))}
+        </div>
       </div>
     </div>
+
+    <div class="wd-sheet" aria-hidden="true">
+      <div class="wd-sheet__strip">
+        {SHEET.map((frame, index) => (
+          <span class:list={['wd-sheet__frame', `wd-sheet__frame--${frame.mark}`]} style={`--i: ${index}`}>
+            <img src={frame.src} alt="" width="320" height="240" loading="lazy" decoding="async" />
+            <span class="wd-sheet__no">{String(index + 12).padStart(2, '0')}</span>
+            {frame.mark === 'keep' && (
+              <svg class="wd-sheet__circle" viewBox="0 0 120 90" preserveAspectRatio="none"><path pathLength="1" d="M60 6C92 4 115 18 114 44c-1 28-28 41-58 40C26 83 5 68 6 44 7 20 30 8 64 7"></path></svg>
+            )}
+            {(frame.mark === 'dark' || frame.mark === 'tilt') && (
+              <svg class="wd-sheet__cross" viewBox="0 0 120 90" preserveAspectRatio="none"><path pathLength="1" d="M12 10 108 80"></path><path pathLength="1" d="M108 12 14 78"></path></svg>
+            )}
+          </span>
+        ))}
+      </div>
+      <div class="wd-sheet__notes">
+        <span><i class="wd-sheet__key wd-sheet__key--keep"></i>Keep</span>
+        <span><i class="wd-sheet__key wd-sheet__key--cut"></i>Too dark, tilted</span>
+      </div>
+    </div>
+
+    <ul class="wd-tips">
+      {WD_PHOTO.tips.map((tip, index) => (
+        <li class="wd-tip">
+          <span class="wd-tip__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3 class="wd-tip__title">{tip.title}</h3>
+          <p class="wd-tip__body">{tip.body}</p>
+        </li>
+      ))}
+    </ul>
 
     <div class="wd-team" id="your-team">
       <div class="wd-team__copy">
@@ -64,8 +128,11 @@ const team = DEMO_BARBERS.slice(0, 3).map((barber) => ({
               <span class="wd-barber__photo">
                 <img src={barber.src} alt={`Portrait of ${barber.name}, a barber at the Heritage Grooming demo shop.`} width="600" height="804" loading="lazy" decoding="async" />
               </span>
-              <span class="wd-barber__name">{barber.name}</span>
-              <span class="wd-barber__book">Book with {barber.first}</span>
+              <span class="wd-barber__meta">
+                <span class="wd-barber__name">{barber.name}</span>
+                <span class="wd-barber__role">{barber.role}</span>
+                <span class="wd-barber__book">Book with {barber.first} <span aria-hidden="true">→</span></span>
+              </span>
             </a>
           </li>
         ))}

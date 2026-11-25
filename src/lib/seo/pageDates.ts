@@ -47,10 +47,10 @@ import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } fro
  */
 /**
  * Seeded from `git log -1 --format=%cs -- <page source>` on 28 October 2026, then updated by hand
- * when a page was rebuilt: /barbershop-websites on 13 Nov 2026, /barbershop-website-design on 14 Nov 2026.
+ * when a page was rebuilt: /barbershop-websites on 13 Nov 2026, /barbershop-website-design on 14 Nov 2026 and again on 25 Nov 2026.
  */
 export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-11-13';
-export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-11-14';
+export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-11-25';
 /** /barbershop-online-booking dates itself (rebuilt 25 Nov 2026); re-exported for the sitemap. */
 export { BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO };
 

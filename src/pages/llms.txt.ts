@@ -9,6 +9,7 @@ import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import { KAR_PAGE_PATH } from '@/lib/seo/adminReportsExperience';
+import { BARBERSHOP_WEBSITE_DESIGN_LLMS_SUMMARY, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 
 /**
  * /llms.txt (llmstxt.org): a plain summary of KERSIVO with links to the pages that answer
@@ -30,6 +31,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     '## Product',
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
+    link(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH, 'Barbershop website design guide', BARBERSHOP_WEBSITE_DESIGN_LLMS_SUMMARY),
     link('/barbershop-online-booking', 'Barbershop online booking guide', 'how clients book step by step, how free times are worked out, deposits and payments on Starter and Full, reminders, and a checklist for choosing a system'),
     link(RETAIL_PICKUP_PAGE_PATH, 'Retail pickup', RETAIL_PICKUP_LLMS_SUMMARY),
     link(

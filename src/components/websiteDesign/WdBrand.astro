@@ -1,4 +1,9 @@
 ---
+/**
+ * Brand tuner. Native radios pick a palette and a typeface; the preview (the Heritage Grooming demo
+ * shop's home screen) and the brand board beside it follow. With the script, a change wipes the new look
+ * in behind a laser line instead of snapping.
+ */
 import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES, HERITAGE_DEMO_TAGLINE as DEMO_SHOP_TAGLINE } from '@/lib/demo/heritage/demoShapes';
 import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { WD_BRAND } from '@/lib/seo/barbershopWebsiteDesignContent';
@@ -7,69 +12,108 @@ const rows = ['Skin fade', 'Haircut and beard', 'Hot-towel shave']
   .map((name) => DEMO_SERVICES.find((service) => service.name === name))
   .filter(Boolean)
   .map((service) => ({ name: service!.name, price: formatDemoPriceGbp(service!.pricePence) }));
+const swatchRoles = ['Ground', 'Ink', 'Accent'];
 ---
 
-<section class="wd-section wd-brand" id="branding" aria-labelledby="wd-brand-heading">
+<section class="wd-section wd-brand" id="branding" aria-labelledby="wd-brand-heading" data-wd-brand>
   <div class="wd-wrap">
-    <header class="wd-head">
-      <p class="wd-eyebrow">{WD_BRAND.kicker}</p>
-      <h2 id="wd-brand-heading" class="wd-h2">{WD_BRAND.heading}</h2>
+    <header class="wd-head wd-head--split">
+      <div>
+        <p class="wd-eyebrow"><span class="wd-eyebrow__scene">03</span>{WD_BRAND.kicker}</p>
+        <h2 id="wd-brand-heading" class="wd-h2" data-wd-reveal>{WD_BRAND.heading}</h2>
+      </div>
       <p class="wd-lede">{WD_BRAND.lede}</p>
     </header>
 
-    <div class="wd-brand__grid">
-      <div class="wd-brand__controls">
-        <fieldset class="wd-choice">
-          <legend class="wd-choice__legend">Colour palette</legend>
-          {WD_BRAND.palettes.map((palette, index) => (
-            <label class="wd-choice__option">
+    <div class="wd-brand__controls">
+      <fieldset class="wd-choice">
+        <legend class="wd-choice__legend">Colour palette</legend>
+        <div class="wd-choice__row">
+          {WD_BRAND.palettes.map((palette) => (
+            <label class="wd-chip">
               <input type="radio" name="wd-palette" value={palette.id} checked={palette.id === 'heritage'} data-wd-palette />
-              <span class={`wd-choice__swatch wd-choice__swatch--${palette.id}`} aria-hidden="true"><i></i><i></i><i></i></span>
-              <span class="wd-choice__text">
-                <span class="wd-choice__name">{palette.label}</span>
-                <span class="wd-choice__note">{palette.note}</span>
+              <span class="wd-chip__swatch" aria-hidden="true">
+                {palette.swatches.map((hex) => <i style={`background: ${hex}`}></i>)}
+              </span>
+              <span class="wd-chip__text">
+                <span class="wd-chip__name">{palette.label}</span>
+                <span class="wd-chip__note">{palette.note}</span>
               </span>
             </label>
           ))}
-        </fieldset>
+        </div>
+      </fieldset>
 
-        <fieldset class="wd-choice">
-          <legend class="wd-choice__legend">Typeface</legend>
-          {WD_BRAND.typefaces.map((face, index) => (
-            <label class="wd-choice__option">
+      <fieldset class="wd-choice">
+        <legend class="wd-choice__legend">Typeface</legend>
+        <div class="wd-choice__row">
+          {WD_BRAND.typefaces.map((face) => (
+            <label class="wd-chip">
               <input type="radio" name="wd-type" value={face.id} checked={face.id === 'serif'} data-wd-type />
-              <span class={`wd-choice__glyph wd-choice__glyph--${face.id}`} aria-hidden="true">Aa</span>
-              <span class="wd-choice__text">
-                <span class="wd-choice__name">{face.label}</span>
-                <span class="wd-choice__note">{face.note}</span>
+              <span class={`wd-chip__glyph wd-chip__glyph--${face.id}`} aria-hidden="true">Aa</span>
+              <span class="wd-chip__text">
+                <span class="wd-chip__name">{face.label}</span>
+                <span class="wd-chip__note">{face.note}</span>
               </span>
             </label>
           ))}
-        </fieldset>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="wd-brand__stage" data-wd-brand-preview data-palette="heritage" data-type="serif" aria-hidden="true">
+      <div class="wd-brand__browser">
+        <div class="wd-compare__bar">
+          <span class="wd-compare__dots"><i></i><i></i><i></i></span>
+          <span class="wd-compare__url"><svg viewBox="0 0 16 16" width="11" height="11"><path d="M5 7V5a3 3 0 0 1 6 0v2M4 7h8v6H4z" fill="none" stroke="currentColor" stroke-width="1.5"></path></svg>yourbarbershop.co.uk</span>
+        </div>
+        <div class="wd-brand__canvas" data-wd-brand-canvas>
+          <div class="wd-brand__layer" data-wd-brand-layer>
+            <div class="wd-site">
+              <div class="wd-site__nav">
+                <span class="wd-site__logo">Heritage Grooming</span>
+                <span class="wd-site__links"><span>Services</span><span>Barbers</span><span>Visit</span></span>
+                <span class="wd-site__pill">Book</span>
+              </div>
+              <div class="wd-site__body">
+                <div class="wd-site__copy">
+                  <span class="wd-site__kicker">Barbers · Chapel Street</span>
+                  <span class="wd-site__title">{DEMO_SHOP_TAGLINE}</span>
+                  <span class="wd-site__rows">
+                    {rows.map((row) => (
+                      <span class="wd-site__row"><span>{row.name}</span><b>{row.price}</b></span>
+                    ))}
+                  </span>
+                  <span class="wd-site__book">Book a chair</span>
+                </div>
+                <div class="wd-site__photo">
+                  <img src="/demo/heritage-grooming/assets/img/work-arthur-fade-960.webp" alt="" width="960" height="1286" loading="lazy" decoding="async" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <i class="wd-brand__laser" data-wd-brand-laser></i>
+        </div>
       </div>
 
-      <div class="wd-brand__preview" data-wd-brand-preview data-palette="heritage" data-type="serif" aria-hidden="true">
-        <div class="wd-site">
-          <div class="wd-site__nav">
-            <span class="wd-site__logo">Heritage Grooming</span>
-            <span class="wd-site__links"><span>Services</span><span>Barbers</span><span>Visit</span></span>
-            <span class="wd-site__pill">Book</span>
-          </div>
-          <div class="wd-site__body">
-            <div class="wd-site__copy">
-              <span class="wd-site__kicker">Barbers · Chapel Street</span>
-              <span class="wd-site__title">{DEMO_SHOP_TAGLINE}</span>
-              <span class="wd-site__rows">
-                {rows.map((row) => (
-                  <span class="wd-site__row"><span>{row.name}</span><b>{row.price}</b></span>
-                ))}
-              </span>
-              <span class="wd-site__book">Book a chair</span>
-            </div>
-            <div class="wd-site__photo">
-              <img src="/demo/heritage-grooming/assets/img/work-arthur-fade-960.webp" alt="" width="960" height="1286" loading="lazy" decoding="async" />
-            </div>
-          </div>
+      <div class="wd-board">
+        <p class="wd-board__title">Brand board</p>
+        <div class="wd-board__mark">
+          <span class="wd-board__seal">HG</span>
+          <span class="wd-board__name">Heritage Grooming</span>
+        </div>
+        {WD_BRAND.palettes.map((palette) => (
+          <ul class="wd-board__swatches" data-for-palette={palette.id}>
+            {palette.swatches.map((hex, index) => (
+              <li><i style={`background: ${hex}`}></i><span>{swatchRoles[index]}</span><code>{hex.toUpperCase()}</code></li>
+            ))}
+          </ul>
+        ))}
+        <div class="wd-board__type">
+          <span class="wd-board__specimen">Aa</span>
+          {WD_BRAND.typefaces.map((face) => (
+            <span class="wd-board__face" data-for-type={face.id}><b>{face.label}</b>{face.note}</span>
+          ))}
         </div>
       </div>
     </div>
