@@ -21,6 +21,7 @@ import { NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
 import { CHAIR_RENT_CALCULATOR_PAGE_PATH } from './chairRentCalculatorPage';
 import { PRICE_CALCULATOR_PAGE_PATH } from './priceCalculatorPage';
 import { FREE_TOOLS_PAGE_PATH } from './freeToolsPage';
+import { RETAIL_PICKUP_PAGE_PATH } from './retailPickupPage';
 import { buildInsightsSitemapEntries } from './insights';
 import { getStaticPageLastModified } from './pageDates';
 import { PRICING_PAGE_PATH } from './pricingPage';
@@ -66,6 +67,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
     ? [staticPage(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)] : []),
   ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
     ? [staticPage(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)] : []),
+  /** Retail pickup (click and collect) feature explainer. */
+  staticPage(RETAIL_PICKUP_PAGE_PATH),
   staticPage(ABOUT_PAGE_PATH),
   /** /free-preview 404s while FREE_PREVIEW_FLOW_ENABLED is off; the sitemap follows the flag at build time. */
   ...(isFreePreviewFlowEnabled() ? [staticPage(FREE_PREVIEW_PAGE_PATH)] : []),
