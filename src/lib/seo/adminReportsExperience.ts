@@ -66,7 +66,7 @@ export type KarChapter = {
 };
 
 export const KAR_CHAPTERS_TITLE = 'A working day in the dashboard';
-export const KAR_CHAPTERS_LEAD = 'Five screens an owner opens most, in the order they sit in the sidebar. Scroll, and the dashboard walks through them.';
+export const KAR_CHAPTERS_LEAD = 'The real KERSIVO dashboard, running the Heritage Grooming demo shop. Scroll, and it walks through the five screens an owner opens most, in the order they sit in the sidebar.';
 
 export const KAR_CHAPTERS: readonly KarChapter[] = [
   {
@@ -74,32 +74,32 @@ export const KAR_CHAPTERS: readonly KarChapter[] = [
     index: '01',
     section: 'Bookings',
     title: 'Open the day',
-    body: 'A timeline per barber shows today’s gaps at a glance. Filter to who is still to come, mark an arrival or a no-show, reschedule, or change a service before the cut starts.',
-    callouts: ['Next client highlighted', 'Gaps you can still fill'],
+    body: 'Today’s timeline runs slot by slot, with live counts above it: bookings today, still to come, rescheduled, cancelled and who is on shift. Tap a count to filter the day, open a slot to see who is booked with whom, then mark an arrival or a no-show.',
+    callouts: ['Live counts for today', 'Filter to who is still to come'],
   },
   {
     id: 'team',
     index: '02',
     section: 'Team',
     title: 'Set up the chairs',
-    body: 'Each barber has their own working hours, services and online bookings switch. See who is on shift today, and invite a manager or a barber to the dashboard.',
-    callouts: ['Who is on shift today', 'Working days per barber'],
+    body: 'Each barber has a card with their role, today’s shift, their next appointment and their own online bookings switch. Search by name or service, set working hours and services, and invite a manager or a barber to the dashboard.',
+    callouts: ['Online bookings per barber', 'Who is on shift today'],
   },
   {
     id: 'reports',
     index: '03',
     section: 'Reports',
     title: 'Read the week',
-    body: 'Pick a day, a week, a month or a year, and every number sits beside the one from the period before it: bookings, utilisation, average booking value and cancellations, with your peak hour, most popular service and a barber leaderboard.',
-    callouts: ['Compared with the previous period', 'Busiest barber first'],
+    body: 'Pick a day, a week, a month or a year, and the headline figure sits beside its change against the period before. Switch to bookings or cancellations, put a barber on the same chart, and read the leader, utilisation and peak hour underneath.',
+    callouts: ['Compared with the previous period', 'Barbers on the same chart'],
   },
   {
     id: 'clients',
     index: '04',
     section: 'Clients',
     title: 'Know who is in the chair',
-    body: 'Every client keeps a record: visits, no-shows, total spent, favourite service, tags and notes with photos. A reliability score built from completed visits against no-shows tells you who to ask for a deposit.',
-    callouts: ['Reliability from real visits', 'Spend and favourite service'],
+    body: 'Every client keeps a record: tags, last visit, total spent and a reliability score built from completed visits against no-shows, which tells you who to ask for a deposit. Search by name, email or phone and open the profile for notes and photos.',
+    callouts: ['Reliability from real visits', 'Total spent per client'],
   },
   {
     id: 'sales',
@@ -107,12 +107,12 @@ export const KAR_CHAPTERS: readonly KarChapter[] = [
     section: 'Sales',
     title: 'Check the shelf',
     body: 'Products sold on your website and collected in the shop: orders, average order value and your top product, by value or by units, over 7, 30 or 90 days or your own dates.',
-    callouts: ['Top product this week', 'Units sold per product'],
+    callouts: ['7, 30 or 90 days', 'By value or by units'],
   },
 ];
 
-/** Shown under the film: the Reports chapter plays the demo shop’s real Reports figures. */
-export const KAR_FILM_NOTE = `${offer.demo.fictional} Booking value is counted at the shop’s service prices; it is not a payout figure.`;
+/** Shown under the film: it plays the real dashboard with the demo shop’s figures. */
+export const KAR_FILM_NOTE = `${offer.demo.fictional} Values are counted at the shop’s service prices; they are not payout figures.`;
 
 /* ---------- Moment 2: the statement ---------- */
 

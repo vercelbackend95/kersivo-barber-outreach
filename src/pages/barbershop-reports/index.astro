@@ -12,9 +12,8 @@ import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { buildAdminReportsJsonLd } from '@/lib/seo/adminReportsJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { FREE_PREVIEW_CTA_HREF } from '@/lib/freePreview/fullPlanCta';
-import { buildKarStudioData, KAR_STUDIO_RANGES } from '@/lib/landing/kar/reportsDemo';
-import { buildKarChapterDemo } from '@/lib/landing/kar/chapterDemo';
-import { karChartPaths, karKpis, karMetricTotal, karPointPercent, karScale, normalise, resample } from '@/lib/landing/kar/studioFormat';
+import { buildKarStudioData, KAR_STUDIO_RANGES, type KarRangeKey } from '@/lib/landing/kar/reportsDemo';
+import { karKpis, karMetricTotal, normalise } from '@/lib/landing/kar/studioFormat';
 import { buildSmoothPath } from '@/lib/admin/chartUtils';
 import {
   KAR_ANSWER,
@@ -50,34 +49,12 @@ import '@/styles/components/admin-reports.css';
 
 const currentYear = new Date().getFullYear();
 const studio = buildKarStudioData();
-const START_RANGE = '7d';
-const start = studio[START_RANGE];
-const kpis = karKpis(start);
-// The film's Reports chart: booking value, on the dashboard's round axis and monotone curve.
-const scale = karScale(start.series.value, 'value');
-const startYs = normalise(resample(start.series.value), scale.max);
-const paths = karChartPaths(startYs);
-const rawYs = normalise(start.series.value, scale.max);
-const markers = rawYs.length <= 14 ? rawYs.map((_, i) => karPointPercent(rawYs, i)) : [];
-const endPoint = karPointPercent(startYs, startYs.length - 1);
-const maxLeader = Math.max(1, ...start.leaderboard.map((row) => row.count));
-const day = buildKarChapterDemo();
-// The Sales screen's 7-day revenue line, drawn the way the dashboard's Sales chart draws it.
-const salesValues = day.sales.days.map((d) => d.gbp);
-const salesScale = karScale(salesValues, 'value');
-const salesYs = normalise(salesValues, salesScale.max);
-const salesPaths = karChartPaths(salesYs);
-const salesMarkers = salesYs.map((_, i) => karPointPercent(salesYs, i));
-const salesEnd = salesMarkers[salesMarkers.length - 1];
 const statementWords = KAR_STATEMENT.split(' ');
-// The real dashboard's sidebar, in its groups.
-const SIDEBAR = [
-  { label: 'Booking system', items: ['Bookings', 'Team', 'Reports', 'Clients', 'Services'] },
-  { label: 'Shop / retail', items: ['Products', 'Orders', 'Sales'] },
-  { label: 'Assistant', items: ['Assistant'] },
-];
-// Hero: one normalised booking-value series per Reports range, front ribbon first.
-// Long ranges are averaged down to at most 12 points so the back ribbons read as shapes, not noise.
+// The film: the real owner dashboard of the Heritage Grooming demo, framed for embedding.
+const FILM_SRC = '/demo/heritage-grooming/admin?embed=hero&section=bookings_dashboard';
+const FILM_POSTER = '/landing/barbershop-reports/film-poster.webp';
+// Hero: one Reports chart (booking value) and the widgets beside it, cycling through the ranges.
+// Long ranges are averaged down to at most 12 points so the line reads as a shape, not noise.
 const averageTo = (values: readonly number[], n: number) => {
   if (values.length <= n) return [...values];
   return Array.from({ length: n }, (_, i) => {
@@ -87,9 +64,33 @@ const averageTo = (values: readonly number[], n: number) => {
     return chunk.reduce((a, b) => a + b, 0) / chunk.length;
   });
 };
-const heroRibbons = (['7d', '1d', '30d', '1y'] as const).map((key) =>
-  normalise(averageTo(studio[key].series.value, 12)).map((v) => Math.round(v * 1000) / 1000),
-);
+const HERO_START: KarRangeKey = '7d';
+const heroRanges = KAR_STUDIO_RANGES.map(({ key }) => {
+  const r = studio[key];
+  const k = karKpis(r);
+  const top = Math.max(1, ...r.leaderboard.map((row) => row.count));
+  return {
+    key,
+    short: r.short,
+    total: karMetricTotal(r, 'value'),
+    bookings: k.bookings.value,
+    bookingsDelta: k.bookings.delta,
+    bookingsTone: k.bookings.tone,
+    util: r.utilisationPct ?? 0,
+    utilLabel: k.utilisation.value,
+    utilDelta: k.utilisation.delta,
+    utilTone: k.utilisation.tone,
+    cancelled: k.cancelled.value,
+    cancelledDelta: k.cancelled.delta,
+    cancelledTone: k.cancelled.tone,
+    peak: r.peak ?? '—',
+    service: r.popularService ?? '—',
+    leaders: r.leaderboard.slice(0, 3).map((row) => ({ name: row.name, count: row.count, share: Math.round((row.count / top) * 1000) / 10 })),
+    series: normalise(averageTo(r.series.value, 12)).map((v) => Math.round(v * 1000) / 1000),
+  };
+});
+const hero = heroRanges.find((r) => r.key === HERO_START)!;
+const UTIL_R = 26;
 // "Fair to every chair": three barbers over the shop total, Tuesday to Saturday (illustrative).
 const CHAIR_DAYS = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const CHAIR_LINES = [
@@ -126,10 +127,66 @@ const chairTotal = buildSmoothPath(
       }
     </script>
 
-    <!-- 1 · Hero: the Reports chart in three.js, one ribbon per range -->
+    <!-- 1 · Hero: one Reports chart in three.js, with the rest of Reports in widgets around it -->
     <section class="kar-hero" aria-labelledby="kar-hero-title" data-kar-hero>
       <div class="kar-hero__visual" aria-hidden="true" data-kar-visual>
-        <canvas class="kar-hero__canvas" data-kar-canvas data-kar-ribbons={JSON.stringify(heroRibbons)}></canvas>
+        <canvas class="kar-hero__canvas" data-kar-canvas></canvas>
+      </div>
+      <div class="kar-hero__board" aria-hidden="true" data-kar-board>
+        <script type="application/json" data-kar-hero-data set:html={JSON.stringify(heroRanges)} />
+        <div class="kar-w kar-w--value" data-kar-w>
+          <p class="kar-w__eyebrow"><i></i>Booking value <span>· demo shop</span></p>
+          <p class="kar-w__big" data-kar-hv="total">{hero.total}</p>
+          <p class="kar-w__sub">
+            <b data-kar-hv="bookings">{hero.bookings}</b> bookings
+            <span class={`kar-w__delta is-${hero.bookingsTone}`} data-kar-hv="bookingsDelta">{hero.bookingsDelta}</span>
+          </p>
+          <span class="kar-w__seg">
+            {heroRanges.map((r) => (
+              <span class:list={['kar-w__seg-btn', { 'is-on': r.key === HERO_START }]} data-kar-hrange={r.key}>{r.short}</span>
+            ))}
+            <span class="kar-w__seg-thumb" data-kar-hthumb></span>
+          </span>
+        </div>
+
+        <div class="kar-w kar-w--util" data-kar-w>
+          <span class="kar-w__ring" style={`--p:${hero.util / 100}`} data-kar-hring>
+            <svg viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r={UTIL_R} pathLength="100"></circle>
+              <circle class="kar-w__ring-fill" cx="32" cy="32" r={UTIL_R} pathLength="100"></circle>
+            </svg>
+          </span>
+          <span class="kar-w__util">
+            <span class="kar-w__eyebrow">Utilisation</span>
+            <b class="kar-w__mid" data-kar-hv="utilLabel">{hero.utilLabel}</b>
+            <span class={`kar-w__delta is-${hero.utilTone}`} data-kar-hv="utilDelta">{hero.utilDelta}</span>
+          </span>
+        </div>
+
+        <div class="kar-w kar-w--leaders" data-kar-w>
+          <p class="kar-w__eyebrow">Barber leaderboard</p>
+          <ol class="kar-w__leaders" data-kar-hleaders>
+            {hero.leaders.map((row, i) => (
+              <li>
+                <span class="kar-w__rank">{i + 1}</span>
+                <span class="kar-w__name">{row.name}</span>
+                <span class="kar-w__bar"><span style={`--w:${row.share}%`}></span></span>
+                <b>{row.count}</b>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="kar-w kar-w--stats" data-kar-w>
+          <dl class="kar-w__stats">
+            <div><dt>Peak day and hour</dt><dd data-kar-hv="peak">{hero.peak}</dd></div>
+            <div><dt>Most popular service</dt><dd data-kar-hv="service">{hero.service}</dd></div>
+            <div>
+              <dt>Cancelled rate</dt>
+              <dd><span data-kar-hv="cancelled">{hero.cancelled}</span> <small class={`is-${hero.cancelledTone}`} data-kar-hv="cancelledDelta">{hero.cancelledDelta}</small></dd>
+            </div>
+          </dl>
+        </div>
       </div>
       <div class="kar-wrap kar-hero__inner">
         <p class="ks-eyebrow" data-kar-enter>{KAR_HERO.eyebrow}</p>
@@ -209,222 +266,21 @@ const chairTotal = buildSmoothPath(
               <div class="kar-app__bar">
                 <span class="kar-app__dots"><i></i><i></i><i></i></span>
                 <span class="kar-app__url">Heritage Grooming · Owner dashboard</span>
-                <span class="kar-app__live"><i></i>Live</span>
+                <span class="kar-app__live"><i></i>Live demo</span>
               </div>
-              <div class="kar-app__body">
-                <nav class="kar-side" aria-hidden="true" data-kar-side>
-                  <span class="kar-side__glow" data-kar-nav-glow></span>
-                  {SIDEBAR.map((group) => (
-                    <>
-                      <span class="kar-side__group">{group.label}</span>
-                      {group.items.map((label) => (
-                        <span class="kar-side__item" data-kar-nav={label}>{label}</span>
-                      ))}
-                    </>
-                  ))}
-                </nav>
-
-                <div class="kar-screens">
-                  <!-- 01 Bookings -->
-                  <div class="kar-screen kar-screen--bookings is-active" data-kar-screen="0">
-                    <div class="kar-screen__head">
-                      <b>Bookings</b><span>{day.dayLabel}</span>
-                    </div>
-                    <div class="kar-chips">
-                      <span class="kar-chip">Bookings today <b>{day.bookingsToday}</b></span>
-                      <span class="kar-chip kar-chip--red">Still to come <b>{day.stillToCome}</b></span>
-                    </div>
-                    <div class="kar-timeline">
-                      <div class="kar-timeline__hours"><span>09:00</span><span>12:00</span><span>15:00</span><span>19:00</span></div>
-                      {day.timeline.map((row) => (
-                        <div class="kar-timeline__row">
-                          <span class="kar-timeline__name">{row.barber.split(' ')[0]}</span>
-                          <span class="kar-timeline__track">
-                            {row.blocks.length === 0 && <span class="kar-timeline__off">Off today</span>}
-                            {row.blocks.map((block) => (
-                              <span class={`kar-block kar-block--${block.state}`} style={`left:${block.left}%;width:${block.width}%`}>
-                                <span>{block.label}</span>
-                              </span>
-                            ))}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <!-- 02 Team -->
-                  <div class="kar-screen kar-screen--team" data-kar-screen="1">
-                    <div class="kar-screen__head"><b>Team</b><span>{day.team.length} members</span></div>
-                    <ul class="kar-team">
-                      {day.team.map((member) => (
-                        <li class="kar-team__row">
-                          <span class="kar-team__avatar">{member.initials}</span>
-                          <span class="kar-team__who">
-                            <b>{member.name}</b>
-                            <span class:list={['kar-team__today', { 'is-on': member.onShift }]}><i></i>{member.today}</span>
-                          </span>
-                          <span class="kar-team__role">{member.role}</span>
-                          <span class="kar-team__week">
-                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, wi) => (
-                              <i class:list={{ 'is-on': member.week[wi] }}>{d}</i>
-                            ))}
-                          </span>
-                          <span class="kar-team__switch"><i></i><small>Online bookings</small></span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <!-- 03 Reports: the demo shop's real Reports figures, walked through four ranges by the scroll -->
-                  <div class="kar-screen kar-screen--reports" data-kar-screen="2" data-kar-reports>
-                    <div class="kar-screen__head kar-reports__head">
-                      <b>Reports</b>
-                      <span class="kar-seg kar-seg--film">
-                        {KAR_STUDIO_RANGES.map((range) => (
-                          <span class:list={['kar-seg__btn', { 'is-on': range.key === START_RANGE }]} data-kar-range={range.key}>{range.label}</span>
-                        ))}
-                        <span class="kar-seg__thumb" data-kar-range-thumb></span>
-                      </span>
-                    </div>
-                    <div class="kar-kpis kar-kpis--film">
-                      {[
-                        ['bookings', 'Bookings'],
-                        ['utilisation', 'Utilisation'],
-                        ['value', 'Avg booking value'],
-                        ['cancelled', 'Cancelled rate'],
-                      ].map(([key, label]) => {
-                        const kpi = kpis[key as keyof typeof kpis];
-                        return (
-                          <div class="kar-kpi" data-kar-kpi={key}>
-                            <span class="kar-kpi__label">{label}</span>
-                            <span class="kar-kpi__value" data-kar-kpi-value>{kpi.value}</span>
-                            <span class={`kar-kpi__delta is-${kpi.tone}`} data-kar-kpi-delta>{kpi.delta}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div class="kar-reports__body">
-                      <div class="kar-chart">
-                        <div class="kar-chart__head">
-                          <span class="kar-chart__metric">Booking value</span>
-                          <span class="kar-chart__total" data-kar-chart-total>{karMetricTotal(start, 'value')}</span>
-                          <span class="kar-flag" data-kar-sample hidden={!start.smallSample}>Small sample</span>
-                        </div>
-                        <div class="kar-chart__box">
-                          <div class="kar-chart__ticks" data-kar-ticks>
-                            {scale.ticks.map((tick) => (
-                              <span style={`top:${tick.y}%`}><small>{tick.label}</small></span>
-                            ))}
-                          </div>
-                          <svg class="kar-chart__svg" viewBox="0 0 640 220" preserveAspectRatio="none">
-                            <defs>
-                              <linearGradient id="kar-area" x1="0" x2="0" y1="0" y2="1">
-                                <stop offset="0%" stop-color="#d72638" stop-opacity="0.34"></stop>
-                                <stop offset="55%" stop-color="#d72638" stop-opacity="0.08"></stop>
-                                <stop offset="100%" stop-color="#d72638" stop-opacity="0"></stop>
-                              </linearGradient>
-                            </defs>
-                            <path class="kar-chart__area" d={paths.area} fill="url(#kar-area)" data-kar-area></path>
-                            <path class="kar-chart__glow" d={paths.line} data-kar-glow></path>
-                            <path class="kar-chart__line" d={paths.line} data-kar-line></path>
-                          </svg>
-                          <div class="kar-chart__markers" data-kar-markers>
-                            {markers.map((m) => <i style={`left:${m.x}%;top:${m.y}%`}></i>)}
-                          </div>
-                          <span class="kar-chart__end" data-kar-end style={`left:${endPoint.x}%;top:${endPoint.y}%`}><i></i></span>
-                        </div>
-                        <div class="kar-chart__axis" data-kar-axis>
-                          {start.axis.map((label) => <span>{label}</span>)}
-                        </div>
-                      </div>
-
-                      <div class="kar-side-stats">
-                        <dl class="kar-side-stats__list">
-                          <div><dt>Peak day and hour</dt><dd data-kar-stat="peak">{start.peak ?? '—'}</dd></div>
-                          <div><dt>Most popular service</dt><dd data-kar-stat="service">{start.popularService ?? '—'}</dd></div>
-                          <div><dt>No-show rate</dt><dd><span data-kar-stat="noshow">{kpis.noshow.value}</span> <small class={`is-${kpis.noshow.tone}`} data-kar-stat="noshow-delta">{kpis.noshow.delta}</small></dd></div>
-                        </dl>
-                        <div class="kar-leaders">
-                          <p class="kar-leaders__title">Barber leaderboard</p>
-                          <ol class="kar-leaders__list" data-kar-leaders>
-                            {start.leaderboard.map((row) => (
-                              <li>
-                                <span class="kar-leaders__name">{row.name}</span>
-                                <span class="kar-leaders__track"><span style={`--w:${(row.count / maxLeader) * 100}%`}></span></span>
-                                <b>{row.count}</b>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      </div>
-                    </div>
-                    <script type="application/json" data-kar-studio-data set:html={JSON.stringify(studio)} />
-                  </div>
-
-                  <!-- 04 Clients -->
-                  <div class="kar-screen kar-screen--clients" data-kar-screen="3">
-                    <div class="kar-screen__head"><b>Client profile</b><span>Clients</span></div>
-                    <div class="kar-client">
-                      <span class="kar-client__avatar">{day.client.initials}</span>
-                      <span class="kar-client__name">{day.client.name}</span>
-                      <span class="kar-client__tags">{day.client.tags.map((tag) => <i>{tag}</i>)}</span>
-                      <span class="kar-score" style={`--score:${day.client.reliability}`}>
-                        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" pathLength="100"></circle><circle class="kar-score__fill" cx="22" cy="22" r="19" pathLength="100"></circle></svg>
-                        <b>{day.client.reliability}</b>
-                        <small>{day.client.reliabilityLabel}</small>
-                      </span>
-                    </div>
-                    <dl class="kar-stats">
-                      <div><dt>Completed</dt><dd>{day.client.visits}</dd></div>
-                      <div><dt>No-shows</dt><dd>{day.client.noShows}</dd></div>
-                      <div><dt>Total spent</dt><dd>{day.client.totalSpent}</dd></div>
-                      <div><dt>Favourite</dt><dd>{day.client.favourite}</dd></div>
-                    </dl>
-                    {day.client.lastOrder && <p class="kar-client__note"><b>Last order</b> {day.client.lastOrder}</p>}
-                  </div>
-
-                  <!-- 05 Sales -->
-                  <div class="kar-screen kar-screen--sales" data-kar-screen="4">
-                    <div class="kar-screen__head"><b>Sales analytics</b><span>7 days</span></div>
-                    <div class="kar-minikpis kar-minikpis--sales">
-                      <span><small>Orders</small><b>{day.sales.orders}</b></span>
-                      <span><small>Avg order value</small><b>{day.sales.aov}</b></span>
-                      <span><small>Top product</small><b class="kar-minikpis__small">{day.sales.topProduct}</b></span>
-                    </div>
-                    <div class="kar-sales__body">
-                      <div class="kar-chart kar-chart--sales">
-                        <div class="kar-chart__head">
-                          <span class="kar-chart__metric">Sales £</span>
-                          <span class="kar-chart__total">{day.sales.revenue}</span>
-                        </div>
-                        <div class="kar-chart__box">
-                          <div class="kar-chart__ticks">
-                            {salesScale.ticks.map((tick) => (
-                              <span style={`top:${tick.y}%`}><small>{tick.label}</small></span>
-                            ))}
-                          </div>
-                          <svg class="kar-chart__svg" viewBox="0 0 640 220" preserveAspectRatio="none">
-                            <path class="kar-chart__area" d={salesPaths.area} fill="url(#kar-area)"></path>
-                            <path class="kar-chart__glow" d={salesPaths.line} data-kar-draw></path>
-                            <path class="kar-chart__line" d={salesPaths.line} data-kar-draw></path>
-                          </svg>
-                          <div class="kar-chart__markers">
-                            {salesMarkers.map((m) => <i style={`left:${m.x}%;top:${m.y}%`}></i>)}
-                          </div>
-                          {salesEnd && <span class="kar-chart__end" style={`left:${salesEnd.x}%;top:${salesEnd.y}%`}><i></i></span>}
-                        </div>
-                        <div class="kar-chart__axis">
-                          {day.sales.days.map((d) => <span>{d.label}</span>)}
-                        </div>
-                      </div>
-                      <ul class="kar-bars">
-                        {day.sales.leaderboard.map((row) => (
-                          <li><span class="kar-bars__name">{row.name}</span><span class="kar-bars__track"><span style={`--w:${row.share}%`}></span></span><b>{row.units}</b></li>
-                        ))}
-                      </ul>
-                    </div>
+              <div class="kar-live" data-kar-live data-frame-state="poster">
+                <div class="kar-live__canvas" data-kar-live-canvas>
+                  <iframe class="kar-live__frame" data-deferred-src={FILM_SRC} title="KERSIVO owner dashboard, Heritage Grooming demo" tabindex="-1" width="1180" height="720"></iframe>
+                  <div class="kar-live__fx" data-kar-fx>
+                    <span class="kar-live__ring" data-kar-ring></span>
+                    <span class="kar-live__tag" data-kar-tag><i></i><span data-kar-tag-text></span></span>
+                    <span class="kar-live__cursor" data-kar-cursor>
+                      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4.5 2.8v16.6l4.3-4.1 2.9 6.4 3-1.4-2.9-6.3h6z"></path></svg>
+                    </span>
                   </div>
                 </div>
+                <img class="kar-live__poster" src={FILM_POSTER} alt="" width="1180" height="720" loading="lazy" decoding="async" />
+                <span class="kar-live__loading"><i></i>Opening the demo dashboard</span>
               </div>
             </div>
           </div>
@@ -503,8 +359,11 @@ const chairTotal = buildSmoothPath(
                 {item.id === 'barbers' && (
                   <div class="kar-vis-chairs">
                     <svg class="kar-vis-chairs__svg" viewBox="0 0 240 104">
+                      <defs>
+                        <clipPath id="kar-chairs-sweep"><rect class="kar-vis-chairs__sweep" x="12" y="0" width="216" height="104"></rect></clipPath>
+                      </defs>
                       <rect class="kar-vis-chairs__day" x="214" y="2" width="28" height="94" rx="6"></rect>
-                      <path class="kar-vis-chairs__total" d={`${chairTotal} L228,96 L12,96 Z`}></path>
+                      <path class="kar-vis-chairs__total" d={`${chairTotal} L228,96 L12,96 Z`} clip-path="url(#kar-chairs-sweep)"></path>
                       <line class="kar-vis-chairs__base" x1="12" x2="228" y1="96" y2="96"></line>
                       {chairPaths.map((line, i) => (
                         <path class={`kar-vis-chairs__line kar-vis-chairs__line--${i}`} d={line.d} pathLength="1"></path>
