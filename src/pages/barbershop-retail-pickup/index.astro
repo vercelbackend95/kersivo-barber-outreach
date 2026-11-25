@@ -87,7 +87,7 @@ const productImage = (key: string) => PRODUCTS[key as keyof typeof PRODUCTS];
       }
     </script>
 
-    <!-- 1 · Hero: the first order on the counter, a photo with a depth map shown in 3D (three.js) -->
+    <!-- 1 · Hero: the first order on the counter, a still 3D render of the two products -->
     <section class="rp-hero" aria-labelledby="rp-hero-title" data-rp-hero>
       <div class="rp-wrap rp-hero__grid">
         <div class="rp-hero__copy">
@@ -140,7 +140,6 @@ const productImage = (key: string) => PRODUCTS[key as keyof typeof PRODUCTS];
                 decoding="async"
               />
             </picture>
-            <canvas class="rp-hero__canvas" aria-hidden="true" data-rp-canvas></canvas>
           </div>
           <div class="rp-ticket ks-glass-card ks-glass-card--accent" aria-hidden="true" data-rp-ticket>
             <p class="rp-ticket__label">Pickup reference</p>
