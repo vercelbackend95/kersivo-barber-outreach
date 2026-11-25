@@ -108,28 +108,98 @@ export function snapIndex(
   return Math.max(0, Math.min(labelCount - 1, Math.round(rawIdx)));
 }
 
-/** Build a monotone cubic-bezier smooth path through points. */
+/**
+ * Monotone-in-x tangents (Steffen 1990, as d3.curveMonotoneX). Unlike Catmull-Rom, the curve
+ * never overshoots its data: a day with £0 never dips below the baseline and a peak is never
+ * drawn higher than it was.
+ */
+function monotoneTangents(points: ChartPoint[]): number[] {
+  const n = points.length;
+  const slopes: number[] = [];
+  for (let i = 0; i < n - 1; i += 1) {
+    const h = points[i + 1].x - points[i].x;
+    slopes.push(h === 0 ? 0 : (points[i + 1].y - points[i].y) / h);
+  }
+  const tangents = new Array<number>(n).fill(0);
+  tangents[0] = slopes[0] ?? 0;
+  tangents[n - 1] = slopes[n - 2] ?? 0;
+  for (let i = 1; i < n - 1; i += 1) {
+    const s0 = slopes[i - 1];
+    const s1 = slopes[i];
+    if (s0 * s1 <= 0) continue;
+    const h0 = points[i].x - points[i - 1].x;
+    const h1 = points[i + 1].x - points[i].x;
+    const p = (s0 * h1 + s1 * h0) / (h0 + h1);
+    tangents[i] = (Math.sign(s0) + Math.sign(s1)) * Math.min(Math.abs(s0), Math.abs(s1), 0.5 * Math.abs(p));
+  }
+  // Ends: clamp so the first and last segments cannot overshoot either.
+  if (n > 2) {
+    tangents[0] = Math.sign(slopes[0]) !== Math.sign(tangents[1]) ? 0 : Math.min(Math.abs(slopes[0]), Math.abs(tangents[1])) * Math.sign(slopes[0]);
+    tangents[n - 1] = Math.sign(slopes[n - 2]) !== Math.sign(tangents[n - 2]) ? 0 : Math.min(Math.abs(slopes[n - 2]), Math.abs(tangents[n - 2])) * Math.sign(slopes[n - 2]);
+  }
+  return tangents;
+}
+
+const round2 = (v: number) => Math.round(v * 100) / 100;
+
+/** Build a monotone cubic-bezier smooth path through points (no overshoot). */
 export function buildSmoothPath(points: ChartPoint[]): string {
   if (points.length === 0) return '';
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
 
+  const tangents = monotoneTangents(points);
   const segments: string[] = [`M ${points[0].x} ${points[0].y}`];
 
   for (let i = 0; i < points.length - 1; i += 1) {
-    const p0 = points[Math.max(0, i - 1)];
     const p1 = points[i];
     const p2 = points[i + 1];
-    const p3 = points[Math.min(points.length - 1, i + 2)];
-
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
+    const third = (p2.x - p1.x) / 3;
+    const cp1x = round2(p1.x + third);
+    const cp1y = round2(p1.y + tangents[i] * third);
+    const cp2x = round2(p2.x - third);
+    const cp2y = round2(p2.y - tangents[i + 1] * third);
     segments.push(`C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`);
   }
 
   return segments.join(' ');
+}
+
+/** Dense points along the same monotone curve buildSmoothPath draws (for canvas / WebGL charts). */
+export function sampleMonotone(points: ChartPoint[], perSegment = 16): ChartPoint[] {
+  if (points.length < 2) return points.slice();
+  const tangents = monotoneTangents(points);
+  const out: ChartPoint[] = [];
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const h = p2.x - p1.x;
+    for (let s = 0; s < perSegment; s += 1) {
+      const t = s / perSegment;
+      const t2 = t * t;
+      const t3 = t2 * t;
+      const h00 = 2 * t3 - 3 * t2 + 1;
+      const h10 = t3 - 2 * t2 + t;
+      const h01 = -2 * t3 + 3 * t2;
+      const h11 = t3 - t2;
+      out.push({
+        x: p1.x + h * t,
+        y: h00 * p1.y + h10 * h * tangents[i] + h01 * p2.y + h11 * h * tangents[i + 1],
+      });
+    }
+  }
+  out.push(points[points.length - 1]);
+  return out;
+}
+
+/** Drop ticks whose formatted label repeats an earlier one (e.g. £0.50 and £1 both rounding to "£1"). */
+export function uniqueTicksByLabel(ticks: number[], format: (value: number) => string): number[] {
+  const seen = new Set<string>();
+  return ticks.filter((tick) => {
+    const label = format(tick);
+    if (seen.has(label)) return false;
+    seen.add(label);
+    return true;
+  });
 }
 
 export function buildLinearPath(points: ChartPoint[]): string {

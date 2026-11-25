@@ -18868,23 +18868,111 @@ button.admin-sidebar-brand--button:focus-visible {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-/* Chart v2 visuals */
+/* Chart v3 visuals: hairline grid, solid baseline, glow under the primary line, markers, live end dot */
 
 .admin-sales-grid-line {
-  stroke: color-mix(in srgb, var(--border) 55%, transparent);
+  stroke: color-mix(in srgb, var(--fg) 7%, transparent);
   stroke-width: 1;
-  stroke-dasharray: 4 6;
+  shape-rendering: crispEdges;
+}
+
+.admin-chart-baseline {
+  stroke: color-mix(in srgb, var(--fg) 16%, transparent);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.admin-chart-y-label-bg {
+  fill: transparent;
+  stroke: none;
+}
+
+.admin-sales-axis-label--floating {
+  fill: color-mix(in srgb, var(--muted) 85%, transparent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.admin-sales-axis-label {
+  transition: fill 160ms ease;
+}
+
+.admin-sales-axis-label.is-active {
+  fill: var(--fg);
+  font-weight: 600;
 }
 
 .admin-chart-crosshair {
-  stroke: color-mix(in srgb, var(--fg) 25%, transparent);
+  stroke: color-mix(in srgb, var(--fg) 22%, transparent);
   stroke-width: 1;
-  stroke-dasharray: 4 4;
   pointer-events: none;
 }
 
+.admin-chart-line-glow {
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.admin-chart-marker {
+  fill: var(--surface, #0d0d0e);
+  stroke: currentColor;
+  stroke-width: 1.75;
+}
+
+.admin-chart-active-halo {
+  opacity: 0.18;
+}
+
 .admin-chart-active-dot {
-  filter: drop-shadow(0 0 4px color-mix(in srgb, currentColor 40%, transparent));
+  stroke: var(--surface, #0d0d0e);
+  stroke-width: 2;
+}
+
+.admin-chart-end-dot__core {
+  stroke: var(--surface, #0d0d0e);
+  stroke-width: 2;
+}
+
+.admin-chart-end-dot__pulse {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: admin-chart-end-pulse 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1s infinite;
+}
+
+@keyframes admin-chart-end-pulse {
+  0% { opacity: 0.35; transform: scale(0.45); }
+  70%, 100% { opacity: 0; transform: scale(1.35); }
+}
+
+.admin-sales-chart-canvas:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 4px;
+  border-radius: var(--radius-12, 12px);
+}
+
+.admin-chart-tooltip-delta {
+  margin: 0.4rem 0 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-chart-tooltip-delta span {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.admin-chart-tooltip-delta.is-up { color: var(--success, #3ecf8e); }
+.admin-chart-tooltip-delta.is-down { color: var(--danger, #ef5350); }
+.admin-chart-tooltip-delta.is-flat { color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-chart-end-dot__pulse { animation: none; }
 }
 
 .admin-chart-line {

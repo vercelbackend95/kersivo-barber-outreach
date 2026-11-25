@@ -81,8 +81,8 @@ describe('/barbershop-reports (Admin & Reports)', () => {
     expect(JSON.stringify(buildAdminReportsJsonLd())).not.toMatch(/aggregateRating|review/i);
   });
 
-  it('walks four dashboard screens named after real sidebar sections', () => {
-    expect(KAR_CHAPTERS.map((c) => c.section)).toEqual(['Bookings', 'Clients', 'Reports', 'Sales']);
+  it('walks five dashboard screens named after real sidebar sections, in sidebar order', () => {
+    expect(KAR_CHAPTERS.map((c) => c.section)).toEqual(['Bookings', 'Team', 'Reports', 'Clients', 'Sales']);
   });
 
   it('feeds the studio from the demo dashboard data for every range', () => {

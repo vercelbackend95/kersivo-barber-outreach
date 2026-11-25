@@ -3,6 +3,7 @@
  * (first paint, no JavaScript needed) and the client script (range and metric switches).
  * Client-safe: no fixture or database imports.
  */
+import { buildSmoothPath, niceTicks } from '@/lib/admin/chartUtils';
 import type { KarStudioRange } from './reportsDemo';
 
 export type KarMetricKey = 'bookings' | 'value';
@@ -69,30 +70,51 @@ export function resample(values: readonly number[], n: number = KAR_CHART.points
   });
 }
 
-/** Normalise to 0..1 against the series maximum (with headroom). */
-export function normalise(values: readonly number[]): number[] {
-  const max = Math.max(1, ...values) * 1.08;
-  return values.map((v) => v / max);
+/** Normalise to 0..1 against `max` (default: the series maximum with headroom). */
+export function normalise(values: readonly number[], max?: number): number[] {
+  const top = max && max > 0 ? max : Math.max(1, ...values) * 1.08;
+  return values.map((v) => v / top);
 }
 
-/** Smooth line and area paths (Catmull-Rom to cubic Bézier) for normalised y values. */
+export type KarScale = { max: number; ticks: { label: string; y: number }[] };
+
+/**
+ * Round axis for the film's Reports chart, the same "nice" ticks the dashboard uses, so a gridline
+ * carries a real figure. `y` is the tick's position as a percentage from the top of the chart box.
+ */
+export function karScale(values: readonly number[], metric: KarMetricKey): KarScale {
+  const { max, ticks } = niceTicks(0, Math.max(metric === 'value' ? 10 : 2, ...values), 3);
+  const { height: h, padTop, padBottom } = KAR_CHART;
+  const usable = h - padTop - padBottom;
+  const fmt = (v: number) => (metric === 'value' ? gbp(v, 0) : num(Math.round(v)));
+  const seen = new Set<string>();
+  return {
+    max,
+    ticks: ticks
+      .map((v) => ({ label: fmt(v), y: ((padTop + (1 - v / max) * usable) / h) * 100 }))
+      .filter((t) => (seen.has(t.label) ? false : (seen.add(t.label), true))),
+  };
+}
+
+/** Where point i of n sits in the chart box, as percentages (for HTML markers over a stretched SVG). */
+export function karPointPercent(ys: readonly number[], i: number): { x: number; y: number } {
+  const { height: h, padTop, padBottom } = KAR_CHART;
+  const usable = h - padTop - padBottom;
+  return {
+    x: ys.length <= 1 ? 50 : (i / (ys.length - 1)) * 100,
+    y: ((padTop + (1 - (ys[i] ?? 0)) * usable) / h) * 100,
+  };
+}
+
+/** Smooth line and area paths for normalised y values: the dashboard's monotone curve (no overshoot). */
 export function karChartPaths(ys: readonly number[]): { line: string; area: string } {
   const { width: w, height: h, padTop, padBottom } = KAR_CHART;
   const usable = h - padTop - padBottom;
-  const pts = ys.map((y, i) => [(i / (ys.length - 1)) * w, padTop + (1 - y) * usable] as const);
-  const f = (n: number) => n.toFixed(1);
-  let line = `M${f(pts[0][0])},${f(pts[0][1])}`;
-  for (let i = 0; i < pts.length - 1; i += 1) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
-    const c1y = Math.min(h - padBottom, p1[1] + (p2[1] - p0[1]) / 6);
-    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
-    const c2y = Math.min(h - padBottom, p2[1] - (p3[1] - p1[1]) / 6);
-    line += ` C${f(c1x)},${f(c1y)} ${f(c2x)},${f(c2y)} ${f(p2[0])},${f(p2[1])}`;
-  }
-  const area = `${line} L${f(w)},${f(h)} L0,${f(h)} Z`;
+  const pts = ys.map((y, i) => ({
+    x: Math.round((i / Math.max(1, ys.length - 1)) * w * 10) / 10,
+    y: Math.round((padTop + (1 - y) * usable) * 10) / 10,
+  }));
+  const line = buildSmoothPath(pts);
+  const area = `${line} L${w},${h} L0,${h} Z`;
   return { line, area };
 }

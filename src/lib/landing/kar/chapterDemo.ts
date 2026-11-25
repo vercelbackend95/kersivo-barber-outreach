@@ -3,7 +3,7 @@
  * Every name and figure comes from the fictional Heritage Grooming demo fixtures that its owner
  * dashboard shows (no database). Pure and client-safe; runs in the page frontmatter.
  */
-import { getHeritageBarbersResponse } from '@/lib/admin/heritageDemoFixtures/catalog';
+import { getHeritageBarberRulesResponse, getHeritageTeamResponse } from '@/lib/admin/heritageDemoFixtures/catalog';
 import { getHeritageClientDetailResponse } from '@/lib/admin/heritageDemoFixtures/clients';
 import { getHeritageBookingsResponse } from '@/lib/admin/heritageDemoFixtures/schedule';
 import { getHeritageShopSalesResponse } from '@/lib/admin/heritageDemoFixtures/shop';
@@ -18,6 +18,15 @@ export type KarChapterDemo = {
   bookingsToday: number;
   stillToCome: number;
   timeline: { barber: string; blocks: KarTimelineBlock[] }[];
+  team: {
+    name: string;
+    initials: string;
+    role: 'Owner' | 'Manager' | 'Barber';
+    today: string;
+    onShift: boolean;
+    /** Monday first. */
+    week: boolean[];
+  }[];
   client: {
     name: string;
     initials: string;
@@ -31,6 +40,9 @@ export type KarChapterDemo = {
     lastOrder: string | null;
   };
   sales: {
+    revenue: string;
+    /** Revenue per day in £, oldest first, with short weekday labels. */
+    days: { label: string; gbp: number }[];
     orders: number;
     aov: string;
     topProduct: string;
@@ -52,6 +64,14 @@ const londonMinutes = (iso: string) => {
   return get('hour') * 60 + get('minute');
 };
 
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((part) => part[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
 /** Same thresholds as the client profile in the dashboard. */
 export function reliabilityLabel(score: number): string {
   if (score >= 75) return 'Excellent';
@@ -65,7 +85,8 @@ export function buildKarChapterDemo(now = new Date()): KarChapterDemo {
   const { bookings } = getHeritageBookingsResponse(new URLSearchParams({ date: dayKey, mode: 'day' }), now) as {
     bookings: { barberId: string; fullName: string; startAt: string; endAt: string; service: { name: string } }[];
   };
-  const barbers = getHeritageBarbersResponse().barbers as { id: string; name: string }[];
+  const teamCards = getHeritageTeamResponse(now).cards;
+  const barbers = teamCards.map((card) => ({ id: card.barber?.id ?? card.id, name: card.name }));
   const nowMs = now.getTime();
   const nextStart = bookings
     .map((b) => Date.parse(b.startAt))
@@ -99,7 +120,8 @@ export function buildKarChapterDemo(now = new Date()): KarChapterDemo {
   const name = detail.client.fullName;
 
   const sales = getHeritageShopSalesResponse(new URLSearchParams({ range: '7d' }), now) as {
-    kpis: { ordersCount: number; avgOrderValuePence: number; bestProduct: { name: string } | null };
+    kpis: { revenuePence: number; ordersCount: number; avgOrderValuePence: number; bestProduct: { name: string } | null };
+    series: { overall: { date: string; revenuePence: number }[] };
     leaderboard: { name: string; units: number }[];
   };
   const top = sales.leaderboard.slice(0, 4);
@@ -110,14 +132,17 @@ export function buildKarChapterDemo(now = new Date()): KarChapterDemo {
     bookingsToday: bookings.length,
     stillToCome: bookings.filter((b) => Date.parse(b.startAt) > nowMs).length,
     timeline,
+    team: teamCards.map((card) => ({
+      name: card.name,
+      initials: initialsOf(card.name),
+      role: card.role === 'OWNER' ? 'Owner' : card.role === 'MANAGER' ? 'Manager' : 'Barber',
+      today: card.barber?.todayLabel ?? '',
+      onShift: Boolean(card.barber?.todayIsOnShift),
+      week: getHeritageBarberRulesResponse(card.barber?.id ?? '').rules.map((rule) => rule.active),
+    })),
     client: {
       name,
-      initials: name
-        .split(/\s+/)
-        .map((part) => part[0] ?? '')
-        .join('')
-        .slice(0, 2)
-        .toUpperCase(),
+      initials: initialsOf(name),
       reliability: detail.reliabilityScore,
       reliabilityLabel: reliabilityLabel(detail.reliabilityScore),
       visits: detail.stats.completedCount,
@@ -128,6 +153,11 @@ export function buildKarChapterDemo(now = new Date()): KarChapterDemo {
       lastOrder: detail.lastOrder?.items.map((item) => item.nameSnapshot).join(', ') ?? null,
     },
     sales: {
+      revenue: gbp(sales.kpis.revenuePence),
+      days: sales.series.overall.map((point) => ({
+        label: new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' }).format(new Date(`${point.date}T12:00:00Z`)),
+        gbp: point.revenuePence / 100,
+      })),
       orders: sales.kpis.ordersCount,
       aov: gbp(sales.kpis.avgOrderValuePence),
       topProduct: sales.kpis.bestProduct?.name ?? '—',

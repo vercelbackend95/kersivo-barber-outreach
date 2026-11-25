@@ -5,6 +5,7 @@ import {
   niceTicks,
   snapIndex,
   sortChartLabels,
+  uniqueTicksByLabel,
 } from './chartUtils';
 
 describe('niceTicks', () => {
@@ -52,6 +53,27 @@ describe('buildSmoothPath', () => {
     ]);
     expect(path.startsWith('M 0 100')).toBe(true);
     expect(path).toContain('C');
+  });
+
+  it('never overshoots the data (a zero day stays on the baseline)', () => {
+    const points = [
+      { x: 0, y: 50 },
+      { x: 50, y: 10 },
+      { x: 100, y: 200 },
+      { x: 150, y: 200 },
+      { x: 200, y: 20 },
+    ];
+    const path = buildSmoothPath(points);
+    const ys = Array.from(path.matchAll(/-?\d+(?:\.\d+)?\s+(-?\d+(?:\.\d+)?)/g)).map((m) => Number(m[1]));
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(10);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(200);
+  });
+});
+
+describe('uniqueTicksByLabel', () => {
+  it('drops ticks that format to the same label', () => {
+    const fmt = (v: number) => `£${Math.round(v / 100)}`;
+    expect(uniqueTicksByLabel([0, 50, 100], fmt)).toEqual([0, 50]);
   });
 });
 

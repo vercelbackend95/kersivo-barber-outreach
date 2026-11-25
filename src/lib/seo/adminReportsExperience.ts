@@ -52,19 +52,21 @@ export const KAR_FACTS: readonly KarFact[] = [
   { term: 'Plan', value: `Full KERSIVO, ${PRICE}/month per location` },
 ];
 
-/* ---------- Moment 1: a day in the dashboard (pinned chapters) ---------- */
+/* ---------- Moment 1: the dashboard, as a scroll-driven film ---------- */
 
 export type KarChapter = {
-  id: 'bookings' | 'clients' | 'reports' | 'sales';
+  id: 'bookings' | 'team' | 'reports' | 'clients' | 'sales';
   index: string;
   /** Sidebar label in the real dashboard. */
   section: string;
   title: string;
   body: string;
+  /** Two short labels pinned to the screen while the chapter plays. */
+  callouts: readonly [string, string];
 };
 
 export const KAR_CHAPTERS_TITLE = 'A working day in the dashboard';
-export const KAR_CHAPTERS_LEAD = 'Four screens an owner opens most, in the order a day usually runs.';
+export const KAR_CHAPTERS_LEAD = 'Five screens an owner opens most, in the order they sit in the sidebar. Scroll, and the dashboard walks through them.';
 
 export const KAR_CHAPTERS: readonly KarChapter[] = [
   {
@@ -73,35 +75,44 @@ export const KAR_CHAPTERS: readonly KarChapter[] = [
     section: 'Bookings',
     title: 'Open the day',
     body: 'A timeline per barber shows today’s gaps at a glance. Filter to who is still to come, mark an arrival or a no-show, reschedule, or change a service before the cut starts.',
+    callouts: ['Next client highlighted', 'Gaps you can still fill'],
   },
   {
-    id: 'clients',
+    id: 'team',
     index: '02',
-    section: 'Clients',
-    title: 'Know who is in the chair',
-    body: 'Every client keeps a record: visits, no-shows, total spent, favourite service, tags and notes with photos. A reliability score built from completed visits against no-shows tells you who to ask for a deposit.',
+    section: 'Team',
+    title: 'Set up the chairs',
+    body: 'Each barber has their own working hours, services and online bookings switch. See who is on shift today, and invite a manager or a barber to the dashboard.',
+    callouts: ['Who is on shift today', 'Working days per barber'],
   },
   {
     id: 'reports',
     index: '03',
     section: 'Reports',
     title: 'Read the week',
-    body: 'Pick a range and every number sits beside the one from the period before it. Open a barber from the leaderboard to see where the busiest chair’s week came from.',
+    body: 'Pick a day, a week, a month or a year, and every number sits beside the one from the period before it: bookings, utilisation, average booking value and cancellations, with your peak hour, most popular service and a barber leaderboard.',
+    callouts: ['Compared with the previous period', 'Busiest barber first'],
+  },
+  {
+    id: 'clients',
+    index: '04',
+    section: 'Clients',
+    title: 'Know who is in the chair',
+    body: 'Every client keeps a record: visits, no-shows, total spent, favourite service, tags and notes with photos. A reliability score built from completed visits against no-shows tells you who to ask for a deposit.',
+    callouts: ['Reliability from real visits', 'Spend and favourite service'],
   },
   {
     id: 'sales',
-    index: '04',
+    index: '05',
     section: 'Sales',
     title: 'Check the shelf',
     body: 'Products sold on your website and collected in the shop: orders, average order value and your top product, by value or by units, over 7, 30 or 90 days or your own dates.',
+    callouts: ['Top product this week', 'Units sold per product'],
   },
 ];
 
-/* ---------- The live studio ---------- */
-
-export const KAR_STUDIO_TITLE = 'Try the Reports screen';
-export const KAR_STUDIO_LEAD = 'Switch the range and the metric. The figures are the same ones the demo shop’s dashboard shows today.';
-export const KAR_STUDIO_NOTE = `${offer.demo.fictional} Booking value is counted at the shop’s service prices; it is not a payout figure.`;
+/** Shown under the film: the Reports chapter plays the demo shop’s real Reports figures. */
+export const KAR_FILM_NOTE = `${offer.demo.fictional} Booking value is counted at the shop’s service prices; it is not a payout figure.`;
 
 /* ---------- Moment 2: the statement ---------- */
 
