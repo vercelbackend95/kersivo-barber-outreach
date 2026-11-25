@@ -230,6 +230,26 @@ export type KarPlanRow = { label: string; starter: string; full: string };
 export const KAR_PLANS_TITLE = 'Starter runs the diary. Full adds the owner’s view.';
 export const KAR_PLANS_LEAD = 'KERSIVO Starter is a real £0 booking plan. Reports and the wider owner tools come with Full KERSIVO.';
 
+/** Plan cards: Full KERSIVO is the featured card, Starter the quieter one beside it. */
+export const KAR_PLAN_CARDS = {
+  full: {
+    name: 'Full KERSIVO',
+    badge: 'Includes Reports',
+    price: PRICE,
+    unit: 'per month, per location',
+    pitch: 'Your branded website, online booking and the whole owner dashboard, with Reports included.',
+    fees: [offer.fees.commission, 'Stripe fees apply', offer.fees.setup],
+    pricingLink: 'See Full KERSIVO pricing',
+  },
+  starter: {
+    name: 'KERSIVO Starter',
+    price: '£0',
+    unit: 'per month, up to 4 barbers',
+    pitch: 'A real £0 booking plan that runs the diary. Reports are not part of it.',
+    link: 'How Starter works',
+  },
+} as const;
+
 export const KAR_PLAN_ROWS: readonly KarPlanRow[] = [
   { label: 'Price', starter: '£0/month', full: `${PRICE}/month per location` },
   { label: 'Bookings, team, services', starter: 'Included', full: 'Included' },

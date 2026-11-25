@@ -38,6 +38,7 @@ import {
   KAR_METRICS_LEAD,
   KAR_METRICS_TITLE,
   KAR_PAGE_PATH,
+  KAR_PLAN_CARDS,
   KAR_PLAN_ROWS,
   KAR_PLANS_LEAD,
   KAR_PLANS_TITLE,
@@ -90,6 +91,9 @@ const heroRanges = KAR_STUDIO_RANGES.map(({ key }) => {
   };
 });
 const hero = heroRanges.find((r) => r.key === HERO_START)!;
+// Plan cards: every row except the price, which each card shows as its headline.
+const planRows = KAR_PLAN_ROWS.filter((row) => row.label !== 'Price');
+const included = (value: string) => value !== 'Not included';
 const UTIL_R = 26;
 // "Fair to every chair": three barbers over the shop total, Tuesday to Saturday (illustrative).
 const CHAIR_DAYS = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -414,29 +418,60 @@ const chairTotal = buildSmoothPath(
         <p class="ks-eyebrow">Plans</p>
         <h2 id="kar-plans-title" class="kar-h2">{KAR_PLANS_TITLE}</h2>
         <p class="kar-lead">{KAR_PLANS_LEAD}</p>
-        <table class="kar-table">
-          <caption class="sr-only">Owner tools in KERSIVO Starter and Full KERSIVO</caption>
-          <thead>
-            <tr>
-              <th scope="col">Feature</th>
-              <th scope="col">KERSIVO Starter</th>
-              <th scope="col" class="kar-table__full">Full KERSIVO</th>
-            </tr>
-          </thead>
-          <tbody>
-            {KAR_PLAN_ROWS.map((row) => (
-              <tr>
-                <th scope="row">{row.label}</th>
-                <td data-plan="Starter" class:list={{ 'is-none': row.starter === 'Not included' }}>{row.starter}</td>
-                <td data-plan="Full" class="kar-table__full">{row.full}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p class="kar-plans__more">
-          <a class="kar-link" href="/pricing#plan" data-track="plan_my_setup_click">See Full KERSIVO pricing <span aria-hidden="true">→</span></a>
-          <a class="kar-link kar-link--quiet" href="/starter" data-track="starter_plan_explore_click">How Starter works</a>
-        </p>
+        <div class="kar-plans__grid" data-kar-plans>
+          <article class="kar-plan kar-plan--full" aria-labelledby="kar-plan-full" data-kar-plan>
+            <span class="kar-plan__beam" aria-hidden="true" data-kar-plan-beam></span>
+            <div class="kar-plan__top">
+              <h3 id="kar-plan-full" class="kar-plan__name"><i aria-hidden="true"></i>{KAR_PLAN_CARDS.full.name}</h3>
+              <span class="kar-plan__badge">{KAR_PLAN_CARDS.full.badge}</span>
+            </div>
+            <p class="kar-plan__price"><b>{KAR_PLAN_CARDS.full.price}</b><span>{KAR_PLAN_CARDS.full.unit}</span></p>
+            <p class="kar-plan__pitch">{KAR_PLAN_CARDS.full.pitch}</p>
+            <ul class="kar-plan__list" aria-label={`What ${KAR_PLAN_CARDS.full.name} includes`}>
+              {planRows.map((row) => (
+                <li class:list={['kar-plan__row', { 'is-key': row.label === 'Reports' }]} data-kar-plan-row>
+                  <svg class="kar-plan__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4l2.9 2.9 6.1-6.6" pathLength="1"></path></svg>
+                  <span class="kar-plan__label">{row.label}</span>
+                  {row.full !== 'Included' && <span class="kar-plan__value">{row.full}</span>}
+                </li>
+              ))}
+            </ul>
+            <p class="kar-plan__fees">
+              {KAR_PLAN_CARDS.full.fees.map((fee) => <span>{fee}</span>)}
+            </p>
+            <div class="kar-plan__actions">
+              <a class="btn btn--primary kar-btn kar-plan__cta" href={FREE_PREVIEW_CTA_HREF} data-track="build_preview_click">
+                {KAR_HERO.primary}
+                <span class="kar-btn__arrow" aria-hidden="true">→</span>
+              </a>
+              <a class="kar-link" href="/pricing#plan" data-track="plan_my_setup_click">{KAR_PLAN_CARDS.full.pricingLink} <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+
+          <article class="kar-plan kar-plan--starter" aria-labelledby="kar-plan-starter" data-kar-plan>
+            <div class="kar-plan__top">
+              <h3 id="kar-plan-starter" class="kar-plan__name">{KAR_PLAN_CARDS.starter.name}</h3>
+            </div>
+            <p class="kar-plan__price"><b>{KAR_PLAN_CARDS.starter.price}</b><span>{KAR_PLAN_CARDS.starter.unit}</span></p>
+            <p class="kar-plan__pitch">{KAR_PLAN_CARDS.starter.pitch}</p>
+            <ul class="kar-plan__list" aria-label={`What ${KAR_PLAN_CARDS.starter.name} includes`}>
+              {planRows.map((row) => (
+                <li class:list={['kar-plan__row', { 'is-off': !included(row.starter) }]} data-kar-plan-row>
+                  {included(row.starter) ? (
+                    <svg class="kar-plan__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4l2.9 2.9 6.1-6.6" pathLength="1"></path></svg>
+                  ) : (
+                    <svg class="kar-plan__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 8h7" pathLength="1"></path></svg>
+                  )}
+                  <span class="kar-plan__label">{row.label}</span>
+                  {row.starter !== 'Included' && <span class="kar-plan__value">{row.starter}</span>}
+                </li>
+              ))}
+            </ul>
+            <div class="kar-plan__actions">
+              <a class="kar-link kar-link--quiet" href="/starter" data-track="starter_plan_explore_click">{KAR_PLAN_CARDS.starter.link} <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 

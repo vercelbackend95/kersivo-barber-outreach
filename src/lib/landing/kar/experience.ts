@@ -14,6 +14,7 @@
  * each reel strip filling as its chapter plays, and the reel buttons pick a chapter.
  * - Moment 2: the statement's words light up with the scroll.
  * - Cards: short loops, played only while on screen, restart on hover, with a pause control.
+ * - Plans: the two plan cards rise in once, Full's laser edge draws and the checks tick down.
  *
  * Under prefers-reduced-motion nothing is hidden, nothing pins, nothing loops and no cursor plays.
  * Returns a cleanup for Astro's ClientRouter (astro:before-swap).
@@ -336,6 +337,13 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
     if (stage) stage.dataset.chapter = String(index);
     captions.forEach((caption, i) => caption.classList.toggle('is-active', i === index));
 
+    // A fast scroll can cross several chapters at once: only the outgoing and incoming captions
+    // may be visible, every other one is put away at once.
+    if (!reduced) captions.forEach((caption, i) => {
+      if (i === index || i === previous) return;
+      gsap.killTweensOf(caption);
+      gsap.set(caption, { autoAlpha: 0, y: 0 });
+    });
     if (!reduced && previous !== -1) {
       // The caption leaves upwards as the next one rises in: one direction of travel, like a reel.
       const dir = index > previous ? 1 : -1;
@@ -700,6 +708,48 @@ function initCards(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   });
 }
 
+/* ---------- Plans: the cards arrive ---------- */
+
+/**
+ * The two plan cards rise in (Full first), Full's top-edge laser draws out from the centre and the
+ * checks tick down each list. A soft light follows the pointer over a card. Played once.
+ */
+function initPlans(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
+  const grid = root.querySelector<HTMLElement>('[data-kar-plans]');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-kar-plan]'));
+
+  const onMove = (event: PointerEvent) => {
+    if (event.pointerType !== 'mouse') return;
+    const card = event.currentTarget as HTMLElement;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${event.clientX - r.left}px`);
+    card.style.setProperty('--my', `${event.clientY - r.top}px`);
+  };
+  cards.forEach((card) => card.addEventListener('pointermove', onMove));
+  disposers.push(() => cards.forEach((card) => card.removeEventListener('pointermove', onMove)));
+
+  if (reduced) return;
+  const beam = grid.querySelector<HTMLElement>('[data-kar-plan-beam]');
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'expo.out' } });
+  tl.fromTo(cards, { autoAlpha: 0, y: 48 }, { autoAlpha: 1, y: 0, duration: 1.1, stagger: 0.14 }, 0);
+  if (beam) tl.fromTo(beam, { scaleX: 0, autoAlpha: 0 }, { scaleX: 1, autoAlpha: 1, duration: 1.2, ease: 'expo.inOut' }, 0.25);
+  cards.forEach((card, c) => {
+    const rows = card.querySelectorAll('[data-kar-plan-row]');
+    const ticks = card.querySelectorAll<SVGPathElement>('.kar-plan__icon path');
+    const at = 0.35 + c * 0.14;
+    tl.fromTo(rows, { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.6, stagger: 0.05, ease: 'power3.out' }, at)
+      .fromTo(ticks, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, stagger: 0.05, ease: 'power2.out' }, at + 0.12);
+  });
+  tl.progress(0);
+  const st = ScrollTrigger.create({ trigger: grid, start: 'top 80%', once: true, onEnter: () => void tl.play() });
+  disposers.push(() => {
+    st.kill();
+    tl.kill();
+    gsap.set(cards, { clearProps: 'opacity,visibility,transform' });
+  });
+}
+
 /* ---------- Entry ---------- */
 
 export function initAdminReports(root: HTMLElement): Cleanup {
@@ -710,6 +760,7 @@ export function initAdminReports(root: HTMLElement): Cleanup {
   initFilm(root, reduced, disposers);
   initStatement(root, reduced, disposers);
   initCards(root, reduced, disposers);
+  initPlans(root, reduced, disposers);
 
   const refresh = () => ScrollTrigger.refresh();
   document.fonts?.ready.then(refresh).catch(() => {});
