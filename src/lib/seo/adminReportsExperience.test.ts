@@ -107,7 +107,7 @@ describe('/barbershop-reports (Admin & Reports)', () => {
     expect(experience).not.toMatch(/from 'three'/);
     // Type-only imports are erased; the fixtures must never reach the client bundle.
     expect(experience).not.toMatch(/^import (?!type )[^;]*from '\.\/(reportsDemo|chapterDemo)'/m);
-    const all = experience + read('../landing/kar/heroScene.ts') + read('../landing/kar/reportsDemo.ts') + read('../landing/kar/chapterDemo.ts');
+    const all = experience + read('../landing/kar/heroScene.ts') + read('../landing/kar/reportsDemo.ts') + read('../landing/kar/filmDirector.ts');
     expect(all).not.toMatch(/@\/lib\/db|prisma/i);
   });
 });
