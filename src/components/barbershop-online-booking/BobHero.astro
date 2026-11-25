@@ -1,0 +1,223 @@
+---
+/**
+ * 01 · Hero. The H1 and the direct answer on the left; on the right a booking you can make on a
+ * phone, built on one real demo day of Heritage Grooming. Confirming it drops the appointment
+ * into the shop diary beside the phone (moment 1). Without JavaScript the first step and the
+ * diary still render; the page reads top to bottom.
+ */
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
+import { HERITAGE_DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
+import { buildBookingSimulatorData, minuteLabel, poundsLabel } from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { BOB_HERO } from '@/lib/seo/barbershopOnlineBookingContent';
+import {
+  BARBERSHOP_ONLINE_BOOKING_DEMO_HREF,
+  BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF,
+} from '@/lib/seo/barbershopOnlineBookingPage';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+
+const TRACK_DEMO = 'view_live_demo_click';
+const TRACK_PLACEMENT = 'barbershop_online_booking_hero_demo';
+const CTA_PLACEMENT = 'barbershop_online_booking_hero';
+
+const freePreview = isFreePreviewFlowEnabled();
+const sim = buildBookingSimulatorData();
+const span = sim.close - sim.open;
+const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, i) => sim.open + i * 60).filter((m, i) => i % 2 === 0);
+const STEPS = ['Service', 'Barber', 'Time', 'Details'] as const;
+
+const ARROW =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
+const CHECK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const BACK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg>';
+---
+
+<section class="bob-hero" aria-labelledby="bob-hero-title" data-bob-hero>
+  <div class="bob-wrap bob-hero__grid">
+    <div class="bob-hero__copy">
+      <nav class="bob-crumbs" aria-label="Breadcrumb" data-enter style="--i:0">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li aria-hidden="true">/</li>
+          <li><span aria-current="page">Online Booking for Barbershops</span></li>
+        </ol>
+      </nav>
+      <p class="ks-eyebrow bob-hero__eyebrow" data-enter style="--i:1">{BOB_HERO.eyebrow}</p>
+      <h1 id="bob-hero-title" class="bob-hero__title">
+        {BOB_HERO.titleLines.map((line, i) => (
+          <span class="bob-hero__line"><span class:list={['bob-hero__line-inner', { 'bob-red': i === 1 }]} style={`--i:${i}`}>{line}</span></span>
+        ))}
+      </h1>
+      <p class="bob-hero__lead" data-enter style="--i:3">{BOB_HERO.lead}</p>
+      <ul class="bob-hero__facts" data-enter style="--i:4">
+        {BOB_HERO.facts.map((fact) => (
+          <li><span class="bob-hero__tick" set:html={CHECK} />{fact}</li>
+        ))}
+      </ul>
+      <div class="bob-hero__actions" data-enter style="--i:5">
+        {freePreview ? (
+          <FullPlanCta part="primary" primaryClass="bob-btn" placement={CTA_PLACEMENT}>
+            <span slot="icon" class="bob-btn__arrow" set:html={ARROW} />
+          </FullPlanCta>
+        ) : (
+          <a class="btn btn--primary btn--lg bob-btn" href={BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF}>
+            {BOB_HERO.compareLabel}<span class="bob-btn__arrow" set:html={ARROW} />
+          </a>
+        )}
+        <a
+          class="btn btn--outline btn--lg bob-btn"
+          href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}
+          data-track={TRACK_DEMO}
+          data-track-placement={TRACK_PLACEMENT}
+        >
+          {BOB_HERO.demoLabel}
+        </a>
+      </div>
+      <p class="bob-hero__fees" data-enter style="--i:6">{BOB_HERO.feesNote}</p>
+    </div>
+
+    <div class="bob-sim" data-bob-sim data-enter-stage>
+      <script type="application/json" data-bob-sim-data set:html={JSON.stringify(sim)} />
+      <p class="bob-sim__hint" id="bob-sim-hint"><span class="bob-sim__hint-dot" aria-hidden="true"></span>{BOB_HERO.tryHint}</p>
+
+      <div class="bob-phone" role="region" aria-label={`Example booking page for ${HERITAGE_DEMO_SHOP_NAME}, a fictional demonstration shop`} aria-describedby="bob-sim-hint">
+        <div class="bob-phone__screen">
+          <header class="bob-phone__head">
+            <img
+              class="bob-phone__logo"
+              src={HERITAGE_LOCKUP.src}
+              alt={HERITAGE_LOCKUP.alt}
+              width={HERITAGE_LOCKUP.width}
+              height={HERITAGE_LOCKUP.height}
+              decoding="async"
+              fetchpriority="low"
+            />
+            <ol class="bob-phone__steps" aria-label="Booking steps">
+              {STEPS.map((label, i) => (
+                <li class:list={['bob-phone__step', { 'is-current': i === 0 }]} data-bob-progress={i}>
+                  <span class="bob-phone__step-dot" aria-hidden="true">{i + 1}</span>
+                  <span class="bob-phone__step-label">{label}</span>
+                </li>
+              ))}
+            </ol>
+          </header>
+
+          <div class="bob-phone__body" data-bob-body>
+            <!-- Step 1 · service -->
+            <div class="bob-pane is-active" role="group" aria-labelledby="bob-pane-service" data-bob-pane="service">
+              <p class="bob-pane__title" id="bob-pane-service">Choose a service</p>
+              <p class="bob-pane__hint">Pick what you need</p>
+              <ul class="bob-list">
+                {sim.services.map((service) => (
+                  <li>
+                    <button type="button" class="bob-row" data-bob-service={service.id}>
+                      <span class="bob-row__main">
+                        <span class="bob-row__name">{service.name}</span>
+                        <span class="bob-row__meta">{service.duration} min</span>
+                      </span>
+                      <span class="bob-row__price">{poundsLabel(service.pricePence)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- Step 2 · barber -->
+            <div class="bob-pane" role="group" aria-labelledby="bob-pane-barber" data-bob-pane="barber" hidden>
+              <p class="bob-pane__title" id="bob-pane-barber">Choose a barber</p>
+              <p class="bob-pane__hint">Who should take you</p>
+              <ul class="bob-list">
+                {sim.barbers.map((barber) => (
+                  <li>
+                    <button type="button" class="bob-row bob-row--barber" data-bob-barber={barber.id} disabled={!barber.working}>
+                      <img class="bob-row__face" src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                      <span class="bob-row__main">
+                        <span class="bob-row__name">{barber.name}</span>
+                        <span class="bob-row__meta">{barber.working ? barber.role : 'Off on this day'}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- Step 3 · time (filled from the diary) -->
+            <div class="bob-pane" role="group" aria-labelledby="bob-pane-time" data-bob-pane="time" hidden>
+              <p class="bob-pane__title" id="bob-pane-time">Pick a time</p>
+              <p class="bob-pane__hint"><span data-bob-time-hint>Free times for this service</span> · Example weekday</p>
+              <div class="bob-times" data-bob-times></div>
+            </div>
+
+            <!-- Step 4 · details -->
+            <div class="bob-pane" role="group" aria-labelledby="bob-pane-details" data-bob-pane="details" hidden>
+              <p class="bob-pane__title" id="bob-pane-details">Check and confirm</p>
+              <p class="bob-pane__hint">Name and email go here on a live shop</p>
+              <dl class="bob-summary">
+                <div><dt>Service</dt><dd data-bob-out="service"></dd></div>
+                <div><dt>Barber</dt><dd data-bob-out="barber"></dd></div>
+                <div><dt>Time</dt><dd data-bob-out="time"></dd></div>
+                <div class="bob-summary__total"><dt>Pay at the shop</dt><dd data-bob-out="price"></dd></div>
+              </dl>
+              <p class="bob-pane__note">This shop takes payment in the chair. Yours can ask for a £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit or the full price instead.</p>
+              <button type="button" class="bob-confirm" data-bob-confirm>Confirm booking</button>
+            </div>
+
+            <!-- Step 5 · confirmed -->
+            <div class="bob-pane bob-pane--done" role="group" aria-labelledby="bob-pane-done" data-bob-pane="done" hidden>
+              <span class="bob-done__badge" set:html={CHECK} />
+              <p class="bob-pane__title" id="bob-pane-done">You’re booked</p>
+              <p class="bob-done__line" data-bob-out="done"></p>
+              <p class="bob-pane__note">On a live shop a confirmation email follows straight away.</p>
+              <button type="button" class="bob-again" data-bob-again>Book another</button>
+            </div>
+          </div>
+
+          <footer class="bob-phone__foot">
+            <button type="button" class="bob-back" data-bob-back hidden><span set:html={BACK} />Back</button>
+            <span class="bob-phone__demo">Demo shop · nothing is booked or charged</span>
+          </footer>
+        </div>
+      </div>
+
+      <div class="bob-diary" aria-label={`${HERITAGE_DEMO_SHOP_NAME} diary for an example weekday`} data-bob-diary>
+        <div class="bob-diary__head">
+          <p class="bob-diary__title">Shop diary</p>
+          <p class="bob-diary__day">Example weekday · {minuteLabel(sim.open)}–{minuteLabel(sim.close)}</p>
+        </div>
+        <div class="bob-diary__grid" style={`--span:${span}`}>
+          <div class="bob-diary__hours" aria-hidden="true">
+            {hours.map((m) => <span style={`--s:${m - sim.open}`}>{minuteLabel(m)}</span>)}
+          </div>
+          {sim.barbers.map((barber) => (
+            <div class:list={['bob-diary__col', { 'is-off': !barber.working }]} data-bob-col={barber.id}>
+              <p class="bob-diary__who">
+                <img src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                <span>{barber.firstName}</span>
+              </p>
+              <ul class="bob-diary__track" aria-label={`${barber.name}: ${barber.working ? `${barber.appointments.length} appointments` : 'off on this day'}`}>
+                {barber.working ? (
+                  barber.appointments.map((a) => (
+                    <li
+                      class:list={['bob-appt', { 'bob-appt--short': a.end - a.start < 40 }]}
+                      style={`--s:${a.start - sim.open};--d:${a.end - a.start}`}
+                      title={`${minuteLabel(a.start)}–${minuteLabel(a.end)} ${a.service}`}
+                    >
+                      <span class="bob-appt__time">{minuteLabel(a.start)}</span>
+                      <span class="bob-appt__name">{a.service}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li class="bob-diary__off">Off</li>
+                )}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p class="sr-only" aria-live="polite" data-bob-sim-status></p>
+    </div>
+  </div>
+</section>

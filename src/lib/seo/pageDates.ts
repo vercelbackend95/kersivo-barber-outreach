@@ -4,7 +4,7 @@ import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
 import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { BARBER_COST_CALCULATOR_LAST_UPDATED_ISO, BARBER_COST_CALCULATOR_PAGE_PATH } from './barberCostCalculatorPage';
-import { BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
+import { BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
 import {
   CANCELLATION_POLICY_LAST_UPDATED_ISO,
   CANCELLATION_POLICY_PAGE_PATH,
@@ -47,7 +47,8 @@ import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } fro
  */
 export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-11-13';
 export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-11-14';
-export const BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO = '2026-10-28';
+/** /barbershop-online-booking dates itself (rebuilt 25 Nov 2026); re-exported for the sitemap. */
+export { BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO };
 
 export const STATIC_PAGE_LAST_MODIFIED: Readonly<Record<string, string>> = {
   /** Same constant as the homepage WebPage dateModified. */

@@ -1,0 +1,203 @@
+---
+/**
+ * 04 · Availability: drag a service along one real demo day (moment 2), with the start times the
+ * booking page would offer. 05 · Payments: plan, payment rule and price give the split between
+ * online and in the shop, worked out with the live booking-payment policy.
+ * Both render a complete, readable first state without JavaScript.
+ */
+import {
+  buildBookingSimulatorData,
+  judgeStart,
+  minuteLabel,
+  offeredStarts,
+  poundsLabel,
+  scrubberServices,
+} from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { BOB_AVAILABILITY, BOB_PAYMENTS } from '@/lib/seo/barbershopOnlineBookingContent';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
+const sim = buildBookingSimulatorData();
+const barber = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
+const services = scrubberServices();
+const initialService = services.find((s) => s.name === 'Skin fade') ?? services[0]!;
+const span = sim.close - sim.open;
+const INITIAL_START = 12 * 60 + 30;
+const verdict = judgeStart(barber.appointments, sim.close, INITIAL_START, initialService.duration);
+const offered = offeredStarts(barber.appointments, sim.open, sim.close, initialService.duration);
+const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, i) => sim.open + i * 60);
+const nextAppt = !verdict.ok && verdict.reason !== 'closing' ? verdict.appointment : null;
+const initialText = verdict.ok
+  ? `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} fits. The booking page offers ${minuteLabel(INITIAL_START)}.`
+  : `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} would run into the ${nextAppt ? minuteLabel(nextAppt.start) : ''} appointment, so ${minuteLabel(INITIAL_START)} isn’t offered.`;
+
+const scrubData = {
+  open: sim.open,
+  close: sim.close,
+  step: sim.step,
+  barber: barber.firstName,
+  appointments: barber.appointments,
+  services: services.map((s) => ({ id: s.id, name: s.name, duration: s.duration })),
+  initialStart: INITIAL_START,
+  initialService: initialService.id,
+};
+
+const PRICE_START = 29;
+const PRICE_MIN = 5;
+const PRICE_MAX = 60;
+---
+
+<section class="bob-section bob-avail" id={BOB_AVAILABILITY.id} aria-labelledby="bob-avail-title">
+  <div class="bob-wrap">
+    <header class="bob-head bob-head--split">
+      <div>
+        <p class="ks-eyebrow">{BOB_AVAILABILITY.eyebrow}</p>
+        <h2 id="bob-avail-title" class="bob-h2">{BOB_AVAILABILITY.title}</h2>
+      </div>
+      <p class="bob-lead">{BOB_AVAILABILITY.lead}</p>
+    </header>
+
+    <div class="ks-glass-card ks-glass-card--accent bob-scrub" data-bob-scrub data-state={verdict.ok ? 'ok' : 'no'}>
+      <script type="application/json" data-bob-scrub-data set:html={JSON.stringify(scrubData)} />
+      <div class="bob-scrub__top">
+        <p class="bob-scrub__who">
+          <img src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
+          <span><b>{barber.name}</b><small>Example weekday · open {minuteLabel(sim.open)}–{minuteLabel(sim.close)}</small></span>
+        </p>
+        <div class="bob-seg" role="group" aria-label="Service length">
+          {services.map((s) => (
+            <button type="button" class="bob-seg__btn" aria-pressed={s.id === initialService.id ? 'true' : 'false'} data-bob-scrub-service={s.id}>
+              {s.name}<small>{s.duration} min</small>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="bob-scrub__track" data-bob-track style={`--span:${span}`}>
+        <div class="bob-scrub__hours" aria-hidden="true">
+          {hours.map((m) => <span style={`--s:${m - sim.open}`}>{minuteLabel(m).replace(':00', '')}</span>)}
+        </div>
+        <ul class="bob-scrub__appts" aria-label={`${barber.firstName}’s booked appointments`}>
+          {barber.appointments.map((a) => (
+            <li class="bob-scrub__appt" style={`--s:${a.start - sim.open};--d:${a.end - a.start}`} data-bob-appt={a.start}>
+              <span class="sr-only">{minuteLabel(a.start)} to {minuteLabel(a.end)},</span>
+              <span class="bob-scrub__appt-name">{a.service}</span>
+            </li>
+          ))}
+        </ul>
+        <div
+          class="bob-scrub__handle"
+          role="slider"
+          tabindex="0"
+          aria-label={`Start time for ${initialService.name}`}
+          aria-valuemin={sim.open}
+          aria-valuemax={sim.close - sim.step}
+          aria-valuenow={INITIAL_START}
+          aria-valuetext={`${minuteLabel(INITIAL_START)}, ${verdict.ok ? 'offered' : 'not offered'}`}
+          style={`--s:${INITIAL_START - sim.open};--d:${initialService.duration}`}
+          data-bob-handle
+        >
+          <span class="bob-scrub__grip" aria-hidden="true"></span>
+          <span class="bob-scrub__handle-time" data-bob-handle-time>{minuteLabel(INITIAL_START)}</span>
+        </div>
+      </div>
+
+      <p class="bob-scrub__readout" aria-live="polite" data-bob-readout>
+        <span class="bob-scrub__verdict" data-bob-verdict>{verdict.ok ? 'Offered' : 'Not offered'}</span>
+        <span data-bob-readout-text>{initialText}</span>
+      </p>
+
+      <div class="bob-scrub__offered">
+        <p class="bob-scrub__offered-label">Start times the booking page offers for <b data-bob-offered-name>{initialService.name}</b>:</p>
+        <div class="bob-scrub__chips" data-bob-offered>
+          {offered.map((m) => (
+            <button type="button" class="bob-chip" data-bob-jump={m}>{minuteLabel(m)}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <ul class="bob-rules">
+      {BOB_AVAILABILITY.rules.map((rule, i) => (
+        <li class="bob-rule">
+          <span class="bob-rule__num">0{i + 1}</span>
+          <h3 class="bob-rule__title">{rule.title}</h3>
+          <p>{rule.body}</p>
+        </li>
+      ))}
+    </ul>
+    <p class="bob-note">{BOB_AVAILABILITY.note}</p>
+  </div>
+</section>
+
+<section class="bob-section bob-pay" id={BOB_PAYMENTS.id} aria-labelledby="bob-pay-title">
+  <div class="bob-wrap">
+    <header class="bob-head bob-head--split">
+      <div>
+        <p class="ks-eyebrow">{BOB_PAYMENTS.eyebrow}</p>
+        <h2 id="bob-pay-title" class="bob-h2">{BOB_PAYMENTS.title}</h2>
+      </div>
+      <p class="bob-lead">{BOB_PAYMENTS.lead}</p>
+    </header>
+
+    <div class="bob-pay__grid" data-bob-pay data-plan="full">
+      <div class="bob-pay__controls" role="group" aria-label="Payment example">
+        <fieldset class="bob-field">
+          <legend class="bob-field__label">Plan</legend>
+          <div class="bob-seg bob-seg--wide">
+            <label class="bob-seg__opt"><input type="radio" name="bob-plan" value="full" checked /><span>Full KERSIVO<small>£{SAAS_MONTHLY_GBP}/month</small></span></label>
+            <label class="bob-seg__opt"><input type="radio" name="bob-plan" value="starter" /><span>KERSIVO Starter<small>£0/month</small></span></label>
+          </div>
+        </fieldset>
+        <fieldset class="bob-field" data-bob-pay-full>
+          <legend class="bob-field__label">Your shop’s rule</legend>
+          <div class="bob-seg bob-seg--wide">
+            {BOB_PAYMENTS.fullRules.map((rule) => (
+              <label class="bob-seg__opt"><input type="radio" name="bob-rule" value={rule.id} checked={rule.id === 'DEPOSIT'} /><span>{rule.label}</span></label>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset class="bob-field" data-bob-pay-starter hidden>
+          <legend class="bob-field__label">The client chooses</legend>
+          <div class="bob-seg bob-seg--wide">
+            {BOB_PAYMENTS.starterChoices.map((choice) => (
+              <label class="bob-seg__opt"><input type="radio" name="bob-choice" value={choice.id} checked={choice.id === 'DEPOSIT'} /><span>{choice.label}</span></label>
+            ))}
+          </div>
+        </fieldset>
+        <div class="bob-field">
+          <label class="bob-field__label" for="bob-price">Service price <output for="bob-price" data-bob-price-out>£{PRICE_START}</output></label>
+          <input class="bob-range" id="bob-price" type="range" min={PRICE_MIN} max={PRICE_MAX} step="1" value={PRICE_START} style={`--p:${((PRICE_START - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100}%`} data-bob-price />
+          <p class="bob-field__scale" aria-hidden="true"><span>£{PRICE_MIN}</span><span>£{PRICE_MAX}</span></p>
+        </div>
+      </div>
+
+      <div class="ks-glass-card ks-glass-card--accent bob-pay__result" aria-live="polite">
+        <p class="ks-eyebrow ks-eyebrow--neutral">The client pays</p>
+        <div class="bob-pay__bar" aria-hidden="true">
+          <span class="bob-pay__bar-now" data-bob-bar-now style={`--f:${5 / PRICE_START}`}></span>
+        </div>
+        <dl class="bob-pay__figures">
+          <div class="bob-pay__fig bob-pay__fig--now">
+            <dt>Online, when booking</dt>
+            <dd data-bob-pay-now>£5</dd>
+          </div>
+          <div class="bob-pay__fig">
+            <dt>In the shop</dt>
+            <dd data-bob-pay-shop>{poundsLabel((PRICE_START - 5) * 100)}</dd>
+          </div>
+        </dl>
+        <dl class="bob-pay__rows">
+          <div><dt>Service price</dt><dd data-bob-pay-total>£{PRICE_START}</dd></div>
+          <div><dt>KERSIVO commission</dt><dd>£0</dd></div>
+          <div><dt>Stripe processing fee</dt><dd data-bob-pay-stripe>On the online part</dd></div>
+        </dl>
+        <p class="bob-pay__explain" data-bob-pay-explain>The £5 deposit counts towards the £{PRICE_START} price. The rest is paid in the shop.</p>
+      </div>
+    </div>
+
+    <ul class="bob-notes">
+      {BOB_PAYMENTS.notes.map((note) => <li>{note}</li>)}
+    </ul>
+    <p class="bob-note">{BOB_PAYMENTS.disclaimer}</p>
+  </div>
+</section>

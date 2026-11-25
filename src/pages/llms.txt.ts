@@ -27,7 +27,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     '## Product',
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
-    link('/barbershop-online-booking', 'Online booking', 'how clients book, deposits and payment options on Starter and Full'),
+    link('/barbershop-online-booking', 'Barbershop online booking guide', 'how clients book step by step, how free times are worked out, deposits and payments on Starter and Full, reminders, and a checklist for choosing a system'),
     link(
       '/starter',
       'KERSIVO Starter',

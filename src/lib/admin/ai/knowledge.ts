@@ -31,7 +31,7 @@ import {
   STANDARD_SITE_NOT_BESPOKE_CLAIM,
   STANDARD_SITE_SCOPE_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
-import { HOMEPAGE_FAQ_ITEMS, ONLINE_BOOKING_MOVED_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
+import { HOMEPAGE_FAQ_ITEMS, ONLINE_BOOKING_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
 import { ADMIN_SECTIONS_PLAYBOOK } from './adminSections';
 import { ADMIN_RESULTS_PLAYBOOK } from './adminResultsPlaybook';
 
@@ -153,7 +153,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   // Orphaned FAQ_ITEMS kept out of AI knowledge — aggressive ownership / competitor wording.
   faqToSection('faq-booking-landing', 'Booking-system FAQ', [
     ...HOMEPAGE_FAQ_ITEMS,
-    ...ONLINE_BOOKING_MOVED_FAQ_ITEMS,
+    ...ONLINE_BOOKING_FAQ_ITEMS,
   ]),
 ];
 
