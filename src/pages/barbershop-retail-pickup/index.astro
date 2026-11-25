@@ -1,0 +1,505 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import {
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_LABEL,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import { offer } from '@/content/offer';
+import {
+  RETAIL_PICKUP_BENEFITS as BENEFITS,
+  RETAIL_PICKUP_BREADCRUMB_NAME,
+  RETAIL_PICKUP_CLOSE as CLOSE,
+  RETAIL_PICKUP_COMPARE as COMPARE,
+  RETAIL_PICKUP_COUNTER as COUNTER,
+  RETAIL_PICKUP_DEMO_HREF,
+  RETAIL_PICKUP_DESCRIPTION,
+  RETAIL_PICKUP_FAQ_ITEMS,
+  RETAIL_PICKUP_HERO as HERO,
+  RETAIL_PICKUP_JOURNEY as JOURNEY,
+  RETAIL_PICKUP_LAST_UPDATED_ISO,
+  RETAIL_PICKUP_LAST_UPDATED_LABEL,
+  RETAIL_PICKUP_NEW as NEW,
+  RETAIL_PICKUP_PAGE_PATH,
+  RETAIL_PICKUP_RELATED_LINKS,
+  RETAIL_PICKUP_SETUP as SETUP,
+  RETAIL_PICKUP_TITLE,
+  buildRetailPickupJsonLd,
+} from '@/lib/seo/retailPickupPage';
+import { RESERVED_UNPAID_STATUS_LABEL } from '@/lib/shop/retailPaymentMode';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/retail-pickup.css';
+
+const currentYear = new Date().getFullYear();
+const freePreview = isFreePreviewFlowEnabled();
+const primaryCta = freePreview
+  ? { href: FREE_PREVIEW_CTA_HREF, label: FREE_PREVIEW_CTA_LABEL, track: FREE_PREVIEW_CTA_TRACK }
+  : { href: SUBSCRIBE_NOW_CTA_HREF, label: offer.cta.subscribeDirect, track: SUBSCRIBE_NOW_CTA_TRACK };
+
+const gbp = (pence: number) =>
+  new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pence / 100);
+const initialSales = COUNTER.orders.filter((o) => o.paid).reduce((sum, o) => sum + o.totalPence, 0);
+const initialReserved = COUNTER.orders.filter((o) => !o.paid).reduce((sum, o) => sum + o.totalPence, 0);
+const initialPaidCount = COUNTER.orders.filter((o) => o.paid).length;
+
+const BAG = [
+  { name: 'Matte Pomade', qty: 1, pence: 1800 },
+  { name: 'Beard Oil', qty: 1, pence: 2200 },
+];
+const BAG_TOTAL = BAG.reduce((sum, line) => sum + line.pence * line.qty, 0);
+const SHELF = [
+  { name: 'Matte Pomade', pence: 1800, tone: 'steel' },
+  { name: 'Beard Oil', pence: 2200, tone: 'amber' },
+  { name: 'Barber Wash', pence: 1500, tone: 'ink' },
+  { name: 'Beard Balm', pence: 1600, tone: 'cream' },
+];
+---
+
+<LandingLayout
+  title={RETAIL_PICKUP_TITLE}
+  description={RETAIL_PICKUP_DESCRIPTION}
+  canonicalPath={RETAIL_PICKUP_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildRetailPickupJsonLd()]}
+>
+  <main class="rp landing-overflow-guard" data-rp data-mode="upfront">
+    <script is:inline>
+      // Hide the hero lines before first paint only when they will animate; a failsafe shows them.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('rp-js');
+        window.setTimeout(function () {
+          var hero = document.querySelector('[data-rp-hero]');
+          if (hero) hero.classList.add('is-in');
+        }, 2500);
+      }
+    </script>
+
+    <!-- 1 · Hero: the pickup spot (three.js) -->
+    <section class="rp-hero" aria-labelledby="rp-hero-title" data-rp-hero>
+      <div class="rp-wrap rp-hero__grid">
+        <div class="rp-hero__copy">
+          <nav class="rp-breadcrumb" aria-label="Breadcrumb" data-rp-enter>
+            <ol>
+              <li><a href="/">Home</a></li>
+              <li aria-hidden="true">/</li>
+              <li><span aria-current="page">{RETAIL_PICKUP_BREADCRUMB_NAME}</span></li>
+            </ol>
+          </nav>
+          <p class="ks-eyebrow rp-hero__eyebrow" data-rp-enter>{HERO.eyebrow}</p>
+          <h1 id="rp-hero-title" class="rp-hero__title">
+            {HERO.titleLines.map((line, i) => (
+              <span class="rp-hero__line">
+                <span class:list={['rp-hero__line-inner', { 'rp-red': i === 1 }]} data-rp-rise>{line}</span>
+              </span>
+            ))}
+          </h1>
+          <p class="rp-hero__lead" data-rp-enter>{HERO.lead}</p>
+          <div class="rp-hero__actions" data-rp-enter>
+            <a class="btn btn--primary btn--lg rp-btn" href={primaryCta.href} data-track={primaryCta.track} data-track-placement="retail_pickup_hero">
+              {primaryCta.label}
+              <span class="rp-btn__arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="rp-link" href={RETAIL_PICKUP_DEMO_HREF} data-track="retail_demo_click" data-track-placement="retail_pickup_hero">{HERO.demoLabel}</a>
+          </div>
+          <ul class="rp-hero__facts" data-rp-enter>
+            {HERO.facts.map((fact) => <li>{fact}</li>)}
+          </ul>
+          <p class="rp-hero__updated" data-rp-enter>
+            Updated <time datetime={RETAIL_PICKUP_LAST_UPDATED_ISO}>{RETAIL_PICKUP_LAST_UPDATED_LABEL}</time>
+          </p>
+        </div>
+
+        <div class="rp-hero__visual" aria-hidden="true" data-rp-visual>
+          <canvas class="rp-hero__canvas" data-rp-canvas></canvas>
+          <div class="rp-hero__still"></div>
+          <div class="rp-ticket ks-glass-card ks-glass-card--accent" data-rp-ticket>
+            <p class="rp-ticket__label">Pickup reference</p>
+            <p class="rp-ticket__ref">KRV-7QM4XA</p>
+            <ul class="rp-ticket__items">
+              {BAG.map((line) => <li><span>{line.name} × {line.qty}</span><span>{gbp(line.pence * line.qty)}</span></li>)}
+            </ul>
+            <p class="rp-ticket__status">
+              <span class="rp-dot"></span>
+              <span class="rp-ticket__state rp-ticket__state--open">Ready to collect</span>
+              <span class="rp-ticket__state rp-ticket__state--done">Collected</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · What's new: the payment switch -->
+    <section class="rp-section rp-modes" id={NEW.id} aria-labelledby="rp-modes-title" data-rp-modes>
+      <div class="rp-wrap rp-split">
+        <div class="rp-modes__copy">
+          <p class="ks-eyebrow">{NEW.eyebrow}</p>
+          <h2 id="rp-modes-title" class="rp-h2">{NEW.heading}</h2>
+          <p class="rp-lead">{NEW.lead}</p>
+
+          <fieldset class="rp-switch">
+            <legend class="sr-only">Show checkout for</legend>
+            {NEW.modes.map((mode, i) => (
+              <label class="rp-switch__option">
+                <input type="radio" name="rp-mode" value={mode.id} checked={i === 0} />
+                <span>{mode.short}</span>
+              </label>
+            ))}
+            <span class="rp-switch__thumb" aria-hidden="true"></span>
+          </fieldset>
+
+          {NEW.modes.map((mode, i) => (
+            <div class="rp-modes__panel" data-rp-mode-panel={mode.id} hidden={i !== 0}>
+              <h3 class="rp-h3">{mode.label}</h3>
+              <ul class="rp-ticks">
+                {mode.points.map((point) => <li>{point}</li>)}
+              </ul>
+            </div>
+          ))}
+          <p class="rp-note">{NEW.footnote}</p>
+        </div>
+
+        <div class="rp-checkout ks-glass-card ks-glass-card--accent" aria-hidden="true">
+          <div class="rp-checkout__head">
+            <p class="rp-checkout__title">Your bag</p>
+            <p class="rp-checkout__shop">Collect in shop</p>
+          </div>
+          <ul class="rp-checkout__lines">
+            {BAG.map((line) => (
+              <li>
+                <span class:list={['rp-swatch', line.name === 'Beard Oil' ? 'rp-swatch--amber' : 'rp-swatch--steel']}></span>
+                <span class="rp-checkout__name">{line.name}<small>Qty {line.qty}</small></span>
+                <span class="rp-checkout__price">{gbp(line.pence * line.qty)}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="rp-checkout__total"><span>Subtotal</span><span>{gbp(BAG_TOTAL)}</span></p>
+
+          {NEW.modes.map((mode, i) => (
+            <div class="rp-checkout__view" data-rp-mode-view={mode.id} hidden={i !== 0}>
+              {mode.id === 'collection' && (
+                <div class="rp-checkout__fields">
+                  <span class="rp-field"><small>Name</small>Daniel R.</span>
+                  <span class="rp-field"><small>Email</small>daniel@example.com</span>
+                  <span class="rp-field rp-field--optional"><small>Phone · optional</small>&nbsp;</span>
+                </div>
+              )}
+              <p class="rp-checkout__note">{mode.note}</p>
+              <span class="rp-checkout__cta">{mode.button}</span>
+              {mode.id === 'upfront' ? (
+                <p class="rp-checkout__by"><span class="rp-lock"></span>Secure card payment by Stripe</p>
+              ) : (
+                <p class="rp-checkout__by"><span class="rp-dot"></span>Shows in Orders as {RESERVED_UNPAID_STATUS_LABEL}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · How it works: the pinned journey (dealt moment) -->
+    <section class="rp-section rp-journey" id={JOURNEY.id} aria-labelledby="rp-journey-title" data-rp-journey>
+      <div class="rp-wrap rp-split rp-journey__grid">
+        <div class="rp-journey__copy">
+          <p class="ks-eyebrow">{JOURNEY.eyebrow}</p>
+          <h2 id="rp-journey-title" class="rp-h2">{JOURNEY.heading}</h2>
+          <ol class="rp-chapters">
+            {JOURNEY.chapters.map((chapter, i) => (
+              <li class:list={['rp-chapter', { 'is-active': i === 0 }]}>
+                <button type="button" class="rp-chapter__button" data-rp-chapter aria-pressed={i === 0 ? 'true' : 'false'}>
+                  <span class="rp-chapter__step">{chapter.step}</span>
+                  <span class="rp-chapter__title">{chapter.title}</span>
+                </button>
+                <p class="rp-chapter__body">{chapter.body}</p>
+              </li>
+            ))}
+          </ol>
+          <div class="rp-journey__track" aria-hidden="true"><span data-rp-progress></span></div>
+        </div>
+
+        <div class="rp-phone" data-rp-frame data-step="0" aria-hidden="true">
+          <div class="rp-phone__bar"><span>Heritage Grooming · Shop</span></div>
+          <div class="rp-phone__screens">
+            <div class="rp-screen" data-rp-screen>
+              <p class="rp-screen__eyebrow" data-rp-pop>Shop · Pick up in store</p>
+              <ul class="rp-shelf">
+                {SHELF.map((item, i) => (
+                  <li class:list={['rp-shelf__item', { 'is-added': i < 2 }]} data-rp-pop>
+                    <span class:list={['rp-shelf__img', `rp-shelf__img--${item.tone}`]}></span>
+                    <span class="rp-shelf__name">{item.name}</span>
+                    <span class="rp-shelf__price">{gbp(item.pence)}</span>
+                    <span class="rp-shelf__add">{i < 2 ? 'Added' : 'Add'}</span>
+                  </li>
+                ))}
+              </ul>
+              <p class="rp-screen__bagbar" data-rp-pop><span>Bag · 2 items</span><span>{gbp(BAG_TOTAL)}</span></p>
+            </div>
+            <div class="rp-screen" data-rp-screen>
+              <p class="rp-screen__eyebrow" data-rp-pop>Order confirmed</p>
+              <p class="rp-screen__ref" data-rp-pop>KRV-7QM4XA</p>
+              <div class="rp-mail" data-rp-pop>
+                <p class="rp-mail__subject">Order KRV-7QM4XA — pick up at Heritage Grooming</p>
+                <ul>
+                  {BAG.map((line) => <li>{line.name} × {line.qty} — {gbp(line.pence * line.qty)}</li>)}
+                </ul>
+                <p class="rp-mail__total">Total {gbp(BAG_TOTAL)}</p>
+                <p class="rp-mail__hint">Please quote your reference when collecting.</p>
+              </div>
+            </div>
+            <div class="rp-screen" data-rp-screen>
+              <p class="rp-screen__eyebrow" data-rp-pop>Orders · To collect</p>
+              <ul class="rp-mini-orders">
+                {COUNTER.orders.map((order) => (
+                  <li data-rp-pop>
+                    <span class="rp-mini-orders__ref">{order.reference}</span>
+                    <span class="rp-mini-orders__client">{order.client}</span>
+                    <span class:list={['rp-chip', order.paid ? 'rp-chip--paid' : 'rp-chip--unpaid']}>{order.paid ? 'Paid' : 'Pay in shop'}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div class="rp-screen rp-screen--done" data-rp-screen>
+              <span class="rp-done" data-rp-pop>
+                <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="22" /><path d="M14 25l7 7 13-15" /></svg>
+              </span>
+              <p class="rp-screen__ref" data-rp-pop>Collected</p>
+              <p class="rp-screen__meta" data-rp-pop>KRV-7QM4XA · Paid {gbp(BAG_TOTAL)}</p>
+              <p class="rp-screen__hint" data-rp-pop>Counted in today’s sales</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · The counter: a working Orders view -->
+    <section class="rp-section rp-counter" id={COUNTER.id} aria-labelledby="rp-counter-title" data-rp-counter>
+      <div class="rp-wrap">
+        <div class="rp-section__head">
+          <p class="ks-eyebrow">{COUNTER.eyebrow}</p>
+          <h2 id="rp-counter-title" class="rp-h2">{COUNTER.heading}</h2>
+          <p class="rp-lead">{COUNTER.lead}</p>
+        </div>
+
+        <div class="rp-app ks-glass-card">
+          <div class="rp-app__chrome" aria-hidden="true"><span></span><span></span><span></span><p>Orders · {COUNTER.shopName}</p></div>
+          <div class="rp-app__stats">
+            <div class="rp-stat">
+              <p class="rp-stat__label">Sales</p>
+              <p class="rp-stat__value" data-rp-sales>{gbp(initialSales)}</p>
+              <p class="rp-stat__meta" data-rp-sales-count>{initialPaidCount} paid order</p>
+            </div>
+            <div class="rp-stat">
+              <p class="rp-stat__label">To pay in shop</p>
+              <p class="rp-stat__value rp-stat__value--muted" data-rp-reserved>{gbp(initialReserved)}</p>
+              <p class="rp-stat__meta">Not counted until paid</p>
+            </div>
+          </div>
+          <div class="rp-app__toolbar">
+            <div class="rp-filters" role="group" aria-label="Filter orders">
+              <button type="button" class="rp-filter" data-rp-filter="all" aria-pressed="false">All <span>{COUNTER.orders.length}</span></button>
+              <button type="button" class="rp-filter" data-rp-filter="open" aria-pressed="true">To collect <span data-rp-open-count>{COUNTER.orders.length}</span></button>
+              <button type="button" class="rp-filter" data-rp-filter="collected" aria-pressed="false">Collected <span data-rp-done-count>0</span></button>
+            </div>
+            <button type="button" class="rp-reset" data-rp-reset>{COUNTER.resetLabel}</button>
+          </div>
+          <table class="rp-orders">
+            <caption class="sr-only">Pickup orders at {COUNTER.shopName}</caption>
+            <thead>
+              <tr>
+                <th scope="col">Reference</th>
+                <th scope="col">Client</th>
+                <th scope="col">Items</th>
+                <th scope="col">Total</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="sr-only">Action</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {COUNTER.orders.map((order) => (
+                <tr class="rp-order" data-rp-order data-reference={order.reference} data-total={order.totalPence} data-paid={String(order.paid)} data-state={order.paid ? 'paid' : 'unpaid'}>
+                  <th scope="row" class="rp-order__ref">{order.reference}</th>
+                  <td class="rp-order__client">{order.client}</td>
+                  <td class="rp-order__items">{order.items}</td>
+                  <td class="rp-order__total">{gbp(order.totalPence)}</td>
+                  <td class="rp-order__status">
+                    <span class="rp-chip rp-chip--paid rp-order__chip-paid">Paid · To collect</span>
+                    <span class="rp-chip rp-chip--unpaid rp-order__chip-unpaid">{RESERVED_UNPAID_STATUS_LABEL}</span>
+                    <span class="rp-chip rp-chip--done rp-order__chip-done">Collected</span>
+                  </td>
+                  <td class="rp-order__action">
+                    <button type="button" class="rp-action" data-rp-action>
+                      <span class="rp-action__collect">Collect<span class="sr-only"> {order.reference}</span></span>
+                      <span class="rp-action__pay">Take payment<span class="sr-only"> for {order.reference}</span></span>
+                    </button>
+                    <span class="rp-order__done-label">Done</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p class="rp-app__empty" data-rp-empty hidden>Nothing here yet. Orders move to Collected once you hand them over.</p>
+          <p class="sr-only" aria-live="polite" data-rp-announce></p>
+        </div>
+        <p class="rp-note">{COUNTER.fictionalNote} No real orders or payments are involved.</p>
+      </div>
+    </section>
+
+    <!-- 5 · Which to choose -->
+    <section class="rp-section rp-compare" id={COMPARE.id} aria-labelledby="rp-compare-title">
+      <div class="rp-wrap">
+        <div class="rp-section__head">
+          <p class="ks-eyebrow">{COMPARE.eyebrow}</p>
+          <h2 id="rp-compare-title" class="rp-h2">{COMPARE.heading}</h2>
+        </div>
+        <div class="rp-table-wrap">
+          <table class="rp-table">
+            <caption class="sr-only">Full payment upfront compared with pay when collecting</caption>
+            <thead>
+              <tr>
+                <td></td>
+                <th scope="col" class="rp-table__col rp-table__col--upfront">{COMPARE.columns[0]}</th>
+                <th scope="col" class="rp-table__col rp-table__col--collection">{COMPARE.columns[1]}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE.rows.map((row) => (
+                <tr>
+                  <th scope="row">{row.label}</th>
+                  <td class="rp-table__col rp-table__col--upfront" data-label={COMPARE.columns[0]}>{row.upfront}</td>
+                  <td class="rp-table__col rp-table__col--collection" data-label={COMPARE.columns[1]}>{row.collection}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="rp-note">{COMPARE.note}</p>
+      </div>
+    </section>
+
+    <!-- 6 · Why pickup -->
+    <section class="rp-section rp-benefits" id={BENEFITS.id} aria-labelledby="rp-benefits-title">
+      <div class="rp-wrap">
+        <div class="rp-section__head">
+          <p class="ks-eyebrow">{BENEFITS.eyebrow}</p>
+          <h2 id="rp-benefits-title" class="rp-h2">{BENEFITS.heading}</h2>
+        </div>
+        <ul class="rp-benefits__grid">
+          {BENEFITS.items.map((item, i) => (
+            <li class="rp-benefit ks-glass-card">
+              <span class="rp-benefit__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3 class="rp-h3">{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7 · Get started -->
+    <section class="rp-section rp-setup" id={SETUP.id} aria-labelledby="rp-setup-title">
+      <div class="rp-wrap rp-split">
+        <div>
+          <p class="ks-eyebrow">{SETUP.eyebrow}</p>
+          <h2 id="rp-setup-title" class="rp-h2">{SETUP.heading}</h2>
+          <ol class="rp-steps">
+            {SETUP.steps.map((step) => (
+              <li>
+                <h3 class="rp-h3">{step.title}</h3>
+                <p>{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <aside class="rp-plan ks-glass-card ks-glass-card--accent" aria-labelledby="rp-plan-title">
+          <p class="ks-eyebrow">Plan</p>
+          <h3 id="rp-plan-title" class="rp-plan__title">{offer.plans.full}</h3>
+          <p class="rp-plan__price"><span>{offer.price.full}</span> {offer.price.fullQualifier}</p>
+          <p class="rp-plan__body">{SETUP.planNote}</p>
+          <p class="rp-plan__small">{SETUP.fairUse}</p>
+          <a class="btn btn--primary btn--md rp-btn rp-plan__cta" href={primaryCta.href} data-track={primaryCta.track} data-track-placement="retail_pickup_plan">
+            {primaryCta.label}
+          </a>
+          <a class="rp-link" href="/pricing#plan">Compare Full and Starter</a>
+        </aside>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Retail pickup questions"
+      subHeading="Payment options, fees, stock and what your clients see."
+      supportHeading="Selling something unusual?"
+      supportText="Tell us what you stock and how you want clients to pay, and we’ll reply by email."
+      supportLinkLabel="Contact KERSIVO"
+      supportLinkHref="/#contact"
+      faqs={[...RETAIL_PICKUP_FAQ_ITEMS]}
+    />
+
+    <!-- 8 · Close -->
+    <section class="rp-close" aria-labelledby="rp-close-title">
+      <div class="rp-wrap rp-close__inner">
+        <h2 id="rp-close-title" class="rp-close__title">{CLOSE.heading}</h2>
+        <p class="rp-lead rp-close__lead">{CLOSE.lead}</p>
+        <div class="rp-hero__actions rp-close__actions">
+          <a class="btn btn--primary btn--lg rp-btn" href={primaryCta.href} data-track={primaryCta.track} data-track-placement="retail_pickup_final">
+            {primaryCta.label}
+            <span class="rp-btn__arrow" aria-hidden="true">→</span>
+          </a>
+          {freePreview ? (
+            <a class="rp-link" href={SUBSCRIBE_NOW_CTA_HREF} data-track={SUBSCRIBE_NOW_CTA_TRACK} data-track-placement="retail_pickup_final">{SUBSCRIBE_NOW_CTA_LABEL}</a>
+          ) : (
+            <a class="rp-link" href={RETAIL_PICKUP_DEMO_HREF} data-track="retail_demo_click" data-track-placement="retail_pickup_final">{HERO.demoLabel}</a>
+          )}
+        </div>
+        <nav class="rp-related" aria-label="Related pages">
+          <ul>
+            {RETAIL_PICKUP_RELATED_LINKS.map((link) => (
+              <li>
+                <a href={link.href}>
+                  <span class="rp-related__label">{link.label} <span aria-hidden="true">→</span></span>
+                  <span class="rp-related__desc">{link.description}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </section>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initRetailPickup } from '@/lib/landing/retailPickup/experience';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main[data-rp]');
+    if (!root || root.dataset.rpBound === 'true') return;
+    root.dataset.rpBound = 'true';
+    const cleanup = initRetailPickup(root);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

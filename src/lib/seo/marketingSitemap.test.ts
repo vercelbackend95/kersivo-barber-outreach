@@ -28,6 +28,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barbershop-website-design',
   'https://kersivo.co.uk/barbershop-online-booking',
   'https://kersivo.co.uk/barbershop-reports',
+  'https://kersivo.co.uk/barbershop-retail-pickup',
   'https://kersivo.co.uk/about',
   'https://kersivo.co.uk/compare',
   'https://kersivo.co.uk/booksy-alternative',

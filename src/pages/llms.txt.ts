@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { PRICE_LIST_LLMS_SUMMARY } from '@/lib/seo/priceListTemplatePage';
+import { RETAIL_PICKUP_LLMS_SUMMARY, RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/retailPickupPage';
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
@@ -30,6 +31,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
     link('/barbershop-online-booking', 'Online booking', 'how clients book, deposits and payment options on Starter and Full'),
+    link(RETAIL_PICKUP_PAGE_PATH, 'Retail pickup', RETAIL_PICKUP_LLMS_SUMMARY),
     link(
       '/starter',
       'KERSIVO Starter',

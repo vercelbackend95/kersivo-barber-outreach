@@ -11,12 +11,12 @@ import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAG
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
 import { KAR_PAGE_PATH } from '@/lib/seo/adminReportsExperience';
+import { RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/retailPickupPage';
 import {
   HERITAGE_ADMIN_DASHBOARD_HREF,
   HERITAGE_ADMIN_DEMO_PATH,
   HERITAGE_DEMO_BOOK_HREF,
   HERITAGE_DEMO_SERVICES_HREF,
-  HERITAGE_DEMO_SHOP_HREF,
   KERSIVO_LIVE_DEMO_HREF,
 } from '@/lib/demo/heritage/links';
 
@@ -179,7 +179,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-retail',
     label: 'Retail pickup',
     description: 'Sell products for collection in your shop.',
-    href: HERITAGE_DEMO_SHOP_HREF,
+    href: RETAIL_PICKUP_PAGE_PATH,
     group: 'product',
     section: 'included',
     icon: 'retail',

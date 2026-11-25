@@ -30,7 +30,6 @@ import {
   HERITAGE_DEMO_BASE_PATH,
   HERITAGE_DEMO_BOOK_HREF,
   HERITAGE_DEMO_SERVICES_HREF,
-  HERITAGE_DEMO_SHOP_HREF,
   HERITAGE_DEMO_SITE_HREF,
 } from '@/lib/demo/heritage/links';
 
@@ -87,7 +86,7 @@ describe('marketing navigation config', () => {
       '/barbershop-websites',
       '/barbershop-online-booking',
       '/barbershop-reports',
-      HERITAGE_DEMO_SHOP_HREF,
+      '/barbershop-retail-pickup',
       '/starter',
     ]);
     expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
