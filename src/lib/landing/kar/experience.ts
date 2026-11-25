@@ -1,11 +1,12 @@
 /**
  * Client choreography for /barbershop-reports.
  *
- * - Hero: lines rise once on load; the three.js booking field loads after first paint and turns
- *   into a top-down heatmap as the hero scrolls away (scroll-linked inside the hero only).
- * - Moment 1: the "working day" section pins on desktop and walks four dashboard screens with the
- *   scroll; the chapter buttons work everywhere (and are the only control on touch and reduced motion).
- * - Studio: range and metric switches tween the KPI numbers and morph the chart.
+ * - Hero: lines rise once on load; the three.js Reports chart loads after first paint, draws its
+ *   ribbons in, and turns to face the viewer as the hero scrolls away (scroll-linked, hero only).
+ * - Moment 1: the dashboard film. The section pins on desktop and the scroll walks five dashboard
+ *   screens in sidebar order; Reports takes two beats and steps through 1D, 1W, 1M and 1Y, tweening
+ *   the KPIs and morphing the chart. The reel buttons work everywhere (and are the only control on
+ *   touch and under reduced motion).
  * - Moment 2: the statement's words light up with the scroll.
  * - Cards: 3 s loops, played only while on screen, restart on hover, with a pause control.
  *
@@ -16,7 +17,16 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { HeroScene } from './heroScene';
 import type { KarRangeKey, KarStudioRange } from './reportsDemo';
-import { karChartPaths, karKpis, karMetricTotal, normalise, resample, type KarMetricKey } from './studioFormat';
+import {
+  karChartPaths,
+  karKpis,
+  karMetricTotal,
+  karPointPercent,
+  karScale,
+  normalise,
+  resample,
+  type KarMetricKey,
+} from './studioFormat';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -62,7 +72,13 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
     try {
       const { createHeroScene } = await import('./heroScene');
       if (disposed) return;
-      scene = createHeroScene(canvas, { reducedMotion: reduced });
+      let ribbons: number[][] = [];
+      try {
+        ribbons = JSON.parse(canvas.dataset.karRibbons ?? '[]');
+      } catch {
+        ribbons = [];
+      }
+      scene = createHeroScene(canvas, { reducedMotion: reduced, ribbons });
     } catch {
       scene = null;
     }
@@ -98,99 +114,7 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   });
 }
 
-/* ---------- Moment 1: a working day ---------- */
-
-const SIDEBAR_INDEX = [0, 4, 2, 8];
-
-function initChapters(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
-  const section = root.querySelector<HTMLElement>('[data-kar-chapters]');
-  if (!section) return;
-  const pin = section.querySelector<HTMLElement>('[data-kar-pin]');
-  const stage = section.querySelector<HTMLElement>('[data-kar-stage]');
-  const tabs = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-kar-tab]'));
-  const panels = Array.from(section.querySelectorAll<HTMLElement>('[data-kar-panel]'));
-  const fills = tabs.map((tab) => tab.querySelector<HTMLElement>('[data-kar-tab-fill]'));
-  const screens = Array.from(section.querySelectorAll<HTMLElement>('[data-kar-screen]'));
-  const count = tabs.length;
-  let current = -1;
-  let pinTrigger: ScrollTrigger | null = null;
-
-  const playScreen = (screen: HTMLElement | undefined) => {
-    if (!screen || reduced) return;
-    const parts = screen.querySelectorAll('.kar-chips > *, .kar-timeline__row, .kar-client > *, .kar-stats > div, .kar-minikpis > span, .kar-bars li');
-    gsap.fromTo(parts, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.04, ease: 'power3.out', overwrite: true });
-    const blocks = screen.querySelectorAll('.kar-block');
-    if (blocks.length) gsap.fromTo(blocks, { scaleX: 0 }, { scaleX: 1, duration: 0.55, stagger: 0.015, ease: 'power3.out', transformOrigin: 'left center', overwrite: true });
-    const line = screen.querySelector('.kar-minichart__line');
-    if (line) gsap.fromTo(line, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1, ease: 'power2.inOut' });
-    const bars = screen.querySelectorAll('.kar-bars__track > span');
-    if (bars.length) gsap.fromTo(bars, { scaleX: 0 }, { scaleX: 1, duration: 0.7, stagger: 0.06, ease: 'power3.out', transformOrigin: 'left center' });
-    const score = screen.querySelector<SVGElement>('.kar-score__fill');
-    if (score) gsap.fromTo(score, { '--p': 0 }, { '--p': 1, duration: 0.9, ease: 'power3.out' });
-  };
-
-  const setChapter = (index: number) => {
-    if (index === current) return;
-    current = index;
-    tabs.forEach((tab, i) => tab.setAttribute('aria-pressed', String(i === index)));
-    panels.forEach((panel, i) => panel.classList.toggle('is-active', i === index));
-    if (stage) {
-      stage.dataset.chapter = String(index);
-      stage.style.setProperty('--kar-nav', String(SIDEBAR_INDEX[index] ?? 0));
-    }
-    screens.forEach((screen, i) => screen.classList.toggle('is-active', i === index));
-    playScreen(screens[index]);
-    if (!pinTrigger) fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === index ? 1 : 0 }));
-  };
-
-  setChapter(0);
-  // Inactive chapter text collapses only once the buttons work; without the script all four stay open.
-  section.classList.add('is-enhanced');
-
-  const onTab = (event: Event) => {
-    const index = Number((event.currentTarget as HTMLElement).dataset.karTab);
-    if (pinTrigger) {
-      const { start, end } = pinTrigger;
-      window.scrollTo({ top: start + ((index + 0.5) / count) * (end - start), behavior: 'smooth' });
-    } else {
-      setChapter(index);
-    }
-  };
-  tabs.forEach((tab) => tab.addEventListener('click', onTab));
-
-  const mm = gsap.matchMedia();
-  if (pin) {
-    mm.add('(min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference)', () => {
-      pinTrigger = ScrollTrigger.create({
-        trigger: section,
-        pin,
-        start: 'top top',
-        end: () => `+=${window.innerHeight * 2.6}`,
-        scrub: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          const p = self.progress * count;
-          setChapter(Math.min(count - 1, Math.floor(p)));
-          fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: clamp01(p - i) }));
-        },
-      });
-      return () => {
-        pinTrigger?.kill();
-        pinTrigger = null;
-        fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === current ? 1 : 0 }));
-      };
-    });
-  }
-
-  disposers.push(() => {
-    section.classList.remove('is-enhanced');
-    mm.revert();
-    tabs.forEach((tab) => tab.removeEventListener('click', onTab));
-  });
-}
-
-/* ---------- The live studio ---------- */
+/* ---------- Moment 1: the dashboard as a film ---------- */
 
 /** Animate a formatted figure by tweening the number inside it and keeping its prefix and suffix. */
 function tweenText(el: HTMLElement | null, text: string, reduced: boolean) {
@@ -217,162 +141,358 @@ function tweenText(el: HTMLElement | null, text: string, reduced: boolean) {
   });
 }
 
-function initStudio(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
-  const section = root.querySelector<HTMLElement>('[data-kar-studio]');
-  const dataEl = section?.querySelector('[data-kar-studio-data]');
-  if (!section || !dataEl) return;
+type ReportsScreen = { setRange: (key: KarRangeKey, animate: boolean) => void; draw: () => void; dispose: Cleanup };
+
+/** The Reports screen inside the film: range switches tween the KPIs and morph the chart. */
+function createReportsScreen(screen: HTMLElement, reduced: boolean): ReportsScreen | null {
+  const dataEl = screen.querySelector('[data-kar-studio-data]');
+  if (!dataEl) return null;
   let data: Record<KarRangeKey, KarStudioRange>;
   try {
     data = JSON.parse(dataEl.textContent ?? '{}');
   } catch {
-    return;
+    return null;
   }
+  const metric: KarMetricKey = 'value';
+  const rangeEls = Array.from(screen.querySelectorAll<HTMLElement>('[data-kar-range]'));
+  const thumb = screen.querySelector<HTMLElement>('[data-kar-range-thumb]');
+  const line = screen.querySelector<SVGPathElement>('[data-kar-line]');
+  const glow = screen.querySelector<SVGPathElement>('[data-kar-glow]');
+  const area = screen.querySelector<SVGPathElement>('[data-kar-area]');
+  const ticks = screen.querySelector<HTMLElement>('[data-kar-ticks]');
+  const markers = screen.querySelector<HTMLElement>('[data-kar-markers]');
+  const end = screen.querySelector<HTMLElement>('[data-kar-end]');
+  const axis = screen.querySelector<HTMLElement>('[data-kar-axis]');
+  const total = screen.querySelector<HTMLElement>('[data-kar-chart-total]');
+  const sample = screen.querySelector<HTMLElement>('[data-kar-sample]');
+  const leaders = screen.querySelector<HTMLElement>('[data-kar-leaders]');
+  const stat = (key: string) => screen.querySelector<HTMLElement>(`[data-kar-stat="${key}"]`);
 
-  const rangeBtns = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-kar-range]'));
-  const metricBtns = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-kar-metric]'));
-  const rangeThumb = section.querySelector<HTMLElement>('[data-kar-range-thumb]');
-  const metricThumb = section.querySelector<HTMLElement>('[data-kar-metric-thumb]');
-  const line = section.querySelector<SVGPathElement>('[data-kar-line]');
-  const area = section.querySelector<SVGPathElement>('[data-kar-area]');
-  const axis = section.querySelector<HTMLElement>('[data-kar-axis]');
-  const chartLabel = section.querySelector<HTMLElement>('[data-kar-chart-label]');
-  const chartTotal = section.querySelector<HTMLElement>('[data-kar-chart-total]');
-  const sample = section.querySelector<HTMLElement>('[data-kar-sample]');
-  const leaders = section.querySelector<HTMLElement>('[data-kar-leaders]');
-  const stat = (key: string) => section.querySelector<HTMLElement>(`[data-kar-stat="${key}"]`);
-
-  let range: KarRangeKey = (rangeBtns.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.karRange as KarRangeKey) ?? '7d';
-  let metric: KarMetricKey = 'bookings';
-  let ys = normalise(resample(data[range].series[metric]));
+  let range: KarRangeKey = (rangeEls.find((el) => el.classList.contains('is-on'))?.dataset.karRange as KarRangeKey) ?? '7d';
+  const scaleOf = (key: KarRangeKey) => karScale(data[key].series[metric], metric);
+  let ys = normalise(resample(data[range].series[metric]), scaleOf(range).max);
   const morph = { t: 1 };
 
-  const moveThumb = (thumb: HTMLElement | null, btn: HTMLButtonElement | undefined) => {
-    if (!thumb || !btn) return;
-    const x = btn.offsetLeft;
-    const w = btn.offsetWidth;
-    if (reduced) gsap.set(thumb, { x, width: w });
-    else gsap.to(thumb, { x, width: w, duration: 0.45, ease: 'power3.out' });
-  };
-
-  const drawChart = (animate: boolean) => {
-    const target = normalise(resample(data[range].series[metric]));
-    const from = ys.slice();
-    const apply = (values: number[]) => {
-      const p = karChartPaths(values);
-      line?.setAttribute('d', p.line);
-      area?.setAttribute('d', p.area);
-    };
-    if (reduced || !animate) {
-      ys = target;
-      apply(ys);
-      return;
+  const apply = (values: number[]) => {
+    const p = karChartPaths(values);
+    line?.setAttribute('d', p.line);
+    glow?.setAttribute('d', p.line);
+    area?.setAttribute('d', p.area);
+    if (end) {
+      const pt = karPointPercent(values, values.length - 1);
+      end.style.left = `${pt.x}%`;
+      end.style.top = `${pt.y}%`;
     }
-    gsap.killTweensOf(morph);
-    morph.t = 0;
-    gsap.to(morph, {
-      t: 1,
-      duration: 0.75,
-      ease: 'power3.inOut',
-      onUpdate: () => {
-        ys = from.map((v, i) => v + (target[i] - v) * morph.t);
-        apply(ys);
-      },
-    });
   };
 
-  const render = (animate: boolean) => {
-    const r = data[range];
+  const placeMarkers = (key: KarRangeKey) => {
+    if (!markers) return;
+    const raw = normalise(data[key].series[metric], scaleOf(key).max);
+    markers.innerHTML = raw.length <= 14
+      ? raw.map((_, i) => {
+          const pt = karPointPercent(raw, i);
+          return `<i style="left:${pt.x}%;top:${pt.y}%"></i>`;
+        }).join('')
+      : '';
+  };
+
+  const placeThumb = (animate: boolean) => {
+    const el = rangeEls.find((r) => r.dataset.karRange === range);
+    if (!thumb || !el) return;
+    const vars = { x: el.offsetLeft, width: el.offsetWidth };
+    if (animate && !reduced) gsap.to(thumb, { ...vars, duration: 0.45, ease: 'power3.out' });
+    else gsap.set(thumb, vars);
+  };
+
+  const setRange = (key: KarRangeKey, animate: boolean) => {
+    if (!data[key] || key === range) return;
+    range = key;
+    rangeEls.forEach((el) => el.classList.toggle('is-on', el.dataset.karRange === key));
+    placeThumb(animate);
+
+    const r = data[key];
     const k = karKpis(r);
-    (['bookings', 'utilisation', 'value', 'cancelled'] as const).forEach((key) => {
-      const box = section.querySelector<HTMLElement>(`[data-kar-kpi="${key}"]`);
+    const still = reduced || !animate;
+    (['bookings', 'utilisation', 'value', 'cancelled'] as const).forEach((name) => {
+      const box = screen.querySelector<HTMLElement>(`[data-kar-kpi="${name}"]`);
       if (!box) return;
-      tweenText(box.querySelector('[data-kar-kpi-value]'), k[key].value, reduced || !animate);
+      tweenText(box.querySelector('[data-kar-kpi-value]'), k[name].value, still);
       const delta = box.querySelector<HTMLElement>('[data-kar-kpi-delta]');
       if (delta) {
-        delta.textContent = k[key].delta;
-        delta.className = `kar-kpi__delta is-${k[key].tone}`;
+        delta.textContent = k[name].delta;
+        delta.className = `kar-kpi__delta is-${k[name].tone}`;
       }
     });
     const peak = stat('peak');
     if (peak) peak.textContent = r.peak ?? '—';
     const service = stat('service');
     if (service) service.textContent = r.popularService ?? '—';
-    tweenText(stat('noshow'), k.noshow.value, reduced || !animate);
+    tweenText(stat('noshow'), k.noshow.value, still);
     const nsd = stat('noshow-delta');
     if (nsd) {
       nsd.textContent = k.noshow.delta;
       nsd.className = `is-${k.noshow.tone}`;
     }
-    if (chartLabel) chartLabel.textContent = metric === 'value' ? 'Booking value' : 'Bookings';
-    tweenText(chartTotal, karMetricTotal(r, metric), reduced || !animate);
+    tweenText(total, karMetricTotal(r, metric), still);
     if (sample) sample.hidden = !r.smallSample;
     if (axis) axis.innerHTML = r.axis.map((label) => `<span>${label}</span>`).join('');
-
+    const scale = scaleOf(key);
+    if (ticks) {
+      ticks.innerHTML = scale.ticks.map((t) => `<span style="top:${t.y}%"><small>${t.label}</small></span>`).join('');
+    }
     if (leaders) {
       const max = Math.max(1, ...r.leaderboard.map((row) => row.count));
       leaders.innerHTML = r.leaderboard
         .map((row) => `<li><span class="kar-leaders__name">${row.name}</span><span class="kar-leaders__track"><span style="--w:${(row.count / max) * 100}%"></span></span><b>${row.count}</b></li>`)
         .join('');
-      if (!reduced && animate) {
+      if (!still) {
         gsap.fromTo(leaders.querySelectorAll('.kar-leaders__track > span'), { scaleX: 0 }, { scaleX: 1, duration: 0.6, stagger: 0.05, ease: 'power3.out', transformOrigin: 'left center' });
       }
     }
-    drawChart(animate);
-  };
 
-  const onRange = (event: Event) => {
-    const btn = event.currentTarget as HTMLButtonElement;
-    const next = btn.dataset.karRange as KarRangeKey;
-    if (!data[next] || next === range) return;
-    range = next;
-    rangeBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-    moveThumb(rangeThumb, btn);
-    render(true);
-  };
-  const onMetric = (event: Event) => {
-    const btn = event.currentTarget as HTMLButtonElement;
-    const next = btn.dataset.karMetric as KarMetricKey;
-    if (next === metric) return;
-    metric = next;
-    metricBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-    moveThumb(metricThumb, btn);
-    render(true);
-  };
-
-  rangeBtns.forEach((b) => b.addEventListener('click', onRange));
-  metricBtns.forEach((b) => b.addEventListener('click', onMetric));
-
-  const placeThumbs = () => {
-    const r = rangeBtns.find((b) => b.getAttribute('aria-pressed') === 'true');
-    const m = metricBtns.find((b) => b.getAttribute('aria-pressed') === 'true');
-    if (rangeThumb && r) gsap.set(rangeThumb, { x: r.offsetLeft, width: r.offsetWidth });
-    if (metricThumb && m) gsap.set(metricThumb, { x: m.offsetLeft, width: m.offsetWidth });
-  };
-  placeThumbs();
-  section.classList.add('is-enhanced');
-  const ro = new ResizeObserver(placeThumbs);
-  rangeBtns[0]?.parentElement && ro.observe(rangeBtns[0].parentElement);
-
-  // The chart draws in once, when the studio arrives.
-  if (!reduced && line) {
-    gsap.set(line, { strokeDasharray: 1, strokeDashoffset: 1, attr: { pathLength: 1 } });
-    const st = ScrollTrigger.create({
-      trigger: section,
-      start: 'top 65%',
-      once: true,
-      onEnter: () => {
-        gsap.to(line, { strokeDashoffset: 0, duration: 1.3, ease: 'power2.inOut', onComplete: () => gsap.set(line, { clearProps: 'strokeDasharray,strokeDashoffset' }) });
-        if (area) gsap.fromTo(area, { autoAlpha: 0 }, { autoAlpha: 1, duration: 1, delay: 0.4 });
+    const target = normalise(resample(r.series[metric]), scale.max);
+    const from = ys.slice();
+    gsap.killTweensOf(morph);
+    if (still) {
+      ys = target;
+      apply(ys);
+      placeMarkers(key);
+      return;
+    }
+    // Markers step aside while the line morphs, then settle on the new points.
+    if (markers) gsap.to(markers, { autoAlpha: 0, duration: 0.15, overwrite: true });
+    morph.t = 0;
+    gsap.to(morph, {
+      t: 1,
+      duration: 0.7,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        ys = from.map((v, i) => v + (target[i] - v) * morph.t);
+        apply(ys);
+      },
+      onComplete: () => {
+        placeMarkers(key);
+        if (markers) gsap.fromTo(markers, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, overwrite: true });
       },
     });
-    disposers.push(() => st.kill());
+  };
+
+  /** The line draws in when the Reports screen comes up. */
+  const draw = () => {
+    if (reduced || !line) return;
+    gsap.fromTo([line, glow], { strokeDasharray: 1, strokeDashoffset: 1, attr: { pathLength: 1 } }, {
+      strokeDashoffset: 0,
+      duration: 1.1,
+      ease: 'power2.inOut',
+      overwrite: true,
+      onComplete: () => { gsap.set([line, glow], { clearProps: 'strokeDasharray,strokeDashoffset' }); },
+    });
+    if (area) gsap.fromTo(area, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.9, delay: 0.3, overwrite: true });
+    if (markers) gsap.fromTo(markers.children, { scale: 0 }, { scale: 1, duration: 0.35, stagger: 0.06, delay: 0.35, ease: 'back.out(2.2)' });
+    if (end) gsap.fromTo(end, { scale: 0 }, { scale: 1, duration: 0.4, delay: 1, ease: 'back.out(2.2)' });
+  };
+
+  placeThumb(false);
+  const ro = new ResizeObserver(() => placeThumb(false));
+  if (thumb?.parentElement) ro.observe(thumb.parentElement);
+  return {
+    setRange,
+    draw,
+    dispose: () => {
+      ro.disconnect();
+      gsap.killTweensOf(morph);
+    },
+  };
+}
+
+/** Reports gets two beats of scroll (it walks four ranges); every other screen gets one. */
+const CHAPTER_WEIGHT = [1, 1, 2, 1, 1];
+const REPORTS_CHAPTER = 2;
+const REPORTS_RANGES: KarRangeKey[] = ['1d', '7d', '30d', '1y'];
+
+function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
+  const section = root.querySelector<HTMLElement>('[data-kar-film]');
+  if (!section) return;
+  const pin = section.querySelector<HTMLElement>('[data-kar-film-pin]');
+  const stage = section.querySelector<HTMLElement>('[data-kar-stage]');
+  const app = section.querySelector<HTMLElement>('[data-kar-film-app]');
+  const side = section.querySelector<HTMLElement>('[data-kar-side]');
+  const glowEl = section.querySelector<HTMLElement>('[data-kar-nav-glow]');
+  const reel = Array.from(section.querySelectorAll<HTMLButtonElement>('[data-kar-reel]'));
+  const fills = reel.map((btn) => btn.querySelector<HTMLElement>('[data-kar-reel-fill]'));
+  const captions = Array.from(section.querySelectorAll<HTMLElement>('[data-kar-caption]'));
+  const screens = Array.from(section.querySelectorAll<HTMLElement>('[data-kar-screen]'));
+  const reportsEl = section.querySelector<HTMLElement>('[data-kar-reports]');
+  const reports = reportsEl ? createReportsScreen(reportsEl, reduced) : null;
+  const sections = captions.map((c) => c.querySelector('.kar-film__section')?.textContent?.trim() ?? '');
+  const count = Math.min(captions.length, screens.length, reel.length);
+  const totalWeight = CHAPTER_WEIGHT.slice(0, count).reduce((a, b) => a + b, 0);
+  let current = -1;
+  let pinTrigger: ScrollTrigger | null = null;
+
+  /** Move the sidebar highlight onto the item the chapter is about, measured from the real layout. */
+  const moveGlow = (index: number, animate: boolean) => {
+    if (!side || !glowEl) return;
+    const item = side.querySelector<HTMLElement>(`[data-kar-nav="${sections[index]}"]`);
+    side.querySelectorAll('.kar-side__item').forEach((el) => el.classList.toggle('is-active', el === item));
+    if (!item) return;
+    const vars = { y: item.offsetTop - glowEl.offsetTop, height: item.offsetHeight };
+    if (animate && !reduced) gsap.to(glowEl, { ...vars, duration: 0.5, ease: 'power3.out', overwrite: true });
+    else gsap.set(glowEl, vars);
+  };
+
+  const playScreen = (screen: HTMLElement | undefined, index: number) => {
+    if (!screen || reduced) return;
+    const parts = screen.querySelectorAll('.kar-chips > *, .kar-timeline__row, .kar-team__row, .kar-kpi, .kar-side-stats__list > div, .kar-client > *, .kar-stats > div, .kar-minikpis > span, .kar-bars li');
+    gsap.fromTo(parts, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.035, ease: 'power3.out', overwrite: true });
+    const blocks = screen.querySelectorAll('.kar-block');
+    if (blocks.length) gsap.fromTo(blocks, { scaleX: 0 }, { scaleX: 1, duration: 0.55, stagger: 0.012, ease: 'power3.out', transformOrigin: 'left center', overwrite: true });
+    const days = screen.querySelectorAll('.kar-team__week i.is-on');
+    if (days.length) gsap.fromTo(days, { scale: 0.4, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.3, stagger: 0.015, delay: 0.15, ease: 'back.out(2)', overwrite: true });
+    const bars = screen.querySelectorAll('.kar-bars__track > span, .kar-leaders__track > span');
+    if (bars.length) gsap.fromTo(bars, { scaleX: 0 }, { scaleX: 1, duration: 0.7, stagger: 0.06, delay: 0.1, ease: 'power3.out', transformOrigin: 'left center' });
+    const score = screen.querySelector<SVGElement>('.kar-score__fill');
+    if (score) gsap.fromTo(score, { '--p': 0 }, { '--p': 1, duration: 0.9, ease: 'power3.out' });
+    if (index === REPORTS_CHAPTER) {
+      reports?.draw();
+      return;
+    }
+    // Any other chart on the screen (Sales) draws in the same way the dashboard's charts do.
+    const pens = screen.querySelectorAll('[data-kar-draw]');
+    if (pens.length) {
+      gsap.fromTo(pens, { strokeDasharray: 1, strokeDashoffset: 1, attr: { pathLength: 1 } }, { strokeDashoffset: 0, duration: 1, delay: 0.15, ease: 'power2.inOut', overwrite: true });
+      gsap.fromTo(screen.querySelectorAll('.kar-chart__area, .kar-chart__markers i, .kar-chart__end'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, stagger: 0.04, delay: 0.5, overwrite: true });
+    }
+  };
+
+  const setChapter = (index: number) => {
+    if (index === current || index < 0 || index >= count) return;
+    const previous = current;
+    current = index;
+    reel.forEach((btn, i) => btn.setAttribute('aria-pressed', String(i === index)));
+    if (stage) stage.dataset.chapter = String(index);
+    moveGlow(index, previous !== -1);
+
+    captions.forEach((caption, i) => caption.classList.toggle('is-active', i === index));
+    screens.forEach((screen, i) => screen.classList.toggle('is-active', i === index));
+
+    if (!reduced && previous !== -1) {
+      // The caption leaves upwards as the next one rises in: one direction of travel, like a reel.
+      const dir = index > previous ? 1 : -1;
+      gsap.fromTo(captions[index], { autoAlpha: 0, y: 18 * dir }, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', overwrite: true });
+      gsap.fromTo(captions[previous], { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: -14 * dir, duration: 0.3, ease: 'power2.in', overwrite: true });
+      const notes = captions[index]?.querySelectorAll('.kar-callout');
+      if (notes?.length) gsap.fromTo(notes, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1, delay: 0.25, ease: 'power3.out', overwrite: true });
+    }
+    playScreen(screens[index], index);
+    if (index === REPORTS_CHAPTER && !pinTrigger) reports?.setRange('7d', previous !== -1);
+    if (!pinTrigger) fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === index ? 1 : 0 }));
+  };
+
+  /** Scroll progress (0..1) → chapter and how far into it, with Reports taking two beats. */
+  const locate = (progress: number) => {
+    let at = progress * totalWeight;
+    for (let i = 0; i < count; i += 1) {
+      const w = CHAPTER_WEIGHT[i] ?? 1;
+      if (at < w || i === count - 1) return { index: i, local: Math.min(1, Math.max(0, at / w)) };
+      at -= w;
+    }
+    return { index: count - 1, local: 1 };
+  };
+  const startOf = (index: number) => CHAPTER_WEIGHT.slice(0, index).reduce((a, b) => a + b, 0) / totalWeight;
+
+  setChapter(0);
+  // Inactive captions collapse only once the reel works; without the script all five stay open.
+  section.classList.add('is-enhanced');
+
+  const onReel = (event: Event) => {
+    const index = Number((event.currentTarget as HTMLElement).dataset.karReel);
+    if (pinTrigger) {
+      const { start, end } = pinTrigger;
+      const w = (CHAPTER_WEIGHT[index] ?? 1) / totalWeight;
+      window.scrollTo({ top: start + (startOf(index) + w * 0.35) * (end - start), behavior: reduced ? 'auto' : 'smooth' });
+    } else {
+      setChapter(index);
+    }
+  };
+  reel.forEach((btn) => btn.addEventListener('click', onReel));
+
+  // The range pills in the Reports screen answer a tap too (pointer only; the stage is decorative).
+  // Pinned, a tap scrolls to that range's beat so the film and the scroll stay in step.
+  const rangePills = Array.from(reportsEl?.querySelectorAll<HTMLElement>('[data-kar-range]') ?? []);
+  const onRangePill = (event: Event) => {
+    const key = (event.currentTarget as HTMLElement).dataset.karRange as KarRangeKey;
+    const at = REPORTS_RANGES.indexOf(key);
+    if (at < 0) return;
+    if (pinTrigger) {
+      const { start, end } = pinTrigger;
+      const w = (CHAPTER_WEIGHT[REPORTS_CHAPTER] ?? 1) / totalWeight;
+      window.scrollTo({ top: start + (startOf(REPORTS_CHAPTER) + ((at + 0.5) / REPORTS_RANGES.length) * w) * (end - start), behavior: reduced ? 'auto' : 'smooth' });
+    } else {
+      reports?.setRange(key, true);
+    }
+  };
+  rangePills.forEach((pill) => pill.addEventListener('click', onRangePill));
+
+  const mm = gsap.matchMedia();
+  if (pin) {
+    mm.add('(min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference)', () => {
+      section.classList.add('is-pinned');
+      // Opening shot: the dashboard rises out of the page and settles flat as the film starts.
+      const intro = app
+        ? gsap.fromTo(app, { rotateX: 16, scale: 0.88, y: 60, autoAlpha: 0.35 }, {
+            rotateX: 0,
+            scale: 1,
+            y: 0,
+            autoAlpha: 1,
+            ease: 'none',
+            scrollTrigger: { trigger: pin, start: 'top 85%', end: 'top top', scrub: 0.6 },
+          })
+        : null;
+      pinTrigger = ScrollTrigger.create({
+        trigger: pin,
+        pin,
+        start: 'top top',
+        end: () => `+=${window.innerHeight * 0.8 * totalWeight}`,
+        scrub: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const { index, local } = locate(self.progress);
+          setChapter(index);
+          if (index === REPORTS_CHAPTER) {
+            reports?.setRange(REPORTS_RANGES[Math.min(REPORTS_RANGES.length - 1, Math.floor(local * REPORTS_RANGES.length))], true);
+          }
+          fills.forEach((fill, i) => {
+            if (!fill) return;
+            const s = startOf(i);
+            const w = (CHAPTER_WEIGHT[i] ?? 1) / totalWeight;
+            gsap.set(fill, { scaleX: clamp01((self.progress - s) / w) });
+          });
+        },
+      });
+      return () => {
+        section.classList.remove('is-pinned');
+        intro?.scrollTrigger?.kill();
+        intro?.kill();
+        if (app) gsap.set(app, { clearProps: 'all' });
+        pinTrigger?.kill();
+        pinTrigger = null;
+        fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === current ? 1 : 0 }));
+      };
+    });
   }
 
+  const onResize = () => moveGlow(Math.max(0, current), false);
+  window.addEventListener('resize', onResize);
+
   disposers.push(() => {
-    ro.disconnect();
-    rangeBtns.forEach((b) => b.removeEventListener('click', onRange));
-    metricBtns.forEach((b) => b.removeEventListener('click', onMetric));
-    gsap.killTweensOf(morph);
+    section.classList.remove('is-enhanced');
+    window.removeEventListener('resize', onResize);
+    mm.revert();
+    reel.forEach((btn) => btn.removeEventListener('click', onReel));
+    rangePills.forEach((pill) => pill.removeEventListener('click', onRangePill));
+    reports?.dispose();
   });
 }
 
@@ -426,12 +546,36 @@ function buildLoop(card: HTMLElement): gsap.core.Timeline | null {
       .to({}, { duration: 1.5 })
       .to(fill, { strokeDashoffset: 100, duration: 0.4, ease: 'power2.in' });
   } else if (id === 'barbers') {
-    const paths = card.querySelectorAll('.kar-vis-lines path');
-    tl.set(paths, { strokeDasharray: 1, strokeDashoffset: 1 })
-      .to(paths, { strokeDashoffset: 0, duration: 1.1, stagger: 0.25, ease: 'power2.inOut' }, 0.1)
-      .to({}, { duration: 1.2 })
-      .to(paths, { autoAlpha: 0, duration: 0.3 })
-      .set(paths, { autoAlpha: 1, strokeDashoffset: 1 });
+    // Fair to every chair: the shop total settles, each barber's line draws in with its chip,
+    // Saturday lights up, the three end points land and the busiest chair is named. The lines then
+    // run off in the same direction they drew, so the loop never snaps back.
+    const total = card.querySelector('.kar-vis-chairs__total');
+    const lines = Array.from(card.querySelectorAll('.kar-vis-chairs__line'));
+    const dots = card.querySelectorAll('.kar-vis-chairs__dot');
+    const chips = Array.from(card.querySelectorAll('.kar-vis-chairs__chip'));
+    const column = card.querySelector('.kar-vis-chairs__day');
+    const lead = card.querySelector('.kar-vis-chairs__lead');
+    if (!lines.length) return null;
+    tl.set(lines, { strokeDasharray: 1, strokeDashoffset: 1 })
+      .set(dots, { scale: 0, transformOrigin: 'center' })
+      .set(column, { scaleY: 0, autoAlpha: 0, transformOrigin: '50% 100%' })
+      .set(chips, { autoAlpha: 0.35 })
+      .set(lead, { autoAlpha: 0, x: -4 })
+      .fromTo(total, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, 0);
+    lines.forEach((line, i) => {
+      const at = 0.25 + i * 0.28;
+      tl.to(line, { strokeDashoffset: 0, duration: 1, ease: 'power2.inOut' }, at)
+        .to(chips[i], { autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, at + 0.15);
+    });
+    tl.to(column, { scaleY: 1, autoAlpha: 1, duration: 0.5, ease: 'power3.out' }, 1.55)
+      .to(dots, { scale: 1, duration: 0.35, stagger: 0.08, ease: 'back.out(2.4)' }, 1.75)
+      .to(lead, { autoAlpha: 1, x: 0, duration: 0.35, ease: 'power3.out' }, 2.05)
+      .to({}, { duration: 1.3 })
+      .addLabel('out')
+      .to(lines, { strokeDashoffset: -1, duration: 0.7, stagger: 0.06, ease: 'power2.in' }, 'out')
+      .to(dots, { scale: 0, duration: 0.25, stagger: 0.04, ease: 'power2.in' }, 'out+=0.2')
+      .to([column, total, lead], { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 'out+=0.3')
+      .to(chips, { autoAlpha: 0.35, duration: 0.35 }, 'out+=0.3');
   } else {
     return null;
   }
@@ -491,8 +635,7 @@ export function initAdminReports(root: HTMLElement): Cleanup {
   const disposers: Cleanup[] = [];
 
   initHero(root, reduced, disposers);
-  initChapters(root, reduced, disposers);
-  initStudio(root, reduced, disposers);
+  initFilm(root, reduced, disposers);
   initStatement(root, reduced, disposers);
   initCards(root, reduced, disposers);
 

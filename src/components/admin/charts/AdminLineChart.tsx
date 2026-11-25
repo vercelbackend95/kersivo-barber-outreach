@@ -6,6 +6,7 @@ import {
   niceTicks,
   snapIndex,
   sortChartLabels,
+  uniqueTicksByLabel,
   type ChartPoint,
 } from '@/lib/admin/chartUtils';
 
@@ -19,7 +20,8 @@ export type AdminLineChartSeries = {
 
 type TooltipState = {
   label: string;
-  entries: Array<{ key: string; name: string; value: number; color: string }>;
+  entries: Array<{ key: string; name: string; value: number; color: string; prev: number | null }>;
+  prevLabel: string | null;
   crosshairX: number;
   activeIndex: number;
 } | null;
@@ -60,6 +62,8 @@ export type AdminLineChartProps = {
 
 const TOOLTIP_MAX_W = 220;
 const GRID_TICK_COUNT = 3;
+/** Point markers only while they read as points, not as a beaded line. */
+const MARKER_MAX_POINTS = 14;
 const LINE_DRAW_MS = 850;
 const LINE_DRAW_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -92,6 +96,11 @@ type AnimatedLineSeriesProps = {
   activeDot: { cx: number; cy: number } | null;
   /** When false, keep the line hidden until the parent allows draw. */
   allowDraw: boolean;
+  /** Primary series only: a soft glow under the line, point markers and the latest-value dot. */
+  emphasis?: {
+    markers: Array<{ cx: number; cy: number }>;
+    endDot: { cx: number; cy: number } | null;
+  } | null;
 };
 
 function AnimatedLineSeries({
@@ -106,39 +115,35 @@ function AnimatedLineSeries({
   gradientId,
   activeDot,
   allowDraw,
+  emphasis,
 }: AnimatedLineSeriesProps) {
   const lineRef = useRef<SVGPathElement>(null);
-  const areaRef = useRef<SVGPathElement>(null);
+  /** Everything that fades in behind the drawn line: area, glow, markers. */
+  const fadeRef = useRef<SVGGElement>(null);
+  const markersRef = useRef<SVGGElement>(null);
   const reduceMotion = usePrefersReducedMotion();
   const drawnFingerprintRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
     const line = lineRef.current;
+    const fades = [fadeRef.current, markersRef.current].filter((el): el is SVGGElement => el !== null);
     if (!line || !linePath) return undefined;
 
     const alreadyDrawn = drawnFingerprintRef.current === dataFingerprint;
-
-    if (reduceMotion) {
+    const showAll = () => {
       line.style.transition = 'none';
       line.style.strokeDasharray = 'none';
       line.style.strokeDashoffset = '0';
-      if (areaRef.current) {
-        areaRef.current.style.transition = 'none';
-        areaRef.current.style.opacity = '1';
-      }
+      fades.forEach((fade) => {
+        fade.style.transition = 'none';
+        fade.style.opacity = '1';
+      });
+    };
+
+    // Reduced motion, or a resize / reflow only: keep everything visible, no re-draw.
+    if (reduceMotion || alreadyDrawn) {
+      showAll();
       drawnFingerprintRef.current = dataFingerprint;
-      return undefined;
-    }
-
-    // Resize / reflow only: keep the line fully visible, no re-draw.
-    if (alreadyDrawn) {
-      line.style.transition = 'none';
-      line.style.strokeDasharray = 'none';
-      line.style.strokeDashoffset = '0';
-      if (areaRef.current) {
-        areaRef.current.style.transition = 'none';
-        areaRef.current.style.opacity = '1';
-      }
       return undefined;
     }
 
@@ -150,9 +155,7 @@ function AnimatedLineSeries({
     }
 
     if (!Number.isFinite(length) || length <= 0) {
-      line.style.strokeDasharray = 'none';
-      line.style.strokeDashoffset = '0';
-      if (areaRef.current) areaRef.current.style.opacity = '1';
+      showAll();
       drawnFingerprintRef.current = dataFingerprint;
       return undefined;
     }
@@ -160,10 +163,10 @@ function AnimatedLineSeries({
     line.style.transition = 'none';
     line.style.strokeDasharray = `${length}`;
     line.style.strokeDashoffset = `${length}`;
-    if (areaRef.current) {
-      areaRef.current.style.transition = 'none';
-      areaRef.current.style.opacity = '0';
-    }
+    fades.forEach((fade) => {
+      fade.style.transition = 'none';
+      fade.style.opacity = '0';
+    });
 
     // Wait until the chart is allowed to draw (viewport gate on landing).
     if (!allowDraw) {
@@ -178,10 +181,11 @@ function AnimatedLineSeries({
       raf2 = window.requestAnimationFrame(() => {
         line.style.transition = `stroke-dashoffset ${LINE_DRAW_MS}ms ${LINE_DRAW_EASING}`;
         line.style.strokeDashoffset = '0';
-        if (areaRef.current) {
-          areaRef.current.style.transition = `opacity ${LINE_DRAW_MS}ms ${LINE_DRAW_EASING}`;
-          areaRef.current.style.opacity = '1';
-        }
+        // The fill and markers settle in behind the pen, not ahead of it.
+        fades.forEach((fade) => {
+          fade.style.transition = `opacity ${LINE_DRAW_MS}ms ${LINE_DRAW_EASING} ${Math.round(LINE_DRAW_MS * 0.35)}ms`;
+          fade.style.opacity = '1';
+        });
         drawnFingerprintRef.current = dataFingerprint;
       });
     });
@@ -193,21 +197,32 @@ function AnimatedLineSeries({
   }, [linePath, dataFingerprint, reduceMotion, seriesKey, allowDraw]);
 
   return (
-    <g>
-      {areaPath ? (
-        <path
-          ref={areaRef}
-          d={areaPath}
-          fill={isSparkline ? undefined : `url(#${gradientId})`}
-          className={
-            isSparkline
-              ? `admin-revenue-chart-area admin-chart-area--draw ${extraClass}`
-              : `admin-chart-area admin-chart-area--draw ${extraClass}`
-          }
-          stroke="none"
-          style={reduceMotion ? undefined : { opacity: 0 }}
-        />
-      ) : null}
+    <g style={{ color }}>
+      <g ref={fadeRef} style={reduceMotion ? undefined : { opacity: 0 }}>
+        {areaPath ? (
+          <path
+            d={areaPath}
+            fill={isSparkline ? undefined : `url(#${gradientId})`}
+            className={
+              isSparkline
+                ? `admin-revenue-chart-area admin-chart-area--draw ${extraClass}`
+                : `admin-chart-area admin-chart-area--draw ${extraClass}`
+            }
+            stroke="none"
+          />
+        ) : null}
+        {emphasis ? (
+          <path
+            d={linePath}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth + 7}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="admin-chart-line-glow"
+          />
+        ) : null}
+      </g>
       <path
         ref={lineRef}
         d={linePath}
@@ -222,14 +237,24 @@ function AnimatedLineSeries({
             : 'admin-chart-line admin-chart-line--draw'
         }
       />
+      {emphasis ? (
+        <g ref={markersRef} className="admin-chart-markers" style={reduceMotion ? undefined : { opacity: 0 }}>
+          {emphasis.markers.map((m) => (
+            <circle key={`${m.cx}-${m.cy}`} cx={m.cx} cy={m.cy} r="3" className="admin-chart-marker" />
+          ))}
+        </g>
+      ) : null}
+      {emphasis?.endDot && !activeDot ? (
+        <g className="admin-chart-end-dot" transform={`translate(${emphasis.endDot.cx} ${emphasis.endDot.cy})`}>
+          <circle r="9" className="admin-chart-end-dot__pulse" fill={color} />
+          <circle r="4" className="admin-chart-end-dot__core" fill={color} />
+        </g>
+      ) : null}
       {activeDot ? (
-        <circle
-          cx={activeDot.cx}
-          cy={activeDot.cy}
-          r="5"
-          fill={color}
-          className="admin-chart-active-dot"
-        />
+        <g transform={`translate(${activeDot.cx} ${activeDot.cy})`} className="admin-chart-active">
+          <circle r="11" fill={color} className="admin-chart-active-halo" />
+          <circle r="5" fill={color} className="admin-chart-active-dot" />
+        </g>
       ) : null}
     </g>
   );
@@ -420,15 +445,18 @@ export default function AdminLineChart({
 
   const fmtTooltipValue = formatValue ?? ((v: number) => defaultFormatValue(v, metric));
   const fmtAxisValue = (v: number) => defaultFormatAxisValue(v, metric);
+  const gridTicks = uniqueTicksByLabel(yTicks, fmtAxisValue);
+  const primaryKey = primarySeriesKey ?? safeSeries[0]?.key;
 
   const estimateYLabelWidth = (label: string) => Math.max(36, label.length * 7 + 12);
 
+  // As many labels as the width allows (~72px each), counted back from the latest point so the
+  // newest day is always labelled and the spacing stays even (no crowded last pair).
+  const maxXLabels = Math.max(2, Math.floor(innerW / 72));
+  const xLabelStep = Math.max(1, Math.ceil(sortedLabels.length / maxXLabels));
   const xTickLabels = sortedLabels.filter((label, i) => {
     if (label === 'start' || label === 'end') return false;
-    return (
-      i % Math.max(1, Math.ceil(sortedLabels.length / 6)) === 0 ||
-      i === sortedLabels.length - 1
-    );
+    return (sortedLabels.length - 1 - i) % xLabelStep === 0;
   });
 
   const buildSeriesPath = (points: AdminLineChartPoint[]): string => {
@@ -443,21 +471,60 @@ export default function AdminLineChart({
     return useCurve === 'smooth' ? buildSmoothPath(chartPoints) : buildLinearPath(chartPoints);
   };
 
-  const updateTooltipFromClientX = (clientX: number) => {
+  const showTooltipAt = (idx: number) => {
     if (isEmpty || sortedLabels.length === 0) return;
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const mouseX = clientX - rect.left;
-    const svgMouseX = (mouseX / rect.width) * svgW;
-    const idx = snapIndex(svgMouseX, padding.left, innerW, sortedLabels.length);
-    const label = sortedLabels[idx];
+    const clamped = Math.max(0, Math.min(sortedLabels.length - 1, idx));
+    const label = sortedLabels[clamped];
+    const prevLabel = clamped > 0 ? sortedLabels[clamped - 1] : null;
     const crosshairX = xPos(label);
     const entries = safeSeries.map((s) => {
       const pt = s.points.find((p) => p.label === label);
-      return { key: s.key, name: s.name, value: pt?.value ?? 0, color: getColor(s.key) };
+      const prevPt = prevLabel ? s.points.find((p) => p.label === prevLabel) : null;
+      return {
+        key: s.key,
+        name: s.name,
+        value: pt?.value ?? 0,
+        color: getColor(s.key),
+        prev: prevLabel ? prevPt?.value ?? 0 : null,
+      };
     });
-    setTooltip({ label, entries, crosshairX, activeIndex: idx });
+    setTooltip({ label, entries, crosshairX, activeIndex: clamped, prevLabel });
+  };
+
+  const updateTooltipFromClientX = (clientX: number) => {
+    const el = containerRef.current;
+    if (!el || sortedLabels.length === 0) return;
+    const rect = el.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const svgMouseX = (mouseX / rect.width) * svgW;
+    showTooltipAt(snapIndex(svgMouseX, padding.left, innerW, sortedLabels.length));
+  };
+
+  /** Arrow keys walk the points, Home/End jump, Escape clears (the chart is a focus stop). */
+  const handleKeyNav = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isEmpty || sortedLabels.length === 0) return;
+    const current = tooltip?.activeIndex ?? sortedLabels.length;
+    let next: number | null = null;
+    if (event.key === 'ArrowRight') next = tooltip ? current + 1 : 0;
+    else if (event.key === 'ArrowLeft') next = tooltip ? current - 1 : sortedLabels.length - 1;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = sortedLabels.length - 1;
+    else if (event.key === 'Escape') {
+      setTooltip(null);
+      return;
+    }
+    if (next === null) return;
+    event.preventDefault();
+    showTooltipAt(next);
+  };
+
+  const formatDelta = (value: number, prev: number | null): { text: string; tone: 'up' | 'down' | 'flat' } | null => {
+    if (prev === null) return null;
+    const diff = value - prev;
+    if (diff === 0) return { text: 'No change', tone: 'flat' };
+    const sign = diff > 0 ? '+' : '−';
+    const pct = prev > 0 ? ` (${sign}${Math.round((Math.abs(diff) / prev) * 100)}%)` : '';
+    return { text: `${sign}${fmtTooltipValue(Math.abs(diff))}${pct}`, tone: diff > 0 ? 'up' : 'down' };
   };
 
   const handlePointerMove = (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
@@ -489,7 +556,8 @@ export default function AdminLineChart({
               x2="0"
               y2="1"
             >
-              <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+              <stop offset="0%" stopColor={color} stopOpacity="0.28" />
+              <stop offset="55%" stopColor={color} stopOpacity="0.07" />
               <stop offset="100%" stopColor={color} stopOpacity="0" />
             </linearGradient>
           );
@@ -497,11 +565,12 @@ export default function AdminLineChart({
       </defs>
 
       {!isSparkline &&
-        yTicks.map((tick) => {
+        gridTicks.map((tick) => {
           if ((contentInsetTop ?? 0) > 0 && tick === yMax) return null;
           const label = fmtAxisValue(tick);
           const labelWidth = estimateYLabelWidth(label);
           const labelY = yPos(tick);
+          const isBaseline = tick === yMin;
           return (
             <g key={`ytick-${tick}`}>
               <line
@@ -509,9 +578,10 @@ export default function AdminLineChart({
                 y1={labelY}
                 x2={svgW - padding.right}
                 y2={labelY}
-                className="admin-sales-grid-line"
+                className={isBaseline ? 'admin-chart-baseline' : 'admin-sales-grid-line'}
               />
-              <g className="admin-chart-y-label" transform={`translate(${padding.left + 4}, ${labelY - 9})`}>
+              {/* The label sits just above its line, so the line never strikes through it. */}
+              <g className="admin-chart-y-label" transform={`translate(${padding.left + 2}, ${labelY - 22 < 2 ? labelY + 4 : labelY - 22})`}>
                 <rect
                   className="admin-chart-y-label-bg"
                   width={labelWidth}
@@ -573,6 +643,19 @@ export default function AdminLineChart({
           const activePt = !isSparkline && activeLabel
             ? s.points.find((pt) => pt.label === activeLabel)
             : null;
+          const isPrimary = !isSparkline && s.key === primaryKey;
+          const ordered = sortedLabels
+            .map((label) => s.points.find((pt) => pt.label === label))
+            .filter((pt): pt is AdminLineChartPoint => Boolean(pt));
+          const last = ordered[ordered.length - 1];
+          const emphasis = isPrimary
+            ? {
+                markers: sortedLabels.length <= MARKER_MAX_POINTS
+                  ? ordered.map((pt) => ({ cx: xPos(pt.label), cy: yPos(pt.value) }))
+                  : [],
+                endDot: last ? { cx: xPos(last.label), cy: yPos(last.value) } : null,
+              }
+            : null;
 
           return (
             <AnimatedLineSeries
@@ -587,6 +670,7 @@ export default function AdminLineChart({
               extraClass={extraClass}
               gradientId={`${gradientId}-${s.key}`}
               allowDraw={allowDraw}
+              emphasis={emphasis}
               activeDot={
                 activePt
                   ? { cx: xPos(activePt.label), cy: yPos(activePt.value) }
@@ -612,8 +696,15 @@ export default function AdminLineChart({
             key={`x-${label}`}
             x={xPos(label)}
             y={svgH - 10}
-            textAnchor="middle"
-            className="admin-sales-axis-label"
+            // Edge labels anchor inwards so "Thu" and "Wed" are never cut by the canvas edge.
+            textAnchor={
+              sortedLabels.length > 1 && label === sortedLabels[0]
+                ? 'start'
+                : sortedLabels.length > 1 && label === sortedLabels[sortedLabels.length - 1]
+                  ? 'end'
+                  : 'middle'
+            }
+            className={`admin-sales-axis-label${label === activeLabel ? ' is-active' : ''}`}
           >
             {formatXAxisLabel(label, sortedLabels.length)}
           </text>
@@ -671,6 +762,17 @@ export default function AdminLineChart({
           </span>
         </p>
       ))}
+      {(() => {
+        const primary = tooltip.entries.find((e) => e.key === primaryKey) ?? tooltip.entries[0];
+        const delta = primary ? formatDelta(primary.value, primary.prev) : null;
+        if (!delta || !tooltip.prevLabel) return null;
+        return (
+          <p className={`admin-chart-tooltip-delta is-${delta.tone}`}>
+            {delta.text}
+            <span> vs {formatTooltipDateLabel(tooltip.prevLabel)}</span>
+          </p>
+        );
+      })()}
     </div>
   ) : null;
 
@@ -718,17 +820,16 @@ export default function AdminLineChart({
         }}
         onClick={onExpand}
         role={onExpand ? 'button' : undefined}
-        tabIndex={onExpand ? 0 : undefined}
-        onKeyDown={
-          onExpand
-            ? (event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onExpand();
-                }
-              }
-            : undefined
-        }
+        tabIndex={onExpand || !isEmpty ? 0 : undefined}
+        onKeyDown={(event) => {
+          if (onExpand && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onExpand();
+            return;
+          }
+          handleKeyNav(event);
+        }}
+        onBlur={handlePointerLeave}
         aria-label={
           onExpand
             ? 'Tap to expand sales chart'
@@ -739,6 +840,11 @@ export default function AdminLineChart({
         {svgNode}
         {tooltipNode}
         {emptyOverlay}
+        <span className="sr-only" aria-live="polite">
+          {tooltip
+            ? `${formatTooltipDateLabel(tooltip.label)}: ${tooltip.entries.map((e) => `${e.name} ${fmtTooltipValue(e.value)}`).join(', ')}`
+            : ''}
+        </span>
       </div>
     </div>
   );
