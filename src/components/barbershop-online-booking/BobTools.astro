@@ -23,12 +23,19 @@ const sim = buildBookingSimulatorData();
 const barber = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
 const services = scrubberServices();
 const initialService = services.find((s) => s.name === 'Skin fade') ?? services[0]!;
-const INITIAL_START = 12 * 60 + 30;
+/* Opens on the busy early afternoon (back-to-back from 13:00), not on a quiet gap, so the shop reads as busy. */
+const INITIAL_START = 13 * 60 + 30;
+/* The timeline opens on the late-morning run, with the demo clock inside a booked appointment. */
+const DIARY_VIEW_MINUTE = 10 * 60 + 45;
 const verdict = judgeStart(barber.appointments, sim.close, INITIAL_START, initialService.duration);
-const nextAppt = !verdict.ok && verdict.reason !== 'closing' ? verdict.appointment : null;
+const start = minuteLabel(INITIAL_START);
 const initialText = verdict.ok
-  ? `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} fits, so the booking page offers ${minuteLabel(INITIAL_START)}.`
-  : `The chair is free at ${minuteLabel(INITIAL_START)}, but a ${initialService.duration}-minute ${initialService.name.toLowerCase()} would run into the ${nextAppt ? minuteLabel(nextAppt.start) : ''} appointment, so ${minuteLabel(INITIAL_START)} isn’t offered.`;
+  ? `${start}–${minuteLabel(INITIAL_START + initialService.duration)} fits, so the booking page offers ${start}.`
+  : verdict.reason === 'closing'
+    ? `${start}–${minuteLabel(INITIAL_START + initialService.duration)} would run past closing at ${minuteLabel(sim.close)}, so ${start} isn’t offered.`
+    : verdict.reason === 'inside'
+      ? `${barber.firstName} is already with a client then (${verdict.appointment.service}, ${minuteLabel(verdict.appointment.start)}–${minuteLabel(verdict.appointment.end)}), so ${start} isn’t offered.`
+      : `The chair is free at ${start}, but a ${initialService.duration}-minute ${initialService.name.toLowerCase()} would run into the ${minuteLabel(verdict.appointment.start)} appointment, so ${start} isn’t offered.`;
 const offered = new Set(offeredStarts(barber.appointments, sim.open, sim.close, initialService.duration));
 
 /* Every 15-minute start of the day, one row per hour. */
@@ -79,7 +86,10 @@ const PRICE_MAX = 60;
           ))}
         </div>
 
-        <p class="bob-slots__label" id="bob-slots-label">Tap a start time for <b data-bob-offered-name>{initialService.name}</b></p>
+        <div class="bob-slots__top">
+          <p class="bob-slots__label" id="bob-slots-label">Tap a start time for <b data-bob-offered-name>{initialService.name}</b></p>
+          <p class="bob-slots__legend" aria-hidden="true"><span class="bob-slots__key is-ok"></span>Offered<span class="bob-slots__key is-no"></span>Not offered</p>
+        </div>
         <div class="bob-slots" role="group" aria-labelledby="bob-slots-label" data-bob-slots>
           {hourRows.map((row) => (
             <div class="bob-slots__row">
@@ -96,7 +106,6 @@ const PRICE_MAX = 60;
             </div>
           ))}
         </div>
-        <p class="bob-slots__legend" aria-hidden="true"><span class="bob-slots__key is-ok"></span>Offered<span class="bob-slots__key is-no"></span>Not offered</p>
 
         <p class="bob-scrub__readout" aria-live="polite" data-bob-readout>
           <span class="bob-scrub__verdict" data-bob-verdict>{verdict.ok ? 'Offered' : 'Not offered'}</span>
@@ -110,7 +119,7 @@ const PRICE_MAX = 60;
           client:visible={{ rootMargin: '300px' }}
           target="availability"
           barberIds={[barber.id]}
-          initialMinute={12 * 60}
+          initialMinute={DIARY_VIEW_MINUTE}
           demoNowMinute={AVAILABILITY_DEMO_NOW_MINUTE}
           label={`${barber.name}’s day in the real KERSIVO owner timeline, with demo appointments`}
         />

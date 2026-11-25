@@ -220,6 +220,17 @@
     var(--bob-bg);
 }
 
+/* The hero runs wider than the rest of the page so the phone and the owner timeline both get room. */
+.bob-hero .bob-wrap {
+  width: min(100% - 2.5rem, 1440px);
+}
+
+@media (min-width: 48rem) {
+  .bob-hero .bob-wrap {
+    width: min(100% - 4rem, 1440px);
+  }
+}
+
 .bob-hero__grid {
   display: grid;
   gap: clamp(2.5rem, 5vw, 3.5rem);
@@ -235,8 +246,8 @@
   }
 
   .bob-hero__grid {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: clamp(2rem, 3.5vw, 3.5rem);
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: clamp(2rem, 3.5vw, 4rem);
   }
 
   .bob-hero .bob-hero__title {
@@ -432,13 +443,16 @@
 
 /* Stage: the phone in front, the owner's real KERSIVO timeline beside it. */
 .bob-sim {
-  --bob-phone-w: min(100%, 20rem);
+  --bob-phone-w: 20rem;
   --bob-stage-h: 40rem;
 }
 
+/* The phone column is a fixed track, never `auto`: an auto track sizes to the step on screen
+   (the Details step's long note widened it and squeezed the timeline). Both keep their shape
+   through every step. */
 @media (min-width: 48rem) {
   .bob-sim {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: var(--bob-phone-w) minmax(0, 1fr);
     grid-template-areas:
       'hint hint'
       'phone owner';
@@ -471,7 +485,9 @@
 /* Phone: graphite frame, Dynamic Island, status bar, side buttons, home indicator. */
 .bob-phone {
   position: relative;
-  width: var(--bob-phone-w);
+  box-sizing: border-box;
+  width: min(100%, var(--bob-phone-w));
+  min-width: 0;
   padding: 0.6rem;
   border-radius: 3.1rem;
   background:
@@ -1129,11 +1145,94 @@
   }
 }
 
+/* Each answer is a quiet tile: the whole tile links to its section, a red hairline draws in along
+   the top on hover or focus, and the background lifts a step. */
 .bob-glance__item {
+  position: relative;
   display: grid;
   gap: 0.55rem;
-  padding: 1.35rem 0;
+  padding: 1.35rem 0.9rem;
+  margin-inline: -0.9rem;
   border-bottom: 1px solid var(--bob-hair);
+  border-radius: 0.9rem;
+  transition: background-color 240ms ease;
+}
+
+.bob-glance__item::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0.9rem;
+  width: 2.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--bob-red), transparent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 420ms var(--bob-ease);
+}
+
+.bob-glance__item:hover,
+.bob-glance__item:focus-within {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.bob-glance__item:hover::before,
+.bob-glance__item:focus-within::before {
+  transform: scaleX(1);
+}
+
+.bob-glance__item dt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bob-glance__num {
+  order: 2;
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  transition: color 240ms ease;
+}
+
+.bob-glance__item:hover .bob-glance__num {
+  color: var(--bob-red-text);
+}
+
+/* The first two answers (price and commission) lead, a little larger. */
+.bob-glance__item--lead .bob-glance__value {
+  font-size: clamp(2.1rem, 3.4vw, 2.9rem);
+}
+
+.bob-glance__item--lead .bob-glance__value::after {
+  content: '';
+  display: inline-block;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: var(--bob-red);
+  vertical-align: 0.15em;
+}
+
+/* Entrance: armed by the page script only when the card is still below the fold. */
+@media (prefers-reduced-motion: no-preference) {
+  .bob-glance__card.is-armed .bob-glance__item {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .bob-glance__card.is-shown .bob-glance__item {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 600ms var(--bob-ease) calc(var(--i, 0) * 55ms),
+      transform 700ms var(--bob-ease) calc(var(--i, 0) * 55ms),
+      background-color 240ms ease;
+  }
 }
 
 @media (min-width: 40rem) {
@@ -1158,6 +1257,7 @@
   align-items: center;
   gap: 0.4rem;
   min-height: 1.75rem;
+  outline-offset: 2px;
   color: var(--bob-dim);
   font-size: 0.7rem;
   font-weight: 700;
@@ -1167,17 +1267,25 @@
   transition: color 160ms ease;
 }
 
+/* The link covers the whole tile, so the answer is one big target. */
+.bob-glance__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
 .bob-glance__link span {
   opacity: 0;
   transform: translateX(-4px);
   transition: opacity 200ms ease, transform 240ms var(--bob-ease);
 }
 
-.bob-glance__link:hover {
+.bob-glance__item:hover .bob-glance__link {
   color: #fff;
 }
 
-.bob-glance__link:hover span,
+.bob-glance__item:hover .bob-glance__link span,
 .bob-glance__link:focus-visible span {
   opacity: 1;
   transform: translateX(0);
@@ -1288,23 +1396,11 @@
   vertical-align: 0.1em;
 }
 
-/* UI fragments: real booking-page pieces on a lit panel. */
+/* UI fragments: real booking-page pieces, set straight on the page with no panel around them. */
 .bob-frag {
   display: grid;
-  min-height: 13.5rem;
+  min-height: 12rem;
   place-items: center;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid var(--bob-line);
-  border-radius: var(--bob-radius);
-  background:
-    radial-gradient(30rem 14rem at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%),
-    linear-gradient(180deg, #111113, #0a0a0b);
-  transition: transform 260ms var(--bob-ease), border-color 200ms ease;
-}
-
-.bob-step:hover .bob-frag {
-  border-color: rgba(255, 255, 255, 0.14);
-  transform: translateY(-2px);
 }
 
 .bob-frag > * {
@@ -1604,21 +1700,64 @@
     opacity: 0;
   }
 
-  .bob-frag__ring--rows3 { width: 100%; height: calc((100% - 1rem) / 3); }
   .bob-frag__ring--rows2 { width: 100%; height: calc((100% - 3.9rem) / 2); }
-  .bob-frag__ring--faces { width: calc((100% - 1.5rem) / 4); height: 100%; }
-  .bob-frag__ring--faces::after { top: 2.2rem; right: 50%; margin-right: -0.8rem; }
 
-  /* While the ring plays, the static selection steps back. */
-  .bob-steps.is-live .bob-frag__anim .bob-frag__row.is-on,
-  .bob-steps.is-live .bob-frag__anim .bob-frag__face.is-on {
+  /* Step 4 keeps its ring; while it plays, the static selection steps back. */
+  .bob-steps.is-live .bob-frag__pay .bob-frag__row.is-on {
     border-color: rgba(27, 26, 24, 0.1);
     box-shadow: none;
   }
 
-  .bob-steps.is-live .bob-frag__anim .bob-frag__row.is-on .bob-frag__radio {
+  .bob-steps.is-live .bob-frag__pay .bob-frag__row.is-on .bob-frag__radio {
     border: 1.5px solid rgba(27, 26, 24, 0.3);
     background: none;
+  }
+
+  /* Steps 1 and 2: the selection drifts from one option to the next as a slow crossfade (no ring,
+     no glow, no tap pulse). Each option carries its own outline layer; only opacity animates. */
+  .bob-frag__cycle > .is-cycled {
+    position: relative;
+  }
+
+  .bob-steps.is-live .bob-frag__cycle > .is-cycled::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: 1.5px solid var(--bob-red);
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .bob-steps.is-live .bob-frag__cycle .bob-frag__radio {
+    position: relative;
+  }
+
+  .bob-steps.is-live .bob-frag__cycle .is-cycled .bob-frag__radio::after {
+    content: '';
+    position: absolute;
+    inset: -1.5px;
+    border-radius: inherit;
+    background: radial-gradient(circle, #fff 0 28%, var(--bob-red) 30%);
+    opacity: 0;
+  }
+
+  /* While the crossfade plays, the static selection steps back. */
+  .bob-steps.is-live .bob-frag__cycle .bob-frag__row.is-on,
+  .bob-steps.is-live .bob-frag__cycle .bob-frag__face.is-on {
+    border-color: rgba(27, 26, 24, 0.1);
+    box-shadow: none;
+  }
+
+  .bob-steps.is-live .bob-frag__cycle .bob-frag__row.is-on .bob-frag__radio {
+    border: 1.5px solid rgba(27, 26, 24, 0.3);
+    background: none;
+  }
+
+  .bob-steps.is-live .bob-step.is-inview .bob-frag__cycle > .is-cycled::after,
+  .bob-steps.is-live .bob-step.is-inview .bob-frag__cycle > .is-cycled .bob-frag__radio::after {
+    animation: bob-select 7.2s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+    animation-delay: calc(var(--c, 0) * 2.4s);
   }
 
   .bob-steps.is-live .bob-frag__paybar {
@@ -1648,15 +1787,13 @@
   }
 
   /* Running state */
-  .bob-step.is-inview .bob-frag__ring--rows3 { animation: bob-ring-rows3 3.6s var(--bob-ease) infinite; }
-  .bob-step.is-inview .bob-frag__ring--faces { animation: bob-ring-faces 3.6s var(--bob-ease) infinite; }
   .bob-step.is-inview .bob-frag__ring--rows2 { animation: bob-ring-rows2 3.6s var(--bob-ease) infinite; }
   .bob-step.is-inview .bob-frag__ring::after { animation: bob-tap 1.2s ease-out infinite; }
   .bob-step.is-inview .bob-frag__paybar-fill { animation: bob-paybar 3.6s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
 
   .bob-steps.is-live .bob-step.is-inview .bob-frag__time {
-    animation: bob-time-in 3.6s var(--bob-ease) infinite;
-    animation-delay: calc(var(--i, 0) * 90ms);
+    animation: bob-time-in 5.4s var(--bob-ease) infinite;
+    animation-delay: calc(var(--i, 0) * 60ms);
   }
 
   .bob-steps.is-live .bob-step.is-inview .bob-frag__time.is-on {
@@ -1682,18 +1819,11 @@
   }
 }
 
-@keyframes bob-ring-rows3 {
-  0%, 22% { transform: translateY(0); }
-  30%, 55% { transform: translateY(calc(100% + 0.5rem)); }
-  63%, 88% { transform: translateY(calc(200% + 1rem)); }
-  96%, 100% { transform: translateY(0); }
-}
-
-@keyframes bob-ring-faces {
-  0%, 22% { transform: translateX(0); }
-  30%, 55% { transform: translateX(calc(100% + 0.5rem)); }
-  63%, 88% { transform: translateX(calc(200% + 1rem)); }
-  96%, 100% { transform: translateX(0); }
+/* One third of the cycle on each option, with a slow fade in and out between them. */
+@keyframes bob-select {
+  0% { opacity: 0; }
+  8%, 30% { opacity: 1; }
+  38%, 100% { opacity: 0; }
 }
 
 @keyframes bob-ring-rows2 {
@@ -1712,17 +1842,19 @@
   40%, 100% { transform: scaleX(1); }
 }
 
+/* Times settle in, then the chosen one fills in red: no bounce, no glow burst. */
 @keyframes bob-time-in {
-  0% { opacity: 0; transform: translateY(6px) scale(0.94); }
-  14%, 100% { opacity: 1; transform: none; }
+  0% { opacity: 0; transform: translateY(4px); }
+  10%, 92% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: none; }
 }
 
 @keyframes bob-time-pick {
-  0% { opacity: 0; transform: translateY(6px) scale(0.94); }
-  14% { opacity: 1; transform: none; }
-  40% { transform: scale(1); box-shadow: none; }
-  48% { transform: scale(1.08); box-shadow: 0 10px 22px -10px rgba(215, 38, 56, 0.9); }
-  58%, 100% { transform: scale(1); box-shadow: 0 10px 22px -10px rgba(215, 38, 56, 0.6); }
+  0% { opacity: 0; transform: translateY(4px); border-color: rgba(27, 26, 24, 0.12); background-color: #fff; color: #1b1a18; }
+  10% { opacity: 1; transform: none; border-color: rgba(27, 26, 24, 0.12); background-color: #fff; color: #1b1a18; }
+  34% { border-color: rgba(27, 26, 24, 0.12); background-color: #fff; color: #1b1a18; }
+  44%, 92% { opacity: 1; border-color: var(--bob-red); background-color: var(--bob-red); color: #fff; }
+  100% { opacity: 0; border-color: var(--bob-red); background-color: var(--bob-red); color: #fff; }
 }
 
 @keyframes bob-mail-in {
@@ -1893,20 +2025,21 @@
   gap: 1rem;
 }
 
+/* Compact: one tight panel of controls and a timeline exactly as tall as it. */
 @media (min-width: 64rem) {
   .bob-avail__stage {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     align-items: stretch;
-    gap: 1.25rem;
+    gap: 1rem;
   }
 }
 
 .bob-avail__panel {
-  --ks-glass-pad: 1.6rem;
+  --ks-glass-pad: 1.25rem;
   display: grid;
   align-content: start;
-  gap: 1.1rem;
-  padding: clamp(1.15rem, 2.6vw, 1.75rem);
+  gap: 0.85rem;
+  padding: clamp(1rem, 2vw, 1.3rem);
 }
 
 .bob-avail__panel .bob-seg {
@@ -1914,7 +2047,7 @@
 }
 
 .bob-avail__diary {
-  height: 38rem;
+  height: 30rem;
   min-width: 0;
 }
 
@@ -1923,7 +2056,7 @@
   .bob-avail__diary {
     position: relative;
     height: auto;
-    min-height: 38rem;
+    min-height: 0;
   }
 
   .bob-avail__diary .bobtl-slot {
@@ -1934,7 +2067,7 @@
 
 @media (max-width: 47.99rem) {
   .bob-avail__diary {
-    height: 30rem;
+    height: 26rem;
   }
 }
 
@@ -1973,10 +2106,18 @@
   }
 }
 
+.bob-slots__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+
 .bob-slots__label {
-  margin: 0.3rem 0 0;
+  margin: 0;
   color: var(--bob-muted);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
 }
 
 .bob-slots__label b {
@@ -1985,33 +2126,33 @@
 
 .bob-slots {
   display: grid;
-  gap: 0.3rem;
+  gap: 0.22rem;
 }
 
 .bob-slots__row {
   display: grid;
-  grid-template-columns: 3rem repeat(4, minmax(0, 1fr));
+  grid-template-columns: 2.6rem repeat(4, minmax(0, 1fr));
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.22rem;
 }
 
 .bob-slots__hour {
   color: var(--bob-dim);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .bob-slot {
   position: relative;
-  min-height: 2.75rem;
+  min-height: 2rem;
   padding: 0;
   border: 1px solid var(--bob-line);
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.025);
   color: #e6e6ea;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -2031,7 +2172,6 @@
 }
 
 .bob-slot:hover {
-  transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
@@ -2053,14 +2193,14 @@
   border-color: var(--bob-green);
   background: var(--bob-green);
   color: #06140d;
-  box-shadow: 0 10px 24px -12px rgba(60, 207, 142, 0.9);
+  box-shadow: 0 6px 16px -10px rgba(60, 207, 142, 0.7);
 }
 
 .bob-slot.is-on.is-no {
   border-color: var(--bob-red);
   background: rgba(215, 38, 56, 0.18);
   color: #ffb3ba;
-  box-shadow: 0 10px 24px -12px rgba(215, 38, 56, 0.9);
+  box-shadow: 0 6px 16px -10px rgba(215, 38, 56, 0.7);
 }
 
 .bob-slots__legend {
@@ -2090,11 +2230,23 @@
 }
 
 .bob-avail__panel .bob-scrub__readout {
-  min-height: 4.6rem;
+  min-height: 4.2rem;
   margin: 0;
-  padding-top: 1rem;
+  padding-top: 0.8rem;
   border-top: 1px solid var(--bob-hair);
-  font-size: 0.92rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.bob-avail__panel .bob-seg__btn {
+  min-height: 2.4rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.bob-avail__panel .bob-scrub__who img {
+  width: 2.2rem;
+  height: 2.2rem;
 }
 
 .bob-rules {

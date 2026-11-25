@@ -5,10 +5,11 @@
 /**
  * The demo clock each timeline runs on (London minute, today). The hero is mid-morning, so the
  * day has finished, live and coming appointments and the phone offers only later times. The
- * availability example starts before opening, so every appointment is still to come.
+ * availability example sits inside the busy late-morning run (back-to-back since 10:00), still
+ * before the first time it offers (12:00), so every time a visitor can add is still to come.
  */
 export const HERO_DEMO_NOW_MINUTE = 11 * 60 + 50;
-export const AVAILABILITY_DEMO_NOW_MINUTE = 8 * 60 + 30;
+export const AVAILABILITY_DEMO_NOW_MINUTE = 11 * 60 + 35;
 
 /** Event the hero phone and the availability controls send to the timeline. */
 export const LIVE_DIARY_EVENT = 'bob:diary';

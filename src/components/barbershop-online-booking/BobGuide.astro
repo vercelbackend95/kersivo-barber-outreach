@@ -13,6 +13,8 @@ const service = sim.services.find((s) => s.name === 'Skin fade') ?? sim.services
 const kit = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
 const times = offeredStarts(kit.appointments, sim.open, sim.close, service.duration).slice(0, 6);
 const picked = times[0]!;
+/* The step-2 selection drifts across the barbers who are in; anyone off is never picked. */
+const workingBarbers = sim.barbers.filter((b) => b.working).slice(0, 3);
 const depositPence = KERSIVO_BOOKING_DEPOSIT_GBP * 100;
 
 const CHECK =
@@ -28,11 +30,12 @@ const MAIL =
       <h2 id="bob-glance-title" class="bob-h2">{BOB_GLANCE.title}</h2>
       <p class="bob-lead">{BOB_GLANCE.lead}</p>
     </header>
-    <div class="ks-glass-card ks-glass-card--accent bob-glance__card">
+    <div class="ks-glass-card ks-glass-card--accent bob-glance__card" data-bob-glance>
       <dl class="bob-glance__list">
-        {BOB_GLANCE.rows.map((row) => (
-          <div class="bob-glance__item">
+        {BOB_GLANCE.rows.map((row, i) => (
+          <div class:list={['bob-glance__item', { 'bob-glance__item--lead': i < 2 }]} style={`--i:${i}`}>
             <dt>
+              <span class="bob-glance__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
               <a class="bob-glance__link" href={row.href}>{row.term}<span aria-hidden="true">→</span></a>
             </dt>
             <dd>
@@ -71,10 +74,9 @@ const MAIL =
 
           <div class="bob-frag" aria-hidden="true">
             {step.id === 'service' && (
-              <div class="bob-frag__stack bob-frag__anim">
-                <span class="bob-frag__ring bob-frag__ring--rows3" aria-hidden="true"></span>
-                {sim.services.slice(0, 3).map((s) => (
-                  <div class:list={['bob-frag__row', { 'is-on': s.id === service.id }]}>
+              <div class="bob-frag__stack bob-frag__anim bob-frag__cycle">
+                {sim.services.slice(0, 3).map((s, i) => (
+                  <div class:list={['bob-frag__row', 'is-cycled', { 'is-on': s.id === service.id }]} style={`--c:${i}`}>
                     <span><b>{s.name}</b><small>{s.description}</small></span>
                     <span class="bob-frag__price">{poundsLabel(s.pricePence)}<small>{s.duration} min</small></span>
                     <i class="bob-frag__radio"></i>
@@ -83,10 +85,12 @@ const MAIL =
               </div>
             )}
             {step.id === 'barber' && (
-              <div class="bob-frag__faces bob-frag__anim">
-                <span class="bob-frag__ring bob-frag__ring--faces" aria-hidden="true"></span>
+              <div class="bob-frag__faces bob-frag__anim bob-frag__cycle">
                 {sim.barbers.map((b) => (
-                  <div class:list={['bob-frag__face', { 'is-on': b.id === kit.id, 'is-off': !b.working }]}>
+                  <div
+                    class:list={['bob-frag__face', { 'is-on': b.id === kit.id, 'is-off': !b.working, 'is-cycled': workingBarbers.includes(b) }]}
+                    style={workingBarbers.includes(b) ? `--c:${workingBarbers.indexOf(b)}` : undefined}
+                  >
                     <img src={b.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
                     <b>{b.firstName}</b>
                     <small>{b.working ? b.role : 'Off on this day'}</small>
