@@ -8,6 +8,7 @@ import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
 import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
+import { KAR_PAGE_PATH } from '@/lib/seo/adminReportsExperience';
 
 /**
  * /llms.txt (llmstxt.org): a plain summary of KERSIVO with links to the pages that answer
@@ -35,6 +36,11 @@ export function buildLlmsTxt(siteUrl: string): string {
       '/starter',
       'KERSIVO Starter',
       `free barber booking system for UK shops: £0/month for up to 4 barbers, every public booking takes a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or full payment through the shop's Stripe account (Stripe fees apply), and when Full is the better fit`,
+    ),
+    link(
+      KAR_PAGE_PATH,
+      'Admin & reports',
+      'the owner dashboard in Full KERSIVO: bookings, barbers, clients with a reliability score, retail sales, and booking reports (bookings, utilisation, cancelled and no-show rates, average booking value, peak day and hour) compared with the previous period, with what each metric means',
     ),
     link(KERSIVO_LIVE_DEMO_HREF, 'Live demo', 'Heritage Grooming, a fictional demo barbershop running on KERSIVO'),
     link('/about', 'About KERSIVO', 'how setup, support and leaving work'),

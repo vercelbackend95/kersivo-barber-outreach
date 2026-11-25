@@ -85,15 +85,16 @@ describe('marketing navigation config', () => {
     expect(included.items.map((item) => item.href)).toEqual([
       '/barbershop-websites',
       '/barbershop-online-booking',
-      HERITAGE_ADMIN_DASHBOARD_HREF,
+      '/barbershop-reports',
       '/barbershop-retail-pickup',
       '/starter',
     ]);
     expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
-    // Admin & reports already links the admin demo; the demo section does not repeat it.
+    // Admin & reports explains the dashboard; the demo section opens the demo dashboard itself.
     expect(product.sections.find((section) => section.id === 'demo')?.items.map((item) => item.href)).toEqual([
       HERITAGE_DEMO_SITE_HREF,
       HERITAGE_DEMO_BOOK_HREF,
+      HERITAGE_ADMIN_DASHBOARD_HREF,
     ]);
     expect(product).toMatchObject({
       eyebrow: 'KERSIVO',

@@ -1,0 +1,543 @@
+---
+/*
+ * /barbershop-reports — KERSIVO Admin & Reports, the interactive explainer.
+ * Kind: software. One effect (three.js booking field in the hero), two dealt moments
+ * (pinned "working day" chapters, scroll-lit statement), one live studio fed by the
+ * fictional Heritage Grooming demo data, card loops with a pause control.
+ * Every word a search engine or assistant needs is in the server HTML; motion only decorates it.
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { buildAdminReportsJsonLd } from '@/lib/seo/adminReportsJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { FREE_PREVIEW_CTA_HREF } from '@/lib/freePreview/fullPlanCta';
+import { buildKarStudioData, KAR_STUDIO_RANGES } from '@/lib/landing/kar/reportsDemo';
+import { buildKarChapterDemo } from '@/lib/landing/kar/chapterDemo';
+import { karChartPaths, karKpis, karMetricTotal, normalise, resample } from '@/lib/landing/kar/studioFormat';
+import {
+  KAR_ANSWER,
+  KAR_ANSWER_TITLE,
+  KAR_CHAPTERS,
+  KAR_CHAPTERS_LEAD,
+  KAR_CHAPTERS_TITLE,
+  KAR_CLOSE_LEAD,
+  KAR_CLOSE_NOTE,
+  KAR_CLOSE_STARTER,
+  KAR_CLOSE_TITLE,
+  KAR_DEMO_REPORTS_HREF,
+  KAR_DESCRIPTION,
+  KAR_DIFFERENCES,
+  KAR_DIFFERENCES_TITLE,
+  KAR_FACTS,
+  KAR_FAQ_TITLE,
+  KAR_FAQS,
+  KAR_HERO,
+  KAR_METRICS,
+  KAR_METRICS_LEAD,
+  KAR_METRICS_TITLE,
+  KAR_PAGE_PATH,
+  KAR_PLAN_ROWS,
+  KAR_PLANS_LEAD,
+  KAR_PLANS_TITLE,
+  KAR_STATEMENT,
+  KAR_STUDIO_LEAD,
+  KAR_STUDIO_NOTE,
+  KAR_STUDIO_TITLE,
+  KAR_TITLE,
+} from '@/lib/seo/adminReportsExperience';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/admin-reports.css';
+
+const currentYear = new Date().getFullYear();
+const studio = buildKarStudioData();
+const START_RANGE = '7d';
+const start = studio[START_RANGE];
+const kpis = karKpis(start);
+const paths = karChartPaths(normalise(resample(start.series.bookings)));
+const maxLeader = Math.max(1, ...start.leaderboard.map((row) => row.count));
+const day = buildKarChapterDemo();
+const statementWords = KAR_STATEMENT.split(' ');
+const SIDEBAR = ['Bookings', 'Barbers', 'Reports', 'History', 'Clients', 'Services', 'Products', 'Orders', 'Sales', 'Assistant'];
+const chapterNavIndex = KAR_CHAPTERS.map((chapter) => SIDEBAR.indexOf(chapter.section));
+const weekKpis = karKpis(studio['7d']);
+const weekPaths = karChartPaths(normalise(resample(studio['7d'].series.bookings, 24)));
+---
+
+<LandingLayout
+  title={KAR_TITLE}
+  description={KAR_DESCRIPTION}
+  canonicalPath={KAR_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), buildAdminReportsJsonLd()]}
+>
+  <main class="kar landing-overflow-guard" data-kar>
+    <script is:inline>
+      // Hide the hero lines before first paint only when they will animate; a failsafe shows them.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('kar-js');
+        window.setTimeout(function () {
+          var hero = document.querySelector('[data-kar-hero]');
+          if (hero) hero.classList.add('is-in');
+        }, 2500);
+      }
+    </script>
+
+    <!-- 1 · Hero: a week of bookings as a field of columns (three.js) -->
+    <section class="kar-hero" aria-labelledby="kar-hero-title" data-kar-hero>
+      <div class="kar-hero__visual" aria-hidden="true" data-kar-visual>
+        <canvas class="kar-hero__canvas" data-kar-canvas></canvas>
+      </div>
+      <div class="kar-wrap kar-hero__inner">
+        <p class="ks-eyebrow" data-kar-enter>{KAR_HERO.eyebrow}</p>
+        <h1 id="kar-hero-title" class="kar-hero__title">
+          {KAR_HERO.titleLines.map((line, i) => (
+            <span class="kar-hero__line">
+              <span class:list={['kar-hero__line-inner', { 'kar-red': i === 1 }]} data-kar-rise>{line}</span>
+            </span>
+          ))}
+        </h1>
+        <p class="kar-hero__lead" data-kar-enter>{KAR_HERO.lead}</p>
+        <ul class="kar-hero__facts" data-kar-enter>
+          {KAR_HERO.facts.map((fact) => <li>{fact}</li>)}
+        </ul>
+        <div class="kar-actions" data-kar-enter>
+          <a class="btn btn--primary kar-btn" href={FREE_PREVIEW_CTA_HREF} data-track="build_preview_click">
+            {KAR_HERO.primary}
+            <span class="kar-btn__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn--outline kar-btn" href={KAR_DEMO_REPORTS_HREF} data-track="view_live_demo_click">{KAR_HERO.secondary}</a>
+        </div>
+      </div>
+      <a class="kar-hero__cue" href="#in-short" aria-label="Scroll to what Admin & Reports is" data-kar-enter>
+        <span class="kar-hero__cue-line" aria-hidden="true"></span>
+      </a>
+    </section>
+
+    <!-- 2 · In short: the direct answer -->
+    <section class="kar-answer" id="in-short" aria-labelledby="kar-answer-title">
+      <div class="kar-wrap kar-answer__grid">
+        <div>
+          <p class="ks-eyebrow">In short</p>
+          <h2 id="kar-answer-title" class="kar-h2">{KAR_ANSWER_TITLE}</h2>
+        </div>
+        <div class="kar-answer__body">
+          <p class="kar-answer__text">{KAR_ANSWER}</p>
+          <dl class="kar-answer__facts">
+            {KAR_FACTS.map((fact) => (
+              <div class="kar-answer__fact">
+                <dt>{fact.term}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · Moment 1: a working day, pinned chapters -->
+    <section class="kar-day" id="day" aria-labelledby="kar-day-title" data-kar-chapters>
+      <div class="kar-day__pin" data-kar-pin>
+        <div class="kar-wrap kar-day__grid">
+          <div class="kar-day__copy">
+            <p class="ks-eyebrow">The dashboard</p>
+            <h2 id="kar-day-title" class="kar-h2">{KAR_CHAPTERS_TITLE}</h2>
+            <p class="kar-lead">{KAR_CHAPTERS_LEAD}</p>
+
+            <ol class="kar-day__tabs" aria-label="Dashboard screens">
+              {KAR_CHAPTERS.map((chapter, i) => (
+                <li class="kar-day__item">
+                  <button
+                    type="button"
+                    class="kar-day__tab"
+                    data-kar-tab={i}
+                    aria-pressed={i === 0 ? 'true' : 'false'}
+                    aria-controls={`kar-day-panel-${chapter.id}`}
+                  >
+                    <span class="kar-day__tab-index">{chapter.index}</span>
+                    <span class="kar-day__tab-title">{chapter.title}</span>
+                    <span class="kar-day__tab-section">{chapter.section}</span>
+                    <span class="kar-day__tab-bar" aria-hidden="true"><span data-kar-tab-fill></span></span>
+                  </button>
+                  <p class:list={['kar-day__body', { 'is-active': i === 0 }]} id={`kar-day-panel-${chapter.id}`} data-kar-panel={i}>{chapter.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div class="kar-day__stage" aria-hidden="true" data-kar-stage data-chapter="0" style={`--kar-nav:${chapterNavIndex[0]}`}>
+            <div class="kar-app kar-app--day">
+              <div class="kar-app__bar">
+                <span class="kar-app__dots"><i></i><i></i><i></i></span>
+                <span class="kar-app__url">Heritage Grooming · Owner dashboard</span>
+              </div>
+              <div class="kar-app__body">
+                <nav class="kar-side" aria-hidden="true">
+                  <span class="kar-side__glow" data-kar-nav-glow></span>
+                  {SIDEBAR.map((label) => (
+                    <span class:list={['kar-side__item', { 'is-group': label === 'Products' || label === 'Assistant' }]}>{label}</span>
+                  ))}
+                </nav>
+                <div class="kar-screens">
+                  <!-- Bookings -->
+                  <div class="kar-screen kar-screen--bookings" data-kar-screen="0">
+                    <div class="kar-screen__head">
+                      <b>Bookings</b><span>{day.dayLabel}</span>
+                    </div>
+                    <div class="kar-chips">
+                      <span class="kar-chip">Bookings today <b>{day.bookingsToday}</b></span>
+                      <span class="kar-chip kar-chip--red">Still to come <b>{day.stillToCome}</b></span>
+                    </div>
+                    <div class="kar-timeline">
+                      <div class="kar-timeline__hours"><span>09:00</span><span>12:00</span><span>15:00</span><span>19:00</span></div>
+                      {day.timeline.map((row) => (
+                        <div class="kar-timeline__row">
+                          <span class="kar-timeline__name">{row.barber.split(' ')[0]}</span>
+                          <span class="kar-timeline__track">
+                            {row.blocks.length === 0 && <span class="kar-timeline__off">Off today</span>}
+                            {row.blocks.map((block) => (
+                              <span class={`kar-block kar-block--${block.state}`} style={`left:${block.left}%;width:${block.width}%`}>
+                                <span>{block.label}</span>
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <!-- Clients -->
+                  <div class="kar-screen kar-screen--clients" data-kar-screen="1">
+                    <div class="kar-screen__head"><b>Client profile</b><span>Clients</span></div>
+                    <div class="kar-client">
+                      <span class="kar-client__avatar">{day.client.initials}</span>
+                      <span class="kar-client__name">{day.client.name}</span>
+                      <span class="kar-client__tags">{day.client.tags.map((tag) => <i>{tag}</i>)}</span>
+                      <span class="kar-score" style={`--score:${day.client.reliability}`}>
+                        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" pathLength="100"></circle><circle class="kar-score__fill" cx="22" cy="22" r="19" pathLength="100"></circle></svg>
+                        <b>{day.client.reliability}</b>
+                        <small>{day.client.reliabilityLabel}</small>
+                      </span>
+                    </div>
+                    <dl class="kar-stats">
+                      <div><dt>Completed</dt><dd>{day.client.visits}</dd></div>
+                      <div><dt>No-shows</dt><dd>{day.client.noShows}</dd></div>
+                      <div><dt>Total spent</dt><dd>{day.client.totalSpent}</dd></div>
+                      <div><dt>Favourite</dt><dd>{day.client.favourite}</dd></div>
+                    </dl>
+                    {day.client.lastOrder && <p class="kar-client__note"><b>Last order</b> {day.client.lastOrder}</p>}
+                  </div>
+
+                  <!-- Reports -->
+                  <div class="kar-screen kar-screen--reports" data-kar-screen="2">
+                    <div class="kar-screen__head"><b>Reports</b><span>1 Week</span></div>
+                    <div class="kar-minikpis">
+                      <span><small>Bookings</small><b>{weekKpis.bookings.value}</b><i class={`is-${weekKpis.bookings.tone}`}>{weekKpis.bookings.delta}</i></span>
+                      <span><small>Utilisation</small><b>{weekKpis.utilisation.value}</b><i class={`is-${weekKpis.utilisation.tone}`}>{weekKpis.utilisation.delta}</i></span>
+                      <span><small>Avg booking value</small><b>{weekKpis.value.value}</b><i class={`is-${weekKpis.value.tone}`}>{weekKpis.value.delta}</i></span>
+                    </div>
+                    <svg class="kar-minichart" viewBox="0 0 640 220" preserveAspectRatio="none">
+                      <path class="kar-minichart__area" d={weekPaths.area}></path>
+                      <path class="kar-minichart__line" d={weekPaths.line} pathLength="1"></path>
+                    </svg>
+                  </div>
+
+                  <!-- Sales -->
+                  <div class="kar-screen kar-screen--sales" data-kar-screen="3">
+                    <div class="kar-screen__head"><b>Sales analytics</b><span>7 days</span></div>
+                    <div class="kar-minikpis kar-minikpis--sales">
+                      <span><small>Orders</small><b>{day.sales.orders}</b></span>
+                      <span><small>Avg order value</small><b>{day.sales.aov}</b></span>
+                      <span><small>Top product</small><b class="kar-minikpis__small">{day.sales.topProduct}</b></span>
+                    </div>
+                    <ul class="kar-bars">
+                      {day.sales.leaderboard.map((row) => (
+                        <li><span class="kar-bars__name">{row.name}</span><span class="kar-bars__track"><span style={`--w:${row.share}%`}></span></span><b>{row.units}</b></li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · The live studio -->
+    <section class="kar-studio" id="studio" aria-labelledby="kar-studio-title" data-kar-studio>
+      <div class="kar-wrap">
+        <div class="kar-studio__head">
+          <div>
+            <p class="ks-eyebrow">Live demo</p>
+            <h2 id="kar-studio-title" class="kar-h2">{KAR_STUDIO_TITLE}</h2>
+          </div>
+          <p class="kar-lead">{KAR_STUDIO_LEAD}</p>
+        </div>
+
+        <div class="kar-app kar-app--studio">
+          <div class="kar-studio__toolbar">
+            <div class="kar-seg" role="group" aria-label="Date range">
+              {KAR_STUDIO_RANGES.map((range) => (
+                <button type="button" class="kar-seg__btn" data-kar-range={range.key} aria-pressed={range.key === START_RANGE ? 'true' : 'false'}>
+                  <span class="kar-seg__long">{range.label}</span><span class="kar-seg__short" aria-hidden="true">{range.short}</span>
+                </button>
+              ))}
+              <span class="kar-seg__thumb" aria-hidden="true" data-kar-range-thumb></span>
+            </div>
+            <div class="kar-seg kar-seg--metric" role="group" aria-label="Chart metric">
+              <button type="button" class="kar-seg__btn" data-kar-metric="bookings" aria-pressed="true">Bookings</button>
+              <button type="button" class="kar-seg__btn" data-kar-metric="value" aria-pressed="false">Booking value</button>
+              <span class="kar-seg__thumb" aria-hidden="true" data-kar-metric-thumb></span>
+            </div>
+          </div>
+
+          <div class="kar-kpis" aria-live="polite">
+            {[
+              ['bookings', 'Bookings'],
+              ['utilisation', 'Utilisation'],
+              ['value', 'Avg booking value'],
+              ['cancelled', 'Cancelled rate'],
+            ].map(([key, label]) => {
+              const kpi = kpis[key as keyof typeof kpis];
+              return (
+                <div class="kar-kpi" data-kar-kpi={key}>
+                  <span class="kar-kpi__label">{label}</span>
+                  <span class="kar-kpi__value" data-kar-kpi-value>{kpi.value}</span>
+                  <span class={`kar-kpi__delta is-${kpi.tone}`} data-kar-kpi-delta>{kpi.delta}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div class="kar-studio__body">
+            <figure class="kar-chart" aria-label="Chart of the selected metric over the selected range">
+              <div class="kar-chart__head">
+                <span class="kar-chart__metric" data-kar-chart-label>Bookings</span>
+                <span class="kar-chart__total" data-kar-chart-total>{karMetricTotal(start, 'bookings')}</span>
+                <span class="kar-flag" data-kar-sample hidden={!start.smallSample}>Small sample — trends may be unreliable</span>
+              </div>
+              <svg class="kar-chart__svg" viewBox="0 0 640 220" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="kar-area" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#d72638" stop-opacity="0.32"></stop>
+                    <stop offset="100%" stop-color="#d72638" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <g class="kar-chart__grid">
+                  <line x1="0" x2="640" y1="60" y2="60"></line>
+                  <line x1="0" x2="640" y1="113" y2="113"></line>
+                  <line x1="0" x2="640" y1="166" y2="166"></line>
+                </g>
+                <path class="kar-chart__area" d={paths.area} fill="url(#kar-area)" data-kar-area></path>
+                <path class="kar-chart__line" d={paths.line} data-kar-line></path>
+              </svg>
+              <div class="kar-chart__axis" data-kar-axis>
+                {start.axis.map((label) => <span>{label}</span>)}
+              </div>
+            </figure>
+
+            <div class="kar-side-stats">
+              <dl class="kar-side-stats__list">
+                <div><dt>Peak day and hour</dt><dd data-kar-stat="peak">{start.peak ?? '—'}</dd></div>
+                <div><dt>Most popular service</dt><dd data-kar-stat="service">{start.popularService ?? '—'}</dd></div>
+                <div><dt>No-show rate</dt><dd><span data-kar-stat="noshow">{kpis.noshow.value}</span> <small class={`is-${kpis.noshow.tone}`} data-kar-stat="noshow-delta">{kpis.noshow.delta}</small></dd></div>
+              </dl>
+              <div class="kar-leaders">
+                <p class="kar-leaders__title">Barber leaderboard</p>
+                <ol class="kar-leaders__list" data-kar-leaders>
+                  {start.leaderboard.map((row) => (
+                    <li>
+                      <span class="kar-leaders__name">{row.name}</span>
+                      <span class="kar-leaders__track"><span style={`--w:${(row.count / maxLeader) * 100}%`}></span></span>
+                      <b>{row.count}</b>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script type="application/json" data-kar-studio-data set:html={JSON.stringify(studio)} />
+        <div class="kar-studio__foot">
+          <p class="kar-note">{KAR_STUDIO_NOTE}</p>
+          <a class="kar-link" href={KAR_DEMO_REPORTS_HREF} data-track="view_live_demo_click">Open Reports in the demo dashboard <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · Moment 2: the statement lights up -->
+    <section class="kar-statement" aria-label="How the dashboard connects" data-kar-statement>
+      <div class="kar-wrap">
+        <p class="kar-statement__text">
+          {statementWords.map((word) => (
+            <span class:list={['kar-word', { 'kar-word--key': word === 'once,' }]} data-kar-word>{word} </span>
+          ))}
+        </p>
+      </div>
+    </section>
+
+    <!-- 6 · What is different: cards with short loops -->
+    <section class="kar-diff" aria-labelledby="kar-diff-title" data-kar-features>
+      <div class="kar-wrap">
+        <div class="kar-diff__head">
+          <div>
+            <p class="ks-eyebrow">What’s different</p>
+            <h2 id="kar-diff-title" class="kar-h2">{KAR_DIFFERENCES_TITLE}</h2>
+          </div>
+          <button type="button" class="kar-pause" aria-pressed="false" data-kar-pause>
+            <span class="kar-pause__icon" aria-hidden="true"></span>
+            <span data-kar-pause-label>Pause animations</span>
+          </button>
+        </div>
+        <ul class="kar-diff__grid">
+          {KAR_DIFFERENCES.map((item) => (
+            <li class="kar-card ks-glass-card" data-kar-card={item.id}>
+              <div class="kar-card__visual" aria-hidden="true">
+                {item.id === 'compare' && (
+                  <div class="kar-vis-compare">
+                    <span class="kar-vis-compare__prev">66.1%<small>Last week</small></span>
+                    <span class="kar-vis-compare__now"><b data-kar-count>72.3%</b><small>This week</small></span>
+                    <span class="kar-vis-compare__chip">+6.2 pts</span>
+                  </div>
+                )}
+                {item.id === 'sample' && (
+                  <div class="kar-vis-sample">
+                    <span class="kar-vis-sample__dots">{Array.from({ length: 10 }, () => <i></i>)}</span>
+                    <span class="kar-flag kar-vis-sample__flag">Small sample</span>
+                  </div>
+                )}
+                {item.id === 'utilisation' && (
+                  <div class="kar-vis-util">
+                    <svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" pathLength="100"></circle><circle class="kar-vis-util__fill" cx="40" cy="40" r="32" pathLength="100"></circle></svg>
+                    <span class="kar-vis-util__text"><b>72%</b><small>booked of available</small></span>
+                  </div>
+                )}
+                {item.id === 'barbers' && (
+                  <svg class="kar-vis-lines" viewBox="0 0 220 90" preserveAspectRatio="none">
+                    <path class="kar-vis-lines__a" d="M0,70 C30,60 50,40 80,46 S130,20 160,28 S200,14 220,10" pathLength="1"></path>
+                    <path class="kar-vis-lines__b" d="M0,78 C30,74 60,62 90,66 S140,50 170,56 S205,44 220,42" pathLength="1"></path>
+                    <path class="kar-vis-lines__c" d="M0,84 C40,82 70,76 100,80 S150,68 180,72 S210,64 220,62" pathLength="1"></path>
+                  </svg>
+                )}
+              </div>
+              <p class="kar-card__kicker">{item.kicker}</p>
+              <h3 class="kar-card__title">{item.title}</h3>
+              <p class="kar-card__body">{item.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- 7 · Metric glossary -->
+    <section class="kar-metrics" id="metrics" aria-labelledby="kar-metrics-title">
+      <div class="kar-wrap">
+        <div class="kar-metrics__head">
+          <div>
+            <p class="ks-eyebrow">The numbers</p>
+            <h2 id="kar-metrics-title" class="kar-h2">{KAR_METRICS_TITLE}</h2>
+          </div>
+          <p class="kar-lead">{KAR_METRICS_LEAD}</p>
+        </div>
+        <ol class="kar-metrics__grid">
+          {KAR_METRICS.map((metric, i) => (
+            <li class="kar-metric" id={`metric-${metric.id}`}>
+              <span class="kar-metric__index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3 class="kar-metric__name">{metric.name}</h3>
+              <p class="kar-metric__def"><span class="kar-metric__tag">Measures</span>{metric.definition}</p>
+              <p class="kar-metric__act"><span class="kar-metric__tag kar-metric__tag--red">If it slips</span>{metric.action}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- 8 · Starter vs Full -->
+    <section class="kar-plans" aria-labelledby="kar-plans-title">
+      <div class="kar-wrap">
+        <p class="ks-eyebrow">Plans</p>
+        <h2 id="kar-plans-title" class="kar-h2">{KAR_PLANS_TITLE}</h2>
+        <p class="kar-lead">{KAR_PLANS_LEAD}</p>
+        <table class="kar-table">
+          <caption class="sr-only">Owner tools in KERSIVO Starter and Full KERSIVO</caption>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">KERSIVO Starter</th>
+              <th scope="col" class="kar-table__full">Full KERSIVO</th>
+            </tr>
+          </thead>
+          <tbody>
+            {KAR_PLAN_ROWS.map((row) => (
+              <tr>
+                <th scope="row">{row.label}</th>
+                <td data-plan="Starter" class:list={{ 'is-none': row.starter === 'Not included' }}>{row.starter}</td>
+                <td data-plan="Full" class="kar-table__full">{row.full}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="kar-plans__more">
+          <a class="kar-link" href="/pricing#plan" data-track="plan_my_setup_click">See Full KERSIVO pricing <span aria-hidden="true">→</span></a>
+          <a class="kar-link kar-link--quiet" href="/starter" data-track="starter_plan_explore_click">How Starter works</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- 9 · FAQ -->
+    <section class="kar-faq" id="faq" aria-labelledby="kar-faq-title">
+      <div class="kar-wrap kar-faq__grid">
+        <div>
+          <p class="ks-eyebrow">FAQ</p>
+          <h2 id="kar-faq-title" class="kar-h2">{KAR_FAQ_TITLE}</h2>
+        </div>
+        <div class="kar-faq__list">
+          {KAR_FAQS.map((faq, i) => (
+            <details class="kar-faq__item" open={i === 0}>
+              <summary class="kar-faq__q"><h3>{faq.question}</h3><span class="kar-faq__icon" aria-hidden="true"></span></summary>
+              <p class="kar-faq__a">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · Close -->
+    <section class="kar-close" aria-labelledby="kar-close-title">
+      <div class="kar-wrap kar-close__inner">
+        <h2 id="kar-close-title" class="kar-close__title">{KAR_CLOSE_TITLE}</h2>
+        <p class="kar-lead kar-close__lead">{KAR_CLOSE_LEAD}</p>
+        <div class="kar-actions kar-close__actions">
+          <a class="btn btn--primary kar-btn" href={FREE_PREVIEW_CTA_HREF} data-track="build_preview_click">
+            {KAR_HERO.primary}
+            <span class="kar-btn__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="kar-link" href="/starter" data-track="starter_plan_explore_click">{KAR_CLOSE_STARTER}</a>
+        </div>
+        <p class="kar-note kar-close__legal">{KAR_CLOSE_NOTE}</p>
+      </div>
+    </section>
+
+    <Footer50
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initAdminReports } from '@/lib/landing/kar/experience';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main[data-kar]');
+    if (!root || root.dataset.karBound === 'true') return;
+    root.dataset.karBound = 'true';
+    const cleanup = initAdminReports(root);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>

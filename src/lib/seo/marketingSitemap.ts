@@ -13,6 +13,7 @@ import { SETORA_ALTERNATIVE_PAGE_PATH } from './setoraAlternativeFaq';
 import { ABOUT_PAGE_PATH } from './aboutPage';
 import { BOOKSY_VS_FRESHA_PAGE_PATH } from './booksyVsFresha';
 import { KVB_PAGE_PATH } from './kersivoVsBooksyExperience';
+import { KAR_PAGE_PATH } from './adminReportsExperience';
 import { FEES_REPORT_PAGE_PATH } from './feesReport';
 import { PRICE_LIST_PAGE_PATH } from './priceListTemplatePage';
 import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
@@ -67,6 +68,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
     ? [staticPage(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH)] : []),
   ...(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE && BARBERSHOP_WEBSITES_PAGE_INDEXABLE
     ? [staticPage(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)] : []),
+  /** Admin & Reports explainer (the owner dashboard and Reports in Full KERSIVO). */
+  staticPage(KAR_PAGE_PATH),
   /** Retail pickup (click and collect) feature explainer. */
   staticPage(RETAIL_PICKUP_PAGE_PATH),
   staticPage(ABOUT_PAGE_PATH),
