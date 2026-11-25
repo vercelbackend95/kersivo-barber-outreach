@@ -1,6 +1,6 @@
 /**
  * /barbershop-retail-pickup interactions.
- * - Hero: lines rise once on load; the three.js scene loads after first paint and follows pointer + scroll.
+ * - Hero: lines rise once on load; the product photo fades in and then stays still (no 3D turning).
  * - Payment switch: two native radios choose the mode; the checkout mock, the points and the comparison
  *   table follow the choice (main[data-mode]).
  * - Journey (the page's dealt moment): on wide screens with motion allowed the section pins and scroll
@@ -12,7 +12,6 @@
  */
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { RetailHeroScene } from './heroScene';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -49,75 +48,17 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   }
   hero.classList.add('is-in');
 
-  const canvas = hero.querySelector<HTMLCanvasElement>('[data-rp-canvas]');
-  const visual = hero.querySelector<HTMLElement>('[data-rp-visual]');
-  if (!canvas || !visual) return;
-
-  let scene: RetailHeroScene | null = null;
-  let disposed = false;
-  let inView = true;
-  const updateRunning = () => scene?.setRunning(inView && document.visibilityState === 'visible');
-  const onVisibility = () => updateRunning();
-  const onPointer = (event: PointerEvent) => {
-    if (event.pointerType !== 'mouse') return;
-    const rect = hero.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-    scene?.setPointer(x, y);
-    // The pickup ticket floats in front of the photo, so it moves against it.
-    if (!reduced) {
-      visual.style.setProperty('--rp-px', x.toFixed(3));
-      visual.style.setProperty('--rp-py', y.toFixed(3));
-    }
-  };
-  const io = new IntersectionObserver(([entry]) => {
-    inView = entry.isIntersecting;
-    updateRunning();
+  // The products are a still photo: they never turn with the pointer or the scroll. Scrolling past
+  // the hero only marks the ticket as collected.
+  const ticket = hero.querySelector<HTMLElement>('[data-rp-ticket]');
+  if (!ticket) return;
+  const st = ScrollTrigger.create({
+    trigger: hero,
+    start: 'top top',
+    end: 'bottom top',
+    onUpdate: (self) => ticket.classList.toggle('is-collected', self.progress > 0.45),
   });
-
-  const start = async () => {
-    try {
-      const { createRetailHeroScene } = await import('./heroScene');
-      if (disposed) return;
-      // The photo under the canvas stays until the textures are on the GPU, then the canvas takes over.
-      scene = createRetailHeroScene(canvas, { reducedMotion: reduced, onReady: () => visual.classList.add('is-live') });
-    } catch {
-      scene = null;
-    }
-    if (!scene) {
-      visual.classList.add('is-fallback');
-      return;
-    }
-    io.observe(hero);
-    document.addEventListener('visibilitychange', onVisibility);
-    hero.addEventListener('pointermove', onPointer);
-    updateRunning();
-
-    const ticket = hero.querySelector<HTMLElement>('[data-rp-ticket]');
-    const st = ScrollTrigger.create({
-      trigger: hero,
-      start: 'top top',
-      end: 'bottom top',
-      onUpdate: (self) => {
-        scene?.setProgress(self.progress);
-        if (ticket) ticket.classList.toggle('is-collected', self.progress > 0.45);
-      },
-    });
-    disposers.push(() => st.kill());
-  };
-
-  const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 120));
-  const handle = idle(() => void start());
-
-  disposers.push(() => {
-    disposed = true;
-    if (window.cancelIdleCallback && typeof handle === 'number') window.cancelIdleCallback(handle);
-    io.disconnect();
-    document.removeEventListener('visibilitychange', onVisibility);
-    hero.removeEventListener('pointermove', onPointer);
-    scene?.dispose();
-    scene = null;
-  });
+  disposers.push(() => st.kill());
 }
 
 /* ---------- Payment mode switch ---------- */

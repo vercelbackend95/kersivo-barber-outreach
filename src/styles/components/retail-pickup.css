@@ -273,8 +273,6 @@
 }
 
 .rp-hero__visual {
-  --rp-px: 0;
-  --rp-py: 0;
   position: relative;
   width: 100%;
   max-width: 40rem;
@@ -282,7 +280,7 @@
   aspect-ratio: 1;
 }
 
-/* The photo and its 3D canvas share one box; the edges melt into the page so the counter has no frame. */
+/* The render's edges melt into the page so the counter has no frame. */
 .rp-hero__stage {
   position: absolute;
   inset: 0;
@@ -295,30 +293,15 @@
   display: contents;
 }
 
-/* The still photo: the LCP image, shown at once and kept if WebGL is refused. */
-.rp-hero__still,
-.rp-hero__canvas {
+/* The product render: the LCP image. It stays still; nothing follows the pointer or the scroll. */
+.rp-hero__still {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-}
-
-.rp-hero__still {
   object-fit: cover;
   object-position: center;
-  /* Matches the canvas's resting zoom so the hand-over from photo to 3D does not jump. */
-  transform: scale(1.03);
-}
-
-.rp-hero__canvas {
-  opacity: 0;
-  transition: opacity 500ms var(--rp-ease);
-}
-
-.rp-hero__visual.is-live .rp-hero__canvas {
-  opacity: 1;
 }
 
 .rp-ticket {
@@ -328,8 +311,6 @@
   bottom: -3%;
   z-index: 1;
   width: min(17rem, 72%);
-  translate: calc(var(--rp-px) * -14px) calc(var(--rp-py) * -10px);
-  transition: translate 600ms var(--rp-ease);
   box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.9);
   padding: 1.05rem var(--ks-glass-pad) 1rem;
   border-radius: 1rem;

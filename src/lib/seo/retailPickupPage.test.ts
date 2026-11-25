@@ -30,7 +30,6 @@ import { RESERVED_UNPAID_STATUS_LABEL } from '@/lib/shop/retailPaymentMode';
 const here = dirname(fileURLToPath(import.meta.url));
 const page = readFileSync(join(here, '../../pages/barbershop-retail-pickup/index.astro'), 'utf8');
 const experience = readFileSync(join(here, '../landing/retailPickup/experience.ts'), 'utf8');
-const scene = readFileSync(join(here, '../landing/retailPickup/heroScene.ts'), 'utf8');
 const css = readFileSync(join(here, '../../styles/components/retail-pickup.css'), 'utf8');
 
 const allCopy = JSON.stringify([
@@ -151,7 +150,6 @@ describe('/barbershop-retail-pickup product photos', () => {
       RETAIL_PICKUP_OG_IMAGE_PATH,
       RETAIL_PICKUP_HERO_IMAGE.src,
       ...Object.values(RETAIL_PICKUP_HERO_IMAGE.webp),
-      '/images/retail-pickup/pickup-counter-depth.webp',
       ...Object.values(RETAIL_PICKUP_PRODUCTS).map((product) => product.image),
     ];
     for (const path of paths) expect(existsSync(pub(path)), path).toBe(true);
@@ -167,11 +165,12 @@ describe('/barbershop-retail-pickup product photos', () => {
 });
 
 describe('/barbershop-retail-pickup motion and accessibility', () => {
-  it('loads three.js only through a dynamic import and caps the scene', () => {
-    expect(experience).toContain("await import('./heroScene')");
-    expect(experience).not.toMatch(/^import .* from 'three'/m);
-    expect(scene).toContain('Math.min(window.devicePixelRatio || 1, 1.75)');
-    expect(scene).toContain('forceContextLoss');
+  it('keeps the hero products still: a photo, no 3D scene, no pointer tracking', () => {
+    expect(existsSync(join(here, '../landing/retailPickup/heroScene.ts'))).toBe(false);
+    expect(experience).not.toMatch(/heroScene|from 'three'|pointermove|setPointer/);
+    expect(page).not.toMatch(/<canvas|data-rp-canvas/);
+    expect(css).not.toMatch(/--rp-px|rp-hero__canvas/);
+    expect(page).toContain('class="rp-hero__still"');
   });
 
   it('respects reduced motion: no pin, no loops, nothing left hidden', () => {
