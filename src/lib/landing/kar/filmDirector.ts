@@ -8,7 +8,9 @@
  * live dashboard (its own charts animate, its own counts update); writes are blocked by the demo.
  *
  * The iframe renders at a fixed desktop size (1180 × 720) and the canvas is scaled to the stage.
- * On a narrow stage the camera follows the action instead of showing the whole screen.
+ * On a narrow stage the camera follows the action instead of showing the whole screen; on a wide
+ * one it pushes in a little on whatever is being pointed out, then eases back to the whole screen.
+ * The cursor travels on a slight arc, timed by distance, like a hand rather than a straight tween.
  * Scripts loop while their chapter is on and stop the moment it changes (AbortController).
  */
 import { gsap } from 'gsap';
@@ -18,6 +20,8 @@ export const FILM_CANVAS = { width: 1180, height: 720 } as const;
 const NARROW_STAGE = 760;
 /** Logical width the camera shows on a narrow stage. */
 const NARROW_VIEW = 620;
+/** How far the wide camera pushes in on a highlighted element. */
+const PUSH_ZOOM = 1.08;
 
 export type FilmDirector = {
   /** Switch the dashboard to a chapter and play its script (looping until the next call). */
@@ -93,6 +97,8 @@ export function createFilmDirector(options: {
   let chapter = -1;
   let running = false;
   const cam = { x: 0, y: 0, s: 1 };
+  /** Where the camera is heading (marks place their tag against this, not the moving camera). */
+  const aim = { x: 0, y: 0, s: 1 };
   let narrow = false;
   let baseScale = 1;
 
@@ -118,7 +124,38 @@ export function createFilmDirector(options: {
       cam.x = Math.min(FILM_CANVAS.width - NARROW_VIEW, 270);
       cam.y = 0;
     }
+    Object.assign(aim, cam);
     applyCam();
+  };
+
+  const glide = (to: { x: number; y: number; s: number }, duration: number) => {
+    Object.assign(aim, to);
+    if (reduced) {
+      Object.assign(cam, to);
+      applyCam();
+      return;
+    }
+    gsap.to(cam, { ...to, duration, ease: 'power3.inOut', onUpdate: applyCam, overwrite: true });
+  };
+
+  /** Wide stage: push in on an element, keeping the view inside the canvas. */
+  const pushIn = (el: HTMLElement | null) => {
+    if (narrow || !el || reduced) return;
+    const r = el.getBoundingClientRect();
+    const s = baseScale * PUSH_ZOOM;
+    const viewW = stage.clientWidth / s;
+    const viewH = stage.clientHeight / s;
+    // Wide rows already read at full size: pushing in would only crop the sidebar.
+    if (r.width > viewW * 0.6) return;
+    const x = Math.min(Math.max(0, r.left + r.width / 2 - viewW / 2), FILM_CANVAS.width - viewW);
+    const y = Math.min(Math.max(0, r.top + r.height / 2 - viewH / 2), FILM_CANVAS.height - viewH);
+    glide({ x, y, s }, 1.1);
+  };
+
+  /** Wide stage: back to the whole screen. */
+  const pullOut = () => {
+    if (narrow || (aim.s === baseScale && aim.x === 0 && aim.y === 0)) return;
+    glide({ x: 0, y: 0, s: baseScale }, 0.9);
   };
 
   /** Narrow stage: glide the camera so the element sits in view. */
@@ -132,10 +169,11 @@ export function createFilmDirector(options: {
     if (!animate || reduced) {
       cam.x = x;
       cam.y = y;
+      Object.assign(aim, cam);
       applyCam();
       return;
     }
-    gsap.to(cam, { x, y, duration: 0.8, ease: 'power3.inOut', onUpdate: applyCam, overwrite: true });
+    glide({ x, y, s: cam.s }, 0.8);
   };
 
   const ro = new ResizeObserver(layout);
@@ -180,15 +218,45 @@ export function createFilmDirector(options: {
     });
   };
 
-  const moveCursor = async (ctx: Ctx, el: HTMLElement | null, duration = 0.75) => {
+  /** Where the cursor is, in canvas coordinates. */
+  const pen = { x: FILM_CANVAS.width * 0.6, y: FILM_CANVAS.height * 0.7 };
+
+  const moveCursor = async (ctx: Ctx, el: HTMLElement | null, duration?: number) => {
     check(ctx);
     if (!el || !cursor) return;
     await reveal(ctx, el);
     focus(el);
     const { x, y } = centre(el);
+    const from = { ...pen };
+    const dx = x - from.x;
+    const dy = y - from.y;
+    const dist = Math.hypot(dx, dy);
+    // Longer trips take longer, within reason; a short hop is quick.
+    const time = duration ?? Math.min(1.05, Math.max(0.45, 0.35 + dist / 1100));
+    // A slight arc to one side of the straight line, as a wrist moves.
+    const bend = Math.min(60, dist * 0.12) * (dx >= 0 ? -1 : 1);
+    const nx = dist ? -dy / dist : 0;
+    const ny = dist ? dx / dist : 0;
     gsap.to(cursor, { autoAlpha: 1, duration: 0.25, overwrite: 'auto' });
+    const t = { p: 0 };
     await new Promise<void>((resolve) => {
-      gsap.to(cursor, { x, y, duration, ease: 'power3.inOut', overwrite: 'auto', onComplete: resolve });
+      gsap.to(t, {
+        p: 1,
+        duration: reduced ? 0 : time,
+        ease: 'power3.inOut',
+        onUpdate: () => {
+          const arc = Math.sin(Math.PI * t.p) * bend;
+          pen.x = from.x + dx * t.p + nx * arc;
+          pen.y = from.y + dy * t.p + ny * arc;
+          gsap.set(cursor, { x: pen.x, y: pen.y });
+        },
+        onComplete: () => {
+          pen.x = x;
+          pen.y = y;
+          gsap.set(cursor, { x, y });
+          resolve();
+        },
+      });
     });
     check(ctx);
   };
@@ -213,8 +281,8 @@ export function createFilmDirector(options: {
   };
 
   const hideMark = () => {
-    if (ring) gsap.to(ring, { autoAlpha: 0, duration: 0.25, overwrite: true });
-    if (tag) gsap.to(tag, { autoAlpha: 0, y: 4, duration: 0.2, overwrite: true });
+    if (ring) gsap.to(ring, { autoAlpha: 0, scale: 0.98, duration: 0.3, ease: 'power2.in', overwrite: true });
+    if (tag) gsap.to(tag, { autoAlpha: 0, duration: 0.2, ease: 'power2.in', overwrite: true });
   };
 
   /** Ring an element and tag it with a short note. */
@@ -223,18 +291,19 @@ export function createFilmDirector(options: {
     if (!visible(el) || !ring || !tag) return;
     await reveal(ctx, el);
     focus(el);
+    pushIn(el);
     const r = el.getBoundingClientRect();
     const pad = 6;
     const box = { x: r.left - pad, y: r.top - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
-    gsap.set(ring, { x: box.x, y: box.y, width: box.width, height: box.height });
-    gsap.fromTo(ring, { autoAlpha: 0, scale: 1.06 }, { autoAlpha: 1, scale: 1, duration: 0.4, ease: 'power3.out', overwrite: true });
+    gsap.set(ring, { x: box.x, y: box.y, width: box.width, height: box.height, transformOrigin: '50% 50%' });
+    gsap.fromTo(ring, { autoAlpha: 0, scale: 1.08 }, { autoAlpha: 1, scale: 1, duration: 0.55, delay: 0.15, ease: 'expo.out', overwrite: true });
     if (tagText) tagText.textContent = note;
     // The tag sits under the ring, or above it near the bottom edge; never off the canvas.
     // Keep the tag inside what the camera shows (the whole canvas on a wide stage).
-    const viewW = stage.clientWidth / cam.s;
-    const viewH = stage.clientHeight / cam.s;
-    const left = narrow ? cam.x : 0;
-    const top = narrow ? cam.y : 0;
+    const viewW = stage.clientWidth / aim.s;
+    const viewH = stage.clientHeight / aim.s;
+    const left = aim.x;
+    const top = aim.y;
     const tagW = tag.offsetWidth;
     const tagH = tag.offsetHeight;
     const below = box.y + box.height + tagH + 14 < top + viewH;
@@ -242,10 +311,11 @@ export function createFilmDirector(options: {
     const tagX = Math.min(Math.max(left + 8, box.x), left + viewW - tagW - 8);
     tag.dataset.side = below ? 'below' : 'above';
     gsap.set(tag, { x: tagX, y: tagY });
-    gsap.fromTo(tag, { autoAlpha: 0, yPercent: below ? -20 : -80 }, { autoAlpha: 1, yPercent: below ? 0 : -100, duration: 0.4, delay: 0.12, ease: 'power3.out', overwrite: true });
-    await wait(ctx, hold);
+    gsap.fromTo(tag, { autoAlpha: 0, yPercent: below ? -30 : -70 }, { autoAlpha: 1, yPercent: below ? 0 : -100, duration: 0.5, delay: 0.3, ease: 'expo.out', overwrite: true });
+    await wait(ctx, hold + 250);
     hideMark();
-    await wait(ctx, 250);
+    pullOut();
+    await wait(ctx, 350);
   };
 
   const setInput = (input: HTMLInputElement, value: string) => {
@@ -391,6 +461,7 @@ export function createFilmDirector(options: {
     controller?.abort();
     controller = null;
     hideMark();
+    pullOut();
   };
 
   const run = async (index: number) => {

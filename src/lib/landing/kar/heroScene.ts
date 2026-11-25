@@ -2,8 +2,9 @@
  * /barbershop-reports hero: one Reports chart from the dashboard, built in three.js.
  *
  * A single brand-red series (booking value for the selected range) drawn with the dashboard's
- * monotone curve: the line, its glow, the soft area fill under it, point markers and the pulsing
- * latest-value dot. No grid and no background series. The line draws in from left to right, and
+ * monotone curve as a laser: a white-hot core inside a red beam and a tight additive halo, with a
+ * bright pen head while it draws, point markers and the pulsing latest-value dot. No area fill,
+ * no grid, no background and no shadow: the line carries the chart on its own. The line draws in from left to right, and
  * draws again from the left each time the hero's range widget moves on (`setSeries`). As the hero
  * scrolls away the camera swings round to face the chart head-on.
  *
@@ -13,18 +14,15 @@
  */
 import {
   AdditiveBlending,
-  BufferGeometry,
   CatmullRomCurve3,
   Color,
   DoubleSide,
-  Float32BufferAttribute,
   Group,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
   RingGeometry,
   Scene,
-  ShaderMaterial,
   SphereGeometry,
   TubeGeometry,
   Vector3,
@@ -42,6 +40,8 @@ export type HeroScene = {
 };
 
 const BRAND = new Color('#d72638');
+/** The laser's core: near white with a little of the brand in it. */
+const CORE = new Color('#ffe1e5');
 
 const WIDTH = 9.2;
 const HEIGHT = 3.4;
@@ -53,39 +53,12 @@ const easeOut = (t: number) => 1 - (1 - t) ** 3;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const easeOutBack = (t: number) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
 
-const AREA_VERTEX = /* glsl */ `
-  attribute float aU;
-  attribute float aV;
-  varying float vU;
-  varying float vV;
-  void main() {
-    vU = aU;
-    vV = aV;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const AREA_FRAGMENT = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uAlpha;
-  uniform float uReveal;
-  varying float vU;
-  varying float vV;
-  void main() {
-    if (vU > uReveal) discard;
-    // Bright just under the line, gone by the floor: the dashboard's area gradient.
-    float a = uAlpha * pow(vV, 2.2);
-    // A soft leading edge where the pen currently is.
-    a *= smoothstep(uReveal, uReveal - 0.05, vU);
-    gl_FragColor = vec4(uColor, a);
-  }
-`;
-
 type Series = {
   group: Group;
   line: Mesh<TubeGeometry, MeshBasicMaterial>;
+  beam: Mesh<TubeGeometry, MeshBasicMaterial>;
   glow: Mesh<TubeGeometry, MeshBasicMaterial>;
-  area: Mesh<BufferGeometry, ShaderMaterial>;
+  curve: CatmullRomCurve3;
   lineIndexCount: number;
   segments: number;
   markers: { mesh: Mesh; u: number }[];
@@ -120,18 +93,28 @@ export function createHeroScene(
   const markerCoreGeometry = new SphereGeometry(0.042, 12, 8);
   const markerMaterial = new MeshBasicMaterial({ color: BRAND });
   const markerCoreMaterial = new MeshBasicMaterial({ color: 0x0d0d0e });
-  const lineMaterial = new MeshBasicMaterial({ color: BRAND });
-  const glowMaterial = new MeshBasicMaterial({ color: BRAND, transparent: true, opacity: 0.17, blending: AdditiveBlending, depthWrite: false });
+  // The laser: a white-hot core, the red beam around it and a tight halo, all added to the dark page.
+  const lineMaterial = new MeshBasicMaterial({ color: CORE, transparent: true, opacity: 0.95, blending: AdditiveBlending, depthWrite: false });
+  const beamMaterial = new MeshBasicMaterial({ color: BRAND, transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false });
+  const glowMaterial = new MeshBasicMaterial({ color: BRAND, transparent: true, opacity: 0.24, blending: AdditiveBlending, depthWrite: false });
+  // The pen head: a white spark with a red bloom, only while the line is being drawn.
+  const headGeometry = new SphereGeometry(0.06, 16, 12);
+  const headMaterial = new MeshBasicMaterial({ color: CORE, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
+  const bloomGeometry = new SphereGeometry(0.22, 20, 14);
+  const bloomMaterial = new MeshBasicMaterial({ color: BRAND, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
   const endDotGeometry = new SphereGeometry(0.13, 20, 14);
   const pulseGeometry = new RingGeometry(0.17, 0.23, 40);
   const pulseMaterial = new MeshBasicMaterial({ color: BRAND, transparent: true, opacity: 0, side: DoubleSide, depthWrite: false });
-  const shared = [markerGeometry, markerCoreGeometry, markerMaterial, markerCoreMaterial, lineMaterial, glowMaterial, endDotGeometry, pulseGeometry, pulseMaterial];
+  const shared = [markerGeometry, markerCoreGeometry, markerMaterial, markerCoreMaterial, lineMaterial, beamMaterial, glowMaterial, headGeometry, headMaterial, bloomGeometry, bloomMaterial, endDotGeometry, pulseGeometry, pulseMaterial];
 
   const endDot = new Mesh(endDotGeometry, markerMaterial);
   endDot.scale.setScalar(0.0001);
   chart.add(endDot);
   const pulse = new Mesh(pulseGeometry, pulseMaterial);
   chart.add(pulse);
+  const head = new Mesh(headGeometry, headMaterial);
+  const bloom = new Mesh(bloomGeometry, bloomMaterial);
+  chart.add(head, bloom);
 
   const state = {
     progress: 0,
@@ -156,43 +139,12 @@ export function createHeroScene(
     const segments = dense.length - 1;
 
     const curve = new CatmullRomCurve3(dense.map((p) => new Vector3(p.x, Math.max(0.005, p.y), 0)), false, 'centripetal');
-    const line = new Mesh(new TubeGeometry(curve, segments, 0.036, 8, false), lineMaterial);
-    const glow = new Mesh(new TubeGeometry(curve, segments, 0.14, 8, false), glowMaterial);
-    group.add(line, glow);
-
-    // The area: a strip from the curve down to the floor, faded by height in the shader.
-    const positions: number[] = [];
-    const us: number[] = [];
-    const vs: number[] = [];
-    const index: number[] = [];
-    dense.forEach((p, i) => {
-      const u = i / segments;
-      positions.push(p.x, Math.max(0, p.y), 0, p.x, 0, 0);
-      us.push(u, u);
-      vs.push(1, 0);
-      if (i < segments) {
-        const a = i * 2;
-        index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-      }
-    });
-    const areaGeometry = new BufferGeometry();
-    areaGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-    areaGeometry.setAttribute('aU', new Float32BufferAttribute(us, 1));
-    areaGeometry.setAttribute('aV', new Float32BufferAttribute(vs, 1));
-    areaGeometry.setIndex(index);
-    const area = new Mesh(
-      areaGeometry,
-      new ShaderMaterial({
-        vertexShader: AREA_VERTEX,
-        fragmentShader: AREA_FRAGMENT,
-        uniforms: { uColor: { value: BRAND.clone() }, uAlpha: { value: 0.36 }, uReveal: { value: 0 } },
-        transparent: true,
-        depthWrite: false,
-        side: DoubleSide,
-      }),
-    );
-    area.renderOrder = -1;
-    group.add(area);
+    const line = new Mesh(new TubeGeometry(curve, segments, 0.014, 8, false), lineMaterial);
+    const beam = new Mesh(new TubeGeometry(curve, segments, 0.04, 8, false), beamMaterial);
+    const glow = new Mesh(new TubeGeometry(curve, segments, 0.085, 8, false), glowMaterial);
+    line.renderOrder = 2;
+    beam.renderOrder = 1;
+    group.add(glow, beam, line);
 
     // Point markers while the series still reads as points.
     const markers: Series['markers'] = [];
@@ -212,8 +164,9 @@ export function createHeroScene(
     return {
       group,
       line,
+      beam,
       glow,
-      area,
+      curve,
       lineIndexCount: line.geometry.index?.count ?? 0,
       segments,
       markers,
@@ -225,9 +178,8 @@ export function createHeroScene(
   const destroy = (s: Series) => {
     chart.remove(s.group);
     s.line.geometry.dispose();
+    s.beam.geometry.dispose();
     s.glow.geometry.dispose();
-    s.area.geometry.dispose();
-    s.area.material.dispose();
   };
 
   let current = build(options.series);
@@ -295,8 +247,23 @@ export function createHeroScene(
     const reveal = easeInOut(clamp01((state.time - s.start) / DRAW_SECONDS));
     const count = Math.min(s.lineIndexCount, Math.ceil(reveal * s.segments) * 8 * 6);
     s.line.geometry.setDrawRange(0, count);
+    s.beam.geometry.setDrawRange(0, count);
     s.glow.geometry.setDrawRange(0, count);
-    s.area.material.uniforms.uReveal.value = reveal * 1.02;
+
+    // The pen head rides the leading edge and burns out as the line lands.
+    const drawing = reveal > 0 && reveal < 1;
+    const headOn = drawing ? Math.min(1, reveal / 0.04) * clamp01((1 - reveal) / 0.08) : 0;
+    if (headOn > 0) {
+      s.curve.getPointAt(reveal, head.position);
+      bloom.position.copy(head.position);
+      const flicker = options.reducedMotion ? 1 : 0.9 + Math.sin(state.time * 38) * 0.1;
+      head.scale.setScalar(Math.max(0.0001, headOn));
+      bloom.scale.setScalar(Math.max(0.0001, headOn * flicker));
+    }
+    headMaterial.opacity = headOn;
+    bloomMaterial.opacity = 0.34 * headOn;
+    head.visible = headOn > 0;
+    bloom.visible = headOn > 0;
     s.markers.forEach((marker) => {
       const t = clamp01((reveal - marker.u) / 0.1);
       marker.mesh.scale.setScalar(Math.max(0.0001, easeOutBack(t)));

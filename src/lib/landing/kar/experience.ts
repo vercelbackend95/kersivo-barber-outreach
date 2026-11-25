@@ -7,11 +7,14 @@
  *   range from the left and every widget counts to its new figure. The camera turns to face the
  *   chart as the hero scrolls away.
  * - Moment 1: the dashboard film. The real KERSIVO owner dashboard (Heritage Grooming demo) loads
- *   in a frame near the section; on desktop the section pins and the scroll walks five sidebar
- *   sections, each playing a short script of real clicks (filmDirector.ts). Elsewhere the film
- *   plays on its own while in view, and the reel buttons pick a chapter.
+ * near the section. As it arrives, "Open the day" opens it: a laser line draws across, parts into
+ * two and opens the screen while the dashboard settles and the reel strips draw in. On desktop the
+ * section then pins and the scroll walks five sidebar sections (each a short script of real
+ * clicks, filmDirector.ts) and fills the reel. Elsewhere the film plays on its own while in view,
+ * each reel strip filling as its chapter plays, and the reel buttons pick a chapter.
  * - Moment 2: the statement's words light up with the scroll.
  * - Cards: short loops, played only while on screen, restart on hover, with a pause control.
+ * - Plans: the two plan cards rise in once, Full's laser edge draws and the checks tick down.
  *
  * Under prefers-reduced-motion nothing is hidden, nothing pins, nothing loops and no cursor plays.
  * Returns a cleanup for Astro's ClientRouter (astro:before-swap).
@@ -295,10 +298,36 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   let frameReady = false;
   let inView = false;
   let autoplay = false;
+  let fillTween: gsap.core.Tween | null = null;
+  /** How long a pass of each chapter takes, measured as it plays (a first guess until then). */
+  const passMs = [9000, 9000, 12000, 9000, 8000];
+  let passFrom = 0;
+  const scans = Array.from(section.querySelectorAll<HTMLElement>('[data-kar-scan]'));
+  const tracks = reel.map((btn) => btn.querySelector<HTMLElement>('.kar-reel__bar')).filter((el): el is HTMLElement => !!el);
 
   const startOf = (index: number) => CHAPTER_WEIGHT.slice(0, index).reduce((a, b) => a + b, 0) / totalWeight;
 
-  const syncDirector = () => director?.setRunning(frameReady && inView && document.visibilityState === 'visible');
+  const playing = () => frameReady && inView && document.visibilityState === 'visible';
+  const syncDirector = () => {
+    director?.setRunning(playing());
+    fillTween?.paused(!playing());
+  };
+
+  /** Not pinned: the strips before the chapter are full, its own strip fills as the chapter plays. */
+  const runFill = (index: number) => {
+    fillTween?.kill();
+    fillTween = null;
+    if (pinTrigger) return;
+    fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: autoplay && i < index ? 1 : 0 }));
+    const fill = fills[index];
+    if (!fill) return;
+    if (!autoplay || reduced) {
+      gsap.set(fill, { scaleX: 1 });
+      return;
+    }
+    passFrom = performance.now();
+    fillTween = gsap.fromTo(fill, { scaleX: 0 }, { scaleX: 0.97, duration: (passMs[index] ?? 9000) / 1000, ease: 'none', paused: !playing() });
+  };
 
   const setChapter = (index: number) => {
     if (index === current || index < 0 || index >= count) return;
@@ -308,6 +337,13 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
     if (stage) stage.dataset.chapter = String(index);
     captions.forEach((caption, i) => caption.classList.toggle('is-active', i === index));
 
+    // A fast scroll can cross several chapters at once: only the outgoing and incoming captions
+    // may be visible, every other one is put away at once.
+    if (!reduced) captions.forEach((caption, i) => {
+      if (i === index || i === previous) return;
+      gsap.killTweensOf(caption);
+      gsap.set(caption, { autoAlpha: 0, y: 0 });
+    });
     if (!reduced && previous !== -1) {
       // The caption leaves upwards as the next one rises in: one direction of travel, like a reel.
       const dir = index > previous ? 1 : -1;
@@ -317,7 +353,7 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
       if (notes?.length) gsap.fromTo(notes, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.1, delay: 0.25, ease: 'power3.out', overwrite: true });
     }
     director?.play(index);
-    if (!pinTrigger) fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === index ? 1 : 0 }));
+    runFill(index);
   };
 
   /** Scroll progress (0..1) → chapter, with Reports taking two beats. */
@@ -365,10 +401,17 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
         // Not pinned: when a chapter has shown itself once, the film moves on by itself.
         onPass: (index) => {
           if (!autoplay || pinTrigger) return;
+          // Learn the real length of a pass so the next round of this strip fills in step with it.
+          if (passFrom) passMs[index] = Math.min(20000, Math.max(4000, performance.now() - passFrom));
+          const fill = fills[index];
+          fillTween?.kill();
+          fillTween = null;
           setChapter((index + 1) % count);
+          if (fill) gsap.set(fill, { scaleX: index + 1 < count ? 1 : 0 });
         },
       });
       director.play(Math.max(0, current));
+      runFill(Math.max(0, current));
       syncDirector();
       // The embed's own timeline starts its scroll once it is told it is on screen.
       frame.contentWindow?.postMessage({ type: HERO_SHOWCASE_VISIBLE_MESSAGE_TYPE }, window.location.origin);
@@ -397,25 +440,84 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
     });
   }
 
+  /* The captions, the reel and the scan lines follow the dashboard's real width. */
+  const frameEl = section.querySelector<HTMLElement>('.kar-film__frame');
+  const syncWidth = () => {
+    if (app && frameEl) frameEl.style.setProperty('--kar-app-w', `${app.offsetWidth}px`);
+  };
+  const widthRo = app ? new ResizeObserver(syncWidth) : null;
+  if (app) widthRo?.observe(app);
+  syncWidth();
+  disposers.push(() => widthRo?.disconnect());
+
+  /**
+   * "Open the day": a laser line draws across the middle of the screen, parts into two that run to
+   * the top and bottom edges and open the dashboard between them, which settles from a slight zoom.
+   * The caption rises in and the reel strips draw left to right. Scrubbed by the approach when the
+   * film pins; played once on arrival otherwise.
+   */
+  const captionParts = () =>
+    Array.from(captions[0]?.querySelectorAll<HTMLElement>('.kar-film__meta, .kar-film__title, .kar-film__body, .kar-callout') ?? []);
+  const buildOpening = (scrubbed: boolean) => {
+    if (!app || reduced) return null;
+    const half = () => app.offsetHeight / 2;
+    const open = scrubbed ? 'power2.inOut' : 'expo.inOut';
+    const land = scrubbed ? 'power2.out' : 'expo.out';
+    const tl = gsap.timeline({ paused: true });
+    tl.set(scans, { autoAlpha: 1, y: 0 }, 0)
+      .fromTo(scans, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: land }, 0)
+      .fromTo(
+        app,
+        { clipPath: 'inset(49.8% 0% 49.8% 0% round 20px)', scale: 0.94, y: 36 },
+        { clipPath: 'inset(0% 0% 0% 0% round 20px)', scale: 1, y: 0, duration: 0.7, ease: open },
+        0.22,
+      )
+      .to(scans[0] ?? {}, { y: () => -half(), duration: 0.7, ease: open }, 0.22)
+      .to(scans[1] ?? {}, { y: () => half(), duration: 0.7, ease: open }, 0.22)
+      .to(scans, { autoAlpha: 0, duration: 0.2, ease: 'power1.in' }, 0.78);
+    if (live) tl.fromTo(live, { scale: 1.08 }, { scale: 1, duration: 0.8, ease: land }, 0.22);
+    tl.fromTo(captionParts(), { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.06, ease: land }, 0.05)
+      .fromTo(reel, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.05, ease: land }, 0.4)
+      .fromTo(tracks, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.45, stagger: 0.07, ease: open }, 0.45);
+    return tl;
+  };
+  const clearOpening = () => {
+    if (app) gsap.set(app, { clearProps: 'clipPath,transform' });
+    if (live) gsap.set(live, { clearProps: 'transform' });
+    gsap.set(scans, { clearProps: 'all' });
+    gsap.set([...reel, ...tracks, ...captionParts()], { clearProps: 'opacity,visibility,transform' });
+  };
+
   const mm = gsap.matchMedia();
-  // Not pinned (touch, small screens): the film plays through the chapters on its own.
+  // Not pinned (touch, small screens): the film opens once on arrival and plays through the chapters on its own.
   mm.add('(max-width: 1023px), (max-height: 639px)', () => {
     autoplay = !reduced;
-    return () => { autoplay = false; };
+    runFill(Math.max(0, current));
+    const opening = buildOpening(false);
+    let st: ScrollTrigger | null = null;
+    if (opening) {
+      opening.duration(1.7);
+      opening.progress(0);
+      st = ScrollTrigger.create({ trigger: stage ?? section, start: 'top 85%', once: true, onEnter: () => void opening.play() });
+    }
+    return () => {
+      autoplay = false;
+      st?.kill();
+      opening?.kill();
+      clearOpening();
+    };
   });
   if (pin) {
     mm.add('(min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference)', () => {
       section.classList.add('is-pinned');
-      // Opening shot: the dashboard rises out of the page and settles flat as the film starts.
-      const intro = app
-        ? gsap.fromTo(app, { rotateX: 14, scale: 0.9, y: 60, autoAlpha: 0.35 }, {
-            rotateX: 0,
-            scale: 1,
-            y: 0,
-            autoAlpha: 1,
-            ease: 'none',
-            scrollTrigger: { trigger: pin, start: 'top 85%', end: 'top top', scrub: 0.6 },
-          })
+      fillTween?.kill();
+      fillTween = null;
+      fills.forEach((fill) => fill && gsap.set(fill, { scaleX: 0 }));
+      syncWidth();
+      // Opening shot, scrubbed by the approach: fully open as the pin takes hold.
+      const intro = buildOpening(true);
+      const introSt = intro
+        ? ScrollTrigger.create({ trigger: stage ?? pin, start: 'center bottom', endTrigger: pin, end: 'top top', scrub: 0.7, animation: intro, invalidateOnRefresh: true })
         : null;
       pinTrigger = ScrollTrigger.create({
         trigger: pin,
@@ -437,18 +539,19 @@ function initFilm(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
       });
       return () => {
         section.classList.remove('is-pinned');
-        intro?.scrollTrigger?.kill();
+        introSt?.kill();
         intro?.kill();
-        if (app) gsap.set(app, { clearProps: 'all' });
+        clearOpening();
         pinTrigger?.kill();
         pinTrigger = null;
-        fills.forEach((fill, i) => fill && gsap.set(fill, { scaleX: i === current ? 1 : 0 }));
+        runFill(Math.max(0, current));
       };
     });
   }
 
   disposers.push(() => {
     section.classList.remove('is-enhanced');
+    fillTween?.kill();
     mm.revert();
     reel.forEach((btn) => btn.removeEventListener('click', onReel));
   });
@@ -515,13 +618,12 @@ function buildLoop(card: HTMLElement): gsap.core.Timeline | null {
   } else if (id === 'barbers') {
     // Fair to every chair: one pen sweeps the week from Tuesday to Saturday. The shop total
     // fills in behind it, then each barber's line is drawn left to right (measured dash lengths,
-    // so the stroke grows rather than appears), each end point lands as its pen arrives,
-    // Saturday lights up and the busiest chair is named. The loop then fades out and starts again.
+    // so the stroke grows rather than appears), each end point lands as its pen arrives and the
+    // busiest chair is named. The loop then fades out and starts again.
     const total = card.querySelector<SVGPathElement>('.kar-vis-chairs__total');
     const lines = Array.from(card.querySelectorAll<SVGPathElement>('.kar-vis-chairs__line'));
     const dots = Array.from(card.querySelectorAll('.kar-vis-chairs__dot'));
     const chips = Array.from(card.querySelectorAll('.kar-vis-chairs__chip'));
-    const column = card.querySelector('.kar-vis-chairs__day');
     const lead = card.querySelector('.kar-vis-chairs__lead');
     const sweep = card.querySelector<SVGRectElement>('.kar-vis-chairs__sweep');
     if (!lines.length) return null;
@@ -531,7 +633,6 @@ function buildLoop(card: HTMLElement): gsap.core.Timeline | null {
     tl.set(lines, { autoAlpha: 1 })
       .set(lines, { strokeDashoffset: (i: number) => lengths[i] })
       .set(dots, { scale: 0, transformOrigin: 'center', transformBox: 'fill-box' })
-      .set(column, { scaleY: 0, autoAlpha: 0, transformOrigin: '50% 100%', transformBox: 'fill-box' })
       .set(chips, { autoAlpha: 0.35 })
       .set(lead, { autoAlpha: 0, x: -4 })
       .set(total, { autoAlpha: 1 });
@@ -544,11 +645,10 @@ function buildLoop(card: HTMLElement): gsap.core.Timeline | null {
         .to(dots[i] ?? {}, { scale: 1, duration: 0.35, ease: 'back.out(2.4)' }, at + DRAW - 0.05);
     });
     const done = 0.15 + (lines.length - 1) * 0.22 + DRAW;
-    tl.to(column, { scaleY: 1, autoAlpha: 1, duration: 0.5, ease: 'power3.out' }, done - 0.2)
-      .to(lead, { autoAlpha: 1, x: 0, duration: 0.35, ease: 'power3.out' }, done + 0.1)
+    tl.to(lead, { autoAlpha: 1, x: 0, duration: 0.35, ease: 'power3.out' }, done + 0.1)
       .to({}, { duration: 1.6 })
       .addLabel('out')
-      .to([...lines, ...dots, column, lead], { autoAlpha: 0, duration: 0.45, ease: 'power1.in' }, 'out')
+      .to([...lines, ...dots, lead], { autoAlpha: 0, duration: 0.45, ease: 'power1.in' }, 'out')
       .to(total, { autoAlpha: 0, duration: 0.45, ease: 'power1.in' }, 'out')
       .to(chips, { autoAlpha: 0.35, duration: 0.35 }, 'out+=0.1')
       .to({}, { duration: 0.25 });
@@ -608,6 +708,48 @@ function initCards(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   });
 }
 
+/* ---------- Plans: the cards arrive ---------- */
+
+/**
+ * The two plan cards rise in (Full first), Full's top-edge laser draws out from the centre and the
+ * checks tick down each list. A soft light follows the pointer over a card. Played once.
+ */
+function initPlans(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
+  const grid = root.querySelector<HTMLElement>('[data-kar-plans]');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-kar-plan]'));
+
+  const onMove = (event: PointerEvent) => {
+    if (event.pointerType !== 'mouse') return;
+    const card = event.currentTarget as HTMLElement;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${event.clientX - r.left}px`);
+    card.style.setProperty('--my', `${event.clientY - r.top}px`);
+  };
+  cards.forEach((card) => card.addEventListener('pointermove', onMove));
+  disposers.push(() => cards.forEach((card) => card.removeEventListener('pointermove', onMove)));
+
+  if (reduced) return;
+  const beam = grid.querySelector<HTMLElement>('[data-kar-plan-beam]');
+  const tl = gsap.timeline({ paused: true, defaults: { ease: 'expo.out' } });
+  tl.fromTo(cards, { autoAlpha: 0, y: 48 }, { autoAlpha: 1, y: 0, duration: 1.1, stagger: 0.14 }, 0);
+  if (beam) tl.fromTo(beam, { scaleX: 0, autoAlpha: 0 }, { scaleX: 1, autoAlpha: 1, duration: 1.2, ease: 'expo.inOut' }, 0.25);
+  cards.forEach((card, c) => {
+    const rows = card.querySelectorAll('[data-kar-plan-row]');
+    const ticks = card.querySelectorAll<SVGPathElement>('.kar-plan__icon path');
+    const at = 0.35 + c * 0.14;
+    tl.fromTo(rows, { autoAlpha: 0, x: -10 }, { autoAlpha: 1, x: 0, duration: 0.6, stagger: 0.05, ease: 'power3.out' }, at)
+      .fromTo(ticks, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, stagger: 0.05, ease: 'power2.out' }, at + 0.12);
+  });
+  tl.progress(0);
+  const st = ScrollTrigger.create({ trigger: grid, start: 'top 80%', once: true, onEnter: () => void tl.play() });
+  disposers.push(() => {
+    st.kill();
+    tl.kill();
+    gsap.set(cards, { clearProps: 'opacity,visibility,transform' });
+  });
+}
+
 /* ---------- Entry ---------- */
 
 export function initAdminReports(root: HTMLElement): Cleanup {
@@ -618,6 +760,7 @@ export function initAdminReports(root: HTMLElement): Cleanup {
   initFilm(root, reduced, disposers);
   initStatement(root, reduced, disposers);
   initCards(root, reduced, disposers);
+  initPlans(root, reduced, disposers);
 
   const refresh = () => ScrollTrigger.refresh();
   document.fonts?.ready.then(refresh).catch(() => {});

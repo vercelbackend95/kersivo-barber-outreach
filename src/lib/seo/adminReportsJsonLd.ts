@@ -51,6 +51,11 @@ export function buildAdminReportsJsonLd(): Record<string, unknown> {
         about: { '@id': software['@id'] },
         mainEntity: { '@id': software['@id'] },
         hasPart: [{ '@id': `${pageUrl}#faq` }, { '@id': `${pageUrl}#metrics` }],
+        // The direct answer and the FAQ are the parts an assistant or voice search should read out.
+        speakable: {
+          '@type': 'SpeakableSpecification',
+          cssSelector: ['#kar-answer-title', '.kar-answer__text', '.kar-faq__q h3', '.kar-faq__a'],
+        },
         breadcrumb: buildBreadcrumbListJsonLd([{ name: KAR_BREADCRUMB_NAME, path: KAR_PAGE_PATH }], {
           siteUrl,
           withContext: false,

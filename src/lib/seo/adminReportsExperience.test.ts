@@ -38,9 +38,11 @@ describe('/barbershop-reports (Admin & Reports)', () => {
     expect(buildLlmsTxt('https://kersivo.co.uk')).toContain(`(https://kersivo.co.uk${KAR_PAGE_PATH})`);
   });
 
-  it('has a title and description that fit the SERP and keep the commercial wording', () => {
-    expect(KAR_TITLE.length).toBeLessThanOrEqual(60);
-    expect(KAR_TITLE).toMatch(/Barbershop Reports/);
+  it('has a hook title (no brand) and a description that keep the commercial wording', () => {
+    // Deliberately long: a question-led hook the founder asked for. Google may trim the tail.
+    expect(KAR_TITLE.length).toBeLessThanOrEqual(70);
+    expect(KAR_TITLE).toMatch(/^Barbershop Reports/);
+    expect(KAR_TITLE).not.toMatch(/KERSIVO/i);
     expect(KAR_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(KAR_DESCRIPTION).toContain('£39/month per location');
   });
