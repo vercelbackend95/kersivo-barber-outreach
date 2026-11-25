@@ -262,12 +262,9 @@ const chairTotal = buildSmoothPath(
           </ol>
 
           <div class="kar-film__stage" aria-hidden="true" data-kar-stage data-chapter="0">
+            <span class="kar-film__scan" data-kar-scan="top"></span>
+            <span class="kar-film__scan" data-kar-scan="bottom"></span>
             <div class="kar-app kar-app--film" data-kar-film-app>
-              <div class="kar-app__bar">
-                <span class="kar-app__dots"><i></i><i></i><i></i></span>
-                <span class="kar-app__url">Heritage Grooming · Owner dashboard</span>
-                <span class="kar-app__live"><i></i>Live demo</span>
-              </div>
               <div class="kar-live" data-kar-live data-frame-state="poster">
                 <div class="kar-live__canvas" data-kar-live-canvas>
                   <iframe class="kar-live__frame" data-deferred-src={FILM_SRC} title="KERSIVO owner dashboard, Heritage Grooming demo" tabindex="-1" width="1180" height="720"></iframe>
@@ -362,7 +359,6 @@ const chairTotal = buildSmoothPath(
                       <defs>
                         <clipPath id="kar-chairs-sweep"><rect class="kar-vis-chairs__sweep" x="12" y="0" width="216" height="104"></rect></clipPath>
                       </defs>
-                      <rect class="kar-vis-chairs__day" x="214" y="2" width="28" height="94" rx="6"></rect>
                       <path class="kar-vis-chairs__total" d={`${chairTotal} L228,96 L12,96 Z`} clip-path="url(#kar-chairs-sweep)"></path>
                       <line class="kar-vis-chairs__base" x1="12" x2="228" y1="96" y2="96"></line>
                       {chairPaths.map((line, i) => (

@@ -177,9 +177,8 @@
   padding-block: clamp(3.5rem, 8vh, 6rem);
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(50% 60% at 76% 55%, rgba(215, 38, 56, 0.09), transparent 70%),
-    var(--kar-bg);
+  /* No glow behind the chart: the laser line carries it on its own. */
+  background: var(--kar-bg);
 }
 
 .kar-hero__visual {
@@ -230,7 +229,7 @@
 }
 
 .kar-hero__title {
-  max-width: 10.5em;
+  max-width: 11.5em;
   margin: 1.4rem 0 0;
   font-size: clamp(2.6rem, 5.6vw, 5.4rem);
   font-weight: 700;
@@ -692,58 +691,40 @@
   line-height: 1.4;
 }
 
-/* ---------- App frame (the dashboard in the film) ---------- */
+/* ---------- The dashboard in the film: no browser chrome, just the screen ---------- */
 
 .kar-app {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--kar-line);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1.25rem;
   background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 50px 100px -60px #000,
-    0 24px 50px -36px rgba(0, 0, 0, 0.9);
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 60px 120px -70px rgba(0, 0, 0, 0.95);
 }
 
-.kar-app::before {
+/* Hairlines over the screen: the red top edge and a soft inset highlight. */
+.kar-app::before,
+.kar-app::after {
   content: '';
   position: absolute;
-  top: -1px;
-  left: 1.6rem;
-  width: 38%;
-  height: 1px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 85%, transparent), transparent);
+  z-index: 2;
   pointer-events: none;
 }
 
-.kar-app__bar {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  height: 2.5rem;
-  padding: 0 1rem;
-  border-bottom: 1px solid var(--kar-hair);
+.kar-app::before {
+  top: 0;
+  left: 1.6rem;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 90%, transparent), transparent);
 }
 
-.kar-app__dots {
-  display: inline-flex;
-  gap: 0.35rem;
-}
-
-.kar-app__dots i {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.kar-app__url {
-  color: var(--kar-dim);
-  font-size: 0.72rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.kar-app::after {
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
 /* ---------- 3 · The dashboard film ---------- */
@@ -772,7 +753,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(0.9rem, 2vh, 1.4rem);
-  width: min(100% - 3rem, 1240px);
+  width: min(100% - 3rem, 1400px);
   margin-inline: auto;
 }
 
@@ -784,6 +765,48 @@
 
 .kar-film.is-pinned .kar-film__frame {
   height: 100%;
+}
+
+/* Pinned: the captions and the reel line up with the dashboard (--kar-app-w is set by experience.ts). */
+.kar-film.is-pinned .kar-film__captions,
+.kar-film.is-pinned .kar-film__reel {
+  width: var(--kar-app-w, 100%);
+  margin-inline: auto;
+}
+
+/* Pinned caption: one compact row (section and title on the left, the story on the right), so the
+   dashboard gets the height. */
+.kar-film.is-pinned.is-enhanced .kar-film__captions {
+  justify-items: stretch;
+  text-align: left;
+}
+
+.kar-film.is-pinned.is-enhanced .kar-film__caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'meta body'
+    'title body'
+    'notes body';
+  align-content: start;
+  column-gap: clamp(2rem, 4vw, 4rem);
+  max-width: none;
+}
+
+.kar-film.is-pinned .kar-film__meta { grid-area: meta; }
+.kar-film.is-pinned .kar-film__title { grid-area: title; }
+
+.kar-film.is-pinned .kar-film__body {
+  grid-area: body;
+  align-self: center;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.kar-film.is-pinned .kar-film__notes {
+  grid-area: notes;
+  justify-content: flex-start;
+  margin-top: 0.65rem;
 }
 
 /* Captions: all five read in order without the script; one at a time once the reel works. */
@@ -860,27 +883,48 @@
   text-wrap: pretty;
 }
 
-/* Stage: the real dashboard in a browser frame, centred. */
+/* Stage: the real dashboard on its own, centred. */
 .kar-film__stage {
   position: relative;
   display: grid;
   justify-items: center;
   align-items: center;
   min-height: 0;
-  perspective: 1600px;
 }
 
 .kar-app--film {
   display: flex;
   flex-direction: column;
-  width: min(100%, 1060px);
+  width: min(100%, 1180px);
   min-height: 0;
-  transform-origin: 50% 100%;
+  transform-origin: 50% 50%;
 }
 
-/* Pinned: as wide as the height left over allows, keeping the dashboard's 1180 × 720 shape. */
+/* Pinned: as large as the stage allows, keeping the dashboard's 1180 × 720 shape. */
+.kar-film.is-pinned .kar-film__stage {
+  container-type: size;
+}
+
 .kar-film.is-pinned .kar-app--film {
-  width: min(100%, 1060px, calc((100svh - 24rem) * 1.6389));
+  width: min(100cqw, 100cqh * 1.6389, 1400px);
+}
+
+/* The opening: two laser lines that part to open the screen (experience.ts). Hidden without it. */
+.kar-film__scan {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: var(--kar-app-w, 100%);
+  height: 2px;
+  margin: -1px 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--color-brand) 18%, #ffe1e5 50%, var(--color-brand) 82%, transparent);
+  box-shadow: 0 0 12px 1px rgba(215, 38, 56, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  translate: -50% 0;
 }
 
 /* The live dashboard: a fixed 1180 × 720 canvas, scaled (and on phones, panned) by filmDirector.ts. */
@@ -1061,34 +1105,6 @@
   box-shadow: 0 0 0 0.25em rgba(215, 38, 56, 0.22);
 }
 
-.kar-app__live {
-  flex: none;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: auto;
-  color: var(--kar-dim);
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.kar-app__live i {
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 50%;
-  background: var(--kar-good);
-  box-shadow: 0 0 0 0 rgba(79, 209, 139, 0.5);
-  animation: kar-live 2.4s ease-out infinite;
-}
-
-@keyframes kar-live {
-  0% { box-shadow: 0 0 0 0 rgba(79, 209, 139, 0.45); }
-  70%, 100% { box-shadow: 0 0 0 6px rgba(79, 209, 139, 0); }
-}
-
 /* Notes: the two things to look at on the screen, as a chip row under the caption. */
 .kar-film__notes {
   display: flex;
@@ -1131,7 +1147,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr 2fr 1fr 1fr;
   gap: 0.6rem;
-  width: min(100%, 1060px);
+  width: min(100%, 1180px);
   margin-inline: auto;
 }
 
@@ -1229,8 +1245,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kar-app__live i {
-    animation: none;
+  .kar-film__scan {
+    display: none;
   }
 }
 
@@ -1488,7 +1504,7 @@
   text-align: center;
 }
 
-/* "Fair to every chair": three barbers over the shop total; Saturday is the busiest column. */
+/* "Fair to every chair": three barbers over the shop total, Tuesday to Saturday. */
 .kar-vis-chairs {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -1503,12 +1519,6 @@
   height: 100%;
   min-height: 0;
   overflow: visible;
-}
-
-.kar-vis-chairs__day {
-  fill: rgba(215, 38, 56, 0.08);
-  stroke: rgba(215, 38, 56, 0.28);
-  stroke-width: 1;
 }
 
 .kar-vis-chairs__total {
@@ -1956,10 +1966,6 @@
   /* Phones: a taller window onto the dashboard; the camera follows the action inside it. */
   .kar-live {
     aspect-ratio: 620 / 600;
-  }
-
-  .kar-app__url {
-    font-size: 0.66rem;
   }
 
   .kar-w__sub {

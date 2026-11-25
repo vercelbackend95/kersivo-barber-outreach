@@ -19,8 +19,9 @@ export const KAR_PAGE_PATH = '/barbershop-reports';
 /** Date the page content last changed (sitemap lastmod and JSON-LD dateModified). */
 export const KAR_LAST_UPDATED_ISO = '2026-11-25';
 export const KAR_PUBLISHED_ISO = '2026-11-25';
-export const KAR_TITLE = 'Barbershop Reports & Owner Dashboard UK | KERSIVO';
-export const KAR_DESCRIPTION = `See bookings, utilisation, no-shows and each barber’s numbers in one owner dashboard. Included in Full KERSIVO, ${formatGbp(SAAS_MONTHLY_GBP)}/month per location.`;
+/** A hook, not the brand: the searcher's own questions (empty chairs, no-shows, who is busiest). */
+export const KAR_TITLE = 'Barbershop Reports: Find Empty Chairs, No-Shows & Your Busiest Barber';
+export const KAR_DESCRIPTION = `Which hours sit empty? Who carries Saturday? See bookings, utilisation, no-shows and each barber vs last week. ${formatGbp(SAAS_MONTHLY_GBP)}/month per location. Try the demo free.`;
 export const KAR_BREADCRUMB_NAME = 'Admin & reports';
 /** Opens the fictional demo shop's dashboard straight on Reports. */
 export const KAR_DEMO_REPORTS_HREF = '/demo/heritage-grooming/admin?section=bookings_reports';
@@ -31,7 +32,7 @@ const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 
 export const KAR_HERO = {
   eyebrow: 'KERSIVO Admin & Reports',
-  titleLines: ['Admin and reports', 'for barbershop owners.'],
+  titleLines: ['Barbershop reports', 'that show empty chairs.'],
   lead: 'Run today’s chairs, know every regular and see how this week compares with the last, in one dashboard that comes with your website and booking.',
   facts: [`Full KERSIVO · ${PRICE}/month per location`, 'No per-barber fees', 'Every number compared with the last period'],
   primary: offer.cta.primary,
@@ -247,6 +248,20 @@ export type KarFaq = { question: string; answer: string };
 export const KAR_FAQ_TITLE = 'Questions owners ask about reports';
 
 export const KAR_FAQS: readonly KarFaq[] = [
+  {
+    question: 'Which numbers should a barbershop owner check every week?',
+    answer:
+      'Five cover most weeks: bookings against the week before, utilisation (how much of your barbers’ available time was booked), cancelled and no-show rates, average booking value and your peak day and hour. Then look at the barber leaderboard to see who carried the week. Reports puts all of them on one screen, each compared with the previous period of the same length.',
+  },
+  {
+    question: 'How do I find the hours my barbershop sits empty?',
+    answer:
+      'Start with utilisation for the week: it is booked chair minutes against the minutes your barbers were working, so a low figure means paid hours with no client in the chair. Then compare it with your peak day and hour, and open the Bookings timeline to see the gaps slot by slot. Trimming quiet hours or moving a barber to the busy ones are the usual first fixes.',
+  },
+  {
+    question: 'How much do barbershop reports cost with KERSIVO?',
+    answer: `Reports are included in Full KERSIVO at ${PRICE}/month per location, with your branded website, online booking and the owner dashboard. There are no per-barber fees and no setup fee. ${offer.fees.commission}; ${offer.fees.stripe} ${offer.fees.vat}`,
+  },
   {
     question: 'What reports does KERSIVO include?',
     answer:
