@@ -1,4 +1,5 @@
 import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getKersivoSoftwareId } from '@/lib/seo/barberDemoJsonLd';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -6,11 +7,15 @@ import { buildBreadcrumbListJsonLd, BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS } from
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
 
-/** Search intent: "barbershop online booking" / "online booking for barbers", how-it-works guide, UK. */
-export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = 'Barbershop Online Booking: How It Works (UK Guide) | KERSIVO';
+/**
+ * Search intent: "barbershop online booking" / "online booking for barbers", UK. The brand is not
+ * known yet, so the title leads with the keyword, the price and the commission hook (the same
+ * pattern as the click-and-collect page) instead of "| KERSIVO".
+ */
+export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = `Barbershop Online Booking UK: £${SAAS_MONTHLY_GBP}/mo, 0% Commission`;
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION =
-  'How barbershop online booking works, step by step: services, barbers, real free times, deposits, reminders and your diary. Full KERSIVO £39/month per location.';
+  `Online booking for UK barbershops at £${SAAS_MONTHLY_GBP}/month per location: real free times, deposits, reminders and your own diary. 0% KERSIVO commission. Stripe fees apply.`;
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'Barbershop online booking, explained in one booking.';
 
@@ -34,6 +39,7 @@ export const BARBERSHOP_ONLINE_BOOKING_TOPICS = [
   'Barber appointment scheduling',
   'Booking deposits',
   'Appointment reminders',
+  'Barbershop booking software cost',
 ] as const;
 
 export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {

@@ -1,7 +1,8 @@
 ---
 /**
- * 04 · Availability: drag a service along one real demo day (moment 2), with the start times the
- * booking page would offer. 05 · Payments: plan, payment rule and price give the split between
+ * 04 · Availability: pick a service and tap any start time on one real demo day (moment 2). The
+ * right side is the real KERSIVO owner timeline for that barber: an offered time drops in as a new
+ * booking, a refused one opens the appointment that blocks it. 05 · Payments: plan, payment rule and price give the split between
  * online and in the shop, worked out with the live booking-payment policy.
  * Both render a complete, readable first state without JavaScript.
  */
@@ -14,29 +15,36 @@ import {
   scrubberServices,
 } from '@/lib/barbershopOnlineBooking/bookingSimulator';
 import { BOB_AVAILABILITY, BOB_PAYMENTS } from '@/lib/seo/barbershopOnlineBookingContent';
+import { AVAILABILITY_DEMO_NOW_MINUTE } from '@/lib/barbershopOnlineBooking/liveDiaryEvents';
+import BobLiveTimelineIsland from '@/components/barbershop-online-booking/BobLiveTimelineIsland';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 
 const sim = buildBookingSimulatorData();
 const barber = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
 const services = scrubberServices();
 const initialService = services.find((s) => s.name === 'Skin fade') ?? services[0]!;
-const span = sim.close - sim.open;
 const INITIAL_START = 12 * 60 + 30;
 const verdict = judgeStart(barber.appointments, sim.close, INITIAL_START, initialService.duration);
-const offered = offeredStarts(barber.appointments, sim.open, sim.close, initialService.duration);
-const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, i) => sim.open + i * 60);
 const nextAppt = !verdict.ok && verdict.reason !== 'closing' ? verdict.appointment : null;
 const initialText = verdict.ok
-  ? `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} fits. The booking page offers ${minuteLabel(INITIAL_START)}.`
-  : `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} would run into the ${nextAppt ? minuteLabel(nextAppt.start) : ''} appointment, so ${minuteLabel(INITIAL_START)} isn’t offered.`;
+  ? `${minuteLabel(INITIAL_START)}–${minuteLabel(INITIAL_START + initialService.duration)} fits, so the booking page offers ${minuteLabel(INITIAL_START)}.`
+  : `The chair is free at ${minuteLabel(INITIAL_START)}, but a ${initialService.duration}-minute ${initialService.name.toLowerCase()} would run into the ${nextAppt ? minuteLabel(nextAppt.start) : ''} appointment, so ${minuteLabel(INITIAL_START)} isn’t offered.`;
+const offered = new Set(offeredStarts(barber.appointments, sim.open, sim.close, initialService.duration));
+
+/* Every 15-minute start of the day, one row per hour. */
+const hourRows = Array.from({ length: Math.ceil((sim.close - sim.open) / 60) }, (_, i) => {
+  const hour = sim.open + i * 60;
+  return { hour, starts: [0, 15, 30, 45].map((m) => hour + m).filter((m) => m < sim.close) };
+});
 
 const scrubData = {
   open: sim.open,
   close: sim.close,
   step: sim.step,
   barber: barber.firstName,
+  barberId: barber.id,
   appointments: barber.appointments,
-  services: services.map((s) => ({ id: s.id, name: s.name, duration: s.duration })),
+  services: services.map((s) => ({ id: s.id, name: s.name, duration: s.duration, pricePence: s.pricePence })),
   initialStart: INITIAL_START,
   initialService: initialService.id,
 };
@@ -56,12 +64,12 @@ const PRICE_MAX = 60;
       <p class="bob-lead">{BOB_AVAILABILITY.lead}</p>
     </header>
 
-    <div class="ks-glass-card ks-glass-card--accent bob-scrub" data-bob-scrub data-state={verdict.ok ? 'ok' : 'no'}>
+    <div class="bob-avail__stage" data-bob-scrub data-state={verdict.ok ? 'ok' : 'no'}>
       <script type="application/json" data-bob-scrub-data set:html={JSON.stringify(scrubData)} />
-      <div class="bob-scrub__top">
+      <div class="ks-glass-card ks-glass-card--accent bob-avail__panel">
         <p class="bob-scrub__who">
           <img src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
-          <span><b>{barber.name}</b><small>Example weekday · open {minuteLabel(sim.open)}–{minuteLabel(sim.close)}</small></span>
+          <span><b>{barber.name}</b><small>Demo day · open {minuteLabel(sim.open)}–{minuteLabel(sim.close)}</small></span>
         </p>
         <div class="bob-seg" role="group" aria-label="Service length">
           {services.map((s) => (
@@ -70,49 +78,42 @@ const PRICE_MAX = 60;
             </button>
           ))}
         </div>
-      </div>
 
-      <div class="bob-scrub__track" data-bob-track style={`--span:${span}`}>
-        <div class="bob-scrub__hours" aria-hidden="true">
-          {hours.map((m) => <span style={`--s:${m - sim.open}`}>{minuteLabel(m).replace(':00', '')}</span>)}
-        </div>
-        <ul class="bob-scrub__appts" aria-label={`${barber.firstName}’s booked appointments`}>
-          {barber.appointments.map((a) => (
-            <li class="bob-scrub__appt" style={`--s:${a.start - sim.open};--d:${a.end - a.start}`} data-bob-appt={a.start}>
-              <span class="sr-only">{minuteLabel(a.start)} to {minuteLabel(a.end)},</span>
-              <span class="bob-scrub__appt-name">{a.service}</span>
-            </li>
-          ))}
-        </ul>
-        <div
-          class="bob-scrub__handle"
-          role="slider"
-          tabindex="0"
-          aria-label={`Start time for ${initialService.name}`}
-          aria-valuemin={sim.open}
-          aria-valuemax={sim.close - sim.step}
-          aria-valuenow={INITIAL_START}
-          aria-valuetext={`${minuteLabel(INITIAL_START)}, ${verdict.ok ? 'offered' : 'not offered'}`}
-          style={`--s:${INITIAL_START - sim.open};--d:${initialService.duration}`}
-          data-bob-handle
-        >
-          <span class="bob-scrub__grip" aria-hidden="true"></span>
-          <span class="bob-scrub__handle-time" data-bob-handle-time>{minuteLabel(INITIAL_START)}</span>
-        </div>
-      </div>
-
-      <p class="bob-scrub__readout" aria-live="polite" data-bob-readout>
-        <span class="bob-scrub__verdict" data-bob-verdict>{verdict.ok ? 'Offered' : 'Not offered'}</span>
-        <span data-bob-readout-text>{initialText}</span>
-      </p>
-
-      <div class="bob-scrub__offered">
-        <p class="bob-scrub__offered-label">Start times the booking page offers for <b data-bob-offered-name>{initialService.name}</b>:</p>
-        <div class="bob-scrub__chips" data-bob-offered>
-          {offered.map((m) => (
-            <button type="button" class="bob-chip" data-bob-jump={m}>{minuteLabel(m)}</button>
+        <p class="bob-slots__label" id="bob-slots-label">Tap a start time for <b data-bob-offered-name>{initialService.name}</b></p>
+        <div class="bob-slots" role="group" aria-labelledby="bob-slots-label" data-bob-slots>
+          {hourRows.map((row) => (
+            <div class="bob-slots__row">
+              <span class="bob-slots__hour" aria-hidden="true">{minuteLabel(row.hour)}</span>
+              {row.starts.map((m) => (
+                <button
+                  type="button"
+                  class:list={['bob-slot', offered.has(m) ? 'is-ok' : 'is-no', { 'is-on': m === INITIAL_START }]}
+                  data-bob-start={m}
+                  aria-pressed={m === INITIAL_START ? 'true' : 'false'}
+                  aria-label={`${minuteLabel(m)}, ${offered.has(m) ? 'offered' : 'not offered'}`}
+                >{minuteLabel(m)}</button>
+              ))}
+            </div>
           ))}
         </div>
+        <p class="bob-slots__legend" aria-hidden="true"><span class="bob-slots__key is-ok"></span>Offered<span class="bob-slots__key is-no"></span>Not offered</p>
+
+        <p class="bob-scrub__readout" aria-live="polite" data-bob-readout>
+          <span class="bob-scrub__verdict" data-bob-verdict>{verdict.ok ? 'Offered' : 'Not offered'}</span>
+          <span data-bob-readout-text>{initialText}</span>
+        </p>
+        <a class="bob-avail__jump" href="#bob-avail-diary" data-bob-avail-jump>See it in the timeline<span aria-hidden="true">↓</span></a>
+      </div>
+
+      <div class="bob-avail__diary" id="bob-avail-diary" tabindex="-1">
+        <BobLiveTimelineIsland
+          client:visible={{ rootMargin: '300px' }}
+          target="availability"
+          barberIds={[barber.id]}
+          initialMinute={12 * 60}
+          demoNowMinute={AVAILABILITY_DEMO_NOW_MINUTE}
+          label={`${barber.name}’s day in the real KERSIVO owner timeline, with demo appointments`}
+        />
       </div>
     </div>
 

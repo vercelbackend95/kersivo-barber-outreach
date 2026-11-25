@@ -1,0 +1,258 @@
+/*
+ * Frame around the real KERSIVO owner timeline on /barbershop-online-booking: the top of the
+ * shop's Bookings page (title, today count, tabs, the day's numbers) over `TodayTimeline`.
+ * The timeline itself keeps its own admin styles (admin-timeline.css); only the scroll height and
+ * the outer surface are set here. Tokens follow the premium KERSIVO card.
+ */
+
+.bobtl {
+  --bobtl-line: rgba(255, 255, 255, 0.08);
+  --bobtl-muted: #a3a3a9;
+  --bobtl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--bobtl-line);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0d0d0e 0%, #080809 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 40px 90px -50px #000;
+  color: #f4f2ee;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.bobtl::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 8%;
+  z-index: 2;
+  width: 52%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-brand), transparent);
+  pointer-events: none;
+}
+
+.bobtl__top {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid var(--bobtl-line);
+}
+
+.bobtl__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.bobtl__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.bobtl__count {
+  padding: 0.18rem 0.5rem;
+  border: 1px solid rgba(60, 207, 142, 0.45);
+  border-radius: 999px;
+  background: rgba(60, 207, 142, 0.1);
+  color: #3ccf8e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bobtl__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid rgba(60, 207, 142, 0.35);
+  border-radius: 999px;
+  color: #3ccf8e;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bobtl__live-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.bobtl__tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.bobtl__tab {
+  padding: 0.32rem 0.65rem;
+  border-radius: 999px;
+  color: var(--bobtl-muted);
+}
+
+.bobtl__tab.is-on {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.bobtl__date {
+  margin-left: auto;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid var(--bobtl-line);
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.bobtl__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.bobtl__stats div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.1rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--bobtl-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.bobtl__stats div:first-child {
+  border-color: rgba(215, 38, 56, 0.45);
+  background: rgba(215, 38, 56, 0.08);
+}
+
+.bobtl__stats dt {
+  overflow: hidden;
+  color: var(--bobtl-muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bobtl__stats dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bobtl__body {
+  position: relative;
+  min-height: 0;
+}
+
+/* The timeline fills the frame; only its own list scrolls. */
+.bobtl .admin-vtl.tl {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.bobtl .admin-vtl-scroll {
+  height: 100%;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+/* Fade at the bottom edge: the day carries on below. */
+.bobtl__body::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 2.25rem;
+  background: linear-gradient(180deg, transparent, #080809);
+  pointer-events: none;
+}
+
+.bobtl__toast {
+  position: absolute;
+  inset: auto 0.75rem 0.85rem;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+}
+
+.bobtl__toast-inner {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(20, 20, 23, 0.96);
+  box-shadow: 0 18px 40px -18px #000;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bobtl__live-dot {
+    animation: bobtl-pulse 1.8s ease-in-out infinite;
+  }
+
+  .bobtl__count[data-bumped] {
+    animation: bobtl-bump 520ms var(--bobtl-ease);
+  }
+
+  .bobtl__toast-inner {
+    animation: bobtl-toast 320ms var(--bobtl-ease) both;
+  }
+}
+
+@keyframes bobtl-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes bobtl-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bobtl-toast {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 30rem) {
+  .bobtl__top {
+    padding: 0.85rem 0.8rem 0.75rem;
+  }
+
+  .bobtl__stats dt {
+    font-size: 0.6rem;
+  }
+}

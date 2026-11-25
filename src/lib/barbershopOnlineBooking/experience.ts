@@ -2,10 +2,10 @@
  * Client behaviour for /barbershop-online-booking.
  *
  * - Hero simulator: service → barber → time → confirm on a phone, with free times worked out from
- *   the demo diary. Hovering a time previews it in the diary; confirming flies a ticket from the
- *   phone into the barber's column (moment 1) and that time is no longer offered.
- * - Diary scrubber: drag (or arrow-key) a service along one demo day and read why a start time
- *   is or isn't offered (moment 2).
+ *   the demo diary. Confirming flies a ticket from the phone into the real KERSIVO owner timeline
+ *   beside it, where the booking opens (moment 1), and that time is no longer offered.
+ * - Availability: tap any start time on one demo day and read why it is or isn't offered; the real
+ *   KERSIVO timeline beside it shows the new booking or the appointment in the way (moment 2).
  * - Payments: plan, rule and price → online now vs in the shop, from the live payment policy.
  * - Hub: pulses run only on screen, with a pause control.
  *
@@ -26,6 +26,7 @@ import {
   poundsLabel,
 } from './bookingTimes';
 import type { BookingSimulatorData } from './bookingSimulator';
+import { HERO_DEMO_NOW_MINUTE, sendLiveDiary } from './liveDiaryEvents';
 
 type Cleanup = () => void;
 
@@ -77,7 +78,8 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
 
   const service = () => data.services.find((s) => s.id === state.service);
   const barber = () => data.barbers.find((b) => b.id === state.barber);
-  const column = (id?: string) => (id ? sim.querySelector<HTMLElement>(`[data-bob-col="${id}"] .bob-diary__track`) : null);
+  const owner = sim.querySelector<HTMLElement>('[data-bob-owner]');
+  let booked = 0;
 
   sim.classList.add('is-live');
 
@@ -117,33 +119,14 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
     }
   };
 
-  /* Diary: highlight the chosen barber's column and preview a time as a ghost block. */
-  const ghost = document.createElement('li');
-  ghost.className = 'bob-appt bob-appt--ghost';
-  ghost.setAttribute('aria-hidden', 'true');
-
-  const highlightColumn = (id?: string) => {
-    sim.querySelectorAll<HTMLElement>('[data-bob-col]').forEach((col) => col.classList.toggle('is-picked', col.dataset.bobCol === id));
-  };
-
-  const previewGhost = (start?: number) => {
-    const svc = service();
-    const track = column(state.barber);
-    if (start === undefined || !svc || !track) {
-      ghost.remove();
-      return;
-    }
-    ghost.style.setProperty('--s', String(start - data.open));
-    ghost.style.setProperty('--d', String(svc.duration));
-    ghost.innerHTML = `<span class="bob-appt__time">${minuteLabel(start)}</span><span class="bob-appt__name">${svc.name}</span>`;
-    if (ghost.parentElement !== track) track.append(ghost);
-  };
-
   const renderTimes = () => {
     const svc = service();
     const who = barber();
     if (!svc || !who) return;
-    const starts = offeredStarts(diary.get(who.id) ?? [], data.open, data.close, svc.duration, data.step);
+    // The phone books "today" on the timeline's demo clock, so only times after now are offered.
+    const starts = offeredStarts(diary.get(who.id) ?? [], data.open, data.close, svc.duration, data.step).filter(
+      (m) => m > HERO_DEMO_NOW_MINUTE,
+    );
     if (timeHint) timeHint.textContent = `${svc.name} with ${who.firstName}`;
     const groups: Array<[string, number[]]> = [
       ['Morning', starts.filter((m) => m < 12 * 60)],
@@ -154,7 +137,7 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
     if (starts.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'bob-times__empty';
-      empty.textContent = `${who.firstName} has no free time left for this service on this day.`;
+      empty.textContent = `${who.firstName} has no free time left for this service today.`;
       timesBox.append(empty);
       return;
     }
@@ -190,59 +173,59 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
     out('price')!.textContent = poundsLabel(svc.pricePence);
   };
 
+  /* The confirmed booking goes into the real owner timeline beside the phone (moment 1). */
   const landBooking = () => {
     const svc = service();
     const who = barber();
-    const track = column(state.barber);
-    if (!svc || !who || state.start === undefined || !track) return;
+    if (!svc || !who || state.start === undefined) return;
     const start = state.start;
     diary.get(who.id)?.push({ start, end: start + svc.duration, service: svc.name });
-
-    const block = document.createElement('li');
-    block.className = `bob-appt bob-appt--new${svc.duration < 40 ? ' bob-appt--short' : ''}`;
-    block.style.setProperty('--s', String(start - data.open));
-    block.style.setProperty('--d', String(svc.duration));
-    block.title = `${minuteLabel(start)}–${minuteLabel(start + svc.duration)} ${svc.name}`;
-    block.innerHTML = `<span class="bob-appt__time">${minuteLabel(start)}</span><span class="bob-appt__name">${svc.name}</span>`;
+    booked += 1;
+    sendLiveDiary({
+      target: 'hero',
+      type: 'add',
+      id: `bob-hero-new-${booked}`,
+      barberId: who.id,
+      start,
+      end: start + svc.duration,
+      serviceName: svc.name,
+      pricePence: svc.pricePence,
+      clientName: 'You',
+      tag: 'Booked online',
+    });
 
     const source = panes.get('details')!.querySelector<HTMLElement>('.bob-summary');
+    const frame = owner?.querySelector<HTMLElement>('.bob-owner__frame');
     const from = source?.getBoundingClientRect();
-    ghost.remove();
-    track.append(block);
-    const to = block.getBoundingClientRect();
+    const to = frame?.getBoundingClientRect();
     const onScreen = (r?: DOMRect | null) => !!r && r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+    if (reducedMotion() || !onScreen(from) || !onScreen(to)) return;
 
-    if (reducedMotion() || !onScreen(from) || !onScreen(to)) {
-      block.classList.add('is-landed');
-      return;
-    }
-
-    // The ticket: a copy of the summary card that shrinks into the new block.
+    // The ticket: a copy of the summary card that travels into the owner timeline.
     const ticket = document.createElement('div');
     ticket.className = 'bob-ticket';
     ticket.setAttribute('aria-hidden', 'true');
     ticket.innerHTML = `<b>${svc.name}</b><span>${minuteLabel(start)} · ${who.firstName}</span>`;
-    Object.assign(ticket.style, { left: `${to.left}px`, top: `${to.top}px`, width: `${to.width}px`, height: `${to.height}px` });
+    const w = Math.min(220, to!.width - 32);
+    const h = 52;
+    const left = to!.left + (to!.width - w) / 2;
+    const top = to!.top + Math.min(to!.height * 0.45, 220);
+    Object.assign(ticket.style, { left: `${left}px`, top: `${top}px`, width: `${w}px`, height: `${h}px` });
     document.body.append(ticket);
-    block.style.opacity = '0';
-    const dx = from!.left - to.left;
-    const dy = from!.top - to.top;
-    const sx = from!.width / to.width;
-    const sy = from!.height / to.height;
-    const lift = Math.min(-40, -Math.abs(dy) * 0.25);
+    const dx = from!.left - left;
+    const dy = from!.top - top;
+    const sx = from!.width / w;
+    const sy = from!.height / h;
     const flight = ticket.animate(
       [
-        { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0.2, offset: 0 },
-        { transform: `translate(${dx * 0.45}px, ${dy * 0.45 + lift}px) scale(${1 + (sx - 1) * 0.4}, ${1 + (sy - 1) * 0.4})`, opacity: 1, offset: 0.45 },
-        { transform: 'translate(0, 0) scale(1, 1)', opacity: 1, offset: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 0.25, offset: 0 },
+        { transform: `translate(${dx * 0.4}px, ${dy * 0.4 - 36}px) scale(1.04)`, opacity: 1, offset: 0.5 },
+        { transform: 'translate(0, 0) scale(1)', opacity: 1, offset: 0.85 },
+        { transform: 'translate(0, 0) scale(0.92)', opacity: 0, offset: 1 },
       ],
-      { duration: 780, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+      { duration: 900, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' },
     );
-    flight.onfinish = () => {
-      ticket.remove();
-      block.style.opacity = '';
-      block.classList.add('is-landed');
-    };
+    flight.onfinish = () => ticket.remove();
     disposers.push(() => ticket.remove());
   };
 
@@ -258,13 +241,11 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
     } else if (el.dataset.bobBarber) {
       state.barber = el.dataset.bobBarber;
       sim.querySelectorAll('[data-bob-barber]').forEach((b) => b.classList.toggle('is-on', b === el));
-      highlightColumn(state.barber);
       renderTimes();
       show('time');
       announce(`${barber()?.name} chosen. Pick a time.`);
     } else if (el.dataset.bobTime) {
       state.start = Number(el.dataset.bobTime);
-      previewGhost(state.start);
       fillSummary();
       show('details');
       announce(`${minuteLabel(state.start)} chosen. Check and confirm.`);
@@ -276,196 +257,141 @@ function initSimulator(root: HTMLElement, disposers: Cleanup[]) {
       landBooking();
       show('done');
       sim.classList.add('has-booked');
-      announce(`Booked. ${svc.name} with ${who.name} at ${minuteLabel(state.start)} is now in the shop diary, and that time is no longer offered.`);
+      announce(`Booked. ${svc.name} with ${who.name} at ${minuteLabel(state.start)} is now in the owner’s KERSIVO timeline, and that time is no longer offered.`);
     } else if (el.hasAttribute('data-bob-again')) {
       state.service = undefined;
       state.barber = undefined;
       state.start = undefined;
       sim.querySelectorAll('[data-bob-service], [data-bob-barber]').forEach((b) => b.classList.remove('is-on'));
-      highlightColumn(undefined);
       show('service', -1);
       announce('Choose a service.');
     } else if (el.hasAttribute('data-bob-back')) {
       const index = PANES.indexOf(state.pane);
       const previous = PANES[Math.max(0, index - 1)]!;
-      if (state.pane === 'details') {
-        state.start = undefined;
-        previewGhost(undefined);
-      }
-      if (previous === 'service') highlightColumn(undefined);
+      if (state.pane === 'details') state.start = undefined;
       show(previous, -1);
       announce(`Back to ${previous === 'service' ? 'services' : previous === 'barber' ? 'barbers' : 'times'}.`);
     }
   };
 
-  const onPreview = (event: Event) => {
-    if (state.pane !== 'time') return;
-    const el = (event.target as HTMLElement).closest<HTMLElement>('[data-bob-time]');
-    if (el) previewGhost(Number(el.dataset.bobTime));
-  };
-  const onPreviewEnd = (event: Event) => {
-    if (state.pane !== 'time') return;
-    const related = (event as FocusEvent).relatedTarget as HTMLElement | null;
-    if (!related?.closest?.('[data-bob-time]')) previewGhost(undefined);
-  };
-
   on(sim, 'click', onClick, disposers);
-  on(timesBox, 'pointerover', onPreview, disposers);
-  on(timesBox, 'focusin', onPreview, disposers);
-  on(timesBox, 'pointerleave', onPreviewEnd, disposers);
-  on(timesBox, 'focusout', onPreviewEnd, disposers);
 }
 
-/* ---------- Diary scrubber ---------- */
+/* ---------- Availability: tap a start time, watch the real timeline ---------- */
 
 type ScrubData = {
   open: number;
   close: number;
   step: number;
   barber: string;
+  barberId: string;
   appointments: SimAppointment[];
-  services: Array<{ id: string; name: string; duration: number }>;
+  services: Array<{ id: string; name: string; duration: number; pricePence: number }>;
   initialStart: number;
   initialService: string;
 };
+
+const AVAIL_PREVIEW_ID = 'bob-avail-preview';
 
 function initScrubber(root: HTMLElement, disposers: Cleanup[]) {
   const box = root.querySelector<HTMLElement>('[data-bob-scrub]');
   const data = box ? readJson<ScrubData>(box, '[data-bob-scrub-data]') : null;
   if (!box || !data) return;
-  const track = box.querySelector<HTMLElement>('[data-bob-track]')!;
-  const handle = box.querySelector<HTMLElement>('[data-bob-handle]')!;
-  const handleTime = box.querySelector<HTMLElement>('[data-bob-handle-time]')!;
   const verdictEl = box.querySelector<HTMLElement>('[data-bob-verdict]')!;
   const text = box.querySelector<HTMLElement>('[data-bob-readout-text]')!;
-  const chips = box.querySelector<HTMLElement>('[data-bob-offered]')!;
   const offeredName = box.querySelector<HTMLElement>('[data-bob-offered-name]');
-  const appts = [...box.querySelectorAll<HTMLElement>('[data-bob-appt]')];
+  const slots = [...box.querySelectorAll<HTMLButtonElement>('[data-bob-start]')];
   const segs = [...box.querySelectorAll<HTMLButtonElement>('[data-bob-scrub-service]')];
 
   let start = data.initialStart;
   let svc = data.services.find((s) => s.id === data.initialService) ?? data.services[0]!;
-  const maxStart = data.close - data.step;
 
-  const render = (announce = true) => {
-    const verdict = judgeStart(data.appointments, data.close, start, svc.duration);
-    const end = start + svc.duration;
-    box.dataset.state = verdict.ok ? 'ok' : 'no';
-    handle.style.setProperty('--s', String(start - data.open));
-    handle.style.setProperty('--d', String(Math.min(svc.duration, data.close - start)));
-    handleTime.textContent = minuteLabel(start);
-    verdictEl.textContent = verdict.ok ? 'Offered' : 'Not offered';
-    let line: string;
-    if (verdict.ok) {
-      line = `${minuteLabel(start)}–${minuteLabel(end)} fits, so the booking page offers ${minuteLabel(start)}.`;
-    } else if (verdict.reason === 'closing') {
-      line = `${minuteLabel(start)}–${minuteLabel(end)} would run past closing at ${minuteLabel(data.close)}, so ${minuteLabel(start)} isn’t offered.`;
-    } else if (verdict.reason === 'inside') {
-      line = `${data.barber} is already with a client then (${verdict.appointment.service}, ${minuteLabel(verdict.appointment.start)}–${minuteLabel(verdict.appointment.end)}).`;
-    } else {
-      line = `The chair is free at ${minuteLabel(start)}, but a ${svc.duration}-minute ${svc.name.toLowerCase()} would run into the ${minuteLabel(verdict.appointment.start)} appointment, so ${minuteLabel(start)} isn’t offered.`;
+  const lineFor = (at: number) => {
+    const verdict = judgeStart(data.appointments, data.close, at, svc.duration);
+    const end = at + svc.duration;
+    if (verdict.ok) return { verdict, line: `${minuteLabel(at)}–${minuteLabel(end)} fits, so the booking page offers ${minuteLabel(at)}. It is now in ${data.barber}’s timeline.` };
+    if (verdict.reason === 'closing') return { verdict, line: `${minuteLabel(at)}–${minuteLabel(end)} would run past closing at ${minuteLabel(data.close)}, so ${minuteLabel(at)} isn’t offered.` };
+    if (verdict.reason === 'inside') {
+      return { verdict, line: `${data.barber} is already with a client then (${verdict.appointment.service}, ${minuteLabel(verdict.appointment.start)}–${minuteLabel(verdict.appointment.end)}), so ${minuteLabel(at)} isn’t offered.` };
     }
-    if (announce || text.textContent !== line) text.textContent = line;
-    const blocking = !verdict.ok && verdict.reason !== 'closing' ? verdict.appointment.start : null;
-    appts.forEach((a) => a.classList.toggle('is-blocking', Number(a.dataset.bobAppt) === blocking));
-    handle.setAttribute('aria-valuenow', String(start));
-    handle.setAttribute('aria-valuetext', `${minuteLabel(start)}, ${verdict.ok ? 'offered' : 'not offered'}`);
-    chips.querySelectorAll<HTMLElement>('[data-bob-jump]').forEach((c) => c.classList.toggle('is-on', Number(c.dataset.bobJump) === start));
+    return {
+      verdict,
+      line: `The chair is free at ${minuteLabel(at)}, but a ${svc.duration}-minute ${svc.name.toLowerCase()} would run into the ${minuteLabel(verdict.appointment.start)} appointment, so ${minuteLabel(at)} isn’t offered.`,
+    };
   };
 
-  const renderChips = () => {
-    const list = offeredStarts(data.appointments, data.open, data.close, svc.duration, data.step);
-    chips.replaceChildren(
-      ...list.map((minute) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'bob-chip';
-        b.dataset.bobJump = String(minute);
-        b.textContent = minuteLabel(minute);
-        return b;
-      }),
-    );
+  /* Offered and refused states for every start, for the chosen service. */
+  const paintSlots = () => {
+    const offered = new Set(offeredStarts(data.appointments, data.open, data.close, svc.duration, data.step));
+    slots.forEach((slot, i) => {
+      const minute = Number(slot.dataset.bobStart);
+      const ok = offered.has(minute);
+      const was = slot.classList.contains('is-ok');
+      slot.classList.toggle('is-ok', ok);
+      slot.classList.toggle('is-no', !ok);
+      slot.setAttribute('aria-label', `${minuteLabel(minute)}, ${ok ? 'offered' : 'not offered'}`);
+      if (was !== ok && !reducedMotion()) {
+        slot.animate([{ transform: 'scale(0.86)', opacity: 0.4 }, { transform: 'scale(1)', opacity: 1 }], {
+          duration: 260,
+          delay: Math.min(i * 6, 240),
+          easing: EASE_OUT,
+          fill: 'backwards',
+        });
+      }
+    });
     if (offeredName) offeredName.textContent = svc.name;
-    handle.setAttribute('aria-label', `Start time for ${svc.name}`);
   };
 
-  const snap = (minute: number) => Math.min(maxStart, Math.max(data.open, Math.round((minute - data.open) / data.step) * data.step + data.open));
+  const select = (minute: number, send: boolean) => {
+    start = minute;
+    const { verdict, line } = lineFor(minute);
+    box.dataset.state = verdict.ok ? 'ok' : 'no';
+    verdictEl.textContent = verdict.ok ? 'Offered' : 'Not offered';
+    text.textContent = line;
+    slots.forEach((slot) => {
+      const on = Number(slot.dataset.bobStart) === minute;
+      slot.classList.toggle('is-on', on);
+      slot.setAttribute('aria-pressed', String(on));
+    });
+    if (!send) return;
+    if (verdict.ok) {
+      sendLiveDiary({
+        target: 'availability',
+        type: 'add',
+        id: AVAIL_PREVIEW_ID,
+        barberId: data.barberId,
+        start: minute,
+        end: minute + svc.duration,
+        serviceName: svc.name,
+        pricePence: svc.pricePence,
+        clientName: 'New client',
+        tag: 'Offered time',
+      });
+    } else {
+      sendLiveDiary({ target: 'availability', type: 'remove', id: AVAIL_PREVIEW_ID });
+      if (verdict.reason !== 'closing') {
+        sendLiveDiary({ target: 'availability', type: 'focus', barberId: data.barberId, start: verdict.appointment.start });
+      }
+    }
+  };
 
-  const minuteAt = (clientX: number, grabOffset: number) => {
-    const rect = track.getBoundingClientRect();
-    const ratio = (clientX - grabOffset - rect.left) / rect.width;
-    return snap(data.open + ratio * (data.close - data.open));
-  };
-
-  let dragging = false;
-  let grab = 0;
-  const onDown = (event: PointerEvent) => {
-    if (event.button !== 0) return;
-    const onHandle = handle.contains(event.target as Node);
-    const rect = handle.getBoundingClientRect();
-    grab = onHandle ? event.clientX - rect.left : Math.min(rect.width / 2, 18);
-    dragging = true;
-    box.classList.add('is-dragging');
-    track.setPointerCapture(event.pointerId);
-    const next = minuteAt(event.clientX, grab);
-    if (next !== start) {
-      start = next;
-      render();
-    }
-    handle.focus({ preventScroll: true });
-    event.preventDefault();
-  };
-  const onMove = (event: PointerEvent) => {
-    if (!dragging) return;
-    const next = minuteAt(event.clientX, grab);
-    if (next !== start) {
-      start = next;
-      render();
-    }
-  };
-  const onUp = (event: PointerEvent) => {
-    if (!dragging) return;
-    dragging = false;
-    box.classList.remove('is-dragging');
-    if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
-  };
-  const onKey = (event: KeyboardEvent) => {
-    const steps: Record<string, number> = { ArrowRight: data.step, ArrowUp: data.step, ArrowLeft: -data.step, ArrowDown: -data.step, PageUp: 60, PageDown: -60 };
-    let next = start;
-    if (event.key in steps) next = snap(start + steps[event.key]!);
-    else if (event.key === 'Home') next = data.open;
-    else if (event.key === 'End') next = maxStart;
-    else return;
-    event.preventDefault();
-    if (next !== start) {
-      start = next;
-      render();
-    }
-  };
   const onClick = (event: MouseEvent) => {
     const el = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
-    if (!el) return;
-    if (el.dataset.bobJump) {
-      start = Number(el.dataset.bobJump);
-      box.classList.add('is-jumping');
-      render();
-      window.setTimeout(() => box.classList.remove('is-jumping'), 320);
+    if (!el || !box.contains(el)) return;
+    if (el.dataset.bobStart) {
+      select(Number(el.dataset.bobStart), true);
     } else if (el.dataset.bobScrubService) {
       svc = data.services.find((s) => s.id === el.dataset.bobScrubService) ?? svc;
       segs.forEach((s) => s.setAttribute('aria-pressed', String(s === el)));
-      renderChips();
-      render();
+      sendLiveDiary({ target: 'availability', type: 'remove', id: AVAIL_PREVIEW_ID });
+      paintSlots();
+      select(start, false);
     }
   };
 
-  on(track, 'pointerdown', onDown, disposers);
-  on(track, 'pointermove', onMove, disposers);
-  on(track, 'pointerup', onUp, disposers);
-  on(track, 'pointercancel', onUp, disposers);
-  on(handle, 'keydown', onKey, disposers);
   on(box, 'click', onClick, disposers);
   box.classList.add('is-live');
-  render(false);
+  select(start, false);
 }
 
 /* ---------- Payments ---------- */
@@ -564,6 +490,36 @@ function initPayments(root: HTMLElement, disposers: Cleanup[]) {
   render();
 }
 
+/* ---------- How it works: fragment loops ---------- */
+
+function initSteps(root: HTMLElement, disposers: Cleanup[]) {
+  const section = root.querySelector<HTMLElement>('.bob-steps');
+  const steps = [...root.querySelectorAll<HTMLElement>('[data-bob-step]')];
+  if (!section || steps.length === 0) return;
+  section.classList.add('is-live');
+  // Loops run only while their step is on screen.
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((entry) => (entry.target as HTMLElement).classList.toggle('is-inview', entry.isIntersecting)),
+    { rootMargin: '0px 0px -12% 0px', threshold: 0.35 },
+  );
+  steps.forEach((step) => io.observe(step));
+  disposers.push(() => io.disconnect());
+  const button = section.querySelector<HTMLButtonElement>('[data-bob-steps-pause]');
+  const label = section.querySelector<HTMLElement>('[data-bob-steps-pause-label]');
+  if (button) {
+    on(
+      button,
+      'click',
+      () => {
+        const paused = section.classList.toggle('is-paused');
+        button.setAttribute('aria-pressed', String(paused));
+        if (label) label.textContent = paused ? 'Play animation' : 'Pause animation';
+      },
+      disposers,
+    );
+  }
+}
+
 /* ---------- Hub ---------- */
 
 function initHub(root: HTMLElement, disposers: Cleanup[]) {
@@ -593,7 +549,7 @@ function initHub(root: HTMLElement, disposers: Cleanup[]) {
 export function bindOnlineBookingPage(root: HTMLElement): Cleanup {
   const disposers: Cleanup[] = [];
   root.classList.add('bob-js');
-  for (const init of [initSimulator, initScrubber, initPayments, initHub]) {
+  for (const init of [initSimulator, initSteps, initScrubber, initPayments, initHub]) {
     try {
       init(root, disposers);
     } catch (error) {

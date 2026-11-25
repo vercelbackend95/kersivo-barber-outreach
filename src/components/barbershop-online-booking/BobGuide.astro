@@ -56,9 +56,12 @@ const MAIL =
       <p class="bob-lead">{BOB_STEPS_SECTION.lead}</p>
     </header>
 
-    <ol class="bob-steps__list">
+    <button type="button" class="bob-steps__pause" data-bob-steps-pause aria-pressed="false">
+      <span class="bob-hub__pause-icon" aria-hidden="true"></span><span data-bob-steps-pause-label>Pause animation</span>
+    </button>
+    <ol class="bob-steps__list" data-bob-steps>
       {BOB_STEPS.map((step) => (
-        <li class="bob-step" id={`step-${step.id}`}>
+        <li class="bob-step" id={`step-${step.id}`} data-bob-step>
           <div class="bob-step__text">
             <span class="bob-step__num" aria-hidden="true">{step.number}</span>
             <h3 class="bob-step__title">{step.title}</h3>
@@ -68,7 +71,8 @@ const MAIL =
 
           <div class="bob-frag" aria-hidden="true">
             {step.id === 'service' && (
-              <div class="bob-frag__stack">
+              <div class="bob-frag__stack bob-frag__anim">
+                <span class="bob-frag__ring bob-frag__ring--rows3" aria-hidden="true"></span>
                 {sim.services.slice(0, 3).map((s) => (
                   <div class:list={['bob-frag__row', { 'is-on': s.id === service.id }]}>
                     <span><b>{s.name}</b><small>{s.description}</small></span>
@@ -79,7 +83,8 @@ const MAIL =
               </div>
             )}
             {step.id === 'barber' && (
-              <div class="bob-frag__faces">
+              <div class="bob-frag__faces bob-frag__anim">
+                <span class="bob-frag__ring bob-frag__ring--faces" aria-hidden="true"></span>
                 {sim.barbers.map((b) => (
                   <div class:list={['bob-frag__face', { 'is-on': b.id === kit.id, 'is-off': !b.working }]}>
                     <img src={b.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
@@ -90,15 +95,16 @@ const MAIL =
               </div>
             )}
             {step.id === 'time' && (
-              <div class="bob-frag__times">
+              <div class="bob-frag__times bob-frag__anim">
                 <p class="bob-frag__label">{service.name} with {kit.firstName} · {service.duration} min</p>
                 <div class="bob-frag__grid">
-                  {times.map((t) => <span class:list={['bob-frag__time', { 'is-on': t === picked }]}>{minuteLabel(t)}</span>)}
+                  {times.map((t, i) => <span class:list={['bob-frag__time', { 'is-on': t === picked }]} style={`--i:${i}`}>{minuteLabel(t)}</span>)}
                 </div>
               </div>
             )}
             {step.id === 'pay' && (
-              <div class="bob-frag__pay">
+              <div class="bob-frag__pay bob-frag__anim">
+                <span class="bob-frag__ring bob-frag__ring--rows2" aria-hidden="true"></span>
                 <div class="bob-frag__row is-on">
                   <span><b>Pay £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</b><small>{poundsLabel(service.pricePence - depositPence)} left to pay in the shop</small></span>
                   <span class="bob-frag__price">£{KERSIVO_BOOKING_DEPOSIT_GBP}</span>
@@ -109,10 +115,11 @@ const MAIL =
                   <span class="bob-frag__price">{poundsLabel(service.pricePence)}</span>
                   <i class="bob-frag__radio"></i>
                 </div>
+                <div class="bob-frag__paybar"><span class="bob-frag__paybar-fill"></span><span class="bob-frag__paybar-text">Paying £{KERSIVO_BOOKING_DEPOSIT_GBP} by card</span></div>
               </div>
             )}
             {step.id === 'confirmed' && (
-              <div class="bob-frag__mail">
+              <div class="bob-frag__mail bob-frag__anim">
                 <div class="bob-frag__mail-head">
                   <span class="bob-frag__mail-icon" set:html={MAIL} />
                   <span><b>Booking confirmed</b><small>{HERITAGE_DEMO_SHOP_NAME}</small></span>

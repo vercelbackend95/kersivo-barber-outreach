@@ -57,11 +57,13 @@ const copyStrings = (() => {
 const copy = copyStrings.join('\n');
 
 describe('/barbershop-online-booking metadata and indexing', () => {
-  it('keeps the route, a UK how-it-works title, a description under 160 characters and the canonical URL', () => {
+  it('keeps the route, a price-led UK title, a description under 160 characters and the canonical URL', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH).toBe('/barbershop-online-booking');
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE).toBe('Barbershop Online Booking: How It Works (UK Guide) | KERSIVO');
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE).toBe('Barbershop Online Booking UK: £39/mo, 0% Commission');
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE.length).toBeLessThanOrEqual(60);
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION).toContain('£39/month per location');
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION).toMatch(/0% KERSIVO commission\. Stripe fees apply\.$/);
     expect(resolveCanonicalUrl(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-online-booking');
     expect(page).toContain('canonicalPath={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(page).toContain('title={BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE}');
@@ -260,9 +262,10 @@ describe('/barbershop-online-booking interaction and motion', () => {
     }));
     expect(imports.length).toBeGreaterThan(0);
     for (const entry of imports) {
-      if (!entry.typeOnly) expect(['@/lib/booking/bookingPaymentPolicy', './bookingTimes']).toContain(entry.from);
+      if (!entry.typeOnly) expect(['@/lib/booking/bookingPaymentPolicy', './bookingTimes', './liveDiaryEvents']).toContain(entry.from);
     }
     expect(bookingTimes).not.toMatch(/^import /m);
+    expect(read('lib/barbershopOnlineBooking/liveDiaryEvents.ts')).not.toMatch(/^import /m);
     expect(read('lib/booking/bookingPaymentPolicy.ts')).not.toMatch(/^import (?!type )/m);
   });
 
@@ -273,12 +276,18 @@ describe('/barbershop-online-booking interaction and motion', () => {
     expect(reach).toContain('aria-pressed="false"');
   });
 
-  it('exposes the diary scrubber as a keyboard slider with readable values', () => {
-    expect(tools).toContain('role="slider"');
-    expect(tools).toContain('tabindex="0"');
-    expect(tools).toContain('aria-valuetext=');
+  it('offers every start time as a real button with its state, and announces the verdict', () => {
+    expect(tools).toContain('data-bob-start={m}');
+    expect(tools).toContain('aria-pressed=');
+    expect(tools).toContain("aria-label={`${minuteLabel(m)}, ${offered.has(m) ? 'offered' : 'not offered'}`}");
     expect(tools).toContain('aria-live="polite"');
-    for (const key of ['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown']) expect(experience).toContain(`${key}:`);
-    for (const key of ['Home', 'End']) expect(experience).toContain(`event.key === '${key}'`);
+    expect(experience).toContain("type: 'focus'");
+  });
+
+  it('shows the real KERSIVO owner timeline, not a drawn diary', () => {
+    expect(hero).toContain('<BobLiveTimelineIsland');
+    expect(tools).toContain('<BobLiveTimelineIsland');
+    expect(components['BobLiveTimeline.tsx']).toContain("import TodayTimeline");
+    expect(hero).not.toContain('bob-diary');
   });
 });
