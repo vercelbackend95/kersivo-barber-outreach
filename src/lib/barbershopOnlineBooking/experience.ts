@@ -490,6 +490,26 @@ function initPayments(root: HTMLElement, disposers: Cleanup[]) {
   render();
 }
 
+/* ---------- At a glance: one staggered reveal ---------- */
+
+function initGlance(root: HTMLElement, disposers: Cleanup[]) {
+  const card = root.querySelector<HTMLElement>('[data-bob-glance]');
+  if (!card || reducedMotion() || !('IntersectionObserver' in window)) return;
+  // Already on screen (a reload mid-page): show it as it is, no entrance.
+  if (card.getBoundingClientRect().top < window.innerHeight * 0.9) return;
+  card.classList.add('is-armed');
+  const io = new IntersectionObserver(
+    ([entry]) => {
+      if (!entry?.isIntersecting) return;
+      card.classList.add('is-shown');
+      io.disconnect();
+    },
+    { rootMargin: '0px 0px -15% 0px' },
+  );
+  io.observe(card);
+  disposers.push(() => io.disconnect());
+}
+
 /* ---------- How it works: fragment loops ---------- */
 
 function initSteps(root: HTMLElement, disposers: Cleanup[]) {
@@ -549,7 +569,7 @@ function initHub(root: HTMLElement, disposers: Cleanup[]) {
 export function bindOnlineBookingPage(root: HTMLElement): Cleanup {
   const disposers: Cleanup[] = [];
   root.classList.add('bob-js');
-  for (const init of [initSimulator, initSteps, initScrubber, initPayments, initHub]) {
+  for (const init of [initSimulator, initGlance, initSteps, initScrubber, initPayments, initHub]) {
     try {
       init(root, disposers);
     } catch (error) {
