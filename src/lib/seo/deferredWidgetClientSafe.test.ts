@@ -11,6 +11,8 @@ import { describe, expect, it } from 'vitest';
 const here = dirname(fileURLToPath(import.meta.url));
 const srcRoot = normalize(join(here, '../..'));
 const entry = join(srcRoot, 'components/landing/DeferredWidget.tsx');
+/* The live KERSIVO timeline on /barbershop-online-booking loads the same way. */
+const bobEntry = join(srcRoot, 'components/barbershop-online-booking/BobLiveTimelineIsland.tsx');
 
 const FORBIDDEN_PACKAGES = [/^@prisma\/client/, /^\.prisma\//, /^dotenv/, /^node:/, /^fs$/, /^path$/];
 const FORBIDDEN_SRC = [/^lib\/db\//];
@@ -37,10 +39,10 @@ function resolveLocal(spec: string, from: string): string | null {
   return null;
 }
 
-function collectViolations(): string[] {
+function collectViolations(start: string = entry): string[] {
   const seen = new Set<string>();
   const violations: string[] = [];
-  const stack: Array<{ file: string; chain: string[] }> = [{ file: entry, chain: [] }];
+  const stack: Array<{ file: string; chain: string[] }> = [{ file: start, chain: [] }];
 
   while (stack.length) {
     const { file, chain } = stack.pop()!;
@@ -78,5 +80,17 @@ describe('DeferredWidget client bundle', () => {
   it('never loads stylesheets with a dynamic import (404s as a CSS-only chunk in production)', () => {
     const source = readFileSync(entry, 'utf8');
     expect(source).not.toMatch(/import\(\s*['"][^'"]+\.css['"]\s*\)/);
+  });
+});
+
+describe('Online booking live timeline client bundle', () => {
+  it('never imports Prisma, the database layer, dotenv or Node built-ins', () => {
+    expect(collectViolations(bobEntry)).toEqual([]);
+  });
+
+  it('never loads stylesheets with a dynamic import', () => {
+    for (const file of [bobEntry, join(srcRoot, 'components/barbershop-online-booking/BobLiveTimeline.tsx')]) {
+      expect(readFileSync(file, 'utf8')).not.toMatch(/import\(\s*['"][^'"]+\.css['"]\s*\)/);
+    }
   });
 });

@@ -1,15 +1,17 @@
 ---
 /**
  * 01 · Hero. The H1 and the direct answer on the left; on the right a booking you can make on a
- * phone, built on one real demo day of Heritage Grooming. Confirming it drops the appointment
- * into the shop diary beside the phone (moment 1). Without JavaScript the first step and the
- * diary still render; the page reads top to bottom.
+ * phone, built on one real demo day of Heritage Grooming. Confirming it drops the appointment into
+ * the real KERSIVO owner timeline beside the phone (moment 1), the same `TodayTimeline` the shop's
+ * Bookings page uses. Without JavaScript the first step still renders; the page reads top to bottom.
  */
 import FullPlanCta from '@/components/cta/FullPlanCta.astro';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
 import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
 import { HERITAGE_DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
-import { buildBookingSimulatorData, minuteLabel, poundsLabel } from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { buildBookingSimulatorData, poundsLabel } from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { HERO_DEMO_NOW_MINUTE } from '@/lib/barbershopOnlineBooking/liveDiaryEvents';
+import BobLiveTimelineIsland from '@/components/barbershop-online-booking/BobLiveTimelineIsland';
 import { BOB_HERO } from '@/lib/seo/barbershopOnlineBookingContent';
 import {
   BARBERSHOP_ONLINE_BOOKING_DEMO_HREF,
@@ -23,14 +25,18 @@ const CTA_PLACEMENT = 'barbershop_online_booking_hero';
 
 const freePreview = isFreePreviewFlowEnabled();
 const sim = buildBookingSimulatorData();
-const span = sim.close - sim.open;
-const hours = Array.from({ length: Math.floor(span / 60) + 1 }, (_, i) => sim.open + i * 60).filter((m, i) => i % 2 === 0);
 const STEPS = ['Service', 'Barber', 'Time', 'Details'] as const;
 
 const ARROW =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
 const CHECK =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const LOCK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const STATUS_ICONS =
+  '<svg viewBox="0 0 18 12" aria-hidden="true" focusable="false"><rect x="0" y="8" width="3" height="4" rx="0.8" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="0.8" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="0.8" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="0.8" fill="currentColor"/></svg>' +
+  '<svg viewBox="0 0 16 12" aria-hidden="true" focusable="false"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0z" fill="currentColor"/><path d="M3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.2 1.2a4.8 4.8 0 0 0-6.8 0z" fill="currentColor"/><path d="M1.2 4.6a9.6 9.6 0 0 1 13.6 0l-1.2 1.2a7.9 7.9 0 0 0-11.2 0z" fill="currentColor"/></svg>' +
+  '<svg viewBox="0 0 27 12" aria-hidden="true" focusable="false"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="currentColor" opacity="0.4"/><rect x="2" y="2" width="17" height="8" rx="1.8" fill="currentColor"/><path d="M24.5 4v4a2 2 0 0 0 0-4z" fill="currentColor" opacity="0.45"/></svg>';
 const BACK =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg>';
 ---
@@ -84,7 +90,17 @@ const BACK =
       <p class="bob-sim__hint" id="bob-sim-hint"><span class="bob-sim__hint-dot" aria-hidden="true"></span>{BOB_HERO.tryHint}</p>
 
       <div class="bob-phone" role="region" aria-label={`Example booking page for ${HERITAGE_DEMO_SHOP_NAME}, a fictional demonstration shop`} aria-describedby="bob-sim-hint">
+        <span class="bob-phone__btn bob-phone__btn--action" aria-hidden="true"></span>
+        <span class="bob-phone__btn bob-phone__btn--vol-up" aria-hidden="true"></span>
+        <span class="bob-phone__btn bob-phone__btn--vol-down" aria-hidden="true"></span>
+        <span class="bob-phone__btn bob-phone__btn--power" aria-hidden="true"></span>
         <div class="bob-phone__screen">
+          <div class="bob-phone__status" aria-hidden="true">
+            <span class="bob-phone__clock">9:41</span>
+            <span class="bob-phone__island"></span>
+            <span class="bob-phone__icons" set:html={STATUS_ICONS} />
+          </div>
+          <div class="bob-phone__url" aria-hidden="true"><span class="bob-phone__lock" set:html={LOCK} />yourshop.co.uk/book</div>
           <header class="bob-phone__head">
             <img
               class="bob-phone__logo"
@@ -136,7 +152,7 @@ const BACK =
                       <img class="bob-row__face" src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
                       <span class="bob-row__main">
                         <span class="bob-row__name">{barber.name}</span>
-                        <span class="bob-row__meta">{barber.working ? barber.role : 'Off on this day'}</span>
+                        <span class="bob-row__meta">{barber.working ? barber.role : 'Off today'}</span>
                       </span>
                     </button>
                   </li>
@@ -147,7 +163,7 @@ const BACK =
             <!-- Step 3 · time (filled from the diary) -->
             <div class="bob-pane" role="group" aria-labelledby="bob-pane-time" data-bob-pane="time" hidden>
               <p class="bob-pane__title" id="bob-pane-time">Pick a time</p>
-              <p class="bob-pane__hint"><span data-bob-time-hint>Free times for this service</span> · Example weekday</p>
+              <p class="bob-pane__hint"><span data-bob-time-hint>Free times for this service</span> · Today</p>
               <div class="bob-times" data-bob-times></div>
             </div>
 
@@ -179,42 +195,19 @@ const BACK =
             <button type="button" class="bob-back" data-bob-back hidden><span set:html={BACK} />Back</button>
             <span class="bob-phone__demo">Demo shop · nothing is booked or charged</span>
           </footer>
+          <span class="bob-phone__home" aria-hidden="true"></span>
         </div>
       </div>
 
-      <div class="bob-diary" aria-label={`${HERITAGE_DEMO_SHOP_NAME} diary for an example weekday`} data-bob-diary>
-        <div class="bob-diary__head">
-          <p class="bob-diary__title">Shop diary</p>
-          <p class="bob-diary__day">Example weekday · {minuteLabel(sim.open)}–{minuteLabel(sim.close)}</p>
-        </div>
-        <div class="bob-diary__grid" style={`--span:${span}`}>
-          <div class="bob-diary__hours" aria-hidden="true">
-            {hours.map((m) => <span style={`--s:${m - sim.open}`}>{minuteLabel(m)}</span>)}
-          </div>
-          {sim.barbers.map((barber) => (
-            <div class:list={['bob-diary__col', { 'is-off': !barber.working }]} data-bob-col={barber.id}>
-              <p class="bob-diary__who">
-                <img src={barber.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
-                <span>{barber.firstName}</span>
-              </p>
-              <ul class="bob-diary__track" aria-label={`${barber.name}: ${barber.working ? `${barber.appointments.length} appointments` : 'off on this day'}`}>
-                {barber.working ? (
-                  barber.appointments.map((a) => (
-                    <li
-                      class:list={['bob-appt', { 'bob-appt--short': a.end - a.start < 40 }]}
-                      style={`--s:${a.start - sim.open};--d:${a.end - a.start}`}
-                      title={`${minuteLabel(a.start)}–${minuteLabel(a.end)} ${a.service}`}
-                    >
-                      <span class="bob-appt__time">{minuteLabel(a.start)}</span>
-                      <span class="bob-appt__name">{a.service}</span>
-                    </li>
-                  ))
-                ) : (
-                  <li class="bob-diary__off">Off</li>
-                )}
-              </ul>
-            </div>
-          ))}
+      <div class="bob-owner" data-bob-owner>
+        <p class="bob-owner__label"><span class="bob-owner__dot" aria-hidden="true"></span>Your KERSIVO timeline</p>
+        <div class="bob-owner__frame">
+          <BobLiveTimelineIsland
+            client:idle
+            target="hero"
+            demoNowMinute={HERO_DEMO_NOW_MINUTE}
+            label={`${HERITAGE_DEMO_SHOP_NAME} owner timeline, the real KERSIVO Bookings page with demo appointments`}
+          />
         </div>
       </div>
       <p class="sr-only" aria-live="polite" data-bob-sim-status></p>

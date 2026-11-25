@@ -86,6 +86,11 @@ type TodayTimelineProps = {
   previewSwipe?: boolean;
   /** Deep-link: expand the slot and scroll to this booking once present. */
   focusBookingId?: string | null;
+  /**
+   * Landing embeds: reveal the focused booking by scrolling only the timeline's own scroll
+   * container (never the page). Real admin leaves this undefined.
+   */
+  containFocusScroll?: boolean;
   onFocusBookingHandled?: (bookingId: string) => void;
   /** Linked roster id for BARBER; null for Owner/Manager. */
   sessionBarberId?: string | null;
@@ -801,6 +806,8 @@ const BookingTicket = memo(function BookingTicket({
     startAt: booking.startAt,
     endAt: booking.endAt,
     paymentStatus: booking.paymentStatus ?? null,
+    // Same clock as the rest of the ticket (frozen and demo clocks differ from Date.now()).
+    nowMs: clock.nowMs(),
   });
   const isPaid = paymentChipState === 'paid';
   const menuTitle = isStatusSheetOpen ? 'Update status' : 'Change service';
@@ -1371,6 +1378,7 @@ function TodayTimeline({
   onClientProfileIntercept,
   previewSwipe = false,
   focusBookingId = null,
+  containFocusScroll = false,
   onFocusBookingHandled,
   sessionBarberId = null,
   canManageBookings = true,
@@ -1451,24 +1459,38 @@ function TodayTimeline({
     setExpandedSlotKey(slotKey);
     setActiveBookingId(focusBookingId);
 
-    const slotEl = document.querySelector(`[data-vtl-slot="${slotKey}"]`) as HTMLElement | null;
-    slotEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Look inside this timeline first: a page can show more than one.
+    const scope: ParentNode = activeScrollRef.current ?? document;
+    const slotEl = scope.querySelector(`[data-vtl-slot="${slotKey}"]`) as HTMLElement | null;
+    const reveal = (el: HTMLElement) => {
+      const container = activeScrollRef.current;
+      if (containFocusScroll && container) {
+        containedNowScrollRef.current?.();
+        containedNowScrollRef.current = scrollContainerToRow(container, el, reduceMotionRef.current);
+      } else {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
+    };
+    if (slotEl) reveal(slotEl);
 
     let attempts = 0;
     const timeoutId = window.setTimeout(function revealFocusedCard() {
-      const card = document.querySelector(`[data-booking-id="${focusBookingId}"]`) as HTMLElement | null;
+      const card = scope.querySelector(`[data-booking-id="${focusBookingId}"]`) as HTMLElement | null;
       if (!card && attempts < 20) {
         attempts += 1;
         window.setTimeout(revealFocusedCard, 150);
         return;
       }
       if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        reveal(card);
         card.classList.add('admin-booking-hit-flash');
         window.setTimeout(() => card.classList.remove('admin-booking-hit-flash'), 2200);
-        window.setTimeout(() => {
-          card.focus?.({ preventScroll: true });
-        }, 220);
+        // Embeds keep keyboard focus where the visitor is (e.g. the booking phone).
+        if (!containFocusScroll) {
+          window.setTimeout(() => {
+            card.focus?.({ preventScroll: true });
+          }, 220);
+        }
         onFocusBookingHandled?.(focusBookingId);
         return;
       }
@@ -1476,7 +1498,8 @@ function TodayTimeline({
     }, 280);
 
     return () => window.clearTimeout(timeoutId);
-  }, [bookings, focusBookingId, isLoading, onFocusBookingHandled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookings, focusBookingId, isLoading, onFocusBookingHandled, containFocusScroll]);
 
   useEffect(() => {
     if (!focusBookingId) {

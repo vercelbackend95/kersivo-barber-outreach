@@ -155,13 +155,13 @@ export const BOB_AVAILABILITY = {
   eyebrow: 'Available times',
   title: 'Why some times are offered and others aren’t',
   lead:
-    'Drag the appointment along a real demo day for one barber. A time is offered only when the whole service fits before the next booking and before closing.',
+    'Tap any start time on one barber’s demo day and watch their KERSIVO timeline. A time is offered only when the whole service fits before the next booking and before closing.',
   rules: [
     { title: 'Working hours', body: 'Each barber’s own hours, breaks and time off set the outer edges of the day.' },
     { title: 'Service length', body: 'A 45-minute skin fade needs 45 free minutes. A 20-minute beard trim fits in smaller gaps.' },
     { title: 'Existing appointments', body: 'A start time is skipped if the cut would run into the next booking, even when the chair is free at that moment.' },
   ],
-  note: 'Heritage Grooming is a fictional KERSIVO demonstration shop. Moving the block creates no booking.',
+  note: 'Heritage Grooming is a fictional KERSIVO demonstration shop. Tapping a time creates no booking.',
 } as const;
 
 /* ---------- 05 Payments ---------- */

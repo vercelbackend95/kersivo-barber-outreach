@@ -6,6 +6,10 @@
  */
 import { heritageAdminHref } from '@/lib/admin/demoConfig';
 import { BOB_AFTER, BOB_CHANNELS, BOB_CHANNELS_SECTION } from '@/lib/seo/barbershopOnlineBookingContent';
+import { buildBookingSimulatorData, minuteLabel, offeredStarts } from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
+import { encodeQr, qrSvgPath } from '@/lib/qr/qrSvg';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 const TRACK_EVENT = 'view_live_demo_click';
 const TRACK_PLACEMENT = 'barbershop_online_booking_after';
@@ -16,6 +20,20 @@ const TIKTOK =
   'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z';
 const ARROW =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
+
+/* A real, scannable code: it opens the demo shop's booking page. */
+const qr = qrSvgPath(encodeQr(new URL(HERITAGE_DEMO_BOOK_HREF, getPublicSiteUrl()).toString()));
+
+/* The diary node: a slice of one barber's demo day, drawn like the KERSIVO owner timeline. */
+const sim = buildBookingSimulatorData();
+const kit = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
+const skinFade = sim.services.find((s) => s.name === 'Skin fade') ?? sim.services[0]!;
+const newStart = offeredStarts(kit.appointments, sim.open, sim.close, skinFade.duration).find((m) => m >= 12 * 60) ?? kit.appointments[0]!.start;
+const before = kit.appointments.filter((a) => a.start < newStart).slice(-2);
+const miniRows = [
+  ...before.map((a) => ({ start: a.start, end: a.end, service: a.service, isNew: false })),
+  { start: newStart, end: newStart + skinFade.duration, service: skinFade.name, isNew: true },
+];
 
 /* Source rows sit at 12.5 / 37.5 / 62.5 / 87.5 % of the diagram height. */
 const ROWS = [12.5, 37.5, 62.5, 87.5];
@@ -79,7 +97,7 @@ const ROWS = [12.5, 37.5, 62.5, 87.5];
                 </span>
               )}
               {channel.id === 'qr' && (
-                <img class="bob-source__qr" src="/images/starter/kersivo-book-now-qr-glass-sign-640.webp" alt="" width="640" height="720" loading="lazy" decoding="async" />
+                <svg class="bob-source__qr" viewBox={qr.viewBox} shape-rendering="crispEdges" focusable="false"><rect width="100%" height="100%" fill="#fff" /><path d={qr.d} fill="#0b0b0c" /></svg>
               )}
             </span>
             <span class="bob-source__text">
@@ -94,15 +112,22 @@ const ROWS = [12.5, 37.5, 62.5, 87.5];
         <div class="bob-node bob-node--page">
           <p class="bob-node__label">One booking page</p>
           <p class="bob-node__url"><span class="bob-node__lock"></span>yourshop.co.uk/book</p>
-          <ol class="bob-node__steps"><li>Service</li><li>Barber</li><li>Time</li><li>Confirm</li></ol>
+          <ol class="bob-node__steps"><li>Service</li><li>Barber</li><li>Time</li><li class="bob-node__confirm">Confirm</li></ol>
         </div>
         <div class="bob-node bob-node--diary">
-          <p class="bob-node__label">One diary</p>
-          <div class="bob-node__blocks">
-            <span><i style="--h:3"></i><i style="--h:2"></i><i style="--h:3"></i></span>
-            <span><i style="--h:2"></i><i style="--h:2" class="is-new"></i><i style="--h:4"></i></span>
-            <span><i style="--h:4"></i><i style="--h:3"></i></span>
-            <span class="is-off"></span>
+          <p class="bob-node__label">One diary <span class="bob-node__live"><i></i>Live</span></p>
+          <div class="bob-mini-tl">
+            {miniRows.map((row, i) => (
+              <div class:list={['bob-mini-tl__row', { 'is-new': row.isNew, 'is-past': i === 0 }]}>
+                <span class="bob-mini-tl__time">{minuteLabel(row.start)}</span>
+                <span class="bob-mini-tl__lane">
+                  <span class="bob-mini-tl__meta"><b>{row.isNew ? 'New online booking' : row.service}</b><small>{row.isNew ? `${row.service} · ${kit.firstName}` : `with ${kit.firstName}`}</small></span>
+                  <span class="bob-mini-tl__track"><span class="bob-mini-tl__fill"></span><img src={kit.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" /></span>
+                </span>
+                <span class="bob-mini-tl__end">{minuteLabel(row.end)}</span>
+              </div>
+            ))}
+            <span class="bob-mini-tl__now" aria-hidden="true"></span>
           </div>
         </div>
       </div>
