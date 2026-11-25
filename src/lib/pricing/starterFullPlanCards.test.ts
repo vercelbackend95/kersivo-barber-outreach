@@ -16,7 +16,7 @@ const srcDir = join(here, '../..');
 const read = (path: string) => readFileSync(join(srcDir, path), 'utf8');
 const component = read('components/pricing/StarterFullPlanCards.astro');
 const starterPage = read('pages/starter/index.astro');
-const bobPlan = read('components/barbershop-online-booking/OnlineBookingPlanChoice.astro');
+const bobPlan = read('pages/barbershop-online-booking/index.astro');
 const css = read('styles/components/starter-full-plan-cards.css');
 
 describe('Shared StarterFullPlanCards', () => {

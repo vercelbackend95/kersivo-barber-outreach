@@ -158,9 +158,63 @@ export function getHomepageFaqItems(freePreview = false): LandingFaqItem[] {
   });
 }
 
-export const ONLINE_BOOKING_MOVED_FAQ_ITEMS: LandingFaqItem[] = [
-  BARBERSHOP_BOOKING_FAQ_ITEMS[0],
-  BARBERSHOP_BOOKING_FAQ_ITEMS[1],
+/**
+ * FAQ for /barbershop-online-booking: the questions owners search for, answered in two to four
+ * sentences each so the visible answer and the FAQPage JSON-LD can be quoted as they are.
+ */
+export const ONLINE_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
+  {
+    question: 'What is barbershop online booking?',
+    answer:
+      'Barbershop online booking lets clients book an appointment themselves, at any time, from a link on your website, Google Business Profile or social media. They choose a service, a barber and a free time, and the appointment goes straight into the shop diary without a phone call or message.',
+  },
+  {
+    question: 'How does online booking work for a barbershop?',
+    answer: `The client picks a service, a barber and a start time that is free in that barber's diary, enters their name and email, and pays a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or the full price if your shop asks for it. They get a confirmation email, and the booking appears as Booked on the barber's timeline so the time is no longer offered to anyone else.`,
+  },
+  {
+    question: 'Do my clients need to download an app?',
+    answer:
+      'No. Clients book in the browser on a phone, tablet or computer. There is nothing to download and no account to create.',
+  },
+  {
+    question: 'Can clients choose their barber?',
+    answer: `Yes. Clients choose a barber who offers the selected service and has a free appointment. KERSIVO Starter supports up to 4 active bookable barbers; Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location rather than per barber, subject to fair use.`,
+  },
+  {
+    question: 'How are the available times worked out?',
+    answer:
+      "From each barber's working hours, breaks and time off, the length of the chosen service and the appointments already in the diary. A start time is only offered when the whole service fits before the next appointment and before closing.",
+  },
+  {
+    question: 'Can I take deposits for barber appointments online?',
+    answer: `Yes. On Full KERSIVO you choose Pay at shop, a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or payment in full. On KERSIVO Starter every public booking is paid online, with the client choosing a £${KERSIVO_BOOKING_DEPOSIT_GBP} deposit or the full price. Payments go through your own connected Stripe account and a deposit counts towards the service price.`,
+  },
+  {
+    question: 'Does KERSIVO take commission on bookings?',
+    answer:
+      'No. KERSIVO takes 0% commission on booking payments on both Starter and Full KERSIVO. Standard Stripe payment-processing fees apply to online card payments.',
+  },
+  {
+    question: 'Can clients book from Google, Instagram or TikTok?',
+    answer:
+      'Yes, through your booking link. You can add it to your Google Business Profile with guided setup, paste it into your Instagram or TikTok bio, or print it as a QR code. The Google setup is a booking link, not a native Google booking integration.',
+  },
+  {
+    question: 'Do clients get booking confirmations and reminders?',
+    answer:
+      'Yes. Clients get a confirmation email and an automatic email reminder on both plans. Full KERSIVO adds SMS appointment reminders within a monthly allowance.',
+  },
+  {
+    question: 'Can clients cancel or change a booking online?',
+    answer:
+      "Clients can request a change or cancellation through the links in their confirmation email. Requests follow your shop's booking, cancellation and payment policy; free changes and refunds are not automatic.",
+  },
+  {
+    question: 'What is the difference between KERSIVO Starter and Full KERSIVO for online booking?',
+    answer: `Starter is £0/month for up to 4 barbers, with a KERSIVO-hosted booking page and an online payment on every public booking. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location and adds your own branded website and domain, Pay at shop as an option, SMS reminders within a monthly allowance, Reports, Retail and full booking history.`,
+  },
+  BARBERSHOP_BOOKING_FAQ_ITEMS[10],
   BARBERSHOP_BOOKING_FAQ_ITEMS[12],
   BARBERSHOP_BOOKING_FAQ_ITEMS[13],
   {
@@ -168,6 +222,7 @@ export const ONLINE_BOOKING_MOVED_FAQ_ITEMS: LandingFaqItem[] = [
     answer:
       "No. KERSIVO isn't a till or card-reader system. Any balance after a deposit is paid in the shop the way you take payments today.",
   },
+  BARBERSHOP_BOOKING_FAQ_ITEMS[14],
 ];
 
 export function buildOnlineBookingFaqJsonLd(): Record<string, unknown> {
@@ -176,7 +231,7 @@ export function buildOnlineBookingFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}/barbershop-online-booking#faq`,
-    mainEntity: ONLINE_BOOKING_MOVED_FAQ_ITEMS.map((item) => ({
+    mainEntity: ONLINE_BOOKING_FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },

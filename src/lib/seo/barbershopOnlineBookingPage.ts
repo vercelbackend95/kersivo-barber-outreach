@@ -1,26 +1,40 @@
 import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
+import { getKersivoSoftwareId } from '@/lib/seo/barberDemoJsonLd';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { buildBreadcrumbListJsonLd, BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
 
-export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = 'Barbershop Online Booking: How It Works | KERSIVO';
+/** Search intent: "barbershop online booking" / "online booking for barbers", how-it-works guide, UK. */
+export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = 'Barbershop Online Booking: How It Works (UK Guide) | KERSIVO';
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION =
-  'See how barbershop online booking works — from choosing a barber and available time to payments, confirmations and the shop diary. Explore KERSIVO.';
+  'How barbershop online booking works, step by step: services, barbers, real free times, deposits, reminders and your diary. Full KERSIVO £39/month per location.';
 
-export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'See How Online Booking Works for Your Barbershop';
+export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'Barbershop online booking, explained in one booking.';
+
+/**
+ * Content date of the guide (shown on the page and used as WebPage dateModified and sitemap lastmod).
+ * Change it only when the guide's content meaningfully changes.
+ */
+export const BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO = '2026-11-25';
 
 /** Published booking guide, with reciprocal pillar links and canonical WebPage schema. */
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE = true;
 
 export const BARBERSHOP_ONLINE_BOOKING_DEMO_HREF = HERITAGE_DEMO_BOOK_HREF;
 
-/**
- * Hero secondary action: jump to Section 07 plan choice on this page.
- */
+/** Hero secondary action when the free preview flow is off: jump to the plan choice on this page. */
 export const BARBERSHOP_ONLINE_BOOKING_HERO_COMPARE_HREF = '#booking-options';
+
+/** The questions the guide answers, in page order (WebPage `about` topics for search and AI answers). */
+export const BARBERSHOP_ONLINE_BOOKING_TOPICS = [
+  'Barbershop online booking',
+  'Barber appointment scheduling',
+  'Booking deposits',
+  'Appointment reminders',
+] as const;
 
 export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {
   const siteUrl = getPublicSiteUrl();
@@ -31,10 +45,17 @@ export function buildBarbershopOnlineBookingJsonLd(): Record<string, unknown> {
     '@id': `${pageUrl}#webpage`,
     url: pageUrl,
     name: BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
+    headline: BARBERSHOP_ONLINE_BOOKING_PAGE_H1,
     description: BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION,
     inLanguage: 'en-GB',
+    dateModified: BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     publisher: { '@id': getKersivoOrganizationId(siteUrl) },
+    about: [
+      { '@id': getKersivoSoftwareId(siteUrl) },
+      ...BARBERSHOP_ONLINE_BOOKING_TOPICS.map((name) => ({ '@type': 'Thing', name })),
+    ],
+    audience: { '@type': 'BusinessAudience', audienceType: 'Independent barbershop owners in the United Kingdom' },
     breadcrumb: buildBreadcrumbListJsonLd(BARBERSHOP_ONLINE_BOOKING_BREADCRUMBS, { siteUrl, withContext: false }),
   };
 }

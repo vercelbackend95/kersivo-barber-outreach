@@ -1,0 +1,131 @@
+---
+/**
+ * 02 · At a glance (eight short answers on the premium glance card) and
+ * 03 · How it works (five steps, each beside a live-HTML piece of the booking page).
+ */
+import { HERITAGE_DEMO_SHOP_NAME } from '@/lib/demo/heritage/demoShapes';
+import { buildBookingSimulatorData, minuteLabel, offeredStarts, poundsLabel } from '@/lib/barbershopOnlineBooking/bookingSimulator';
+import { BOB_GLANCE, BOB_STEPS, BOB_STEPS_SECTION } from '@/lib/seo/barbershopOnlineBookingContent';
+import { KERSIVO_BOOKING_DEPOSIT_GBP } from '@/lib/seo/defaults';
+
+const sim = buildBookingSimulatorData();
+const service = sim.services.find((s) => s.name === 'Skin fade') ?? sim.services[0]!;
+const kit = sim.barbers.find((b) => b.firstName === 'Kit') ?? sim.barbers.find((b) => b.working)!;
+const times = offeredStarts(kit.appointments, sim.open, sim.close, service.duration).slice(0, 6);
+const picked = times[0]!;
+const depositPence = KERSIVO_BOOKING_DEPOSIT_GBP * 100;
+
+const CHECK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const MAIL =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>';
+---
+
+<section class="bob-section bob-glance" id={BOB_GLANCE.id} aria-labelledby="bob-glance-title">
+  <div class="bob-wrap bob-glance__grid">
+    <header class="bob-head">
+      <p class="ks-eyebrow">{BOB_GLANCE.eyebrow}</p>
+      <h2 id="bob-glance-title" class="bob-h2">{BOB_GLANCE.title}</h2>
+      <p class="bob-lead">{BOB_GLANCE.lead}</p>
+    </header>
+    <div class="ks-glass-card ks-glass-card--accent bob-glance__card">
+      <dl class="bob-glance__list">
+        {BOB_GLANCE.rows.map((row) => (
+          <div class="bob-glance__item">
+            <dt>
+              <a class="bob-glance__link" href={row.href}>{row.term}<span aria-hidden="true">→</span></a>
+            </dt>
+            <dd>
+              <span class="bob-glance__value">{row.value}</span>
+              <span class="bob-glance__detail">{row.detail}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="bob-section bob-steps" id={BOB_STEPS_SECTION.id} aria-labelledby="bob-steps-title">
+  <div class="bob-wrap">
+    <header class="bob-head bob-head--split">
+      <div>
+        <p class="ks-eyebrow">{BOB_STEPS_SECTION.eyebrow}</p>
+        <h2 id="bob-steps-title" class="bob-h2">{BOB_STEPS_SECTION.title}</h2>
+      </div>
+      <p class="bob-lead">{BOB_STEPS_SECTION.lead}</p>
+    </header>
+
+    <ol class="bob-steps__list">
+      {BOB_STEPS.map((step) => (
+        <li class="bob-step" id={`step-${step.id}`}>
+          <div class="bob-step__text">
+            <span class="bob-step__num" aria-hidden="true">{step.number}</span>
+            <h3 class="bob-step__title">{step.title}</h3>
+            <p class="bob-step__client">{step.client}</p>
+            <p class="bob-step__shop"><span class="bob-step__tag">Your shop</span>{step.shop}</p>
+          </div>
+
+          <div class="bob-frag" aria-hidden="true">
+            {step.id === 'service' && (
+              <div class="bob-frag__stack">
+                {sim.services.slice(0, 3).map((s) => (
+                  <div class:list={['bob-frag__row', { 'is-on': s.id === service.id }]}>
+                    <span><b>{s.name}</b><small>{s.description}</small></span>
+                    <span class="bob-frag__price">{poundsLabel(s.pricePence)}<small>{s.duration} min</small></span>
+                    <i class="bob-frag__radio"></i>
+                  </div>
+                ))}
+              </div>
+            )}
+            {step.id === 'barber' && (
+              <div class="bob-frag__faces">
+                {sim.barbers.map((b) => (
+                  <div class:list={['bob-frag__face', { 'is-on': b.id === kit.id, 'is-off': !b.working }]}>
+                    <img src={b.thumb} alt="" width="160" height="160" loading="lazy" decoding="async" />
+                    <b>{b.firstName}</b>
+                    <small>{b.working ? b.role : 'Off on this day'}</small>
+                  </div>
+                ))}
+              </div>
+            )}
+            {step.id === 'time' && (
+              <div class="bob-frag__times">
+                <p class="bob-frag__label">{service.name} with {kit.firstName} · {service.duration} min</p>
+                <div class="bob-frag__grid">
+                  {times.map((t) => <span class:list={['bob-frag__time', { 'is-on': t === picked }]}>{minuteLabel(t)}</span>)}
+                </div>
+              </div>
+            )}
+            {step.id === 'pay' && (
+              <div class="bob-frag__pay">
+                <div class="bob-frag__row is-on">
+                  <span><b>Pay £{KERSIVO_BOOKING_DEPOSIT_GBP} deposit</b><small>{poundsLabel(service.pricePence - depositPence)} left to pay in the shop</small></span>
+                  <span class="bob-frag__price">£{KERSIVO_BOOKING_DEPOSIT_GBP}</span>
+                  <i class="bob-frag__radio"></i>
+                </div>
+                <div class="bob-frag__row">
+                  <span><b>Pay in full</b><small>Nothing left to pay in the shop</small></span>
+                  <span class="bob-frag__price">{poundsLabel(service.pricePence)}</span>
+                  <i class="bob-frag__radio"></i>
+                </div>
+              </div>
+            )}
+            {step.id === 'confirmed' && (
+              <div class="bob-frag__mail">
+                <div class="bob-frag__mail-head">
+                  <span class="bob-frag__mail-icon" set:html={MAIL} />
+                  <span><b>Booking confirmed</b><small>{HERITAGE_DEMO_SHOP_NAME}</small></span>
+                </div>
+                <p class="bob-frag__mail-line">{service.name} with {kit.name}</p>
+                <p class="bob-frag__mail-line bob-frag__mail-line--dim">{minuteLabel(picked)}–{minuteLabel(picked + service.duration)} · {poundsLabel(service.pricePence)}</p>
+                <div class="bob-frag__mail-actions"><span>Request a change</span><span>Cancel</span></div>
+                <p class="bob-frag__booked"><span set:html={CHECK} />Booked · in {kit.firstName}’s diary</p>
+              </div>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>

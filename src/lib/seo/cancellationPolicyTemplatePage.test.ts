@@ -110,7 +110,7 @@ describe('internal links to the tool', () => {
   it('is linked from Starter, online booking and the no-show deposits article', () => {
     for (const file of [
       'src/pages/starter/index.astro',
-      'src/components/barbershop-online-booking/OnlineBookingAfterBooking.astro',
+      'src/lib/seo/barbershopOnlineBookingContent.ts',
       'editorial-staging/insights/barbershop-no-show-cost-when-deposit-makes-sense-display.md',
     ]) {
       expect(read(file)).toContain(CANCELLATION_POLICY_PAGE_PATH);

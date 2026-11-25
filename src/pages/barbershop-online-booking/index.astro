@@ -1,33 +1,55 @@
 ---
+/**
+ * /barbershop-online-booking — the online booking guide (rebuilt 25 Nov 2026).
+ *
+ * 01 hero (make a booking, watch it land in the diary) · 02 at a glance · 03 how it works ·
+ * 04 available times (drag the diary) · 05 payments (calculator) · 06 where bookings start ·
+ * 07 after the booking · 08 buyer checklist · 09 setup · 10 plan choice · 11 FAQ · 12 close.
+ * Copy: src/lib/seo/barbershopOnlineBookingContent.ts and barbershopBookingFaq.ts.
+ * Motion: src/lib/barbershopOnlineBooking/experience.ts (nothing hidden or moving under reduced motion).
+ */
 import LandingLayout from '@/layouts/LandingLayout.astro';
-import Faq4 from '@/components/faq4.astro';
 import Footer50 from '@/components/footer50.astro';
-import OnlineBookingHero from '@/components/barbershop-online-booking/OnlineBookingHero.astro';
-import OnlineBookingJourney from '@/components/barbershop-online-booking/OnlineBookingJourney.astro';
-import OnlineBookingAvailability from '@/components/barbershop-online-booking/OnlineBookingAvailability.astro';
-import OnlineBookingPayments from '@/components/barbershop-online-booking/OnlineBookingPayments.astro';
-import OnlineBookingEntryPoints from '@/components/barbershop-online-booking/OnlineBookingEntryPoints.astro';
-import OnlineBookingAfterBooking from '@/components/barbershop-online-booking/OnlineBookingAfterBooking.astro';
-import OnlineBookingPlanChoice from '@/components/barbershop-online-booking/OnlineBookingPlanChoice.astro';
+import FullPlanCta from '@/components/cta/FullPlanCta.astro';
+import BobHero from '@/components/barbershop-online-booking/BobHero.astro';
+import BobGuide from '@/components/barbershop-online-booking/BobGuide.astro';
+import BobTools from '@/components/barbershop-online-booking/BobTools.astro';
+import BobReach from '@/components/barbershop-online-booking/BobReach.astro';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { PLAN_CHOICE_INTENTS, buildPlanChoiceContent } from '@/lib/barbershopOnlineBooking/planChoiceContent';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { buildKersivoSoftwareApplicationJsonLd } from '@/lib/seo/barberDemoJsonLd';
 import {
+  BARBERSHOP_ONLINE_BOOKING_DEMO_HREF,
+  BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO,
   BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION,
   BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE,
   BARBERSHOP_ONLINE_BOOKING_PAGE_PATH,
   BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE,
   buildBarbershopOnlineBookingJsonLd,
 } from '@/lib/seo/barbershopOnlineBookingPage';
-import {
-  ONLINE_BOOKING_MOVED_FAQ_ITEMS,
-  buildOnlineBookingFaqJsonLd,
-} from '@/lib/seo/barbershopBookingFaq';
-import { BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
-import { BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
-import {
-  KERSIVO_CONTACT_EMAIL,
-  getFooterSocialLinks,
-} from '@/lib/seo/footerSocialLinks';
+import { ONLINE_BOOKING_FAQ_ITEMS, buildOnlineBookingFaqJsonLd } from '@/lib/seo/barbershopBookingFaq';
+import { BOB_CHECKLIST, BOB_CLOSE, BOB_SETUP } from '@/lib/seo/barbershopOnlineBookingContent';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/barbershop-online-booking.css';
 
 const currentYear = new Date().getFullYear();
+const freePreview = isFreePreviewFlowEnabled();
+const plans = buildPlanChoiceContent(freePreview);
+const PLAN_TRACK_PLACEMENT = 'barbershop_online_booking_chooser';
+const CLOSE_PLACEMENT = 'barbershop_online_booking_close';
+const updated = new Date(`${BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO}T12:00:00Z`).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Europe/London',
+});
+
+const CHECK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const ARROW =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
 ---
 
 <LandingLayout
@@ -36,26 +58,178 @@ const currentYear = new Date().getFullYear();
   canonicalPath={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}
   noindex={!BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE}
   robotsFollow
-  jsonLd={[buildBarbershopOnlineBookingJsonLd(), buildOnlineBookingFaqJsonLd()]}
+  jsonLd={[
+    buildKersivoEntityJsonLd(),
+    buildBarbershopOnlineBookingJsonLd(),
+    buildKersivoSoftwareApplicationJsonLd(),
+    buildOnlineBookingFaqJsonLd(),
+  ]}
 >
-  <main class="bob-page">
-    <OnlineBookingHero />
-    <OnlineBookingJourney />
-    <OnlineBookingAvailability />
-    <OnlineBookingPayments />
-    <OnlineBookingEntryPoints />
-    <OnlineBookingAfterBooking />
-    <OnlineBookingPlanChoice />
-    <Faq4
-      className="faq4--landing"
-      heading="Questions about barbershop online booking"
-      subHeading="What the software covers, the dashboard, and what it does not replace."
-      supportHeading="Still have a question?"
-      supportText="Tell us about your shop and we’ll reply by email."
-      supportLinkLabel="Contact KERSIVO"
-      supportLinkHref="/#contact"
-      faqs={ONLINE_BOOKING_MOVED_FAQ_ITEMS}
-    />
+  <main class="bob-page landing-overflow-guard" data-bob>
+    <BobHero />
+    <BobGuide />
+    <BobTools />
+    <BobReach />
+
+    <!-- 08 · Buyer checklist -->
+    <section class="bob-section bob-check" id={BOB_CHECKLIST.id} aria-labelledby="bob-check-title">
+      <div class="bob-wrap">
+        <header class="bob-head bob-head--split">
+          <div>
+            <p class="ks-eyebrow">{BOB_CHECKLIST.eyebrow}</p>
+            <h2 id="bob-check-title" class="bob-h2">{BOB_CHECKLIST.title}</h2>
+          </div>
+          <p class="bob-lead">{BOB_CHECKLIST.lead}</p>
+        </header>
+        <ol class="bob-check__list">
+          {BOB_CHECKLIST.items.map((item, i) => (
+            <li class="bob-check__item">
+              <span class="bob-check__num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <div class="bob-check__q">
+                <h3>{item.question}</h3>
+                <p>{item.why}</p>
+              </div>
+              <p class="bob-check__a"><span class="bob-check__tick" set:html={CHECK} /><span><b>KERSIVO:</b> {item.answer}</span></p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- 09 · Setup -->
+    <section class="bob-section bob-setup" id={BOB_SETUP.id} aria-labelledby="bob-setup-title">
+      <div class="bob-wrap">
+        <header class="bob-head bob-head--split">
+          <div>
+            <p class="ks-eyebrow">{BOB_SETUP.eyebrow}</p>
+            <h2 id="bob-setup-title" class="bob-h2">{BOB_SETUP.title}</h2>
+          </div>
+          <p class="bob-lead">{BOB_SETUP.lead}</p>
+        </header>
+        <ol class="bob-setup__grid">
+          {BOB_SETUP.steps.map((step, i) => (
+            <li class="bob-setup__card">
+              <span class="bob-setup__num" aria-hidden="true">{i + 1}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+              {'link' in step && step.link && (
+                <a class="bob-link bob-setup__link" href={step.link.href}>{step.link.label}</a>
+              )}
+            </li>
+          ))}
+        </ol>
+        <p class="bob-setup__tools">
+          More free tools:
+          {BOB_SETUP.tools.map((tool, i) => (
+            <>{i > 0 && ' · '}<a class="bob-link" href={tool.href}>{tool.label}</a></>
+          ))}
+        </p>
+      </div>
+    </section>
+
+    <!-- 10 · Plan choice (Full first) -->
+    <section class="bob-section bob-plans" id={plans.sectionId} aria-labelledby="bob-plans-title">
+      <div class="bob-wrap">
+        <header class="bob-head bob-head--center">
+          <p class="ks-eyebrow">Choose your setup</p>
+          <h2 id="bob-plans-title" class="bob-h2">{plans.h2.replace(/\.$/, '')}</h2>
+          <p class="bob-lead">{plans.lead}</p>
+        </header>
+        <div class="bob-plans__grid">
+          {PLAN_CHOICE_INTENTS.map((option) => (
+            <article
+              class:list={['bob-plan', `bob-plan--${option.id}`, { 'ks-glass-card ks-glass-card--accent': option.id === 'full' }]}
+              aria-labelledby={`bob-plan-${option.id}`}
+            >
+              <p class="bob-plan__label">{option.label}</p>
+              <p class="bob-plan__price" id={`bob-plan-${option.id}`}>{option.price}</p>
+              <h3 class="bob-plan__heading">{option.heading}</h3>
+              <ul class="bob-plan__list">
+                {option.intents.map((intent) => <li><span set:html={CHECK} />{intent}</li>)}
+              </ul>
+              <div class="bob-plan__actions">
+                {freePreview && option.id === 'full' ? (
+                  <FullPlanCta part="primary" primaryClass="bob-btn" placement={PLAN_TRACK_PLACEMENT}>
+                    <span slot="icon" class="bob-btn__arrow" set:html={ARROW} />
+                  </FullPlanCta>
+                ) : (
+                  <a
+                    href={option.primary.href}
+                    class:list={option.id === 'full' ? 'btn btn--primary btn--lg bob-btn' : 'bob-textlink'}
+                    data-track={option.primary.trackEvent}
+                    data-track-placement={PLAN_TRACK_PLACEMENT}
+                  >
+                    {option.primary.label}<span class:list={option.id === 'full' ? 'bob-btn__arrow' : 'bob-textlink__arrow'} set:html={ARROW} />
+                  </a>
+                )}
+                {option.secondary && (
+                  <a
+                    href={option.secondary.href}
+                    class="bob-textlink"
+                    data-track={option.secondary.trackEvent}
+                    data-track-placement={PLAN_TRACK_PLACEMENT}
+                  >
+                    {option.secondary.label}<span class="bob-textlink__arrow" set:html={ARROW} />
+                  </a>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+        <ul class="bob-plans__terms">
+          {plans.disclosure.map((line) => <li>{line}</li>)}
+        </ul>
+        <p class="bob-plans__close">{plans.close}</p>
+      </div>
+    </section>
+
+    <!-- 11 · FAQ -->
+    <section class="bob-section bob-faq" id="faq" aria-labelledby="bob-faq-title">
+      <div class="bob-wrap bob-faq__grid">
+        <header class="bob-head">
+          <p class="ks-eyebrow">FAQ</p>
+          <h2 id="bob-faq-title" class="bob-h2">Questions about barbershop online booking</h2>
+          <p class="bob-lead">Straight answers on apps, times, deposits, commission, reminders and switching.</p>
+          <p class="bob-faq__meta">Updated <time datetime={BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO}>{updated}</time> · Prices in GBP, no VAT added</p>
+          <a class="bob-textlink" href="/#contact">Ask KERSIVO a question<span class="bob-textlink__arrow" set:html={ARROW} /></a>
+        </header>
+        <div class="bob-faq__list">
+          {ONLINE_BOOKING_FAQ_ITEMS.map((item, i) => (
+            <details class="bob-faq__item" open={i === 0}>
+              <summary><h3>{item.question}</h3><span class="bob-faq__icon" aria-hidden="true"></span></summary>
+              <div class="bob-faq__answer"><p>{item.answer}</p></div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · Close -->
+    <section class="bob-section bob-close" aria-labelledby="bob-close-title">
+      <div class="bob-wrap bob-close__inner">
+        <h2 id="bob-close-title" class="bob-close__title">
+          {BOB_CLOSE.title.map((line, i) => <span class:list={['bob-close__line', { 'bob-red': i === BOB_CLOSE.title.length - 1 }]}>{line}</span>)}
+        </h2>
+        <p class="bob-lead bob-close__lead">{BOB_CLOSE.lead}</p>
+        <div class="bob-close__actions">
+          {freePreview ? (
+            <FullPlanCta part="primary" primaryClass="bob-btn" placement={CLOSE_PLACEMENT}>
+              <span slot="icon" class="bob-btn__arrow" set:html={ARROW} />
+            </FullPlanCta>
+          ) : (
+            <a class="btn btn--primary btn--lg bob-btn" href="#booking-options">Compare Starter and Full<span class="bob-btn__arrow" set:html={ARROW} /></a>
+          )}
+          <a
+            class="btn btn--outline btn--lg bob-btn"
+            href={BARBERSHOP_ONLINE_BOOKING_DEMO_HREF}
+            data-track="view_live_demo_click"
+            data-track-placement={CLOSE_PLACEMENT}
+          >
+            Open the live demo
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <Footer50
@@ -67,3 +241,18 @@ const currentYear = new Date().getFullYear();
     social={getFooterSocialLinks()}
   />
 </LandingLayout>
+
+<script>
+  import { bindOnlineBookingPage } from '@/lib/barbershopOnlineBooking/experience';
+
+  const boot = () => {
+    const root = document.querySelector<HTMLElement>('main[data-bob]');
+    if (!root || root.dataset.bobBound === 'true') return;
+    root.dataset.bobBound = 'true';
+    const cleanup = bindOnlineBookingPage(root);
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+  };
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+</script>
