@@ -27,6 +27,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barbershop-websites/bournemouth',
   'https://kersivo.co.uk/barbershop-website-design',
   'https://kersivo.co.uk/barbershop-online-booking',
+  'https://kersivo.co.uk/barbershop-retail-pickup',
   'https://kersivo.co.uk/about',
   'https://kersivo.co.uk/compare',
   'https://kersivo.co.uk/booksy-alternative',
@@ -47,6 +48,8 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barbershop-price-list-template',
   'https://kersivo.co.uk/barbershop-no-show-calculator',
   'https://kersivo.co.uk/chair-rent-vs-commission-calculator',
+  'https://kersivo.co.uk/barber-price-calculator',
+  'https://kersivo.co.uk/free-tools',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/dpa',
@@ -116,6 +119,8 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/chair-rent-vs-commission-calculator']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/barber-price-calculator']).toBe('2026-11-24');
+    expect(byLoc['https://kersivo.co.uk/free-tools']).toBe('2026-11-24');
     expect(byLoc['https://kersivo.co.uk/privacy']).toBe(PRIVACY_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/dpa']).toBe(CURRENT_DPA_VERSION);

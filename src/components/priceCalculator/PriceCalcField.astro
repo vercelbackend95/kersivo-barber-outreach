@@ -1,0 +1,41 @@
+---
+import { DEFAULT_INPUTS, NUMERIC_LIMITS, type NumericInputKey } from '@/lib/priceCalculator/engine';
+
+interface Props {
+  name: NumericInputKey;
+  label: string;
+  helper?: string;
+  prefix?: string;
+  suffix?: string;
+  step?: number;
+  compact?: boolean;
+  /** Associates a field rendered outside the <form> with it (the price rise card). */
+  form?: string;
+}
+
+const { name, label, helper, prefix, suffix, step = 1, compact = false, form } = Astro.props;
+const id = `pc-${name}`;
+const limit = NUMERIC_LIMITS[name];
+const helperId = helper ? `${id}-helper` : undefined;
+---
+
+<div class:list={['pc-field', { 'pc-field--compact': compact }]}>
+  <label class="pc-label" for={id}>{label}</label>
+  <div class:list={['pc-input', { 'pc-input--prefix': prefix, 'pc-input--suffix': suffix }]}>
+    {prefix ? <span class="pc-input__affix pc-input__affix--prefix" aria-hidden="true">{prefix}</span> : null}
+    <input
+      id={id}
+      type="number"
+      inputmode="decimal"
+      name={name}
+      value={DEFAULT_INPUTS[name]}
+      min={limit.min}
+      max={limit.max}
+      step={limit.integer ? 1 : step}
+      aria-describedby={helperId}
+      form={form}
+    />
+    {suffix ? <span class="pc-input__affix pc-input__affix--suffix" aria-hidden="true">{suffix}</span> : null}
+  </div>
+  {helper ? <p id={helperId} class="pc-helper">{helper}</p> : null}
+</div>

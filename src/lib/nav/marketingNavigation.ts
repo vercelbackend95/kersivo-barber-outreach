@@ -10,12 +10,12 @@ import type { MarketingNavIcon } from './marketingNavIcons';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
 import { BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from '@/lib/seo/barbershopOnlineBookingPage';
 import { BARBERSHOP_WEBSITES_PAGE_INDEXABLE, BARBERSHOP_WEBSITES_PAGE_PATH } from '@/lib/seo/barbershopWebsitesPage';
+import { RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/retailPickupPage';
 import {
   HERITAGE_ADMIN_DASHBOARD_HREF,
   HERITAGE_ADMIN_DEMO_PATH,
   HERITAGE_DEMO_BOOK_HREF,
   HERITAGE_DEMO_SERVICES_HREF,
-  HERITAGE_DEMO_SHOP_HREF,
   KERSIVO_LIVE_DEMO_HREF,
 } from '@/lib/demo/heritage/links';
 
@@ -124,6 +124,8 @@ export const MARKETING_NAV_GROUPS: readonly MarketingNavGroup[] = [
     eyebrow: 'FREE TOOLS',
     heading: 'Run the numbers on your shop.',
     description: 'Free calculators and templates for UK barbershops.',
+    featuredAction: { label: 'See all free tools', href: '/free-tools' },
+    currentPrefixes: ['/free-tools'],
     sections: [
       { id: 'calculators', label: 'Calculators' },
       { id: 'templates', label: 'Templates' },
@@ -176,7 +178,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     id: 'platform-retail',
     label: 'Retail pickup',
     description: 'Sell products for collection in your shop.',
-    href: HERITAGE_DEMO_SHOP_HREF,
+    href: RETAIL_PICKUP_PAGE_PATH,
     group: 'product',
     section: 'included',
     icon: 'retail',
@@ -398,6 +400,16 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     matchPrefix: '/insights',
   },
   {
+    id: 'tools-price-calculator',
+    label: 'Barber price calculator',
+    description: 'Work out what to charge for each service and test a price rise.',
+    href: '/barber-price-calculator',
+    group: 'tools',
+    section: 'calculators',
+    icon: 'calculator',
+    keywords: ['haircut price', 'what to charge', 'pricing', 'price rise', 'rates'],
+  },
+  {
     id: 'resources-no-show-calculator',
     label: 'No-show cost calculator',
     description: 'See what missed appointments cost and whether a deposit pays.',
@@ -430,7 +442,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   {
     id: 'resources-price-list',
     label: 'Price list template',
-    description: 'Lay out your prices to print for the wall or copy for Instagram.',
+    description: 'Lay out your prices to print, post on Instagram or copy for Google.',
     href: '/barbershop-price-list-template',
     group: 'tools',
     section: 'templates',

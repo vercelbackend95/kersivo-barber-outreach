@@ -1,4 +1,6 @@
 import type { APIRoute } from 'astro';
+import { PRICE_LIST_LLMS_SUMMARY } from '@/lib/seo/priceListTemplatePage';
+import { RETAIL_PICKUP_LLMS_SUMMARY, RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/retailPickupPage';
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
@@ -28,6 +30,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
     link('/barbershop-online-booking', 'Barbershop online booking guide', 'how clients book step by step, how free times are worked out, deposits and payments on Starter and Full, reminders, and a checklist for choosing a system'),
+    link(RETAIL_PICKUP_PAGE_PATH, 'Retail pickup', RETAIL_PICKUP_LLMS_SUMMARY),
     link(
       '/starter',
       'KERSIVO Starter',
@@ -53,6 +56,12 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/setora-alternative', 'Setora alternative', 'KERSIVO compared with Setora'),
     '',
     '## Free tools',
+    link('/free-tools', 'All free tools', 'every free KERSIVO calculator and template for UK barbershops on one page, grouped by pricing, no-shows, taking on a barber and booking software'),
+    link(
+      '/barber-price-calculator',
+      'Barber price calculator',
+      'free barber price calculator: what to charge for each service from rent, costs, take-home target, working hours and how busy the chair is, including card fees and VAT, plus a price rise check showing how many clients a rise can lose, with nothing stored',
+    ),
     link(
       '/barbershop-cancellation-policy-template',
       'Cancellation policy template',
@@ -61,7 +70,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     link(
       '/barbershop-price-list-template',
       'Price list template',
-      'free barber price list template: add services, prices and times, then print on A4 or copy as text for Instagram and Google, with nothing stored',
+      PRICE_LIST_LLMS_SUMMARY,
     ),
     link(
       '/barbershop-no-show-calculator',

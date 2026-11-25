@@ -30,7 +30,6 @@ import {
   HERITAGE_DEMO_BASE_PATH,
   HERITAGE_DEMO_BOOK_HREF,
   HERITAGE_DEMO_SERVICES_HREF,
-  HERITAGE_DEMO_SHOP_HREF,
   HERITAGE_DEMO_SITE_HREF,
 } from '@/lib/demo/heritage/links';
 
@@ -87,7 +86,7 @@ describe('marketing navigation config', () => {
       '/barbershop-websites',
       '/barbershop-online-booking',
       HERITAGE_ADMIN_DASHBOARD_HREF,
-      HERITAGE_DEMO_SHOP_HREF,
+      '/barbershop-retail-pickup',
       '/starter',
     ]);
     expect(included.items.at(-1)).toMatchObject({ id: 'product-starter', emphasis: 'quiet' });
@@ -124,9 +123,15 @@ describe('marketing navigation config', () => {
       '/insights',
     ]);
     const tools = groups.find((group) => group.id === 'tools')!;
-    expect(tools).toMatchObject({ label: 'Free tools', tabLabel: 'Tools' });
+    expect(tools).toMatchObject({
+      label: 'Free tools',
+      tabLabel: 'Tools',
+      featuredAction: { label: 'See all free tools', href: '/free-tools' },
+      currentPrefixes: ['/free-tools'],
+    });
     expect(tools.featured.map((item) => item.href)).toEqual(['/barber-software-cost-calculator']);
     expect(tools.sections.find((section) => section.id === 'calculators')?.items.map((item) => item.href)).toEqual([
+      '/barber-price-calculator',
       '/barbershop-no-show-calculator',
       '/chair-rent-vs-commission-calculator',
     ]);

@@ -44,10 +44,11 @@ describe('marketing CTAs route to the live Heritage Grooming demo', () => {
     });
   }
 
-  it('routes the Platform menu admin, booking and retail items to the Heritage Grooming demo', () => {
+  it('routes the Platform menu admin and booking items to the Heritage Grooming demo, retail to its explainer', () => {
     const href = (id: string) => MARKETING_NAV_ITEMS.find((item) => item.id === id)?.href;
     expect(href('platform-admin')).toBe(HERITAGE_ADMIN_DASHBOARD_HREF);
-    expect(href('platform-retail')).toBe(HERITAGE_DEMO_SHOP_HREF);
+    // Retail pickup opens /barbershop-retail-pickup, which links on to the demo shop.
+    expect(href('platform-retail')).toBe('/barbershop-retail-pickup');
     expect(href('platform-booking')).toBe(HERITAGE_DEMO_BOOK_HREF);
   });
 

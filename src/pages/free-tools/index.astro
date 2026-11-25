@@ -1,0 +1,119 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import {
+  FREE_TOOLS,
+  FREE_TOOLS_BREADCRUMB_NAME,
+  FREE_TOOLS_DESCRIPTION,
+  FREE_TOOLS_EYEBROW,
+  FREE_TOOLS_H1,
+  FREE_TOOLS_LAST_UPDATED_ISO,
+  FREE_TOOLS_LAST_UPDATED_LABEL,
+  FREE_TOOLS_LEAD,
+  FREE_TOOLS_PAGE_PATH,
+  FREE_TOOLS_TITLE,
+  FREE_TOOL_GROUPS,
+  buildFreeToolsJsonLd,
+} from '@/lib/seo/freeToolsPage';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+import '@/styles/components/free-tools.css';
+
+const currentYear = new Date().getFullYear();
+const calculators = FREE_TOOLS.filter((tool) => tool.kind === 'Calculator').length;
+const templates = FREE_TOOLS.length - calculators;
+---
+
+<LandingLayout
+  title={FREE_TOOLS_TITLE}
+  description={FREE_TOOLS_DESCRIPTION}
+  canonicalPath={FREE_TOOLS_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildFreeToolsJsonLd()]}
+>
+  <main class="dr-page ft-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{FREE_TOOLS_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">{FREE_TOOLS_EYEBROW}</p>
+        <h1 class="dr-hero__title">{FREE_TOOLS_H1}</h1>
+        <p class="dr-hero__lead">{FREE_TOOLS_LEAD}</p>
+        <ul class="dr-hero__meta" aria-label="What is here">
+          <li>{calculators} calculators</li>
+          <li>{templates} templates</li>
+          <li>No account or email needed</li>
+        </ul>
+        <nav class="ft-jump" aria-label="Jump to a topic">
+          {FREE_TOOL_GROUPS.map((group) => <a class="ft-jump__link" href={`#${group.id}`}>{group.heading}</a>)}
+        </nav>
+        <p class="dr-note">
+          Updated <time datetime={FREE_TOOLS_LAST_UPDATED_ISO}>{FREE_TOOLS_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </header>
+
+    {FREE_TOOL_GROUPS.map((group, groupIndex) => (
+      <section id={group.id} class="dr-section ft-group" aria-labelledby={`ft-${group.id}-title`}>
+        <div class="dr-shell ft-group__inner">
+          <div class="ft-group__head">
+            <p class="ks-eyebrow ks-eyebrow--neutral">{String(groupIndex + 1).padStart(2, '0')}</p>
+            <h2 id={`ft-${group.id}-title`} class="ft-group__title">{group.heading}</h2>
+          </div>
+          <ul class="ft-cards" role="list">
+            {group.tools.map((tool) => (
+              <li>
+                <a class="ks-glass-card ft-card" href={tool.href} data-track="cta_click" data-track-placement={`free_tools_${group.id}`}>
+                  <span class="ft-card__kind">{tool.kind}</span>
+                  <span class="ft-card__label">{tool.label}</span>
+                  <span class="ft-card__desc">{tool.description}</span>
+                  <span class="ft-card__go">
+                    Open the {tool.kind.toLowerCase()} <span aria-hidden="true">→</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    ))}
+
+    <section class="dr-section" aria-labelledby="ft-why-title">
+      <div class="dr-shell">
+        <div class="ks-glass-card ks-glass-card--accent ft-why">
+          <p class="ks-eyebrow">Why they are free</p>
+          <h2 id="ft-why-title" class="ft-why__title">Made by KERSIVO, booking software for independent UK barbershops</h2>
+          <p class="ft-why__body">
+            They cover the sums and paperwork that come with running a chair, and you do not need KERSIVO to use them. Everything is worked out in your browser: nothing you type is sent to us or stored.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <ComparisonFinalCta placement="free_tools" />
+
+    <div class="dr-end"></div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>
