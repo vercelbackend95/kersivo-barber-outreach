@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +10,11 @@ import {
   RETAIL_PICKUP_DESCRIPTION,
   RETAIL_PICKUP_FAQ_ITEMS,
   RETAIL_PICKUP_HERO,
+  RETAIL_PICKUP_HERO_IMAGE,
   RETAIL_PICKUP_JOURNEY,
+  RETAIL_PICKUP_LLMS_SUMMARY,
+  RETAIL_PICKUP_OG_IMAGE_PATH,
+  RETAIL_PICKUP_PRODUCTS,
   RETAIL_PICKUP_LAST_UPDATED_ISO,
   RETAIL_PICKUP_NEW,
   RETAIL_PICKUP_PAGE_PATH,
@@ -41,10 +45,14 @@ const allCopy = JSON.stringify([
 describe('/barbershop-retail-pickup metadata', () => {
   it('has a search title and description within SERP limits', () => {
     expect(RETAIL_PICKUP_PAGE_PATH).toBe('/barbershop-retail-pickup');
-    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: Retail Pickup | KERSIVO');
+    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: £39/mo, 0% Commission');
     expect(RETAIL_PICKUP_TITLE.length).toBeLessThanOrEqual(60);
     expect(RETAIL_PICKUP_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
     expect(RETAIL_PICKUP_DESCRIPTION.length).toBeLessThanOrEqual(165);
+    // The price is in the snippet, and the commission claim keeps its Stripe note.
+    expect(RETAIL_PICKUP_DESCRIPTION).toContain('£39/month');
+    expect(RETAIL_PICKUP_DESCRIPTION).toMatch(/0% KERSIVO commission. Stripe fees apply./);
+    expect(RETAIL_PICKUP_LLMS_SUMMARY).toContain('£39/month per location');
     expect(resolveCanonicalUrl(RETAIL_PICKUP_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-retail-pickup');
     expect(page).toContain('canonicalPath={RETAIL_PICKUP_PAGE_PATH}');
     expect(page).not.toContain('noindex');
@@ -97,7 +105,22 @@ describe('/barbershop-retail-pickup structured data', () => {
   });
 
   it('prices the Service from the offer, per location', () => {
-    expect(byType('Service')).toMatchObject({ offers: { price: '39', priceCurrency: 'GBP' } });
+    expect(byType('Service')).toMatchObject({
+      offers: {
+        price: '39',
+        priceCurrency: 'GBP',
+        priceSpecification: { '@type': 'UnitPriceSpecification', price: '39', billingDuration: 'P1M', unitText: 'per location per month' },
+      },
+    });
+  });
+
+  it('answers the price question in the FAQ', () => {
+    const price = RETAIL_PICKUP_FAQ_ITEMS.find((item) => item.question === 'How much does click and collect cost for a barbershop?');
+    expect(price?.answer).toContain('£39/month per location');
+  });
+
+  it('describes the hero photo as the page’s primary image', () => {
+    expect(byType('WebPage')).toMatchObject({ primaryImageOfPage: { '@type': 'ImageObject', url: `https://kersivo.co.uk${RETAIL_PICKUP_HERO_IMAGE.src}` } });
   });
 });
 
@@ -117,6 +140,29 @@ describe('/barbershop-retail-pickup copy rules', () => {
   it('never promises delivery, fixed setup days or invented numbers', () => {
     expect(allCopy).not.toMatch(/next[- ]day|same[- ]day delivery|we deliver|\b\d+ (working )?days\b|\d+%(?! KERSIVO commission)/i);
     expect(allCopy).not.toMatch(/\bcolor\b|\bcustomize\b|\borganize\b/);
+  });
+});
+
+describe('/barbershop-retail-pickup product photos', () => {
+  const pub = (path: string) => join(here, '../../../public', path.replace(/^\//, ''));
+
+  it('ships every photo the page references', () => {
+    const paths = [
+      RETAIL_PICKUP_OG_IMAGE_PATH,
+      RETAIL_PICKUP_HERO_IMAGE.src,
+      ...Object.values(RETAIL_PICKUP_HERO_IMAGE.webp),
+      '/images/retail-pickup/pickup-counter-depth.webp',
+      ...Object.values(RETAIL_PICKUP_PRODUCTS).map((product) => product.image),
+    ];
+    for (const path of paths) expect(existsSync(pub(path)), path).toBe(true);
+  });
+
+  it('shows product photos, not colour swatches, in the bag and the phone', () => {
+    expect(page).not.toMatch(/rp-swatch|rp-shelf__img--/);
+    expect(page).toContain('class="rp-thumb rp-checkout__img" src={line.image}');
+    expect(page).toContain('<img src={item.image}');
+    expect(page).toContain('alt={HERO_IMAGE.alt}');
+    expect(page).toContain('ogImagePath={RETAIL_PICKUP_OG_IMAGE_PATH}');
   });
 });
 

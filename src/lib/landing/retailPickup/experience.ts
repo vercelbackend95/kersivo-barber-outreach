@@ -61,7 +61,14 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
   const onPointer = (event: PointerEvent) => {
     if (event.pointerType !== 'mouse') return;
     const rect = hero.getBoundingClientRect();
-    scene?.setPointer(((event.clientX - rect.left) / rect.width) * 2 - 1, ((event.clientY - rect.top) / rect.height) * 2 - 1);
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+    scene?.setPointer(x, y);
+    // The pickup ticket floats in front of the photo, so it moves against it.
+    if (!reduced) {
+      visual.style.setProperty('--rp-px', x.toFixed(3));
+      visual.style.setProperty('--rp-py', y.toFixed(3));
+    }
   };
   const io = new IntersectionObserver(([entry]) => {
     inView = entry.isIntersecting;
@@ -72,7 +79,8 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
     try {
       const { createRetailHeroScene } = await import('./heroScene');
       if (disposed) return;
-      scene = createRetailHeroScene(canvas, { reducedMotion: reduced });
+      // The photo under the canvas stays until the textures are on the GPU, then the canvas takes over.
+      scene = createRetailHeroScene(canvas, { reducedMotion: reduced, onReady: () => visual.classList.add('is-live') });
     } catch {
       scene = null;
     }
@@ -80,7 +88,6 @@ function initHero(root: HTMLElement, reduced: boolean, disposers: Cleanup[]) {
       visual.classList.add('is-fallback');
       return;
     }
-    visual.classList.add('is-live');
     io.observe(hero);
     document.addEventListener('visibilitychange', onVisibility);
     hero.addEventListener('pointermove', onPointer);
