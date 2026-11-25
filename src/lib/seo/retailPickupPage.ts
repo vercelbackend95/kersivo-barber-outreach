@@ -22,9 +22,36 @@ export const RETAIL_PICKUP_LAST_UPDATED_ISO = '2026-11-25';
 export const RETAIL_PICKUP_LAST_UPDATED_LABEL = '25 November 2026';
 export const RETAIL_PICKUP_BREADCRUMB_NAME = 'Retail pickup';
 
-export const RETAIL_PICKUP_TITLE = 'Barbershop Click and Collect: Retail Pickup | KERSIVO';
+/** Price in the title: searchers comparing click-and-collect tools filter on cost first. */
+export const RETAIL_PICKUP_TITLE = `Barbershop Click and Collect: £${offer.price.amount}/mo, 0% Commission`;
 export const RETAIL_PICKUP_DESCRIPTION =
-  'Let clients order your grooming products on your barbershop’s website and collect them in the shop. They pay online or pay when collecting. 0% KERSIVO commission.';
+  `Sell pomade and beard oil on your own barbershop website. Clients pay online or in the shop when they collect. ${offer.price.full}, 0% KERSIVO commission. Stripe fees apply.`;
+
+export const RETAIL_PICKUP_OG_IMAGE_PATH = '/images/og/barbershop-retail-pickup-1200x630.jpg';
+export const RETAIL_PICKUP_OG_IMAGE_ALT = `Click and collect for your barbershop: pomade and beard oil ready to collect. KERSIVO, ${offer.price.full} ${offer.price.fullQualifier}.`;
+
+export type RetailPickupProduct = { id: string; brand: string; name: string; pence: number; image: string; alt: string };
+
+/**
+ * The shelf every mock on the page shows (hero, checkout, phone, counter): four products from the
+ * fictional Heritage Grooming demo shop, with its own prices (public/demo/heritage-grooming/js/shop-data.js)
+ * and its product photographs, cropped for thumbnails into /images/retail-pickup/.
+ */
+export const RETAIL_PICKUP_PRODUCTS = {
+  pomade: { id: 'oakmoss-firm-pomade', brand: 'Oakmoss & Iron', name: 'Firm Pomade', pence: 1800, image: '/images/retail-pickup/oakmoss-firm-pomade-320.webp', alt: 'Oakmoss & Iron Firm Pomade tin with a brass lid' },
+  oil: { id: 'barrow-beard-oil', brand: 'Barrow & Pike', name: 'Beard Oil', pence: 2000, image: '/images/retail-pickup/barrow-beard-oil-320.webp', alt: 'Barrow & Pike Beard Oil in a blue glass dropper bottle' },
+  shampoo: { id: 'old-quarry-shampoo', brand: 'Old Quarry', name: 'Daily Shampoo', pence: 1500, image: '/images/retail-pickup/old-quarry-shampoo-320.webp', alt: 'Old Quarry Daily Shampoo in a green pump bottle' },
+  balm: { id: 'ashgrove-beard-balm', brand: 'Ashgrove', name: 'Beard Balm', pence: 1800, image: '/images/retail-pickup/ashgrove-beard-balm-320.webp', alt: 'Ashgrove Beard Balm tin with a wooden lid' },
+} as const satisfies Record<string, RetailPickupProduct>;
+
+/** The hero photo: a render of the first order on the counter, with a depth map for the 3D view. */
+export const RETAIL_PICKUP_HERO_IMAGE = {
+  src: '/images/retail-pickup/pickup-counter-1024.jpg',
+  webp: { 720: '/images/retail-pickup/pickup-counter-720.webp', 1024: '/images/retail-pickup/pickup-counter-1024.webp' },
+  width: 1024,
+  height: 1024,
+  alt: 'An Oakmoss & Iron Firm Pomade tin, lid off, and a Barrow & Pike Beard Oil bottle on a dark barbershop counter, ready to collect',
+} as const;
 
 export const RETAIL_PICKUP_DEMO_HREF = HERITAGE_DEMO_SHOP_HREF;
 
@@ -124,9 +151,9 @@ export const RETAIL_PICKUP_COUNTER = {
   shopName: 'Heritage Grooming',
   fictionalNote: offer.demo.fictional,
   orders: [
-    { id: 'o1', reference: 'KRV-7QM4XA', client: 'Daniel R.', items: 'Matte Pomade × 1, Beard Oil × 1', totalPence: 4000, paid: true },
-    { id: 'o2', reference: 'KRV-H3TP9C', client: 'Marcus O.', items: 'Barber Wash × 2', totalPence: 3000, paid: false },
-    { id: 'o3', reference: 'KRV-W8LD2N', client: 'Sam K.', items: 'Beard Balm × 1', totalPence: 1600, paid: false },
+    { id: 'o1', reference: 'KRV-7QM4XA', client: 'Daniel R.', items: 'Firm Pomade × 1, Beard Oil × 1', totalPence: 3800, paid: true, products: ['pomade', 'oil'] },
+    { id: 'o2', reference: 'KRV-H3TP9C', client: 'Marcus O.', items: 'Daily Shampoo × 2', totalPence: 3000, paid: false, products: ['shampoo'] },
+    { id: 'o3', reference: 'KRV-W8LD2N', client: 'Sam K.', items: 'Beard Balm × 1', totalPence: 1800, paid: false, products: ['balm'] },
   ],
   resetLabel: 'Reset the counter',
 } as const;
@@ -182,6 +209,10 @@ export const RETAIL_PICKUP_FAQ_ITEMS: readonly RetailPickupFaqItem[] = [
     question: 'What is click and collect for a barbershop?',
     answer:
       'Clients order the products you sell, such as pomade, beard oil or shampoo, on your website and pick them up in your shop instead of having them posted. With KERSIVO Retail pickup the shop sits on your own branded site, and each order arrives in your dashboard with a pickup reference.',
+  },
+  {
+    question: 'How much does click and collect cost for a barbershop?',
+    answer: `With KERSIVO, Retail pickup is part of ${offer.plans.full} at ${PRICE}, together with your branded website, domain and online booking. ${offer.fees.setup}. There is 0% KERSIVO commission on product sales. ${offer.fees.stripe}`,
   },
   {
     question: 'What is new in KERSIVO Retail pickup?',
@@ -241,7 +272,7 @@ export const RETAIL_PICKUP_CLOSE = {
 
 /** One-line summary for /llms.txt. */
 export const RETAIL_PICKUP_LLMS_SUMMARY =
-  'click and collect for barbershop products in Full KERSIVO: clients order on the shop’s own website and collect in the shop, paying by card at checkout (Stripe fees apply) or, if the shop chooses, reserving with a name and email and paying at the counter; pickup references, an Orders view and 0% KERSIVO commission';
+  `click and collect for barbershop products in Full KERSIVO (${offer.price.full} ${offer.price.fullQualifier}): clients order on the shop’s own website and collect in the shop, paying by card at checkout (Stripe fees apply) or, if the shop chooses, reserving with a name and email and paying at the counter; pickup references, an Orders view and 0% KERSIVO commission`;
 
 function pageUrl(siteUrl: string): string {
   return `${siteUrl}${RETAIL_PICKUP_PAGE_PATH}`;
@@ -251,6 +282,13 @@ export function buildRetailPickupJsonLd(): Record<string, unknown>[] {
   const siteUrl = getPublicSiteUrl();
   const url = pageUrl(siteUrl);
   const organization = { '@id': getKersivoOrganizationId(siteUrl) };
+  const heroImage = {
+    '@type': 'ImageObject',
+    url: `${siteUrl}${RETAIL_PICKUP_HERO_IMAGE.src}`,
+    width: RETAIL_PICKUP_HERO_IMAGE.width,
+    height: RETAIL_PICKUP_HERO_IMAGE.height,
+    caption: RETAIL_PICKUP_HERO_IMAGE.alt,
+  };
   return [
     {
       '@context': 'https://schema.org',
@@ -265,6 +303,8 @@ export function buildRetailPickupJsonLd(): Record<string, unknown>[] {
       publisher: organization,
       breadcrumb: { '@id': `${url}#breadcrumb` },
       about: { '@id': `${url}#feature` },
+      primaryImageOfPage: heroImage,
+      keywords: 'barbershop click and collect, barber shop retail, sell barber products online, reserve and pay in store',
       speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#rp-hero-title', '.rp-hero__lead'] },
     },
     {
@@ -279,12 +319,20 @@ export function buildRetailPickupJsonLd(): Record<string, unknown>[] {
       provider: organization,
       areaServed: { '@type': 'Country', name: 'United Kingdom' },
       audience: { '@type': 'BusinessAudience', audienceType: 'Independent barbershops' },
+      image: heroImage,
       offers: {
         '@type': 'Offer',
         name: offer.plans.full,
         price: String(offer.price.amount),
         priceCurrency: 'GBP',
         url: `${siteUrl}/pricing`,
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: String(offer.price.amount),
+          priceCurrency: 'GBP',
+          billingDuration: 'P1M',
+          unitText: 'per location per month',
+        },
       },
     },
     {
