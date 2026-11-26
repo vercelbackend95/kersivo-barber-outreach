@@ -79,7 +79,7 @@ Ty (szczegóły w `ai-visibility-playbook.md`, sekcje 2–5):
 1. Krótkie odpowiedzi z etapu 1 w `/llms.txt` (robione razem z etapem 1).
 2. Opcjonalnie `/llms-full.txt` z pełną treścią stron produktu i porównań. Mały wpływ na Google, ale tani w utrzymaniu, bo generowany z tych samych stałych.
 
-### Etap 7. Metryki: AI visibility, citation rate, mention rate (kod + Ty)
+### Etap 7. Metryki: AI visibility, citation rate, mention rate (kod + Ty) ✅ kod: `geo-aeo-7-changelog.md` (log w `docs/seo/ai-visibility-log/`, raport botów AI `scripts/ai-bot-visits.mjs` z danych Vercel zamiast middleware); punkt 4 (test 1 grudnia) po Twojej stronie
 
 1. Arkusz logu w repo (`docs/seo/ai-visibility-log/RRRR-MM.md`) z tabelą z playbooka i podsumowaniem: mention rate (x/40), citation rate (x/40), share of voice względem Booksy, Fresha, Treatwell w tych samych odpowiedziach.
 2. Licznik wizyt botów AI: lekki log w middleware (user-agent OAI-SearchBot, PerplexityBot, Claude-SearchBot itd. → ścieżka, dzień), żeby widzieć, które strony AI faktycznie pobiera. Wymaga sprawdzenia kosztu w Vercel.
