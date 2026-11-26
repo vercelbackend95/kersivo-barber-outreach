@@ -2,12 +2,14 @@
 interface Props {
   mark: string;
   headlineLines: readonly string[];
+  /** Plain-language subtitle directly under the H1. */
+  subtitle?: string;
   lead: string;
   statementLines: readonly string[];
   audienceLines: readonly string[];
 }
 
-const { mark, headlineLines, lead, statementLines, audienceLines } = Astro.props;
+const { mark, headlineLines, subtitle, lead, statementLines, audienceLines } = Astro.props;
 
 const lines = headlineLines.map((line, index) => {
   const isLast = index === headlineLines.length - 1;
@@ -39,6 +41,8 @@ const lines = headlineLines.map((line, index) => {
         )
       }
     </h1>
+
+    {subtitle && <p class="ins-masthead__subtitle">{subtitle}</p>}
 
     <p class="ins-masthead__lead">{lead}</p>
   </div>

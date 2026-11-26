@@ -1,4 +1,5 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 export const PHOREST_ALTERNATIVE_PAGE_PATH='/phorest-alternative';
 /**
  * Search title: the query, the flat price, then the Phorest pain: no public price, every shop needs a
@@ -26,5 +27,5 @@ export const PHOREST_ALTERNATIVE_FAQ_ITEMS=[
 ];
 export function buildPhorestAlternativeFaqJsonLd():Record<string,unknown>{
 const pageUrl=`${getPublicSiteUrl()}${PHOREST_ALTERNATIVE_PAGE_PATH}`;
-return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:PHOREST_ALTERNATIVE_FAQ_ITEMS.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
+return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:PHOREST_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/phorest-alternative')).map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
 }

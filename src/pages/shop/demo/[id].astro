@@ -26,7 +26,7 @@ const FOOTER_PROPS = {
   ctaText: 'GET STARTED',
   ctaHref: '/#book-demo',
   ctaIsDemo: false,
-  brandName: 'Kersivo',
+  brandName: 'KERSIVO',
   social: getFooterSocialLinks(),
 };
 
@@ -41,7 +41,7 @@ const demoBreadcrumbJsonLd = product
 
 {!product ? (
   <MainLayout
-    title="Product not found | Kersivo"
+    title="Product not found | KERSIVO"
     description="This demo product is not available. Browse the Kersivo retail demo catalog."
     canonicalPath={id ? `/shop/demo/${id}` : '/shop'}
     noindex
@@ -58,7 +58,7 @@ const demoBreadcrumbJsonLd = product
   </MainLayout>
 ) : (
   <MainLayout
-    title={`${product.name} | Kersivo Retail Demo`}
+    title={`${product.name} | KERSIVO Retail Demo`}
     description={product.description}
     canonicalPath={`/shop/demo/${product.id}`}
     ogImagePath={source?.imageUrl?.startsWith('/') ? source.imageUrl : undefined}

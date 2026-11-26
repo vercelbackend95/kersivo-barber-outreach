@@ -22,6 +22,7 @@ import { SETORA_FACTS_CHECKED_DATE, requireVerifiedSetoraFact } from '@/lib/seo/
 import { TIMELY_UK_DOMESTIC_ONLINE_PERCENT, TIMELY_UK_DOMESTIC_ONLINE_FIXED_GBP } from '@/lib/seo/timelyFacts';
 import { requireVerifiedVagaroFact, estimateVagaroDisplayedSubscriptionGbp } from '@/lib/seo/vagaroFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export type BarberCostCalculatorFaqItem = {
   question: string;
@@ -151,7 +152,7 @@ export function buildBarberCostCalculatorFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}${BARBER_COST_CALCULATOR_PAGE_PATH}#faq`,
-    mainEntity: BARBER_COST_CALCULATOR_FAQ_ITEMS.map((item) => ({
+    mainEntity: BARBER_COST_CALCULATOR_FAQ_ITEMS.filter(ownedFaqSchemaItem('/barber-software-cost-calculator')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

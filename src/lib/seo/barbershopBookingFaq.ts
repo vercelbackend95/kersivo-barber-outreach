@@ -5,6 +5,7 @@ import { HOME_CHECKLIST_FAQ_ANSWER, HOME_CHECKLIST_FAQ_QUESTION } from '@/lib/se
 import { KERSIVO_CONTACT_EMAIL } from '@/lib/seo/footerSocialLinks';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export type LandingFaqItem = {
   question: string;
@@ -251,7 +252,7 @@ export function buildOnlineBookingFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}/barbershop-online-booking#faq`,
-    mainEntity: ONLINE_BOOKING_FAQ_ITEMS.map((item) => ({
+    mainEntity: ONLINE_BOOKING_FAQ_ITEMS.filter(ownedFaqSchemaItem('/barbershop-online-booking')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },
@@ -266,7 +267,7 @@ export function buildBarbershopBookingFaqJsonLd(freePreview = false): Record<str
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}/#faq`,
-    mainEntity: getHomepageFaqItems(freePreview).map((item) => ({
+    mainEntity: getHomepageFaqItems(freePreview).filter(ownedFaqSchemaItem('/')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

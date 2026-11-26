@@ -58,6 +58,11 @@ export const PAGE_DESCRIPTIONS = {
     'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
     'Your KERSIVO subscription is confirmed. Continue your setup to prepare your barbershop for launch.',
+  setupSuccessDeposit:
+    'Your KERSIVO setup deposit is confirmed. Continue your setup to prepare your barbershop for launch.',
+  /** Shown whenever the payment is not verified, including link previews, which never carry a session. */
+  setupSuccessUnverified:
+    'Check the status of your KERSIVO payment. If it has not been confirmed yet, look for our email or contact us.',
   setupCancel:
     'KERSIVO subscription checkout was cancelled. No payment was taken.',
   book:

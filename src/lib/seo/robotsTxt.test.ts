@@ -28,13 +28,14 @@ describe('robots.txt', () => {
     expect(body).toContain('Allow: /');
     expect(body).toContain('Disallow: /ops');
     expect(body).toContain('Disallow: /api/');
-    expect(body).toContain('Disallow: /setup/');
     expect(body).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
 
     expect(body).not.toContain('Disallow: /admin\n');
     expect(body).not.toContain('Disallow: /admin-demo');
     expect(body).not.toContain('Disallow: /demo');
     expect(body).not.toContain('Disallow: /book');
+    // Checkout return pages are noindex; blocking them would hide that from Google.
+    expect(body).not.toContain('Disallow: /setup');
   });
 
   it('gives OAI-SearchBot its own allow group with the same private-path rules', async () => {

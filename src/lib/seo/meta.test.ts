@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { INDEXABLE_ROBOTS_CONTENT, resolveOgImageUrl, resolvePageSeo, resolveRobotsContent } from './meta';
+import {
+  assertIndexablePageHasCanonical,
+  INDEXABLE_ROBOTS_CONTENT,
+  resolveOgImageUrl,
+  resolvePageSeo,
+  resolveRobotsContent,
+} from './meta';
 
 describe('resolvePageSeo robots', () => {
   it('accepts absolute HTTPS Open Graph image URLs without rewriting the host', () => {
     const absolute = 'https://images.example.com/insights/hero.jpg';
     expect(resolveOgImageUrl(absolute)).toBe(absolute);
-    expect(resolvePageSeo({ ogImagePath: absolute }).ogImage).toBe(absolute);
+    expect(resolvePageSeo({ canonicalPath: '/', ogImagePath: absolute }).ogImage).toBe(absolute);
   });
 
   it('emits open snippet limits when noindex is false', () => {
@@ -44,5 +50,18 @@ describe('resolvePageSeo robots', () => {
     expect(seo.ogType).toBe('website');
     expect(seo.robotsContent).toBe('noindex, follow');
     expect(resolveRobotsContent({ noindex: true, robotsFollow: true })).toBe('noindex, follow');
+  });
+});
+
+describe('resolvePageSeo canonical guard', () => {
+  it('fails in dev and tests when an indexable page omits canonicalPath', () => {
+    expect(() => resolvePageSeo({ title: 'Orphan page' })).toThrow(/missing canonicalPath/);
+    expect(() => assertIndexablePageHasCanonical({}, true)).toThrow(/missing canonicalPath/);
+  });
+
+  it('accepts noindex pages without canonicalPath and keeps the production fallback', () => {
+    expect(() => resolvePageSeo({ noindex: true })).not.toThrow();
+    expect(() => assertIndexablePageHasCanonical({}, false)).not.toThrow();
+    expect(resolvePageSeo({ canonicalPath: '/' }).canonical).toBe('https://kersivo.co.uk/');
   });
 });

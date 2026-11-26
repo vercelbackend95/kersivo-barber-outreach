@@ -14,6 +14,7 @@ import { PHOREST_COMPARE_SECTIONS, PHOREST_SOURCES, getPublishedPhorestSubscript
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { GET as getRobots } from '../../pages/robots.txt';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(dir, path), 'utf8');
@@ -40,9 +41,10 @@ describe('Phorest Alternative SEO page', () => {
     const faq = buildPhorestAlternativeFaqJsonLd();
     expect(faq['@type']).toBe('FAQPage');
     const questions = faq.mainEntity as Array<{name: string; acceptedAnswer: {text: string}}>;
-    expect(questions).toHaveLength(PHOREST_ALTERNATIVE_FAQ_ITEMS.length);
-    expect(questions.map(x=>x.name)).toEqual(PHOREST_ALTERNATIVE_FAQ_ITEMS.map(x=>x.question));
-    expect(questions.map(x=>x.acceptedAnswer.text)).toEqual(PHOREST_ALTERNATIVE_FAQ_ITEMS.map(x=>x.answer));
+    const marked = PHOREST_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/phorest-alternative'));
+    expect(questions).toHaveLength(marked.length);
+    expect(questions.map(x=>x.name)).toEqual(marked.map(x=>x.question));
+    expect(questions.map(x=>x.acceptedAnswer.text)).toEqual(marked.map(x=>x.answer));
   });
   it('keeps the Nearcut visual flow with one H1 and correct breadcrumb trail', () => {
     const flow = [

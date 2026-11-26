@@ -79,7 +79,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     },
     seoTitle: 'Clients & Growth for UK Barbershops | KERSIVO Insights',
     seoDescription:
-      'Practical guidance for UK barbershop owners on client acquisition, retention, referrals and lifetime value.',
+      'Practical guidance for UK barbershop owners on winning new clients, earning the second visit, referrals, retention and lifetime value.',
     indexable: true,
     order: 2,
   },
@@ -136,7 +136,7 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     },
     seoTitle: 'Tools & Payments for UK Barbershops | KERSIVO Insights',
     seoDescription:
-      'Guides for UK barbershop owners on booking software, websites, card fees and payment technology costs.',
+      'Guides for UK barbershop owners on booking software, websites, card fees and payment technology, and what each digital tool really costs.',
     indexable: true,
     order: 5,
   },
@@ -148,9 +148,9 @@ export const INSIGHTS_CATEGORIES: readonly InsightsCategory[] = [
     icon: 'culture',
     intro:
       'People, craft and culture across the UK barber industry — stories, careers and developments that sit outside pure shop operations.',
-    seoTitle: 'Industry & People | KERSIVO Insights',
+    seoTitle: 'Industry & People for UK Barbershops | KERSIVO Insights',
     seoDescription:
-      'Perspectives on UK barber culture, careers, industry trends and the people behind independent shops.',
+      'Perspectives for UK barbershop owners on barber culture, careers, industry trends and the people and stories behind independent shops.',
     indexable: true,
     order: 6,
   },

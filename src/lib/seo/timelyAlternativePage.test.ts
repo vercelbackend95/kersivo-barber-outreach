@@ -21,6 +21,7 @@ import {
 } from './timelyAlternativeJsonLd';
 import { TIMELY_SOURCES } from './timelyFacts';
 import { BUILDER_FEATURES, TIMELY_TABLE_ROWS, TIMELY_TIERS } from './timelyAlternativeContent';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const here=dirname(fileURLToPath(import.meta.url));
 const read=(path:string)=>readFileSync(join(here,path),'utf8');
@@ -101,8 +102,9 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(page).toContain('faqs={faqs}');
     expect(faq['@id']).toBe(pageUrl+'#faq');
     const entities=faq.mainEntity as Array<{name:string;acceptedAnswer:{text:string}}>;
-    expect(entities).toHaveLength(TIMELY_ALTERNATIVE_FAQ_ITEMS.length);
-    TIMELY_ALTERNATIVE_FAQ_ITEMS.forEach((item,i)=>{
+    const marked=TIMELY_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/timely-alternative'));
+    expect(entities).toHaveLength(marked.length);
+    marked.forEach((item,i)=>{
       expect(entities[i].name).toBe(item.question);
       expect(entities[i].acceptedAnswer.text).toBe(item.answer);
     });

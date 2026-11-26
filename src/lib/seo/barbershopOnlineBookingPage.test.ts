@@ -25,6 +25,7 @@ import { HERITAGE_DEMO_BOOK_HREF } from '@/lib/demo/heritage/links';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, '../..');
@@ -182,9 +183,10 @@ describe('/barbershop-online-booking structured data', () => {
       mainEntity: Array<{ name: string; acceptedAnswer: { text: string } }>;
     };
     expect(faq['@type']).toBe('FAQPage');
-    expect(faq.mainEntity.map((q) => q.name)).toEqual(ONLINE_BOOKING_FAQ_ITEMS.map((item) => item.question));
-    expect(faq.mainEntity.map((q) => q.acceptedAnswer.text)).toEqual(ONLINE_BOOKING_FAQ_ITEMS.map((item) => item.answer));
-    expect(new Set(faq.mainEntity.map((q) => q.name)).size).toBe(ONLINE_BOOKING_FAQ_ITEMS.length);
+    const marked = ONLINE_BOOKING_FAQ_ITEMS.filter(ownedFaqSchemaItem('/barbershop-online-booking'));
+    expect(faq.mainEntity.map((q) => q.name)).toEqual(marked.map((item) => item.question));
+    expect(faq.mainEntity.map((q) => q.acceptedAnswer.text)).toEqual(marked.map((item) => item.answer));
+    expect(new Set(faq.mainEntity.map((q) => q.name)).size).toBe(marked.length);
     expect(ONLINE_BOOKING_FAQ_ITEMS.length).toBeGreaterThanOrEqual(12);
     expect(ONLINE_BOOKING_FAQ_ITEMS[0]?.question).toBe('What is barbershop online booking?');
   });

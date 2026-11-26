@@ -5,7 +5,7 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 const PRIVATE_PATH_RULES = [
   'Disallow: /ops',
   'Disallow: /api/',
-  'Disallow: /setup/',
+  // /setup/ stays crawlable so Google sees its noindex (meta + X-Robots-Tag) instead of indexing a blocked URL.
   'Disallow: /shop/success',
   'Disallow: /shop/cancelled',
   'Disallow: /shop/*/success',

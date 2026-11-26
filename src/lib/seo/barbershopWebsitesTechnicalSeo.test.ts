@@ -23,9 +23,6 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
 const page = read('../../pages/barbershop-websites/index.astro');
-const hero = read('../../components/barbershop-websites/BarbershopWebsitesHero.astro');
-const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
-const css = read('../../styles/components/barbershop-websites-hero.css');
 const designTeamSection = read('../../components/websiteDesign/WdPhoto.astro');
 
 describe('/barbershop-websites Batch 2 — technical SEO and link integrity', () => {
@@ -96,24 +93,8 @@ describe('/barbershop-websites Batch 2 — technical SEO and link integrity', ()
     expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
   });
 
-  it('matches visible accessible breadcrumb order to JSON-LD', () => {
-    const breadcrumb = hero.match(/<nav class="bsw-hero__breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? '';
-    expect(breadcrumb).toContain('aria-label="Breadcrumb"');
-    expect(breadcrumb).toContain('<li><a href="/">Home</a></li>');
-    expect(breadcrumb).toContain('<li><span aria-current="page">Barbershop Websites</span></li>');
-    expect(breadcrumb.indexOf('Home')).toBeLessThan(breadcrumb.indexOf('Barbershop Websites'));
-    expect(css).toContain('.bsw-hero__breadcrumb a:focus-visible');
-  });
-
-  it('links to both guides from website essentials without deleting the real demo paths', () => {
-    const essentials = read('../../components/barbershop-websites/WebsiteEssentials.astro');
-    expect(essentials).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
-    expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
-    expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
+  it('links the design guide and its team section plus the booking guide from the footer', () => {
     expect(designTeamSection).toContain('id="your-team"');
-    for (const route of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', 'DEMO_BOOK_HREF', 'HERITAGE_DEMO_SERVICES_HREF', 'HERITAGE_DEMO_TEAM_HREF']) {
-      expect(panel).toContain(route);
-    }
     const footer = read('../../lib/nav/footerNavigation.ts');
     expect(footer).toContain("name: 'Website design guide', href: '/barbershop-website-design'");
     expect(footer).toContain("name: 'Online booking & deposits', href: '/barbershop-online-booking'");

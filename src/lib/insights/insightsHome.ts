@@ -19,10 +19,12 @@ const reviews = INSIGHTS_GOOGLE_REVIEWS;
 
 export const INSIGHTS_HOME_MASTHEAD = {
   ...GATE1_MASTHEAD,
-  lead: 'Practical insights for independent UK barbershop owners — bookings, clients, costs, branding and stronger day-to-day decisions.',
+  /** Visible subtitle under the H1: carries the hub's search phrase, which the editorial H1 does not. */
+  subtitle: 'Barbershop business insights for UK owners',
+  lead: 'Practical guides for independent shops on bookings, clients, costs, branding and stronger day-to-day decisions.',
 } as const;
 
-/** Canonical six-category topic strip — not design-preview fixtures. */
+/** Canonical six-category topic strip. */
 export const INSIGHTS_HOME_TOPICS = getInsightsTopicStripItems();
 
 export const INSIGHTS_HOME_OWNERS_DESK = GATE1_OWNERS_DESK;

@@ -8,6 +8,7 @@ import {
 import { formatGbp, formatPercent } from '@/lib/seo/freshaFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { NO_CUSTOMER_APP_FAQ } from '@/lib/seo/barbershopBookingFaq';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export type BooksyAlternativeFaqItem = {
   question: string;
@@ -123,7 +124,7 @@ export function buildBooksyAlternativeFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}${BOOKSY_ALTERNATIVE_PAGE_PATH}#faq`,
-    mainEntity: BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => ({
+    mainEntity: BOOKSY_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/booksy-alternative')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

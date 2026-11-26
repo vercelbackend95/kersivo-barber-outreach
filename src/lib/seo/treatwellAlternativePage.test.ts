@@ -11,6 +11,7 @@ import { GET as getRobots } from '../../pages/robots.txt';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=(path:string)=>readFileSync(join(dir,path),'utf8');
 const page=read('../../pages/treatwell-alternative/index.astro');
@@ -42,7 +43,7 @@ describe('Treatwell Alternative UK marketing page',()=>{
     {'@type':'ListItem',position:2,name:'Treatwell alternative',item:'https://kersivo.co.uk/treatwell-alternative'},
   ]);
   expect((breadcrumb.itemListElement as unknown[]).length).toBe(2);
-  expect((faq.mainEntity as unknown[]).length).toBe(TREATWELL_ALTERNATIVE_FAQ_ITEMS.length);
+  expect((faq.mainEntity as unknown[]).length).toBe(TREATWELL_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/treatwell-alternative')).length);
   expect(TREATWELL_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(8);
  });
  it('runs the owner-first section order without stray competitor copy',()=>{

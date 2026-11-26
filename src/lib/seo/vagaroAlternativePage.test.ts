@@ -19,6 +19,7 @@ import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { GET as getRobots } from '../../pages/robots.txt';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(dir, path), 'utf8');
@@ -68,10 +69,11 @@ describe('Vagaro Alternative UK SEO foundation', () => {
     const faq = buildVagaroAlternativeFaqJsonLd();
     expect(faq['@type']).toBe('FAQPage');
     const entries = faq.mainEntity as Array<Record<string, unknown>>;
-    expect(entries).toHaveLength(VAGARO_ALTERNATIVE_FAQ_ITEMS.length);
+    const marked = VAGARO_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/vagaro-alternative'));
+    expect(entries).toHaveLength(marked.length);
     for (let i = 0; i < entries.length; i++) {
-      expect(entries[i].name).toBe(VAGARO_ALTERNATIVE_FAQ_ITEMS[i].question);
-      expect(entries[i].acceptedAnswer).toEqual({ '@type': 'Answer', text: VAGARO_ALTERNATIVE_FAQ_ITEMS[i].answer });
+      expect(entries[i].name).toBe(marked[i].question);
+      expect(entries[i].acceptedAnswer).toEqual({ '@type': 'Answer', text: marked[i].answer });
     }
   });
 

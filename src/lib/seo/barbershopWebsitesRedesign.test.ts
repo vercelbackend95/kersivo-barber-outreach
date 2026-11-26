@@ -18,7 +18,6 @@ import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
 const page = read('../../pages/barbershop-websites/index.astro');
-const legacy = read('../../pages/design-preview/barbershop-websites-v1.astro');
 const dir = '../../components/barbershopWebsite/';
 const files = readdirSync(join(here, dir)).filter((file) => file.endsWith('.astro'));
 const component = (name: string) => read(`${dir}${name}.astro`);
@@ -110,17 +109,6 @@ describe('/barbershop-websites redesign — accessibility and motion', () => {
     const init = read('../../lib/barbershopWebsite/init.ts');
     expect(init).toContain("'(prefers-reduced-motion: no-preference)'");
     expect(init).toMatch(/import\('gsap'\)/);
-  });
-});
-
-describe('/barbershop-websites previous version is kept', () => {
-  it('renders the v1 sections at a noindex preview URL that is not in the sitemap', () => {
-    for (const name of ['BarbershopWebsitesHero', 'WebsiteEssentials', 'BrandToBooking', 'FullOffer', 'SetupProcess', 'FaqAndClose']) {
-      expect(legacy).toContain(`<${name} />`);
-    }
-    expect(legacy).toMatch(/^\s+noindex$/m);
-    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 });
 

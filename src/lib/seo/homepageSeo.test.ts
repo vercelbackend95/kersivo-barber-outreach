@@ -9,6 +9,7 @@ import { buildBarberDemoJsonLd } from './barberDemoJsonLd';
 import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, SAAS_MONTHLY_GBP } from './defaults';
 import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
@@ -269,9 +270,9 @@ describe('homepage SEO phase 1: FAQ', () => {
     );
     for (const question of NEW_FAQ_QUESTIONS) {
       expect(visible).toContain(question);
-      expect(structured).toContain(question);
     }
-    expect(structured).toEqual(visible);
+    // Questions another page owns stay visible here but are marked up only on their owner page.
+    expect(structured).toEqual(HOMEPAGE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/')).map((item) => item.question));
     expect(visible.length).toBe(new Set(visible).size);
   });
 

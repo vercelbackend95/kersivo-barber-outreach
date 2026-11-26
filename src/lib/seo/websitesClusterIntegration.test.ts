@@ -59,17 +59,13 @@ describe('Websites three-page integrated cluster release gates', () => {
     }
   });
 
-  it('retains both guide routes from website essentials and preserves demo links', () => {
-    const panel = read('../../components/barbershop-websites/WebsiteFeaturesPanel.astro');
-    const essentials = read('../../components/barbershop-websites/WebsiteEssentials.astro');
+  it('links both guide routes from the live pillar sections', () => {
+    const anatomy = read('../../components/barbershopWebsite/BwAnatomy.astro');
+    const booking = read('../../components/barbershopWebsite/BwBooking.astro');
     const design = read('../../components/websiteDesign/WdPhoto.astro');
-    expect(essentials).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
-    expect(essentials).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
-    expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}#your-team');
+    expect(anatomy).toContain('href={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}');
+    expect(booking).toContain('href={BARBERSHOP_ONLINE_BOOKING_PAGE_PATH}');
     expect(design).toContain('id="your-team"');
-    for (const href of ['DEMO_HOME_HREF', 'DEMO_SHOP_HREF', 'DEMO_CONTACT_HREF', 'DEMO_BOOK_HREF', 'HERITAGE_DEMO_SERVICES_HREF', 'HERITAGE_DEMO_TEAM_HREF']) {
-      expect(panel).toContain(href);
-    }
     const pillar = read('../../pages/barbershop-websites/index.astro');
     const footer = read('../../lib/nav/footerNavigation.ts');
     expect(pillar).toContain('buildBarbershopWebsitesJsonLd()');

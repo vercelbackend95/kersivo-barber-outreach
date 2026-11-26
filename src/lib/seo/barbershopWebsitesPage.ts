@@ -28,9 +28,6 @@ export const BARBERSHOP_WEBSITES_SERVICE_NAME = 'Barbershop website with online 
 
 export const BARBERSHOP_WEBSITES_PAGE_H1 = 'A barbershop website clients can find, trust and book from';
 
-/** H1 of the previous design, kept at /design-preview/barbershop-websites-v1. */
-export const BARBERSHOP_WEBSITES_V1_H1 = 'Barbershop Websites with Online Booking';
-
 /** Published as the canonical pillar of the UK barbershop websites cluster. */
 export const BARBERSHOP_WEBSITES_PAGE_INDEXABLE = true;
 

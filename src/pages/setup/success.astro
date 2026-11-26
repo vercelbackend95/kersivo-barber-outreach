@@ -27,7 +27,11 @@ const adsPurchaseSendTo = resolveGoogleAdsPurchaseSendToFromProcessEnv();
       ? 'Subscription confirmed — KERSIVO'
       : 'Setup deposit confirmed — KERSIVO'
     : 'Payment verification — KERSIVO'}
-  description={PAGE_DESCRIPTIONS.setupSuccess}
+  description={verified
+    ? isSubscription
+      ? PAGE_DESCRIPTIONS.setupSuccess
+      : PAGE_DESCRIPTIONS.setupSuccessDeposit
+    : PAGE_DESCRIPTIONS.setupSuccessUnverified}
   canonicalPath="/setup/success"
   noindex={true}
   bodyClass="setup-success-body"

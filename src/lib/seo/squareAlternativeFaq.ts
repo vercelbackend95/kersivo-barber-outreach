@@ -1,5 +1,6 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { squareBaseMonthlyPriceGbp } from './squareFacts';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 export const SQUARE_ALTERNATIVE_PAGE_PATH='/square-appointments-alternative';
 /**
  * Search title: the query, who it is for, the flat price. The description sets Square's paid plans
@@ -28,5 +29,5 @@ export const SQUARE_ALTERNATIVE_FAQ_ITEMS: {question:string;answer:string}[] = [
 ];
 export function buildSquareAlternativeFaqJsonLd():Record<string,unknown>{
  const pageUrl=getPublicSiteUrl()+SQUARE_ALTERNATIVE_PAGE_PATH;
- return {'@context':'https://schema.org','@type':'FAQPage','@id':pageUrl+'#faq',mainEntity:SQUARE_ALTERNATIVE_FAQ_ITEMS.map(i=>({'@type':'Question',name:i.question,acceptedAnswer:{'@type':'Answer',text:i.answer}}))};
+ return {'@context':'https://schema.org','@type':'FAQPage','@id':pageUrl+'#faq',mainEntity:SQUARE_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/square-appointments-alternative')).map(i=>({'@type':'Question',name:i.question,acceptedAnswer:{'@type':'Answer',text:i.answer}}))};
 }

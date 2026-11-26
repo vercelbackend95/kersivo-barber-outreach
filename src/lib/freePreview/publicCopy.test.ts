@@ -37,6 +37,7 @@ import {
 import { HUB_FREE_PREVIEW_FAQ_PHOTOS_ANSWER, HUB_FREE_PREVIEW_PHOTOS_LINE } from './hubCopy';
 import { FREE_PREVIEW_AUTHORISATION_STATEMENT, FREE_PREVIEW_MARKETING_LABEL } from './intake';
 import { SMART_LINK_COPY } from './workPlatforms';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), 'utf8');
 
@@ -87,7 +88,7 @@ describe('free preview public copy (spec §10)', () => {
     for (const on of [false, true]) {
       const faq = buildBarbershopBookingFaqJsonLd(on) as { mainEntity: Array<{ name: string; acceptedAnswer: { text: string } }> };
       expect(faq.mainEntity.map((q) => [q.name, q.acceptedAnswer.text])).toEqual(
-        getHomepageFaqItems(on).map((item) => [item.question, item.answer]),
+        getHomepageFaqItems(on).filter(ownedFaqSchemaItem('/')).map((item) => [item.question, item.answer]),
       );
     }
     const graph = buildHomepageJsonLd(true)['@graph'] as Array<Record<string, unknown>>;
@@ -125,16 +126,11 @@ describe('pay-first wording while the flag is on', () => {
   });
 
   it('gates the /barbershop-websites and design page wording on the flag', () => {
-    const setup = read('src/components/barbershop-websites/SetupProcess.astro');
-    expect(setup).toContain('const shownStages: Stage[] = getSetupSteps(freePreview).map');
-    expect(setup).toContain('{shownStages.map(');
-    expect(setup).toContain('{billingNote}');
-    const offer = read('src/components/barbershop-websites/FullOffer.astro');
-    expect(offer).toContain('const shownPayment = isFreePreviewFlowEnabled() ? previewPayment : payment;');
-    expect(offer).toContain('{shownPayment.map(');
-    const close = read('src/components/barbershop-websites/FaqAndClose.astro');
-    expect(close).toContain('{shownFaqs.map(');
-    expect(close).toContain("You don't pay anything for your preview. If you decide to launch");
+    const offer = read('src/components/barbershopWebsite/BwOffer.astro');
+    expect(offer).toContain('const freePreview = isFreePreviewFlowEnabled();');
+    expect(offer).toContain('FREE_PREVIEW_BILLING_CLAIM');
+    const close = read('src/components/barbershopWebsite/BwFaqClose.astro');
+    expect(close).toContain('const freePreview = isFreePreviewFlowEnabled();');
     const design = read('src/components/websiteDesign/WdOffer.astro');
     expect(design).toContain('{BILLING_NOTE}');
   });

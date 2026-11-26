@@ -1,4 +1,5 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 export const TIMELY_ALTERNATIVE_PAGE_PATH = '/timely-alternative';
 /**
  * Search title: the query, then the Timely pain (a weekly bill that grows with bookings) against one flat
@@ -30,7 +31,7 @@ export function buildTimelyAlternativeFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${pageUrl}#faq`,
-    mainEntity: TIMELY_ALTERNATIVE_FAQ_ITEMS.map(item => ({
+    mainEntity: TIMELY_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/timely-alternative')).map(item => ({
       '@type': 'Question', name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },
     })),

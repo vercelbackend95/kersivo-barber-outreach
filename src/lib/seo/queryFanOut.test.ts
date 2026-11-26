@@ -13,11 +13,13 @@ import {
 import { BOOKSY_ALTERNATIVE_FAQ_ITEMS } from '@/lib/seo/booksyAlternativeFaq';
 import { buildPricingFaqJsonLd, getPricingFaqItems } from '@/lib/seo/pricingPage';
 import { STARTER_FAQ_ITEMS, buildStarterFaqJsonLd } from '@/lib/seo/starterPage';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 /**
  * GEO/AEO stage 2 (docs/seo/geo-aeo-2-fan-out-map.md): the sub-questions an AI assistant asks when an
  * owner searches for booking software are answered on each page that owns the search, in the visible
- * FAQ and in its FAQPage JSON-LD, with one shared wording.
+ * FAQ, with one shared wording. A shared question is marked up in FAQPage JSON-LD only on the page
+ * that owns it (faqSchemaOwners.ts), so each question appears once in the site's structured data.
  */
 type Faq = { question: string; answer: string };
 const names = (jsonLd: Record<string, unknown>) =>
@@ -34,19 +36,19 @@ describe('query fan-out answers', () => {
     }
   });
 
-  it('homepage answers "does it work with Google/Instagram" and "are reminders included", visibly and in JSON-LD', () => {
+  it('homepage answers "does it work with Google/Instagram" and "are reminders included", visibly; /barbershop-online-booking marks them up', () => {
     for (const freePreview of [false, true]) {
       const items = getHomepageFaqItems(freePreview);
       expect(items).toContain(BOOKING_LINK_CHANNELS_FAQ);
       expect(items).toContain(CONFIRMATIONS_REMINDERS_FAQ);
-      expect(names(buildBarbershopBookingFaqJsonLd(freePreview))).toEqual(pairs(items));
+      expect(names(buildBarbershopBookingFaqJsonLd(freePreview))).toEqual(pairs(items.filter(ownedFaqSchemaItem('/'))));
     }
   });
 
   it('/pricing answers "can you move my clients"', () => {
     for (const freePreview of [false, true]) {
       expect(getPricingFaqItems(freePreview)).toContain(MIGRATION_ASSISTANCE_FAQ);
-      expect(names(buildPricingFaqJsonLd(freePreview))).toEqual(pairs(getPricingFaqItems(freePreview)));
+      expect(names(buildPricingFaqJsonLd(freePreview))).toEqual(pairs(getPricingFaqItems(freePreview).filter(ownedFaqSchemaItem('/pricing'))));
     }
   });
 
