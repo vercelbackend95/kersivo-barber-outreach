@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
@@ -7,6 +7,7 @@ import {
   ABOUT_PAGE_DESCRIPTION,
   ABOUT_PAGE_H1,
   ABOUT_PAGE_TITLE,
+  ABOUT_PRESS_LOGOS,
   buildAboutPageJsonLd,
 } from './aboutPage';
 import {
@@ -122,6 +123,21 @@ describe('/about page', () => {
     expect(page).toContain('canonicalPath={ABOUT_PAGE_PATH}');
     expect(page.match(/<h1\b/g)).toHaveLength(1);
     expect(page.indexOf('{ABOUT_ENTITY_DEFINITION}')).toBeGreaterThan(page.indexOf('<h1'));
+  });
+
+  it('has a press section with brand name, logo files and the fees report data, without a founder', () => {
+    const start = page.indexOf('id="press"');
+    expect(start).toBeGreaterThan(page.indexOf('id="at-a-glance"'));
+    const press = page.slice(start, page.indexOf('</section>', start));
+    expect(press).toContain('{ABOUT_PRESS_NAME_NOTE}');
+    expect(press).toContain('{KERSIVO_ENTITY_DESCRIPTION}');
+    expect(press).toContain('ABOUT_PRESS_LOGOS.map');
+    expect(press).toContain('href={FEES_REPORT_CSV_PATH}');
+    expect(press).toContain('KERSIVO_CONTACT_EMAIL');
+    expect(press).not.toMatch(/founder|founded by|our team|Ltd/i);
+    for (const asset of ABOUT_PRESS_LOGOS) {
+      expect(existsSync(`public${asset.href}`), asset.href).toBe(true);
+    }
   });
 
   it('covers every required section and links to pricing, demo and contact', () => {

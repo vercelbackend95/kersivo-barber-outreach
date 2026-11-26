@@ -46,7 +46,7 @@ AI rozbija jedno pytanie na kilka podpytań („best barber booking software UK�
 5. Realizacja priorytetu P1 z `content-plan-buying-searches.md` (opłaty Booksy, jak odejść z Booksy, opłaty Fresha, własna strona vs marketplace, depozyty według systemu): każdy tekst pisany od razu w formie answer-first.
    Stan 26.11.2026: sekcje już są na stronach — opłaty Booksy (`/booksy-alternative#booksy-pricing`), odejście z Booksy (`#switching`), opłaty Fresha (`/fresha-alternative#costs`), depozyty (`/compare#deposits`), opłaty kartowe (`/barber-booking-fees-uk#card-fees`). Zostaje nowy artykuł Insights „Booking website vs marketplace” (pozycja 4 planu treści): artykuły Insights publikujemy tylko po Twojej akceptacji w Notion, więc to osobny krok.
 
-### Etap 3. Wzmianki o marce i earned media (kod + Ty)
+### Etap 3. Wzmianki o marce i earned media (kod + Ty) — kod: punkty 2–3 ✅ `geo-aeo-3-press-changelog.md` (CSV, akapit do cytowania, sekcja prasowa na `/about`); punkt 1 czeka na Twoją decyzję
 
 Kod:
 1. Pętla „Powered by KERSIVO”: link z nazwą marki na stronie rezerwacji `/book/[shopId]`, na ekranie potwierdzenia i w stopce stron klientów Full, z UTM `powered-by`; `rel="nofollow"` na rezerwacji i potwierdzeniu. Wymaga Twojej decyzji co do wyglądu i tego, czy klienci Full mogą to wyłączyć.
