@@ -22,8 +22,11 @@ export const RETAIL_PICKUP_LAST_UPDATED_ISO = '2026-11-25';
 export const RETAIL_PICKUP_LAST_UPDATED_LABEL = '25 November 2026';
 export const RETAIL_PICKUP_BREADCRUMB_NAME = 'Retail pickup';
 
-/** Price in the title: searchers comparing click-and-collect tools filter on cost first. */
-export const RETAIL_PICKUP_TITLE = `Barbershop Click and Collect: £${offer.price.amount}/mo, 0% Commission`;
+/**
+ * Price in the title: searchers comparing click-and-collect tools filter on cost first. The hook names
+ * KERSIVO's commission, never a claim of zero fees: Stripe fees apply, and the description says so.
+ */
+export const RETAIL_PICKUP_TITLE = `Barbershop Click and Collect: £${offer.price.amount}/mo, 0% KERSIVO Commission`;
 export const RETAIL_PICKUP_DESCRIPTION =
   `Sell pomade and beard oil on your own barbershop website. Clients pay online or in the shop when they collect. ${offer.price.full}, 0% KERSIVO commission. Stripe fees apply.`;
 

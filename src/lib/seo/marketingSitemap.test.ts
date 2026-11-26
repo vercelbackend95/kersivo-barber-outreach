@@ -10,8 +10,10 @@ import { HOMEPAGE_LAST_UPDATED_ISO } from './defaults';
 import {
   buildMarketingSitemapEntries,
   buildMarketingSitemapXml,
+  MARKETING_SITEMAP_ENTRIES,
   SITEMAP_CONTENT_TYPE,
 } from './marketingSitemap';
+import { CONTENT_CHANGED_ISO, getStaticPageLastModified, STATIC_PAGE_LAST_MODIFIED } from './pageDates';
 import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
@@ -100,23 +102,25 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-29');
     // Same constant as the homepage WebPage dateModified.
     expect(byLoc['https://kersivo.co.uk/']).toBe(HOMEPAGE_LAST_UPDATED_ISO);
-    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-11-14'); // rebuilt 14 Nov 2026
-    expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-11-14');
-    expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-13'); // rebuilt 13 Nov 2026
+    expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-11-26'); // rebuilt 14 Nov 2026, migration FAQ 26 Nov
+    expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-11-26'); // reminders FAQ; visible date stays 14 Nov
+    expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-24'); // rebuilt 13 Nov, city cards 24 Nov
     expect(byLoc['https://kersivo.co.uk/barbershop-website-design']).toBe('2026-11-25'); // rebuilt 25 Nov 2026
-    expect(byLoc['https://kersivo.co.uk/barbershop-online-booking']).toBe('2026-11-25'); // last commit touching the page source
+    expect(byLoc['https://kersivo.co.uk/barbershop-online-booking']).toBe('2026-11-26'); // rebuilt 25 Nov, title 26 Nov
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-26');
-    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-13');
+    expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-26'); // deposits table, app FAQ; visible date stays 13 Nov
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-11-14');
-    expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-11-14');
+    // "In short" answers (14 Nov 2026) and the new titles (26 Nov, audit P1) moved lastmod;
+    // the visible "Last updated" dates stay as they were.
+    expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-11-26');
+    expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-11-14');
-    expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-10-08');
-    expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-10-08');
+    expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-11-26');
+    expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-11-26');
+    expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-11-14');
@@ -151,6 +155,18 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/cookies']).toBe(COOKIE_POLICY_LAST_UPDATED_ISO);
   });
 
+  it('moves lastmod forward for content changes that kept the visible date, never backwards', () => {
+    const sitemapPaths = new Set(MARKETING_SITEMAP_ENTRIES.map((entry) => entry.path));
+    for (const [path, changed] of Object.entries(CONTENT_CHANGED_ISO)) {
+      expect(sitemapPaths.has(path), path).toBe(true);
+      expect(changed, path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(Number.isNaN(Date.parse(`${changed}T00:00:00Z`)), path).toBe(false);
+      // A content date older than the visible date would do nothing; it is a stale entry to remove.
+      expect(changed > STATIC_PAGE_LAST_MODIFIED[path], path).toBe(true);
+      expect(getStaticPageLastModified(path), path).toBe(changed);
+    }
+  });
+
   it('emits valid urlset XML without product, admin, or API paths and without stale global lastmod', () => {
     const xml = buildMarketingSitemapXml();
     const urlMatches = xml.match(/<url>/g) ?? [];
@@ -169,7 +185,7 @@ describe('marketing sitemap', () => {
     expect(xml).toContain(`<lastmod>${CURRENT_DPA_VERSION}</lastmod>`);
     expect(xml).toContain(`<lastmod>${CURRENT_TERMS_VERSION}</lastmod>`);
     expect(xml).toContain('<lastmod>2026-11-14</lastmod>');
-    expect(xml).toContain('<lastmod>2026-10-08</lastmod>');
+    expect(xml).toContain('<lastmod>2026-11-26</lastmod>');
     expect(xml.match(/<lastmod>/g)?.length).toBe(EXPECTED_COUNT);
     expect(xml).not.toContain('<loc>https://kersivo.co.uk/shop</loc>');
     expect(xml).not.toContain('/design-preview/');

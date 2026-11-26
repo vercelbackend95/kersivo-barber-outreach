@@ -90,7 +90,8 @@ describe('Alternatives hub: metadata and indexability', () => {
   it('is in the sitemap with a genuine lastmod, in the Compare menu and crawlable in robots', async () => {
     const entries = buildMarketingSitemapEntries().filter((e) => e.loc === pageUrl);
     expect(entries).toHaveLength(1);
-    expect(entries[0].lastmod).toBe(ALTERNATIVES_HUB_LAST_UPDATED_ISO);
+    expect(entries[0].lastmod).toBe('2026-11-26'); // content added after the visible "Last updated" date
+    expect((entries[0].lastmod ?? '') >= ALTERNATIVES_HUB_LAST_UPDATED_ISO).toBe(true);
     const navItems = MARKETING_NAV_ITEMS.filter((item) => item.href === '/compare');
     expect(navItems).toHaveLength(1);
     expect(navItems.map((item) => item.group)).toEqual(['compare']);

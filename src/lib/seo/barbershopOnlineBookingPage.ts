@@ -10,9 +10,10 @@ export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
 /**
  * Search intent: "barbershop online booking" / "online booking for barbers", UK. The brand is not
  * known yet, so the title leads with the keyword, the price and the commission hook (the same
- * pattern as the click-and-collect page) instead of "| KERSIVO".
+ * pattern as the click-and-collect page) instead of "| KERSIVO". The hook names KERSIVO's commission
+ * ("0% KERSIVO Commission"), never a claim of zero fees: Stripe fees apply, and the description says so.
  */
-export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = `Barbershop Online Booking UK: £${SAAS_MONTHLY_GBP}/mo, 0% Commission`;
+export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = `Barbershop Online Booking UK: £${SAAS_MONTHLY_GBP}/mo, 0% KERSIVO Commission`;
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION =
   `Online booking for UK barbershops at £${SAAS_MONTHLY_GBP}/month per location: real free times, deposits, reminders and your own diary. 0% KERSIVO commission. Stripe fees apply.`;

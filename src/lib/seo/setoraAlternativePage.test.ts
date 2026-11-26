@@ -71,7 +71,7 @@ describe('Setora Alternative landing page', () => {
   });
   it('has public nav, sitemap, cross-links and nonblocking robots rules', async () => {
     expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/setora-alternative')).toMatchObject({group:'compare',section:'alternatives'});
-    expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/setora-alternative' && x.lastmod==='2026-10-08')).toBe(true);
+    expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/setora-alternative' && x.lastmod==='2026-11-14')).toBe(true);
     const robots=await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
     expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
     expect(robots).not.toContain('Disallow: /setora');

@@ -3,7 +3,7 @@ import { SQUIRE_US_LIST_PLANS } from './squireFacts';
 export { SQUIRE_FACTS_CHECKED_DATE, SQUIRE_OFFICIAL_SOURCES } from './squireFacts';
 
 export const SQUIRE_ALTERNATIVE_PAGE_PATH='/squire-alternative';
-export const SQUIRE_ALTERNATIVE_TITLE='SQUIRE Alternative UK for Barbershops: £39/mo, 0% Fees';
+export const SQUIRE_ALTERNATIVE_TITLE='SQUIRE Alternative UK for Barbershops: Flat £39/mo';
 export const SQUIRE_ALTERNATIVE_DESCRIPTION=
   'SQUIRE alternative for UK barbershops: custom website on your domain, online booking, deposits and a retail pickup shop for £39/month flat. No lock-in.';
 export const SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';

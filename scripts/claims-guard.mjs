@@ -29,6 +29,8 @@ export const CLAIM_PATTERNS = [
   String.raw`free forever`,
   String.raw`£39 forever`,
   String.raw`no fees whatsoever`,
+  // Stripe fees apply to online payments, so a title or snippet must never promise "0% fees".
+  String.raw`\b0% fees\b`,
   String.raw`unlimited sms`,
   String.raw`email and sms confirmations`,
   String.raw`sms confirmation`,

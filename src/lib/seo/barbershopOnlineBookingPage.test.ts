@@ -59,7 +59,7 @@ const copy = copyStrings.join('\n');
 describe('/barbershop-online-booking metadata and indexing', () => {
   it('keeps the route, a price-led UK title, a description under 160 characters and the canonical URL', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH).toBe('/barbershop-online-booking');
-    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE).toBe('Barbershop Online Booking UK: £39/mo, 0% Commission');
+    expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE).toBe('Barbershop Online Booking UK: £39/mo, 0% KERSIVO Commission');
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE.length).toBeLessThanOrEqual(60);
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION).toContain('£39/month per location');
@@ -77,7 +77,10 @@ describe('/barbershop-online-booking metadata and indexing', () => {
     expect(resolveRobotsContent({ noindex: false, robotsFollow: true })).toBe(INDEXABLE_ROBOTS_CONTENT);
     const entry = buildMarketingSitemapEntries().find((item) => item.loc === 'https://kersivo.co.uk/barbershop-online-booking');
     expect(entry).toBeDefined();
-    expect(getStaticPageLastModified(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe(BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO);
+    // The title change (26 Nov 2026) moved the sitemap lastmod, not the visible "Updated" date.
+    expect(getStaticPageLastModified(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe('2026-11-26');
+    expect(entry?.lastmod).toBe('2026-11-26');
+    expect(getStaticPageLastModified(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH) >= BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO).toBe(true);
     expect(BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 

@@ -57,7 +57,9 @@ describe('SQUIRE alternative: SEO and factual safety', () => {
    expect(web['@id']).toBe(canonical+'#webpage');
    expect(web.inLanguage).toBe('en-GB');
    expect(web.dateModified).toBe(SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO);
-   expect(sitemap).toEqual({loc:canonical,lastmod:SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO});
+   // The "In short" answer and the new title moved the sitemap lastmod, not the visible "Last updated" date.
+   expect(sitemap).toEqual({loc:canonical,lastmod:'2026-11-26'});
+   expect((sitemap?.lastmod ?? '') >= SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO).toBe(true);
    expect(buildMarketingSitemapXml()).toContain('<loc>'+canonical+'</loc>');
    expect(page).toContain('buildSquireAlternativeWebPageJsonLd(), buildSquireAlternativeBreadcrumbJsonLd(), buildSquireAlternativeFaqJsonLd()');
  });
