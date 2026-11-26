@@ -17,6 +17,21 @@ describe('commercial claims guard', () => {
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
   });
 
+  it('fails on a "0% fees" claim in a page title', () => {
+    const root = mkdtempSync(join(tmpdir(), 'claims-guard-'));
+    const seoDir = join(root, 'src', 'lib', 'seo');
+    mkdirSync(seoDir, { recursive: true });
+    writeFileSync(join(seoDir, 'fixture.ts'), "export const TITLE = 'Some Alternative UK: £39/mo, 0% Fees';\n", 'utf8');
+
+    try {
+      const result = runGuard(['--root', root]);
+      expect(result.status).toBe(1);
+      expect(`${result.stdout}\n${result.stderr}`).toMatch(/src\/lib\/seo\/fixture\.ts:1: 0% Fees/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('fails on a seeded banned phrase in a temp fixture', () => {
     const root = mkdtempSync(join(tmpdir(), 'claims-guard-'));
     const pageDir = join(root, 'src', 'pages');

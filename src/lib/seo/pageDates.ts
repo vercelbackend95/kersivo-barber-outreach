@@ -48,9 +48,10 @@ import { VAGARO_ALTERNATIVE_LAST_UPDATED_ISO, VAGARO_ALTERNATIVE_PAGE_PATH } fro
  */
 /**
  * Seeded from `git log -1 --format=%cs -- <page source>` on 28 October 2026, then updated by hand
- * when a page was rebuilt: /barbershop-websites on 13 Nov 2026, /barbershop-website-design on 14 Nov 2026 and again on 25 Nov 2026.
+ * when a page was rebuilt: /barbershop-websites on 13 Nov 2026 (city guide cards added 24 Nov 2026),
+ * /barbershop-website-design on 14 Nov 2026 and again on 25 Nov 2026.
  */
-export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-11-13';
+export const BARBERSHOP_WEBSITES_LAST_MODIFIED_ISO = '2026-11-24';
 export const BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO = '2026-11-25';
 /** /barbershop-online-booking dates itself (rebuilt 25 Nov 2026); re-exported for the sitemap. */
 export { BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO };
@@ -98,8 +99,32 @@ export const STATIC_PAGE_LAST_MODIFIED: Readonly<Record<string, string>> = {
   '/terms': CURRENT_TERMS_VERSION,
 };
 
+/**
+ * Content added without moving the page's visible "Last updated" / "Updated" date (and the WebPage
+ * dateModified that mirrors it): an "In short" answer, an FAQ or a section, while the prices, facts and
+ * claims stayed the same — the same rule as Insights articles in GEO/AEO stage 1. The sitemap <lastmod>,
+ * and so IndexNow, must still see the change, so they use the later of the two dates.
+ * Add a line in the same PR as the content change, dated the day it ships.
+ */
+export const CONTENT_CHANGED_ISO: Readonly<Record<string, string>> = {
+  [STARTER_PAGE_PATH]: '2026-11-26', // FAQ: booking reminders (GEO/AEO stage 2)
+  [ALTERNATIVES_HUB_PAGE_PATH]: '2026-11-26', // deposits table (15 Nov), FAQ: customer app (GEO/AEO stage 2)
+  [FEES_REPORT_PAGE_PATH]: '2026-11-26', // "For writers and press" card and CSV download (GEO/AEO stage 3)
+  [SQUARE_ALTERNATIVE_PAGE_PATH]: '2026-11-14', // "In short" answer under the H1
+  [SETORA_ALTERNATIVE_PAGE_PATH]: '2026-11-14', // "In short" answer under the H1
+  // "In short" answer (14 Nov); new title and a description with "Stripe fees apply" (26 Nov, audit P1).
+  [VAGARO_ALTERNATIVE_PAGE_PATH]: '2026-11-26',
+  [NEARCUT_ALTERNATIVE_PAGE_PATH]: '2026-11-26',
+  [PHOREST_ALTERNATIVE_PAGE_PATH]: '2026-11-26',
+  [SQUIRE_ALTERNATIVE_PAGE_PATH]: '2026-11-26',
+  // Title hook now names "0% KERSIVO Commission" instead of a zero-fees claim (26 Nov, audit P1).
+  [BARBERSHOP_ONLINE_BOOKING_PAGE_PATH]: '2026-11-26',
+  [RETAIL_PICKUP_PAGE_PATH]: '2026-11-26',
+};
+
 export function getStaticPageLastModified(path: string): string {
   const date = STATIC_PAGE_LAST_MODIFIED[path];
   if (!date) throw new Error(`No lastModified date for static page ${path} (add it to src/lib/seo/pageDates.ts)`);
-  return date;
+  const contentChanged = CONTENT_CHANGED_ISO[path];
+  return contentChanged && contentChanged > date ? contentChanged : date;
 }

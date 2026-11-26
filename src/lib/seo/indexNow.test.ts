@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   INDEXNOW_ENDPOINT,
   INDEXNOW_KEY,
+  INDEXNOW_LOOKBACK_DAYS,
   buildIndexNowPayload,
   selectRecentlyChangedPaths,
   submitRecentlyChangedUrls,
@@ -13,7 +14,8 @@ import { GET } from '../../pages/api/cron/indexnow';
 const entries = [
   { path: '/', lastmod: '2026-11-14' },
   { path: '/pricing', lastmod: '2026-11-13' },
-  { path: '/about', lastmod: '2026-11-12' },
+  { path: '/starter', lastmod: '2026-11-11' },
+  { path: '/about', lastmod: '2026-11-10' },
   { path: '/compare', lastmod: '2026-10-01' },
 ];
 const now = new Date('2026-11-14T06:30:00Z');
@@ -35,8 +37,15 @@ describe('IndexNow key file', () => {
 });
 
 describe('selectRecentlyChangedPaths', () => {
-  it('keeps only URLs whose lastmod is today or yesterday', () => {
-    expect(selectRecentlyChangedPaths(now, entries)).toEqual(['/', '/pricing']);
+  it('keeps only URLs whose lastmod is today or in the three days before', () => {
+    expect(INDEXNOW_LOOKBACK_DAYS).toBe(3);
+    expect(selectRecentlyChangedPaths(now, entries)).toEqual(['/', '/pricing', '/starter']);
+  });
+
+  it('still submits a change whose PR was merged two days after its lastmod', () => {
+    const written = [{ path: '/compare', lastmod: '2026-11-26' }];
+    const firstRunAfterMerge = new Date('2026-11-29T06:40:00Z');
+    expect(selectRecentlyChangedPaths(firstRunAfterMerge, written)).toEqual(['/compare']);
   });
 
   it('ignores future-dated entries', () => {
@@ -78,7 +87,11 @@ describe('submitRecentlyChangedUrls', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe(INDEXNOW_ENDPOINT);
-    expect(JSON.parse(init.body).urlList).toEqual(['https://kersivo.co.uk/', 'https://kersivo.co.uk/pricing']);
+    expect(JSON.parse(init.body).urlList).toEqual([
+      'https://kersivo.co.uk/',
+      'https://kersivo.co.uk/pricing',
+      'https://kersivo.co.uk/starter',
+    ]);
   });
 
   it('never throws when IndexNow is down or rejects the request', async () => {

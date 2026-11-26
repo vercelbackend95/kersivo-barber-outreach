@@ -27,9 +27,11 @@ describe('Alternatives Hub discovery and search intent', () => {
     expect(ALTERNATIVES_HUB_TITLE).not.toMatch(/#1|award|rated/i);
   });
 
-  it('has a current, explicit sitemap lastmod matching the visible content update', () => {
+  it('has a current, explicit sitemap lastmod no older than the visible update', () => {
     const item = buildMarketingSitemapEntries().find((entry) => entry.loc === 'https://kersivo.co.uk/compare');
-    expect(item?.lastmod).toBe(ALTERNATIVES_HUB_LAST_UPDATED_ISO);
+    // Deposits table and the customer-app FAQ were added without moving the visible "Last updated" date.
+    expect(item?.lastmod).toBe('2026-11-26');
+    expect((item?.lastmod ?? '') >= ALTERNATIVES_HUB_LAST_UPDATED_ISO).toBe(true);
     const hero = readFileSync(join(repoSrc, 'components/alternativesHub/HubHero.astro'), 'utf8');
     expect(hero).toContain('ALTERNATIVES_HUB_LAST_UPDATED_LABEL');
     expect(hero).toContain('datetime={ALTERNATIVES_HUB_LAST_UPDATED_ISO}');

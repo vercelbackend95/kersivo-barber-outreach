@@ -68,12 +68,20 @@ describe('city page metadata', () => {
 
   it('keeps the meta description between 145 and 160 characters', () => {
     expect(buildCityPageDescription('London')).toBe(
-      'Custom barbershop website design for London shops. Own domain, online booking, deposits and a retail pickup shop for £39/month flat — 0% KERSIVO commission.',
+      'Barbershop website design for London shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
     );
     for (const city of PUBLISHED_CITY_PAGES) {
       const length = buildCityPageDescription(city.name).length;
       expect(length).toBeGreaterThanOrEqual(145);
       expect(length).toBeLessThanOrEqual(160);
+    }
+  });
+
+  it('never puts the commission claim in a description without the Stripe qualifier', () => {
+    for (const name of [...PUBLISHED_CITY_PAGES.map((city) => city.name), 'Newcastle upon Tyne', 'Milton Keynes']) {
+      const description = buildCityPageDescription(name);
+      expect(description, name).toMatch(/0% KERSIVO commission \(Stripe fees apply\)\.$/);
+      expect(description, name).toContain(name);
     }
   });
 
@@ -311,12 +319,12 @@ describe('Bournemouth city page', () => {
     expect(BOURNEMOUTH.checkedIso).toBe('2026-11-24');
   });
 
-  it('uses the full title and the shorter description that fits 160 characters', () => {
+  it('uses the full title and the full-form description within 160 characters', () => {
     expect(buildCityPageTitle('Bournemouth')).toBe('Barbershop Website Design Bournemouth | £39/mo | KERSIVO');
     expect(buildCityPageDescription('Bournemouth')).toBe(
-      'Custom barbershop website design for Bournemouth shops. Own domain, online booking, deposits and a retail pickup shop for £39/month — 0% KERSIVO commission.',
+      'Barbershop website design for Bournemouth shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
     );
-    expect(buildCityPageDescription('London')).toContain('£39/month flat');
+    expect(buildCityPageDescription('Bournemouth')).toHaveLength(158);
   });
 
   it('builds Home > Barbershop Websites > Bournemouth', () => {
@@ -386,14 +394,14 @@ describe('Birmingham city page', () => {
     expect(BIRMINGHAM.checkedIso).toBe('2026-11-24');
   });
 
-  it('uses the exact title and the full 160-character description', () => {
+  it('uses the exact title and the full-form description', () => {
     expect(buildCityPageTitle('Birmingham')).toBe('Barbershop Website Design Birmingham | £39/mo | KERSIVO');
     expect(buildCityPageTitle('Birmingham')).toHaveLength(55);
     const description = buildCityPageDescription('Birmingham');
     expect(description).toBe(
-      'Custom barbershop website design for Birmingham shops. Own domain, online booking, deposits and a retail pickup shop for £39/month flat — 0% KERSIVO commission.',
+      'Barbershop website design for Birmingham shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
     );
-    expect(description).toHaveLength(160);
+    expect(description).toHaveLength(157);
   });
 
   it('builds Home > Barbershop Websites > Birmingham', () => {

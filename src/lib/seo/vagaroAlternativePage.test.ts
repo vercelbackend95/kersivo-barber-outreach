@@ -99,7 +99,7 @@ describe('Vagaro Alternative UK SEO foundation', () => {
 
   it('is indexable, included in the public sitemap and Google/OAI crawl rules', async () => {
     expect(page).not.toContain('noindex');
-    expect(buildMarketingSitemapEntries()).toContainEqual({ loc: 'https://kersivo.co.uk/vagaro-alternative', lastmod: '2026-10-08' });
+    expect(buildMarketingSitemapEntries()).toContainEqual({ loc: 'https://kersivo.co.uk/vagaro-alternative', lastmod: '2026-11-26' });
     const robots = await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
     expect(robots).toContain('User-agent: *');
     expect(robots).toContain('User-agent: OAI-SearchBot');

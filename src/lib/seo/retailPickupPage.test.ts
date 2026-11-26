@@ -44,7 +44,7 @@ const allCopy = JSON.stringify([
 describe('/barbershop-retail-pickup metadata', () => {
   it('has a search title and description within SERP limits', () => {
     expect(RETAIL_PICKUP_PAGE_PATH).toBe('/barbershop-retail-pickup');
-    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: £39/mo, 0% Commission');
+    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: £39/mo, 0% KERSIVO Commission');
     expect(RETAIL_PICKUP_TITLE.length).toBeLessThanOrEqual(60);
     expect(RETAIL_PICKUP_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
     expect(RETAIL_PICKUP_DESCRIPTION.length).toBeLessThanOrEqual(165);
@@ -71,9 +71,9 @@ describe('/barbershop-retail-pickup metadata', () => {
   it('is listed in the sitemap with its content date, in llms.txt and in the Product menu', () => {
     expect(buildMarketingSitemapEntries()).toContainEqual({
       loc: 'https://kersivo.co.uk/barbershop-retail-pickup',
-      lastmod: RETAIL_PICKUP_LAST_UPDATED_ISO,
+      lastmod: '2026-11-26', // title change; the visible "Updated" date stays RETAIL_PICKUP_LAST_UPDATED_ISO
     });
-    expect(getStaticPageLastModified(RETAIL_PICKUP_PAGE_PATH)).toBe(RETAIL_PICKUP_LAST_UPDATED_ISO);
+    expect(getStaticPageLastModified(RETAIL_PICKUP_PAGE_PATH) >= RETAIL_PICKUP_LAST_UPDATED_ISO).toBe(true);
     expect(buildLlmsTxt('https://kersivo.co.uk')).toContain('[Retail pickup](https://kersivo.co.uk/barbershop-retail-pickup)');
     const product = buildMarketingNavigation().find((group) => group.id === 'product')!;
     const retail = product.sections.flatMap((section) => section.items).find((item) => item.id === 'platform-retail');

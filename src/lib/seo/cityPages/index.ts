@@ -62,15 +62,18 @@ export function buildCityPageTitle(name: string): string {
 export const CITY_DESCRIPTION_MAX_LENGTH = 160;
 
 /**
- * Full form first. Longer city names drop "flat", then "Custom ", so the description stays within
- * 160 characters (e.g. "Bournemouth" would be 161 with the full form; "Birmingham" fits at 160).
+ * Every form ends with "0% KERSIVO commission (Stripe fees apply)": the commission claim never goes
+ * out without the Stripe qualifier. Full form first; long city names move the city to the front,
+ * then shorten to "websites", so the description stays within 160 characters
+ * (London 153, Birmingham 157, Bournemouth 158 with the full form).
  */
 export function buildCityPageDescription(name: string): string {
-  const offer = `Own domain, online booking, deposits and a retail pickup shop for £${SAAS_MONTHLY_GBP}/month`;
+  const offer = `own domain, online booking, deposits and retail pickup, £${SAAS_MONTHLY_GBP}/month`;
+  const commission = '0% KERSIVO commission (Stripe fees apply).';
   const candidates = [
-    `Custom barbershop website design for ${name} shops. ${offer} flat — 0% KERSIVO commission.`,
-    `Custom barbershop website design for ${name} shops. ${offer} — 0% KERSIVO commission.`,
-    `Barbershop website design for ${name} shops. ${offer} — 0% KERSIVO commission.`,
+    `Barbershop website design for ${name} shops: ${offer}. ${commission}`,
+    `${name} barbershop website design: ${offer}. ${commission}`,
+    `${name} barbershop websites: ${offer}. ${commission}`,
   ];
   return candidates.find((text) => text.length <= CITY_DESCRIPTION_MAX_LENGTH) ?? candidates[candidates.length - 1];
 }

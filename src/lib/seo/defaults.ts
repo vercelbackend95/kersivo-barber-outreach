@@ -28,7 +28,11 @@ export function getHomepageDescription(freePreview = false): string {
   return freePreview ? HOMEPAGE_FREE_PREVIEW_DESCRIPTION : HOMEPAGE_DESCRIPTION;
 }
 
-export const HOMEPAGE_LAST_UPDATED_ISO = '2026-11-15';
+/**
+ * When the homepage content last changed (not shown on the page): WebPage dateModified and sitemap
+ * <lastmod>. 26 Nov 2026: FAQ gained the Google/Instagram/TikTok and reminders questions.
+ */
+export const HOMEPAGE_LAST_UPDATED_ISO = '2026-11-26';
 
 export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
 

@@ -13,11 +13,13 @@ export const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 export const INDEXNOW_HOST = 'kersivo.co.uk';
 
 /**
- * The daily cron submits every sitemap URL whose lastmod falls in this window (today and the day before).
- * lastmod comes from src/lib/seo/pageDates.ts and Insights dates — never from build time — so an
- * unchanged page is never resubmitted, and a changed page is submitted at most twice.
+ * The daily cron submits every sitemap URL whose lastmod falls in this window (today and the three days
+ * before). lastmod comes from src/lib/seo/pageDates.ts and Insights dates — never from build time — so an
+ * unchanged page is never resubmitted, and a changed page is submitted at most four times.
+ * Three days, not one: lastmod is the day the change was written, and a PR merged a day or two later
+ * (after the 06:40 UTC run) would otherwise never be submitted.
  */
-export const INDEXNOW_LOOKBACK_DAYS = 1;
+export const INDEXNOW_LOOKBACK_DAYS = 3;
 
 /** IndexNow accepts up to 10,000 URLs per request; we never get close, but cap it anyway. */
 export const INDEXNOW_MAX_URLS = 500;
