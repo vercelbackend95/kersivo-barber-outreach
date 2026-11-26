@@ -13,8 +13,13 @@ const FULL = gbp(SAAS_MONTHLY_GBP);
 const DEPOSIT = gbp(KERSIVO_BOOKING_DEPOSIT_GBP);
 
 export const TREATWELL_ALTERNATIVE_PAGE_PATH = '/treatwell-alternative';
-export const TREATWELL_ALTERNATIVE_TITLE = 'Treatwell Alternative UK: Your Brand, Direct Bookings | KERSIVO';
-export const TREATWELL_ALTERNATIVE_DESCRIPTION = `UK barbers: take bookings on your own branded site, not a marketplace. Flat ${FULL}/month per location, 0% KERSIVO commission (Stripe fees apply).`;
+/**
+ * Search title: the query, then the fee a Treatwell partner feels most (the marketplace commission on a
+ * qualifying new client, from treatwellFacts), against one flat price. "Cut" is the British idiom for a
+ * share taken; KERSIVO takes 0% commission. Audit P2-3.
+ */
+export const TREATWELL_ALTERNATIVE_TITLE = `Treatwell Alternative UK: No ${newClient} New-Client Cut, ${FULL} Flat`;
+export const TREATWELL_ALTERNATIVE_DESCRIPTION = `Treatwell can take ${newClient} + VAT of a new client’s first visit. KERSIVO: booking on your own site, ${FULL}/month flat. 0% KERSIVO commission. Stripe fees apply.`;
 export const TREATWELL_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';
 export const TREATWELL_ALTERNATIVE_LAST_UPDATED_LABEL = '14 November 2026';
 export const TREATWELL_ALTERNATIVE_FAQ_ITEMS = [

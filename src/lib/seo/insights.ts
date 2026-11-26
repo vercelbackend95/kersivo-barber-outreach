@@ -619,11 +619,15 @@ export function buildInsightsArticleJsonLd(article: {
     datePublished: article.publishedDate,
     dateModified: getInsightsArticleDateModified(article),
     inLanguage: 'en-GB',
+    /**
+     * The shared Organization node, with the same url it has everywhere else (the home page), so `#organization`
+     * stays one consistent entity (audit P2-2). /about is linked from Organization.mainEntityOfPage.
+     */
     author: {
       '@type': 'Organization',
       '@id': organizationId,
       name: 'KERSIVO',
-      url: buildAbsoluteUrl('/about'),
+      url: `${siteUrl}/`,
     },
     /** Resolves to the shared Organization node (square kersivo-mark.png logo) emitted alongside the article. */
     publisher: { '@id': organizationId },

@@ -44,10 +44,12 @@ const allCopy = JSON.stringify([
 describe('/barbershop-retail-pickup metadata', () => {
   it('has a search title and description within SERP limits', () => {
     expect(RETAIL_PICKUP_PAGE_PATH).toBe('/barbershop-retail-pickup');
-    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: £39/mo, 0% KERSIVO Commission');
+    // Audit P2-6: the reason owners never sold online (posting and packing) is the hook; the page says it in the hero.
+    expect(RETAIL_PICKUP_TITLE).toBe('Barbershop Click and Collect: No Postage or Packing, £39/mo');
+    expect(RETAIL_PICKUP_HERO.lead).toContain('No postage, no packing');
     expect(RETAIL_PICKUP_TITLE.length).toBeLessThanOrEqual(60);
     expect(RETAIL_PICKUP_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
-    expect(RETAIL_PICKUP_DESCRIPTION.length).toBeLessThanOrEqual(165);
+    expect(RETAIL_PICKUP_DESCRIPTION.length).toBeLessThanOrEqual(155);
     // The price is in the snippet, and the commission claim keeps its Stripe note.
     expect(RETAIL_PICKUP_DESCRIPTION).toContain('£39/month');
     expect(RETAIL_PICKUP_DESCRIPTION).toMatch(/0% KERSIVO commission. Stripe fees apply./);

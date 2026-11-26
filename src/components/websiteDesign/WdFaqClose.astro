@@ -2,6 +2,10 @@
 import WdPrimaryCta from './WdPrimaryCta.astro';
 import { HERITAGE_DEMO_SITE_HREF as DEMO_HOME_HREF } from '@/lib/demo/heritage/links';
 import { WD_FAQS } from '@/lib/seo/barbershopWebsiteDesignContent';
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from '@/lib/seo/cityPages';
+
+/** Local guides (audit P2-4): this page owns the national term and hands the city term to each city page. */
+const cities = PUBLISHED_CITY_PAGES;
 ---
 
 <section class="wd-section wd-faq" id="faq" aria-labelledby="wd-faq-heading">
@@ -10,6 +14,21 @@ import { WD_FAQS } from '@/lib/seo/barbershopWebsiteDesignContent';
       <p class="wd-eyebrow">Questions</p>
       <h2 id="wd-faq-heading" class="wd-h2">Website design questions, answered</h2>
       <p class="wd-lede">Straight answers on cost, templates, photos, branding and changes.</p>
+      {cities.length > 0 && (
+        <nav class="wd-local" aria-labelledby="wd-local-heading">
+          <p class="wd-local__label" id="wd-local-heading"><span class="wd-local__dot" aria-hidden="true"></span>Local guides</p>
+          <p class="wd-local__lead">Local fade prices, chair rent and business rates, city by city.</p>
+          <ul class="wd-local__list" role="list">
+            {cities.map((city) => (
+              <li>
+                <a class="wd-local__link" href={getCityPagePath(city)}>
+                  Barbershop website design in {city.name}<span class="wd-local__arrow" aria-hidden="true">→</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </header>
 
     <div class="wd-faq__list">

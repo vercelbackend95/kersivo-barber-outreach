@@ -19,7 +19,9 @@ const prefix = '../../components/setoraAlternative/';
 describe('Setora Alternative landing page', () => {
   it('uses unique canonical and indexable UK-focused metadata', () => {
     expect(SETORA_ALTERNATIVE_PAGE_PATH).toBe('/setora-alternative');
-    expect(SETORA_ALTERNATIVE_TITLE).toContain('Setora Alternative for UK Barbershops');
+    expect(SETORA_ALTERNATIVE_TITLE).toBe('Setora Alternative UK: Flat £39/mo Instead of £59');
+    expect(SETORA_ALTERNATIVE_DESCRIPTION).toBe('Setora lists £59/month per location. Full KERSIVO is £39, with your own website and domain, booking and deposits. 0% KERSIVO commission. Stripe fees apply.');
+    expect(SETORA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
     expect(SETORA_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(65);
     expect(SETORA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
     expect(page).toContain('canonicalPath={SETORA_ALTERNATIVE_PAGE_PATH}');
@@ -71,7 +73,7 @@ describe('Setora Alternative landing page', () => {
   });
   it('has public nav, sitemap, cross-links and nonblocking robots rules', async () => {
     expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/setora-alternative')).toMatchObject({group:'compare',section:'alternatives'});
-    expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/setora-alternative' && x.lastmod==='2026-11-14')).toBe(true);
+    expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/setora-alternative' && x.lastmod==='2026-11-26')).toBe(true);
     const robots=await (await getRobots({} as Parameters<typeof getRobots>[0])).text();
     expect(robots).toContain('Sitemap: https://kersivo.co.uk/sitemap.xml');
     expect(robots).not.toContain('Disallow: /setora');

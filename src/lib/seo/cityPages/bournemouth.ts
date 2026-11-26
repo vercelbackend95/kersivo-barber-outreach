@@ -41,6 +41,9 @@ export const BOURNEMOUTH_CITY_PAGE: CityPage = {
     `A website on your own .co.uk, designed around your shop, with online booking, deposits on the slots that go first and a pickup shelf for clay, pomade and beard oil. One flat £${SAAS_MONTHLY_GBP}/month per location and 0% KERSIVO commission (Stripe fees apply), whether you cut on Wimborne Road in Winton or Christchurch Road in Boscombe.`,
   hubSummary:
     'A £20 middle fade price, student terms and summer visitors, with set-ups for the town centre, Boscombe to Southbourne and Winton.',
+  seoTitle: `Barbershop Website Design Bournemouth: Own .co.uk, £${SAAS_MONTHLY_GBP}/mo`,
+  seoDescription:
+    `Students in term, visitors in summer: let them book your real free slots on your own .co.uk. £${SAAS_MONTHLY_GBP}/month flat. 0% KERSIVO commission (Stripe fees apply).`,
   targetQueries: [
     'barbershop website design Bournemouth',
     'barber website Bournemouth',

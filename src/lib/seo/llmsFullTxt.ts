@@ -26,6 +26,7 @@ import { BARBER_COST_CALCULATOR_FAQ_ITEMS } from '@/lib/seo/barberCostCalculator
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberCostCalculatorPage';
 import { BOOKSY_VS_FRESHA_PAGE_PATH, BVF_DIRECT_ANSWER, BVF_FAQ_ITEMS } from '@/lib/seo/booksyVsFresha';
 import { KVB_HERO, KVB_PAGE_PATH } from '@/lib/seo/kersivoVsBooksyExperience';
+import { PUBLISHED_CITY_PAGES, buildCityPageH1, getCityFaqs, getCityPagePath } from '@/lib/seo/cityPages';
 import { BOOKSY_ALTERNATIVE_FAQ_ITEMS, BOOKSY_ALTERNATIVE_PAGE_PATH } from '@/lib/seo/booksyAlternativeFaq';
 import { FRESHA_ALTERNATIVE_FAQ_ITEMS, FRESHA_ALTERNATIVE_PAGE_PATH } from '@/lib/seo/freshaAlternativeFaq';
 import { TREATWELL_ALTERNATIVE_FAQ_ITEMS, TREATWELL_ALTERNATIVE_PAGE_PATH } from '@/lib/seo/treatwellAlternativeFaq';
@@ -120,6 +121,16 @@ export function getLlmsFullSections(freePreview: boolean): LlmsFullSection[] {
           faqs: toFaqs(alt.faqs),
         })),
       ],
+    },
+    {
+      // City guides (audit P2-5): the hero lead and the local market paragraphs, then the city FAQ, as rendered.
+      heading: 'Local guides',
+      pages: PUBLISHED_CITY_PAGES.map((city) => ({
+        path: getCityPagePath(city),
+        name: buildCityPageH1(city),
+        answer: [city.heroLead, ...city.marketIntro],
+        faqs: toFaqs(getCityFaqs(city)),
+      })),
     },
   ];
 }

@@ -1,8 +1,9 @@
 ---
 /**
- * /barbershop-website-design — design-intent guide: layout, visual hierarchy, mobile UX, branding and
- * photography, closing on Full KERSIVO. "Do I need a website / what should it include" intent belongs
- * to /barbershop-websites; do not repeat that page here.
+ * /barbershop-website-design — owns "barbershop website design" (UK): a design guide (layout, visual
+ * hierarchy, mobile UX, branding and photography) that also sells KERSIVO's design, with the free preview
+ * as the primary action (audit P2-1). "Do I need a website / what should it include" intent belongs
+ * to /barbershop-websites; do not repeat that page here. City pages own the local queries.
  */
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import Footer50 from '@/components/footer50.astro';
@@ -16,15 +17,15 @@ import WdAudit from '@/components/websiteDesign/WdAudit.astro';
 import WdOffer from '@/components/websiteDesign/WdOffer.astro';
 import WdFaqClose from '@/components/websiteDesign/WdFaqClose.astro';
 import {
-  BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH,
-  BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
   buildBarbershopWebsiteDesignFaqJsonLd,
   buildBarbershopWebsiteDesignJsonLd,
   buildBarbershopWebsiteDesignServiceJsonLd,
+  getBarbershopWebsiteDesignSeo,
 } from '@/lib/seo/barbershopWebsiteDesignPage';
-import { BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO } from '@/lib/seo/pageDates';
+import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { getStaticPageLastModified } from '@/lib/seo/pageDates';
 import {
   KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
@@ -32,16 +33,18 @@ import {
 import '@/styles/components/website-design.css';
 
 const currentYear = new Date().getFullYear();
+const freePreview = isFreePreviewFlowEnabled();
+const seo = getBarbershopWebsiteDesignSeo(freePreview);
 ---
 
 <LandingLayout
-  title={BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE}
-  description={BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION}
+  title={seo.title}
+  description={seo.description}
   canonicalPath={BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH}
   noindex={!BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE}
   robotsFollow
   jsonLd={[
-    buildBarbershopWebsiteDesignJsonLd(BARBERSHOP_WEBSITE_DESIGN_LAST_MODIFIED_ISO),
+    buildBarbershopWebsiteDesignJsonLd(getStaticPageLastModified(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH), freePreview),
     buildBarbershopWebsiteDesignServiceJsonLd(),
     buildBarbershopWebsiteDesignFaqJsonLd(),
   ]}

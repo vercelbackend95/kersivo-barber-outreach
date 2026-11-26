@@ -16,10 +16,15 @@ export type FreshaAlternativeFaqItem = {
 
 export const FRESHA_ALTERNATIVE_PAGE_PATH = '/fresha-alternative';
 
-export const FRESHA_ALTERNATIVE_TITLE = 'Fresha Alternative UK: Keep Your Clients & Brand | KERSIVO';
+const snippetNewClientFee = formatPercent(requireVerifiedFreshaFact('marketplaceNewClientFee').percent!);
 
-export const FRESHA_ALTERNATIVE_DESCRIPTION =
-  'Looking for a Fresha alternative? KERSIVO gives UK barbershops their own booking website, flat pricing and 0% KERSIVO commission (Stripe fees apply).';
+/**
+ * Search title: the query, the flat price, then the Fresha fee owners feel most (the Marketplace
+ * new-client fee, from freshaFacts). KERSIVO charges no new-client fee. Audit P2-3.
+ */
+export const FRESHA_ALTERNATIVE_TITLE = `Fresha Alternative UK: £${SAAS_MONTHLY_GBP} Flat, No ${snippetNewClientFee} New-Client Fee`;
+
+export const FRESHA_ALTERNATIVE_DESCRIPTION = `Fresha takes ${snippetNewClientFee} + VAT of a new Marketplace client’s first visit. KERSIVO: your own booking site, £${SAAS_MONTHLY_GBP}/month flat. 0% KERSIVO commission. Stripe fees apply.`;
 
 /** Visible "Last updated" date on the page; also used for sitemap lastmod and WebPage dateModified. */
 export const FRESHA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';

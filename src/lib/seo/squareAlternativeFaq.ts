@@ -1,7 +1,12 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { squareBaseMonthlyPriceGbp } from './squareFacts';
 export const SQUARE_ALTERNATIVE_PAGE_PATH='/square-appointments-alternative';
-export const SQUARE_ALTERNATIVE_TITLE='Square Appointments Alternative for UK Barbers | KERSIVO';
-export const SQUARE_ALTERNATIVE_DESCRIPTION='Looking for a Square Appointments alternative in the UK? Compare Free, Plus and Premium pricing, card fees, websites, deposits and KERSIVO for barbers.';
+/**
+ * Search title: the query, who it is for, the flat price. The description sets Square's paid plans
+ * (from squareFacts) against what Full KERSIVO bundles for a barbershop at one price. Audit P2-3.
+ */
+export const SQUARE_ALTERNATIVE_TITLE='Square Appointments Alternative for UK Barbers: £39 Flat';
+export const SQUARE_ALTERNATIVE_DESCRIPTION=`Square Plus is £${squareBaseMonthlyPriceGbp('plus')}/month and Premium £${squareBaseMonthlyPriceGbp('premium')} per location. Full KERSIVO is £39: a barbershop website on your own domain, booking, deposits and retail pickup.`;
 export const SQUARE_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const SQUARE_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';
 export const SQUARE_ALTERNATIVE_FAQ_ITEMS: {question:string;answer:string}[] = [

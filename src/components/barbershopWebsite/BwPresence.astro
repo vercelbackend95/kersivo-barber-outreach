@@ -4,7 +4,13 @@
  * says how Full KERSIVO handles it. The ring, tally, verdict and gap list update in the browser and
  * nothing is stored or sent. Without JS the checklist and the KERSIVO lines still read in full.
  */
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from '@/lib/seo/cityPages';
+
 type Check = { id: string; title: string; hint: string; kersivo: string };
+
+/** Contextual links to the city guides, in running text outside the local guides cards (audit P2-4). */
+const cities = PUBLISHED_CITY_PAGES;
+const separator = (index: number) => (index === 0 ? '' : index === cities.length - 1 ? ' and ' : ', ');
 
 const checks: Check[] = [
   {
@@ -135,5 +141,16 @@ const SEG = CIRC / checks.length;
         ))}
       </fieldset>
     </div>
+
+    {cities.length > 0 && (
+      <p class="bw-aside bw-presence__local">
+        How clients find a shop on Google Maps, what a fade costs locally and what you pay in business
+        rates change from city to city. Our guides to barbershop website design in
+        {' '}{cities.map((city, index) => (
+          <Fragment>{separator(index)}<a href={getCityPagePath(city)}>{city.name}</a></Fragment>
+        ))}{' '}
+        walk through each one.
+      </p>
+    )}
   </div>
 </section>

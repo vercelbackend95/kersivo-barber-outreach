@@ -15,8 +15,12 @@ export const BARBERSHOP_ONLINE_BOOKING_PAGE_PATH = '/barbershop-online-booking';
  */
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_TITLE = `Barbershop Online Booking UK: £${SAAS_MONTHLY_GBP}/mo, 0% KERSIVO Commission`;
 
+/**
+ * Within 155 characters (audit P2-6). Opens on "No app" (clients book in the browser, a real difference
+ * from marketplace apps), then what the client does and the price.
+ */
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_DESCRIPTION =
-  `Online booking for UK barbershops at £${SAAS_MONTHLY_GBP}/month per location: real free times, deposits, reminders and your own diary. 0% KERSIVO commission. Stripe fees apply.`;
+  `No app: clients book a barber and a real free time on your own site, deposit optional. £${SAAS_MONTHLY_GBP}/month per location. 0% KERSIVO commission. Stripe fees apply.`;
 
 export const BARBERSHOP_ONLINE_BOOKING_PAGE_H1 = 'Barbershop online booking, explained in one booking.';
 

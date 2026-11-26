@@ -5,6 +5,7 @@ import { GET } from '../../pages/llms-full.txt';
 import { buildLlmsTxt } from '../../pages/llms.txt';
 import { LLMS_FULL_TXT_PATH, buildLlmsFullTxt, getLlmsFullSections } from './llmsFullTxt';
 import { MARKETING_SITEMAP_ENTRIES } from './marketingSitemap';
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from './cityPages';
 
 const site = 'https://kersivo.co.uk';
 
@@ -52,7 +53,20 @@ describe('/llms-full.txt', () => {
     expect(ownSentences).toEqual([]);
     for (const page of getLlmsFullSections(false).flatMap((section) => section.pages)) {
       const route = join(process.cwd(), 'src/pages', page.path === '/' ? 'index' : page.path.slice(1));
-      expect(existsSync(`${route}.astro`) || existsSync(join(route, 'index.astro')), page.path).toBe(true);
+      const city = PUBLISHED_CITY_PAGES.some((item) => getCityPagePath(item) === page.path);
+      const routeFile = city ? join(process.cwd(), 'src/pages/barbershop-websites/[city].astro') : `${route}.astro`;
+      expect(existsSync(routeFile) || existsSync(join(route, 'index.astro')), page.path).toBe(true);
+    }
+  });
+
+  it('includes /kersivo-vs-booksy and every city guide with its own lead, market notes and FAQ (audit P2-5)', () => {
+    const pages = getLlmsFullSections(true).flatMap((section) => section.pages);
+    expect(pages.map((page) => page.path)).toContain('/kersivo-vs-booksy');
+    for (const city of PUBLISHED_CITY_PAGES) {
+      const page = pages.find((item) => item.path === getCityPagePath(city));
+      expect(page, city.name).toBeDefined();
+      expect(page!.answer).toEqual([city.heroLead, ...city.marketIntro]);
+      expect(page!.faqs.map((faq) => faq.question)).toEqual(city.faqs.map((faq) => faq.question));
     }
   });
 

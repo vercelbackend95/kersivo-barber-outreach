@@ -1,7 +1,11 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const TIMELY_ALTERNATIVE_PAGE_PATH = '/timely-alternative';
-export const TIMELY_ALTERNATIVE_TITLE = 'Timely Alternative UK for Barbers: Flat £39/month | KERSIVO';
-export const TIMELY_ALTERNATIVE_DESCRIPTION = 'Timely now bills weekly, by bookings. KERSIVO is £39/month per location, flat, with your own website. Compare prices, fees and switching for UK barbershops.';
+/**
+ * Search title: the query, then the Timely pain (a weekly bill that grows with bookings) against one flat
+ * price. The description ends on the page's own action: the calculator takes the shop's Timely bill. Audit P2-3.
+ */
+export const TIMELY_ALTERNATIVE_TITLE = 'Timely Alternative UK: Flat £39/mo, However Busy You Get';
+export const TIMELY_ALTERNATIVE_DESCRIPTION = 'Timely bills weekly, and the price rises with bookings. KERSIVO: £39/month per location, flat, with your own website. Enter your Timely bill to compare.';
 export const TIMELY_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';
 export const TIMELY_ALTERNATIVE_LAST_UPDATED_LABEL = '14 November 2026';
 export const TIMELY_ALTERNATIVE_FAQ_ITEMS = [

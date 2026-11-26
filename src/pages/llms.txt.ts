@@ -3,7 +3,6 @@ import { PRICE_LIST_LLMS_SUMMARY } from '@/lib/seo/priceListTemplatePage';
 import { RETAIL_PICKUP_LLMS_SUMMARY, RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/retailPickupPage';
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
-import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
 import { getInsightsShortAnswer } from '@/lib/insights/insightsShortAnswers';
 import {
   EDITORIAL_STANDARDS_H1,
@@ -18,12 +17,18 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import { KAR_PAGE_PATH } from '@/lib/seo/adminReportsExperience';
 import { BARBERSHOP_WEBSITE_DESIGN_LLMS_SUMMARY, BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH } from '@/lib/seo/barbershopWebsiteDesignPage';
+import { FREE_PREVIEW_PAGE_PATH, isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { KVB_PAGE_PATH } from '@/lib/seo/kersivoVsBooksyExperience';
+import { PUBLISHED_CITY_PAGES, buildCityPageH1, getCityPagePath } from '@/lib/seo/cityPages';
+import { INSIGHTS_INDEX_DESCRIPTION, INSIGHTS_INDEX_PATH, INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
+import { INSIGHTS_CATEGORIES } from '@/lib/insights/categories';
 
 /**
  * /llms.txt (llmstxt.org): a plain summary of KERSIVO with links to the pages that answer
  * buyer questions. Every claim comes from claimsPolicy / defaults, so it cannot drift from the site.
+ * /free-preview is listed only while FREE_PREVIEW_FLOW_ENABLED is on (it 404s otherwise), like the sitemap.
  */
-export function buildLlmsTxt(siteUrl: string): string {
+export function buildLlmsTxt(siteUrl: string, freePreview = isFreePreviewFlowEnabled()): string {
   const link = (path: string, label: string, note: string) => `- [${label}](${siteUrl}${path}): ${note}`;
   return [
     '# KERSIVO',
@@ -37,9 +42,23 @@ export function buildLlmsTxt(siteUrl: string): string {
     `Who KERSIVO is not for: ${KERSIVO_NOT_FOR}`,
     '',
     '## Product',
+    link(
+      '/',
+      'KERSIVO home',
+      "what KERSIVO is and who it is for, how a client books on the shop's own website, the Full KERSIVO price with Starter as the £0 option, and eight questions to ask any UK barber booking system before signing up (marketplace fees, card fees, per-barber pricing, client list export, deposits, own domain, app downloads, contract length)",
+    ),
     link('/pricing', 'Pricing', 'Full KERSIVO and Starter, what each includes, billing and cancellation'),
+    ...(freePreview
+      ? [
+          link(
+            FREE_PREVIEW_PAGE_PATH,
+            'Free website preview',
+            `a free private preview of the shop's own website and booking page, designed with its name, services, barbers and photos before it pays anything: no card, no sales call; launch on Full KERSIVO for £${SAAS_MONTHLY_GBP}/month per location only if it fits`,
+          ),
+        ]
+      : []),
     link('/barbershop-websites', 'Barbershop websites', 'the branded website, domain and setup process in Full KERSIVO'),
-    link(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH, 'Barbershop website design guide', BARBERSHOP_WEBSITE_DESIGN_LLMS_SUMMARY),
+    link(BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH, 'Barbershop website design', BARBERSHOP_WEBSITE_DESIGN_LLMS_SUMMARY),
     link('/barbershop-online-booking', 'Barbershop online booking guide', 'how clients book step by step, how free times are worked out, deposits and payments on Starter and Full, reminders, and a checklist for choosing a system'),
     link(RETAIL_PICKUP_PAGE_PATH, 'Retail pickup', RETAIL_PICKUP_LLMS_SUMMARY),
     link(
@@ -61,6 +80,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/barber-booking-fees-uk', 'Booking software fees report', 'dated UK fees report: monthly cost by team size, marketplace new-client fees and card fees for 10 systems'),
     link(FEES_REPORT_CSV_PATH, 'Fees report data (CSV)', 'every figure from the fees report tables, one per row, free to reuse under CC BY 4.0 with a link to the report'),
     link('/booksy-vs-fresha', 'Booksy vs Fresha', 'neutral head-to-head for UK barbershops: cost by team size, commission and card fees'),
+    link(KVB_PAGE_PATH, 'Booksy vs your own booking website', `a Booksy profile inside Booksy's app and marketplace, or the shop's own branded website and booking on its own domain for £${SAAS_MONTHLY_GBP}/month per location, with no per-barber fees`),
     link('/booksy-alternative', 'Booksy alternative', 'KERSIVO compared with Booksy'),
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),
     link('/treatwell-alternative', 'Treatwell alternative', 'KERSIVO compared with Treatwell'),
@@ -71,6 +91,16 @@ export function buildLlmsTxt(siteUrl: string): string {
     link('/square-appointments-alternative', 'Square Appointments alternative', 'KERSIVO compared with Square Appointments'),
     link('/squire-alternative', 'Squire alternative', 'KERSIVO compared with Squire'),
     link('/setora-alternative', 'Setora alternative', 'KERSIVO compared with Setora'),
+    '',
+    '## Local guides',
+    // One researched page per city: local fade prices, chair rent, business rates and a marketplace fee calculator.
+    ...PUBLISHED_CITY_PAGES.map((city) =>
+      link(
+        getCityPagePath(city),
+        buildCityPageH1(city),
+        `${city.hubSummary} With local chair rent, business rates, a marketplace fee calculator set to the city's typical fade price, and sources checked on ${city.checkedDate}.`,
+      ),
+    ),
     '',
     '## Free tools',
     link('/free-tools', 'All free tools', 'every free KERSIVO calculator and template for UK barbershops on one page, grouped by pricing, no-shows, taking on a barber and booking software'),
@@ -101,6 +131,11 @@ export function buildLlmsTxt(siteUrl: string): string {
     ),
     '',
     '## Insights',
+    link(INSIGHTS_INDEX_PATH, 'KERSIVO Insights', INSIGHTS_INDEX_DESCRIPTION),
+    ...INSIGHTS_CATEGORIES.filter((category) => category.indexable)
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((category) => link(category.path, `Insights: ${category.name}`, category.seoDescription)),
     // Answer-first: the article's question and short answer, so an assistant can quote it without fetching the page.
     ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => {
       const shortAnswer = getInsightsShortAnswer(article.slug);
@@ -125,7 +160,7 @@ export function buildLlmsTxt(siteUrl: string): string {
 }
 
 export const GET: APIRoute = () =>
-  new Response(buildLlmsTxt(getPublicSiteUrl()), {
+  new Response(buildLlmsTxt(getPublicSiteUrl(), isFreePreviewFlowEnabled()), {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',

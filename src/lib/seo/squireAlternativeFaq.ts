@@ -3,9 +3,13 @@ import { SQUIRE_US_LIST_PLANS } from './squireFacts';
 export { SQUIRE_FACTS_CHECKED_DATE, SQUIRE_OFFICIAL_SOURCES } from './squireFacts';
 
 export const SQUIRE_ALTERNATIVE_PAGE_PATH='/squire-alternative';
-export const SQUIRE_ALTERNATIVE_TITLE='SQUIRE Alternative UK for Barbershops: Flat £39/mo';
+/**
+ * Search title: the query, the SQUIRE pain for a UK shop (US-dollar list prices, a GBP quote needed;
+ * squireFacts), then the flat price. Audit P2-3.
+ */
+export const SQUIRE_ALTERNATIVE_TITLE='SQUIRE Alternative UK: Priced in Pounds, £39 Flat';
 export const SQUIRE_ALTERNATIVE_DESCRIPTION=
-  'SQUIRE alternative for UK barbershops: custom website on your domain, online booking, deposits and a retail pickup shop for £39/month flat. No lock-in.';
+  'SQUIRE publishes US-dollar prices, so UK shops need a quote. KERSIVO is £39/month per location, no VAT added, with your own website. Stripe fees apply.';
 export const SQUIRE_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const SQUIRE_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';
 

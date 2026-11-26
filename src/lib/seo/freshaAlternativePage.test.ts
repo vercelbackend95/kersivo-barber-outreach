@@ -53,6 +53,7 @@ import {
   type FreshaCommercialFactKey,
   estimateFreshaMarketplaceNewClientFee,
   estimateFreshaMonthlySubscription,
+  formatPercent,
   isVerifiedCommercialFact,
   requireVerifiedFreshaFact,
 } from './freshaFacts';
@@ -161,7 +162,7 @@ describe('fresha-alternative page SEO foundation', () => {
     );
     expect(pageSource).not.toContain('noindex');
     expect(FRESHA_ALTERNATIVE_PAGE_PATH).toBe('/fresha-alternative');
-    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative UK: Keep Your Clients & Brand | KERSIVO');
+    expect(FRESHA_ALTERNATIVE_TITLE).toBe('Fresha Alternative UK: £39 Flat, No 20% New-Client Fee');
     expect(resolveCanonicalUrl(FRESHA_ALTERNATIVE_PAGE_PATH)).toBe(
       'https://kersivo.co.uk/fresha-alternative',
     );
@@ -172,10 +173,12 @@ describe('fresha-alternative page SEO foundation', () => {
     expect(FRESHA_ALTERNATIVE_TITLE.startsWith('Fresha Alternative UK')).toBe(true);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(110);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(160);
+    // Audit P2-3: Fresha's Marketplace new-client fee (from freshaFacts) against one flat price.
     expect(FRESHA_ALTERNATIVE_DESCRIPTION).toBe(
-      'Looking for a Fresha alternative? KERSIVO gives UK barbershops their own booking website, flat pricing and 0% KERSIVO commission (Stripe fees apply).',
+      'Fresha takes 20% + VAT of a new Marketplace client’s first visit. KERSIVO: your own booking site, £39/month flat. 0% KERSIVO commission. Stripe fees apply.',
     );
-    expect(FRESHA_ALTERNATIVE_DESCRIPTION).toContain('Fresha alternative');
+    expect(FRESHA_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
+    expect(FRESHA_ALTERNATIVE_DESCRIPTION).toContain(`${formatPercent(requireVerifiedFreshaFact('marketplaceNewClientFee').percent!)} + VAT`);
     expect(FRESHA_ALTERNATIVE_DESCRIPTION.match(/Fresha/g)?.length).toBeLessThanOrEqual(2);
   });
 
@@ -352,7 +355,8 @@ describe('fresha-alternative page SEO foundation', () => {
     expect(webPage.name).toBe(FRESHA_ALTERNATIVE_TITLE);
     expect(webPage.description).toBe(FRESHA_ALTERNATIVE_DESCRIPTION);
     expect(webPage.dateModified).toBe(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO);
-    expect(sitemapEntry?.lastmod).toBe(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO);
+    // Title and description changed on 26 Nov 2026 (audit P2-3): lastmod moves, the visible date stays.
+    expect(sitemapEntry?.lastmod).toBe('2026-11-26');
 
     const serialized = JSON.stringify([webPage, buildFreshaAlternativeFaqJsonLd()]);
     for (const banned of ['aggregateRating', 'AggregateRating', 'reviewCount', '"Review"', 'SoftwareApplication']) {
@@ -384,7 +388,7 @@ describe('fresha-alternative page SEO foundation', () => {
       (entry) => entry.loc === 'https://kersivo.co.uk/fresha-alternative',
     );
     expect(matches).toHaveLength(1);
-    expect(matches[0].lastmod).toBe('2026-11-14');
+    expect(matches[0].lastmod).toBe('2026-11-26');
     expect(FRESHA_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-11-14');
     expect(FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL).toBe('14 November 2026');
     expect(sourcesSource).toContain('FRESHA_ALTERNATIVE_LAST_UPDATED_LABEL');

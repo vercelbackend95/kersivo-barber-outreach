@@ -59,10 +59,11 @@ describe('Treatwell Alternative UK marketing page',()=>{
   const ids=TW_STARTING_POINTS.map(x=>x.id);
   expect(ids).toEqual(['on-treatwell','first-system','other-app','phone-dm']);
   expect(read('../../components/treatwellAlternative/TreatwellAnswer.astro')).toContain('Where are you starting from?');
-  expect(TREATWELL_ALTERNATIVE_TITLE).toMatch(/Your Brand, Direct Bookings/);
-  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toContain('£39/month per location');
-  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toContain('Stripe fees apply');
-  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toMatch(/own branded site/);
+  // Audit P2-3: the snippet says what Treatwell "can take" on a new client, so it reads for shops not on Treatwell yet.
+  expect(TREATWELL_ALTERNATIVE_TITLE).toBe('Treatwell Alternative UK: No 35% New-Client Cut, £39 Flat');
+  expect(TREATWELL_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
+  expect(TREATWELL_ALTERNATIVE_DESCRIPTION).toBe('Treatwell can take 35% + VAT of a new client’s first visit. KERSIVO: booking on your own site, £39/month flat. 0% KERSIVO commission. Stripe fees apply.');
+  expect(TREATWELL_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
  });
  it('keeps setup-time and commission wording within the claims policy',()=>{
   const all=['TreatwellHero','TreatwellOutcomes','TreatwellRule','TreatwellCosts','TreatwellSwitching','TreatwellPricing'].map(n=>read(`../../components/treatwellAlternative/${n}.astro`)).join(' ')+JSON.stringify([TW_HERO_FACTS,TW_SWITCHING_LEAD]);
@@ -74,7 +75,7 @@ describe('Treatwell Alternative UK marketing page',()=>{
  it('is linked from marketing navigation, routing and sitemap',()=>{
   expect(MARKETING_NAV_ITEMS.find(x=>x.href==='/treatwell-alternative')).toMatchObject({group:'compare',section:'alternatives'});
   expect(getRouteFamily('/treatwell-alternative')).toBe('marketing');
-  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-11-14')).toBe(true);
+  expect(buildMarketingSitemapEntries().some(x=>x.loc==='https://kersivo.co.uk/treatwell-alternative' && x.lastmod==='2026-11-26')).toBe(true);
   for(const other of ['booksyAlternative/BooksyFit.astro','freshaAlternative/FreshaFit.astro','nearcutAlternative/NearcutFit.astro']) {
     expect(read('../../components/'+other)).toContain('/treatwell-alternative');
   }
