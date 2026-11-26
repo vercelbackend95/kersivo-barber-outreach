@@ -14,6 +14,10 @@ import {
   FEES_REPORT_CITATION,
   FEES_REPORT_COST_NOTE,
   FEES_REPORT_COST_ROWS,
+  FEES_REPORT_CSV_FILENAME,
+  FEES_REPORT_CSV_LICENCE,
+  FEES_REPORT_CSV_LICENCE_URL,
+  FEES_REPORT_CSV_PATH,
   FEES_REPORT_DESCRIPTION,
   FEES_REPORT_DIRECT_ANSWER,
   FEES_REPORT_EDITION,
@@ -29,6 +33,7 @@ import {
   FEES_REPORT_NEW_CLIENT_PRICES,
   FEES_REPORT_NEW_CLIENT_ROWS,
   FEES_REPORT_PAGE_PATH,
+  FEES_REPORT_PRESS_SUMMARY,
   FEES_REPORT_SOURCES,
   FEES_REPORT_TEAM_SIZES,
   FEES_REPORT_TITLE,
@@ -273,10 +278,30 @@ const cell = (value: number | null) => (value === null ? 'Quote' : formatReportG
             </p>
             <blockquote id="dr-citation">{FEES_REPORT_CITATION}</blockquote>
             <div class="dr-cite__actions">
-              <button type="button" class="btn btn--secondary btn--md" data-copy-citation>Copy citation</button>
-              <span class="dr-cite__status" role="status" aria-live="polite" data-copy-status></span>
+              <button type="button" class="btn btn--secondary btn--md" data-copy-target="dr-citation" data-copy-done="Citation copied.">Copy citation</button>
+              <span class="dr-cite__status" role="status" aria-live="polite" data-copy-status="dr-citation"></span>
             </div>
           </div>
+        </div>
+        <div id="press" class="ks-glass-card dr-cite dr-press">
+          <p class="ks-eyebrow">For writers and press</p>
+          <h3 class="dr-press__title">A paragraph you can quote</h3>
+          <blockquote id="dr-press-summary">{FEES_REPORT_PRESS_SUMMARY}</blockquote>
+          <div class="dr-cite__actions">
+            <button type="button" class="btn btn--secondary btn--md" data-copy-target="dr-press-summary" data-copy-done="Paragraph copied.">Copy paragraph</button>
+            <a
+              class="btn btn--secondary btn--md"
+              href={FEES_REPORT_CSV_PATH}
+              download={FEES_REPORT_CSV_FILENAME}
+              data-track="fees_report_csv_download"
+            >Download the data (CSV)</a>
+            <span class="dr-cite__status" role="status" aria-live="polite" data-copy-status="dr-press-summary"></span>
+          </div>
+          <p class="dr-note">
+            The CSV has every figure from the three tables, one per row. The data is free to reuse under
+            <a class="dr-link" href={FEES_REPORT_CSV_LICENCE_URL} rel="license noopener" target="_blank">{FEES_REPORT_CSV_LICENCE}</a>
+            with a link to this page. For brand assets and facts about KERSIVO, see <a class="dr-link" href="/about#press">About KERSIVO</a>.
+          </p>
         </div>
       </div>
     </section>
@@ -357,22 +382,25 @@ const cell = (value: number | null) => (value === null ? 'Quote' : formatReportG
 </LandingLayout>
 
 <script>
-  const bindCitation = () => {
-    const button = document.querySelector<HTMLButtonElement>('[data-copy-citation]');
-    const status = document.querySelector<HTMLElement>('[data-copy-status]');
-    const text = document.getElementById('dr-citation')?.textContent?.trim();
-    if (!button || !status || !text || button.dataset.bound === 'true') return;
-    button.dataset.bound = 'true';
-    button.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(text);
-        status.textContent = 'Citation copied.';
-      } catch {
-        status.textContent = 'Copy failed. Select the text above instead.';
-      }
+  const bindCopyButtons = () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-target]').forEach((button) => {
+      if (button.dataset.bound === 'true') return;
+      const targetId = button.dataset.copyTarget!;
+      const status = document.querySelector<HTMLElement>(`[data-copy-status="${targetId}"]`);
+      const text = document.getElementById(targetId)?.textContent?.trim();
+      if (!status || !text) return;
+      button.dataset.bound = 'true';
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(text);
+          status.textContent = button.dataset.copyDone ?? 'Copied.';
+        } catch {
+          status.textContent = 'Copy failed. Select the text above instead.';
+        }
+      });
     });
   };
 
-  bindCitation();
-  document.addEventListener('astro:page-load', bindCitation);
+  bindCopyButtons();
+  document.addEventListener('astro:page-load', bindCopyButtons);
 </script>

@@ -261,6 +261,76 @@ export const FEES_REPORT_METHODOLOGY: readonly string[] = [
 
 export const FEES_REPORT_CITATION = `KERSIVO, “What booking software costs a UK barbershop: fees report”, ${FEES_REPORT_EDITION}, updated ${FEES_REPORT_LAST_UPDATED_LABEL}. https://kersivo.co.uk${FEES_REPORT_PAGE_PATH}`;
 
+/**
+ * Ready-to-quote paragraph for journalists and writers. Every figure is derived from the
+ * tables above; the last sentence discloses that KERSIVO sells booking software.
+ */
+export const FEES_REPORT_PRESS_SUMMARY = `According to KERSIVO’s UK barber booking software fees report (${FEES_REPORT_EDITION}, updated ${FEES_REPORT_LAST_UPDATED_LABEL}), booking software costs a barbershop from £0 on free plans up to ${formatReportGbp(highestMonthly)} a month for ${largest} barbers, before card fees. On a £25 first visit, the published marketplace fee for a new client is ${formatReportGbp(treatwellFee25)} on Treatwell, ${formatReportGbp(freshaFee25)} on Fresha and ${formatReportGbp(booksyFee25)} on Booksy when Boost brings the client, each before VAT. The card fee on a ${formatReportGbp(EXAMPLE_PAYMENT_GBP)} online payment runs from ${formatReportGbp(cheapestCard.feeOnExample)} to ${formatReportGbp(priciestCard.feeOnExample)}. KERSIVO sells booking software; every figure comes from the providers’ official UK pricing pages, with the date each was checked.`;
+
+/* ---------------------------------- CSV ---------------------------------- */
+
+export const FEES_REPORT_CSV_PATH = `${FEES_REPORT_PAGE_PATH}/fees.csv`;
+export const FEES_REPORT_CSV_FILENAME = `kersivo-barber-booking-fees-uk-${FEES_REPORT_LAST_UPDATED_ISO}.csv`;
+export const FEES_REPORT_CSV_LICENCE = 'CC BY 4.0';
+export const FEES_REPORT_CSV_LICENCE_URL = 'https://creativecommons.org/licenses/by/4.0/';
+
+/** Byte order mark so Excel reads the file as UTF-8 and shows £ correctly. */
+export const CSV_BOM = String.fromCharCode(0xfeff);
+
+const CSV_HEADER = ['table', 'system', 'detail', 'input', 'value_gbp', 'note'] as const;
+
+function csvCell(value: string | number): string {
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/**
+ * The three report tables in one long-format CSV (one figure per row), so a journalist or
+ * another tool can reuse the numbers. Built from the same constants as the page.
+ */
+export function buildFeesReportCsv(): string {
+  const rows: (string | number)[][] = [];
+  for (const row of FEES_REPORT_COST_ROWS) {
+    row.monthly.forEach((value, index) => {
+      const size = FEES_REPORT_TEAM_SIZES[index];
+      rows.push([
+        'monthly_cost',
+        row.name,
+        'Monthly cost, VAT included where added, direct bookings only',
+        `${size} ${size === 1 ? 'barber' : 'barbers'}`,
+        value === null ? '' : value.toFixed(2),
+        value === null ? 'Quote: no published price that can be calculated' : '',
+      ]);
+    });
+  }
+  for (const row of FEES_REPORT_NEW_CLIENT_ROWS) {
+    row.fees.forEach((fee, index) => {
+      rows.push([
+        'new_client_fee',
+        row.name,
+        `${row.rate}; ${row.when}`,
+        `${formatReportGbp(FEES_REPORT_NEW_CLIENT_PRICES[index])} first visit`,
+        fee.toFixed(2),
+        'Before VAT',
+      ]);
+    });
+  }
+  for (const row of FEES_REPORT_CARD_ROWS) {
+    rows.push([
+      'card_fee',
+      row.name,
+      `${row.channel}; ${formatCardRate(row)}; VAT: ${CARD_VAT_LABEL[row.vat]}`,
+      `${formatReportGbp(EXAMPLE_PAYMENT_GBP)} online payment`,
+      row.feeOnExample.toFixed(2),
+      'Standard UK card',
+    ]);
+  }
+  for (const name of FEES_REPORT_CARD_NOT_PUBLISHED) {
+    rows.push(['card_fee', name, '', `${formatReportGbp(EXAMPLE_PAYMENT_GBP)} online payment`, '', 'No UK rate published']);
+  }
+  return CSV_BOM + [CSV_HEADER, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
+}
+
 /* ---------------------------------- FAQ ---------------------------------- */
 
 export type ReportFaqItem = { question: string; answer: string };
@@ -330,8 +400,13 @@ export function buildFeesReportJsonLd(): Record<string, unknown>[] {
       dateModified: FEES_REPORT_LAST_UPDATED_ISO,
       spatialCoverage: { '@type': 'Place', name: 'United Kingdom' },
       isAccessibleForFree: true,
-      license: 'https://creativecommons.org/licenses/by/4.0/',
+      license: FEES_REPORT_CSV_LICENCE_URL,
       citation: FEES_REPORT_CITATION,
+      distribution: {
+        '@type': 'DataDownload',
+        encodingFormat: 'text/csv',
+        contentUrl: `${siteUrl}${FEES_REPORT_CSV_PATH}`,
+      },
       isBasedOn: FEES_REPORT_SOURCES.map((source) => source.url),
     },
     {

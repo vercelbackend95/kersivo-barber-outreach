@@ -159,6 +159,25 @@ export const ABOUT_AT_A_GLANCE: readonly { label: string; value: string; href?: 
   { label: 'Contact', value: KERSIVO_CONTACT_EMAIL, href: `mailto:${KERSIVO_CONTACT_EMAIL}` },
 ];
 
+/* ------------------------------ Press and writers ------------------------------ */
+
+export const ABOUT_PRESS_TITLE = 'For press and writers';
+
+export const ABOUT_PRESS_INTRO =
+  'Writing about barbershop booking software? Use the name, description and logo below, and the dated figures from the KERSIVO fees report. Email us for anything else.';
+
+export const ABOUT_PRESS_NAME_NOTE = 'KERSIVO, written in capitals.';
+
+export type AboutPressAsset = { label: string; detail: string; href: string };
+
+export const ABOUT_PRESS_LOGOS: readonly AboutPressAsset[] = [
+  { label: 'Logo for light backgrounds', detail: 'SVG', href: '/images/brand/kersivo-lockup-horizontal.svg' },
+  { label: 'Logo for light backgrounds', detail: 'PNG, 1200 × 289', href: '/images/brand/kersivo-lockup-horizontal.png' },
+  { label: 'Logo for dark backgrounds', detail: 'SVG', href: '/images/brand/kersivo-lockup-horizontal-reversed.svg' },
+  { label: 'Logo for dark backgrounds', detail: 'PNG, 1200 × 289', href: '/images/brand/kersivo-lockup-horizontal-reversed.png' },
+  { label: 'K mark', detail: 'PNG, 512 × 512', href: '/images/brand/kersivo-mark.png' },
+];
+
 export function getAboutOfficialProfiles(): readonly { label: string; href: string }[] {
   return getFooterSocialLinks().map((link) => ({ label: link.name, href: link.href }));
 }

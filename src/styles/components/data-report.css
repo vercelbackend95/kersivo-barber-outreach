@@ -419,6 +419,21 @@
   gap: 0.75rem;
 }
 
+.dr-press {
+  margin-top: 1.25rem;
+}
+
+.dr-press__title {
+  margin: 0;
+  color: var(--fg);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.dr-press .dr-note {
+  margin: 0;
+}
+
 .dr-cite__status {
   color: var(--dr-small);
   font-size: 0.82rem;
