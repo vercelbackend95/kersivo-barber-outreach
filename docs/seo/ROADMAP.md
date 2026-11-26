@@ -64,7 +64,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 Seven-stage plan in `docs/seo/GEO-AEO-PLAN.md` (answer-first, query fan-out, brand mentions, snippet eligibility, entity/E-E-A-T, llms.txt, AI visibility metrics). Stage 1 (answer-first Insights): `docs/seo/geo-aeo-1-changelog.md`. Stage 2 items 1–4 (query fan-out map, FAQ gaps): `docs/seo/geo-aeo-2-fan-out-map.md`. Stage 3 code items 2–3 (fees report CSV, quotable paragraph, press section on /about): `docs/seo/geo-aeo-3-press-changelog.md`. Stage 4 (snippet directives, indexability checks): `docs/seo/geo-aeo-4-changelog.md`. Stage 5 (editorial standards page, publishingPrinciples, citation, knowsAbout): `docs/seo/geo-aeo-5-changelog.md`. Stage 6 (/llms-full.txt): `docs/seo/geo-aeo-6-changelog.md`. Stage 7 (AI visibility log, AI bot visit report): `docs/seo/geo-aeo-7-changelog.md`.
 
 ## Audit of 26 Nov 2026 — P1 done
-Titles without zero-fees claims and descriptions with the Stripe qualifier (guarded by `claims-guard`), sitemap lastmod that follows content changes (`CONTENT_CHANGED_ISO` in `src/lib/seo/pageDates.ts`), 3-day IndexNow window: `docs/seo/audit-p1-claims-lastmod-changelog.md`. Open decision: whether the Insights "Short answer" block moves the articles' sitemap lastmod.
+Titles without zero-fees claims and descriptions with the Stripe qualifier (guarded by `claims-guard`), sitemap lastmod that follows content changes (`CONTENT_CHANGED_ISO` in `src/lib/seo/pageDates.ts`), 3-day IndexNow window, Insights article lastmod moved by the "Short answer" template change (`INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO`): `docs/seo/audit-p1-claims-lastmod-changelog.md`.
 
 ## Small leftovers
 - New OG image (no "ZERO COMMISSION"; needs a design).

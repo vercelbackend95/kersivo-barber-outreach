@@ -83,15 +83,11 @@ describe('marketing sitemap', () => {
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
     expect(byLoc['https://kersivo.co.uk/insights']).toBe(getInsightsIndexLastmod());
-    expect(byLoc['https://kersivo.co.uk/insights/barber-commission-pay-minimum-wage-uk']).toBe('2026-10-29');
-    expect(byLoc['https://kersivo.co.uk/insights/barbershop-client-retention-second-visit']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/barber-dermatitis-skin-care-hse']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/barbershop-christmas-opening-hours-planning']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/how-to-price-haircut-uk-barber']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/barbershop-gift-vouchers-uk']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/barbershop-card-payment-fees-uk']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/get-more-barbershop-clients-locally-uk']).toBe('2026-10-17');
-    expect(byLoc['https://kersivo.co.uk/insights/google-reviews-barbershop-uk-rules']).toBe('2026-10-17');
+    // Every article got the "Short answer" block on 26 Nov 2026 (INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO);
+    // their visible "Updated" dates and Article dateModified stay as they were.
+    const articleLocs = locs.filter((loc) => /\/insights\/(?!category\/|editorial-standards$)[^/]+$/.test(loc));
+    expect(articleLocs.length).toBeGreaterThanOrEqual(20);
+    for (const loc of articleLocs) expect(byLoc[loc], loc).toBe('2026-11-26');
     // Every URL has a content date. Archives use the newest dateModified of the articles they list.
     for (const entry of entries) expect(entry.lastmod, entry.loc).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBe('2026-10-29');

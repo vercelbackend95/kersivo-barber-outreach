@@ -40,7 +40,19 @@ Twelve pages changed in November without their sitemap `<lastmod>` moving, becau
 
 - The audit suggested that WebPage `dateModified` also use the later date. It does on the homepage and `/pricing` (no visible date there), but on pages with a visible "Last updated" date `dateModified` keeps mirroring that date, so the page and its structured data never disagree.
 - `/free-preview` is not in `CONTENT_CHANGED_ISO`: its only change was the demo shop name in an example caption.
-- Insights "Short answer" blocks (audit section 3c, step 3) are not in this PR: that needs a decision on whether the block counts as a content change. Until then, those articles are on the manual list below.
+- Insights (audit section 3c, step 3, approved by the founder on 26 Nov): see below.
+
+### Insights: the "Short answer" block moves article lastmod
+
+All 20 published articles got the "Short answer" block under the H1 on 26 Nov 2026 (GEO/AEO stage 1, PR #315). It changes the first screen of every article, so search engines should recrawl them, but the articles' substance did not change, so their visible "Updated" line and Article `dateModified` stay as they were.
+
+| File | Change |
+|---|---|
+| `src/lib/seo/insights.ts` | `INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO = '2026-11-26'` and `getInsightsArticleSitemapLastmod()`: an article's sitemap lastmod is the later of its own date and the template date. The hub and category archives keep the newest article's own date, because their article cards did not change. An article published after 26 Nov keeps its own date. |
+| `src/lib/seo/insightsPublication.test.ts` | New test: every article's sitemap lastmod is the later of the two dates, its Article `dateModified` is its own date, and the hub and archives are unchanged. |
+| `src/lib/seo/marketingSitemap.test.ts` | Article lastmod expectations now 26 Nov. |
+
+Move the constant only for a change that alters what every article page says (not for styling).
 
 ### How to keep it right
 
@@ -48,7 +60,7 @@ When a PR adds an FAQ, a section or an answer block, or changes a title or descr
 
 ## P1-3: reindexing (founder actions)
 
-IndexNow picks up the changes on its own: the first 06:40 UTC run after the merge submits every URL with lastmod in the last three days (all the 26 Nov pages above, plus the 24–25 Nov pages if the merge happens by 27 November). Google needs Search Console, and Bing should get the rest by hand.
+IndexNow picks up the changes on its own: the first 06:40 UTC run after the merge submits every URL with lastmod in the last three days (all the 26 Nov pages above and all 20 Insights articles if the merge happens by 29 November; the 24–25 Nov pages only if it happens by 27–28 November). Google needs Search Console, and Bing should get the rest by hand.
 
 1. Search Console and Bing Webmaster Tools: resubmit `https://kersivo.co.uk/sitemap.xml`.
 2. Search Console → URL Inspection → Request indexing, spread over 2–3 days (daily limit), in this order:
@@ -56,7 +68,7 @@ IndexNow picks up the changes on its own: the first 06:40 UTC run after the merg
    - Rebuilt or retitled: `/`, `/compare`, `/pricing`, `/starter`, `/vagaro-alternative`, `/nearcut-alternative`, `/phorest-alternative`, `/squire-alternative`, `/barbershop-online-booking`, `/barbershop-website-design`, `/barbershop-websites`, `/barber-booking-fees-uk`, `/about`.
    - Rebuilt on 14 Nov (skip any whose "Last crawl" in URL Inspection is after 14 Nov): `/booksy-alternative`, `/fresha-alternative`, `/treatwell-alternative`, `/timely-alternative`, `/barber-software-cost-calculator`.
    - Insights with the new "Short answer" block: `how-much-do-barbershop-owners-make-uk`, `barbershop-walk-ins-vs-appointments`, `apprentice-barber-funding-costs-2026`, `barber-dermatitis-skin-care-hse`, `barbershop-business-rates-2026-england`, `barber-commission-pay-minimum-wage-uk`, `barbershop-no-show-cost-when-deposit-makes-sense`.
-3. Bing Webmaster Tools → URL Submission: the 14 Nov rebuilds and the seven Insights articles above (IndexNow will not submit them, their lastmod is older than three days).
+3. Bing Webmaster Tools → URL Submission: the 14 Nov rebuilds above (IndexNow will not submit them, their lastmod is older than three days), and anything IndexNow missed if the merge happens after 29 November.
 
 ## Checks
 
