@@ -36,12 +36,32 @@
     },
     {
       "source": "/barbershop-booking-system",
-      "destination": "/",
+      "destination": "/barbershop-online-booking",
       "permanent": true
     },
     {
       "source": "/home-v2",
       "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/packages",
+      "destination": "/pricing",
+      "permanent": true
+    },
+    {
+      "source": "/contact",
+      "destination": "/#contact",
+      "permanent": true
+    },
+    {
+      "source": "/process",
+      "destination": "/#setup",
+      "permanent": true
+    },
+    {
+      "source": "/work",
+      "destination": "/barbershop-websites",
       "permanent": true
     }
   ],

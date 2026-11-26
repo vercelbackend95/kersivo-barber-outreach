@@ -482,10 +482,30 @@ export function getInsightsIndexLastmod(): string {
   return getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[])!;
 }
 
+/**
+ * Hub and category archive changes that left their article cards alone (a new title, description or
+ * visible intro), so the newest article date does not move. Sitemap lastmod (and so IndexNow) takes the
+ * later of the two dates; the same rule as CONTENT_CHANGED_ISO for static pages (src/lib/seo/pageDates.ts).
+ * Add a line, dated the day it ships, whenever a PR changes what a listing page says.
+ */
+export const INSIGHTS_LISTING_CONTENT_CHANGED_ISO: Readonly<Record<string, string>> = {
+  // Visible subtitle "Barbershop business insights for UK owners" and a new lead (audit P3).
+  [INSIGHTS_INDEX_PATH]: '2026-11-26',
+  // Fuller meta descriptions; Industry & People also took the other categories' title pattern (audit P3).
+  [getInsightsCategory('clients-growth').path]: '2026-11-26',
+  [getInsightsCategory('tools-payments').path]: '2026-11-26',
+  [getInsightsCategory('industry-people').path]: '2026-11-26',
+};
+
+function withListingContentChange(path: string, lastmod: string): string {
+  const changed = INSIGHTS_LISTING_CONTENT_CHANGED_ISO[path];
+  return changed && changed > lastmod ? changed : lastmod;
+}
+
 export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: string }> {
   const articles = INSIGHTS_PUBLISHED_ARTICLES as readonly InsightsPublishedArticle[];
   return [
-    { path: INSIGHTS_INDEX_PATH, lastmod: getInsightsIndexLastmod() },
+    { path: INSIGHTS_INDEX_PATH, lastmod: withListingContentChange(INSIGHTS_INDEX_PATH, getInsightsIndexLastmod()) },
     ...articles.map((article) => ({
       path: article.path,
       lastmod: getInsightsArticleSitemapLastmod(article),
@@ -493,10 +513,12 @@ export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: st
     /** Archives change when an article they list does; an empty archive follows the hub. */
     ...getIndexableInsightsCategorySitemapEntries().map((entry) => ({
       path: entry.path,
-      lastmod:
+      lastmod: withListingContentChange(
+        entry.path,
         getNewestInsightsDateModified(
           articles.filter((article) => getInsightsCategory(article.categoryId).path === entry.path),
         ) ?? getInsightsIndexLastmod(),
+      ),
     })),
   ];
 }

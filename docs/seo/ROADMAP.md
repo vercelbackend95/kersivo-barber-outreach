@@ -69,12 +69,15 @@ Titles without zero-fees claims and descriptions with the Stripe qualifier (guar
 ## Audit of 26 Nov 2026 — P2 done
 Snippets with a pain point, a hook and the price on the ten alternatives, reports, retail pickup, online booking and website design (free-preview aware). Each city writes its own title and description, and the city pages now get contextual links from the three pillar pages. One `#software` / `#organization` entity graph. llms.txt and llms-full.txt list the home page, free preview, Booksy vs own website, city guides and the Insights hub: `docs/seo/audit-p2-changelog.md`.
 
+## Reindexing check of 26 Nov 2026 — done
+Production crawl after P3 (66/66 sitemap URLs indexable, JSON-LD valid, IndexNow returning 200), the founder's step-by-step reindexing list for Search Console, Bing and AI: `docs/seo/reindex-2026-11-26.md`. Follow-up: old URLs that Bingbot still requested now redirect permanently, the Insights hub and three archives get their own lastmod, and the Capterra, GetApp and G2 profiles are in `sameAs`: `docs/seo/old-urls-insights-lastmod-changelog.md`.
+
 ## Small leftovers
 - New OG image (no "ZERO COMMISSION"; needs a design).
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).
 
 ## Founder actions (outside code)
 - GA4: follow `docs/analytics/ga4-setup.md` (internal traffic filter → Active, key events, "AI assistants" channel group, annotation, DebugView check). `setup_enquiry_submit` can also be a key event.
-- Search Console and Bing Webmaster Tools: resubmit the sitemap and request indexing for the list in `docs/seo/audit-p1-claims-lastmod-changelog.md` (P1-3), after that PR is live.
-- After the audit P2 PR is live: request indexing for the list in `docs/seo/audit-p2-changelog.md`, then in 2–4 weeks compare CTR per page in Search Console (alternatives and /barbershop-website-design first).
+- Search Console and Bing Webmaster Tools: work through `docs/seo/reindex-2026-11-26.md` (it replaces the reindexing lists in the P1 and P2 changelogs), then in 2–4 weeks compare CTR per page in Search Console (alternatives and /barbershop-website-design first).
+- Off-site profiles: Capterra, GetApp and G2 are in `sameAs` (`KERSIVO_OFF_SITE_PROFILES`). Check that each profile's description matches `docs/seo/ai-visibility-playbook.md` section 1; send new profile URLs (Trustpilot, Product Hunt, UK directories) as they go live.
 - Off-site (not in this roadmap, high value): directory listings (Capterra/GetApp, G2, etc.) to fix the brand SERP.

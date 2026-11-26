@@ -82,20 +82,23 @@ describe('marketing sitemap', () => {
     expect(new Set(locs).size).toBe(EXPECTED_COUNT);
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
-    expect(byLoc['https://kersivo.co.uk/insights']).toBe(getInsightsIndexLastmod());
+    // The hub's subtitle changed on 26 Nov 2026 (INSIGHTS_LISTING_CONTENT_CHANGED_ISO), after its newest article.
+    expect(getInsightsIndexLastmod()).toBe('2026-10-29');
+    expect(byLoc['https://kersivo.co.uk/insights']).toBe('2026-11-26');
     // Every article got the "Short answer" block on 26 Nov 2026 (INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO);
     // their visible "Updated" dates and Article dateModified stay as they were.
     const articleLocs = locs.filter((loc) => /\/insights\/(?!category\/|editorial-standards$)[^/]+$/.test(loc));
     expect(articleLocs.length).toBeGreaterThanOrEqual(20);
     for (const loc of articleLocs) expect(byLoc[loc], loc).toBe('2026-11-26');
-    // Every URL has a content date. Archives use the newest dateModified of the articles they list.
+    // Every URL has a content date. Archives use the newest dateModified of the articles they list, or the
+    // date their own title or description changed (INSIGHTS_LISTING_CONTENT_CHANGED_ISO, audit P3).
     for (const entry of entries) expect(entry.lastmod, entry.loc).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(byLoc['https://kersivo.co.uk/insights/category/business-profit']).toBe('2026-10-29');
-    expect(byLoc['https://kersivo.co.uk/insights/category/clients-growth']).toBe('2026-10-18');
+    expect(byLoc['https://kersivo.co.uk/insights/category/clients-growth']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/insights/category/brand-marketing']).toBe('2026-10-17');
     expect(byLoc['https://kersivo.co.uk/insights/category/bookings-operations']).toBe('2026-10-29');
-    expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBe('2026-10-19');
-    expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-10-29');
+    expect(byLoc['https://kersivo.co.uk/insights/category/tools-payments']).toBe('2026-11-26');
+    expect(byLoc['https://kersivo.co.uk/insights/category/industry-people']).toBe('2026-11-26');
     // Same constant as the homepage WebPage dateModified.
     expect(byLoc['https://kersivo.co.uk/']).toBe(HOMEPAGE_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-11-26'); // rebuilt 14 Nov 2026, migration FAQ 26 Nov

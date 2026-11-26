@@ -10,6 +10,7 @@ import {
   INSIGHTS_INDEX_TITLE,
   INSIGHTS_PUBLISHED_ARTICLES,
   INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO,
+  INSIGHTS_LISTING_CONTENT_CHANGED_ISO,
   getInsightsArticleDateModified,
   getInsightsArticleSitemapLastmod,
   getInsightsIndexLastmod,
@@ -77,9 +78,11 @@ describe('Insights publication safety', () => {
     }
 
     const insightsSitemap = buildInsightsSitemapEntries();
+    // The hub's newest article date, or its own content change (INSIGHTS_LISTING_CONTENT_CHANGED_ISO) when later.
+    const hubChanged = INSIGHTS_LISTING_CONTENT_CHANGED_ISO[INSIGHTS_INDEX_PATH];
     expect(insightsSitemap[0]).toEqual({
       path: INSIGHTS_INDEX_PATH,
-      lastmod: getInsightsIndexLastmod(),
+      lastmod: hubChanged && hubChanged > getInsightsIndexLastmod() ? hubChanged : getInsightsIndexLastmod(),
     });
     const publishedPaths = INSIGHTS_PUBLISHED_ARTICLES.map((article) => article.path);
     const categories = [
@@ -159,13 +162,35 @@ describe('Insights publication safety', () => {
       const [, jsonLd] = buildInsightsArticleJsonLd(article) as Record<string, any>[];
       expect(jsonLd.dateModified, article.slug).toBe(own);
     }
-    // Hub and category archives list article cards, which the template change did not touch.
-    expect(byPath.get(INSIGHTS_INDEX_PATH)).toBe(getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES));
+    // Hub and category archives list article cards, which the template change did not touch: an archive
+    // without its own listing change keeps its newest article date.
+    expect(getInsightsIndexLastmod()).toBe(getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES));
     expect(byPath.get('/insights/category/business-profit')).toBe('2026-10-29');
 
     // An article published after the template change keeps its own date.
     expect(getInsightsArticleSitemapLastmod({ publishedDate: '2026-12-03' })).toBe('2026-12-03');
     expect(getInsightsArticleSitemapLastmod({ publishedDate: '2026-10-01', updatedDate: '2026-10-20' })).toBe('2026-11-26');
+  });
+
+  it('moves hub and archive lastmod for a listing change without touching their article dates', () => {
+    const byPath = new Map(buildInsightsSitemapEntries().map((entry) => [entry.path, entry.lastmod]));
+    const entries = Object.entries(INSIGHTS_LISTING_CONTENT_CHANGED_ISO);
+    expect(entries.length).toBeGreaterThan(0);
+    for (const [path, changed] of entries) {
+      // Every key is a listing page in the sitemap, with a valid date that wins over its article date.
+      expect(byPath.has(path), path).toBe(true);
+      expect(changed, path).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(byPath.get(path), path).toBe(changed);
+      expect(path === INSIGHTS_INDEX_PATH || path.startsWith('/insights/category/'), path).toBe(true);
+    }
+    // Audit P3 (26 Nov 2026): the hub subtitle and three category snippets changed.
+    expect(byPath.get(INSIGHTS_INDEX_PATH)).toBe('2026-11-26');
+    expect(byPath.get('/insights/category/clients-growth')).toBe('2026-11-26');
+    expect(byPath.get('/insights/category/tools-payments')).toBe('2026-11-26');
+    expect(byPath.get('/insights/category/industry-people')).toBe('2026-11-26');
+    // Archives whose listing did not change keep their newest article date.
+    expect(byPath.get('/insights/category/brand-marketing')).toBe('2026-10-17');
+    expect(byPath.get('/insights/category/bookings-operations')).toBe('2026-10-29');
   });
 
   it('keeps related links on published destinations only', () => {
