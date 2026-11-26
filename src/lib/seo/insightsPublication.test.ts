@@ -9,7 +9,11 @@ import {
   INSIGHTS_INDEX_PATH,
   INSIGHTS_INDEX_TITLE,
   INSIGHTS_PUBLISHED_ARTICLES,
+  INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO,
+  getInsightsArticleDateModified,
+  getInsightsArticleSitemapLastmod,
   getInsightsIndexLastmod,
+  getNewestInsightsDateModified,
   buildInsightsArticleJsonLd,
   buildInsightsSitemapEntries,
   isInsightsArticlePublished,
@@ -146,6 +150,26 @@ describe('Insights publication safety', () => {
 
     const [, revised] = buildInsightsArticleJsonLd({ ...input, updatedDate: '2026-10-28' }) as Record<string, any>[];
     expect(revised).toHaveProperty('dateModified', '2026-10-28');
+  });
+
+  it('moves article sitemap lastmod to the "Short answer" template date without touching visible dates', () => {
+    expect(INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO).toBe('2026-11-26');
+    const byPath = new Map(buildInsightsSitemapEntries().map((entry) => [entry.path, entry.lastmod]));
+    for (const article of INSIGHTS_PUBLISHED_ARTICLES) {
+      const own = getInsightsArticleDateModified(article);
+      const lastmod = byPath.get(article.path);
+      expect(lastmod, article.slug).toBe(own > INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO ? own : INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO);
+      // The visible "Updated" line and Article dateModified keep the article's own date.
+      const [, jsonLd] = buildInsightsArticleJsonLd(article) as Record<string, any>[];
+      expect(jsonLd.dateModified, article.slug).toBe(own);
+    }
+    // Hub and category archives list article cards, which the template change did not touch.
+    expect(byPath.get(INSIGHTS_INDEX_PATH)).toBe(getNewestInsightsDateModified(INSIGHTS_PUBLISHED_ARTICLES));
+    expect(byPath.get('/insights/category/business-profit')).toBe('2026-10-29');
+
+    // An article published after the template change keeps its own date.
+    expect(getInsightsArticleSitemapLastmod({ publishedDate: '2026-12-03' })).toBe('2026-12-03');
+    expect(getInsightsArticleSitemapLastmod({ publishedDate: '2026-10-01', updatedDate: '2026-10-20' })).toBe('2026-11-26');
   });
 
   it('keeps related links on published destinations only', () => {

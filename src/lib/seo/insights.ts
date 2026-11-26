@@ -414,6 +414,21 @@ export function getInsightsArticleDateModified(article: { publishedDate: string;
   return article.updatedDate && article.updatedDate.length > 0 ? article.updatedDate : article.publishedDate;
 }
 
+/**
+ * When the article template last changed for every article at once, without changing any article's
+ * substance: 26 Nov 2026, the "Short answer" block under the H1 (GEO/AEO stage 1, PR #315).
+ * Only article sitemap <lastmod> values (and so IndexNow) use it. The visible "Updated" line and Article
+ * dateModified keep the article's own date, and the hub and category archives keep theirs: their
+ * article cards did not change. Move it only for a change that alters what every article page says.
+ */
+export const INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO = '2026-11-26';
+
+/** Sitemap lastmod of an article: its content date, or the template revision date when that is later. */
+export function getInsightsArticleSitemapLastmod(article: { publishedDate: string; updatedDate?: string }): string {
+  const modified = getInsightsArticleDateModified(article);
+  return INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO > modified ? INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO : modified;
+}
+
 /** Newest content date among the given articles (category archives, hub). */
 export function getNewestInsightsDateModified(
   articles: readonly { publishedDate: string; updatedDate?: string }[],
@@ -473,7 +488,7 @@ export function buildInsightsSitemapEntries(): Array<{ path: string; lastmod: st
     { path: INSIGHTS_INDEX_PATH, lastmod: getInsightsIndexLastmod() },
     ...articles.map((article) => ({
       path: article.path,
-      lastmod: getInsightsArticleDateModified(article),
+      lastmod: getInsightsArticleSitemapLastmod(article),
     })),
     /** Archives change when an article they list does; an empty archive follows the hub. */
     ...getIndexableInsightsCategorySitemapEntries().map((entry) => ({
