@@ -34,6 +34,7 @@ import {
   getAboutOfficialProfiles,
 } from '@/lib/seo/aboutPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { EDITORIAL_STANDARDS_PATH } from '@/lib/insights/editorialStandards';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { ABOUT_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -149,6 +150,10 @@ const officialProfiles = getAboutOfficialProfiles();
           <h2 id="about-support-title" class="fresha-alt__h2">Support and contact</h2>
         </header>
         <p>{ABOUT_SUPPORT_PARAGRAPH}</p>
+        <p class="company-insights-note">
+          KERSIVO also publishes <a href="/insights">KERSIVO Insights</a>, practical guides for UK barbershop owners. Read
+          <a href={EDITORIAL_STANDARDS_PATH}>how Insights articles are written and checked</a>.
+        </p>
       </div>
     </section>
 

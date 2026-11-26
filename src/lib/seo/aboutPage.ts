@@ -25,8 +25,8 @@ export const ABOUT_PAGE_DESCRIPTION =
 export const ABOUT_PAGE_H1 = 'About KERSIVO';
 
 /** Visible "Last updated" date; also used for sitemap lastmod and WebPage dateModified. */
-export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-11-14';
-export const ABOUT_PAGE_LAST_UPDATED_LABEL = '14 November 2026';
+export const ABOUT_PAGE_LAST_UPDATED_ISO = '2026-11-26';
+export const ABOUT_PAGE_LAST_UPDATED_LABEL = '26 November 2026';
 
 const PRICE = formatGbp(SAAS_MONTHLY_GBP);
 

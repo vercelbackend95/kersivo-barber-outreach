@@ -28,6 +28,7 @@ import {
   splitInsightsBodyAtMiddle,
 } from '@/lib/insights/insightsCta';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { EDITORIAL_STANDARDS_PATH, extractInsightsCitations } from '@/lib/insights/editorialStandards';
 import { findInsightsShortAnswerSlot, getInsightsShortAnswer } from '@/lib/insights/insightsShortAnswers';
 
 interface Props {
@@ -141,6 +142,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
           ogImage,
           categoryId,
           abstract: shortAnswer?.answer,
+          citation: bodyRefs ? extractInsightsCitations(bodyRefs) : undefined,
         })
       : undefined
   }
@@ -198,6 +200,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
           <p>KERSIVO Insights explores the decisions behind running a barbershop in the UK, from reputation and client relationships to costs and bookings.</p>
           <div class="insights-read-next__links">
             <a href="/insights">Explore Insights <span aria-hidden="true">↗</span></a>
+            <a href={EDITORIAL_STANDARDS_PATH}>How we check articles <span aria-hidden="true">↗</span></a>
             <a href="/about">About KERSIVO <span aria-hidden="true">↗</span></a>
           </div>
         </div>

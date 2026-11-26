@@ -30,6 +30,7 @@ const EXPECTED_LOCS = [
   'https://kersivo.co.uk/barbershop-reports',
   'https://kersivo.co.uk/barbershop-retail-pickup',
   'https://kersivo.co.uk/about',
+  'https://kersivo.co.uk/insights/editorial-standards',
   'https://kersivo.co.uk/compare',
   'https://kersivo.co.uk/booksy-alternative',
   'https://kersivo.co.uk/fresha-alternative',
@@ -104,7 +105,7 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-13'); // rebuilt 13 Nov 2026
     expect(byLoc['https://kersivo.co.uk/barbershop-website-design']).toBe('2026-11-25'); // rebuilt 25 Nov 2026
     expect(byLoc['https://kersivo.co.uk/barbershop-online-booking']).toBe('2026-11-25'); // last commit touching the page source
-    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-13');
     expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-11-14');

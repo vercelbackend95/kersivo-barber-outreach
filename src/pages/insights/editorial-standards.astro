@@ -1,0 +1,86 @@
+---
+/**
+ * How KERSIVO Insights is written and checked (GEO/AEO stage 5, E-E-A-T without a personal byline).
+ * Copy: src/lib/insights/editorialStandards.ts. Every Insights Article JSON-LD points here (publishingPrinciples).
+ */
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import InsightsMasthead from '@/components/insights/InsightsMasthead.astro';
+import InsightsShortAnswer from '@/components/insights/InsightsShortAnswer.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import {
+  EDITORIAL_STANDARDS_BREADCRUMB,
+  EDITORIAL_STANDARDS_DESCRIPTION,
+  EDITORIAL_STANDARDS_H1,
+  EDITORIAL_STANDARDS_LAST_UPDATED_ISO,
+  EDITORIAL_STANDARDS_LAST_UPDATED_LABEL,
+  EDITORIAL_STANDARDS_PATH,
+  EDITORIAL_STANDARDS_SECTIONS,
+  EDITORIAL_STANDARDS_SHORT_ANSWER,
+  EDITORIAL_STANDARDS_TITLE,
+  buildEditorialStandardsJsonLd,
+} from '@/lib/insights/editorialStandards';
+import '@/styles/components/insights-preview.css';
+
+export const prerender = true;
+---
+
+<LandingLayout
+  title={EDITORIAL_STANDARDS_TITLE}
+  description={EDITORIAL_STANDARDS_DESCRIPTION}
+  canonicalPath={EDITORIAL_STANDARDS_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildEditorialStandardsJsonLd()]}
+>
+  <main class="insights-page">
+    <InsightsMasthead
+      page="category"
+      currentLabel={EDITORIAL_STANDARDS_BREADCRUMB}
+      metaLine="Editorial standards for KERSIVO Insights."
+    />
+    <div class="insights-paper">
+      <article class="insights-article insights-standards" aria-labelledby="insights-standards-title">
+        <div class="insights-article__body">
+          <h1 id="insights-standards-title">{EDITORIAL_STANDARDS_H1}</h1>
+          <p class="insights-standards__updated">
+            Last updated <time datetime={EDITORIAL_STANDARDS_LAST_UPDATED_ISO}>{EDITORIAL_STANDARDS_LAST_UPDATED_LABEL}</time>
+          </p>
+          <InsightsShortAnswer shortAnswer={EDITORIAL_STANDARDS_SHORT_ANSWER} />
+          {EDITORIAL_STANDARDS_SECTIONS.map((section) => (
+            <Fragment>
+              <h2 id={section.id}>{section.title}</h2>
+              {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+            </Fragment>
+          ))}
+        </div>
+      </article>
+      <aside class="insights-read-next" aria-label="About KERSIVO Insights">
+        <div class="insights-read-next__inner">
+          <p class="insights-read-next__kicker">ABOUT THIS PUBLICATION</p>
+          <h2>Independent thinking for independent barbers.</h2>
+          <p>KERSIVO Insights explores the decisions behind running a barbershop in the UK, from reputation and client relationships to costs and bookings.</p>
+          <div class="insights-read-next__links">
+            <a href="/insights">Explore Insights <span aria-hidden="true">↗</span></a>
+            <a href="/about">About KERSIVO <span aria-hidden="true">↗</span></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <Footer50 showIntro={false} />
+</LandingLayout>
+
+<style>
+  .insights-standards .insights-article__body > p.insights-standards__updated {
+    margin-top: 0;
+    margin-bottom: 0;
+    color: #5b5e64;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+  }
+  .insights-standards :where(a):focus-visible {
+    outline: 2px solid #852430;
+    outline-offset: 2px;
+  }
+</style>

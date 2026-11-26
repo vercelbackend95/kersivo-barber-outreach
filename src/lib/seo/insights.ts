@@ -10,6 +10,7 @@ import {
   type InsightsCategoryId,
 } from '@/lib/insights/categories';
 import { buildAbsoluteUrl } from './meta';
+import { EDITORIAL_STANDARDS_PATH } from '@/lib/insights/editorialStandards';
 import {
   buildKersivoEntityJsonLd,
   getKersivoOrganizationId,
@@ -584,6 +585,8 @@ export function buildInsightsArticleJsonLd(article: {
   categoryId: InsightsCategoryId;
   /** Answer-first summary (src/lib/insights/insightsShortAnswers.ts), shown under the hero. */
   abstract?: string;
+  /** Sources from the article's References/Sources list (extractInsightsCitations). */
+  citation?: ReadonlyArray<{ '@type': 'CreativeWork'; name: string; url: string }>;
 }) {
   const siteUrl = getPublicSiteUrl();
   const organizationId = getKersivoOrganizationId(siteUrl);
@@ -612,9 +615,14 @@ export function buildInsightsArticleJsonLd(article: {
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
     articleSection: categoryName,
     isAccessibleForFree: true,
+    /** How KERSIVO Insights is written and checked (E-E-A-T without a personal byline). */
+    publishingPrinciples: buildAbsoluteUrl(EDITORIAL_STANDARDS_PATH),
   };
   if (article.abstract) {
     payload.abstract = article.abstract;
+  }
+  if (article.citation && article.citation.length > 0) {
+    payload.citation = article.citation;
   }
   return [
     buildKersivoEntityJsonLd(),

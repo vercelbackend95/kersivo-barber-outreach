@@ -2,6 +2,7 @@ import { CURRENT_DPA_VERSION } from '@/lib/legal/dpaVersion';
 import { COOKIE_POLICY_LAST_UPDATED_ISO, PRIVACY_POLICY_LAST_UPDATED_ISO } from '@/lib/legal/legalPageDates';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import { ABOUT_PAGE_LAST_UPDATED_ISO, ABOUT_PAGE_PATH } from './aboutPage';
+import { EDITORIAL_STANDARDS_LAST_UPDATED_ISO, EDITORIAL_STANDARDS_PATH } from '@/lib/insights/editorialStandards';
 import { ALTERNATIVES_HUB_LAST_UPDATED_ISO, ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { BARBER_COST_CALCULATOR_LAST_UPDATED_ISO, BARBER_COST_CALCULATOR_PAGE_PATH } from './barberCostCalculatorPage';
 import { BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO, BARBERSHOP_ONLINE_BOOKING_PAGE_PATH } from './barbershopOnlineBookingPage';
@@ -65,6 +66,7 @@ export const STATIC_PAGE_LAST_MODIFIED: Readonly<Record<string, string>> = {
   /** City pages (/barbershop-websites/{city}) are dated by their research check date. */
   ...Object.fromEntries(PUBLISHED_CITY_PAGES.map((city) => [getCityPagePath(city), city.checkedIso])),
   [ABOUT_PAGE_PATH]: ABOUT_PAGE_LAST_UPDATED_ISO,
+  [EDITORIAL_STANDARDS_PATH]: EDITORIAL_STANDARDS_LAST_UPDATED_ISO,
   [ALTERNATIVES_HUB_PAGE_PATH]: ALTERNATIVES_HUB_LAST_UPDATED_ISO,
   [BOOKSY_ALTERNATIVE_PAGE_PATH]: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
   [FRESHA_ALTERNATIVE_PAGE_PATH]: FRESHA_ALTERNATIVE_LAST_UPDATED_ISO,

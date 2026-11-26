@@ -67,11 +67,11 @@ Ty (szczegóły w `ai-visibility-playbook.md`, sekcje 2–5):
 3. Decyzja o `Google-Extended` i `GPTBot` (trening modeli): dziś nie są nazwane, więc są dopuszczone. Blokada nie wpływa na AI Overviews, ale wpływa na to, co modele „wiedzą” o KERSIVO bez wyszukiwania. Rekomendacja: zostawić dopuszczone.
 4. Ty: GSC i Bing, sprawdzenie raportu indeksowania i ręczne zgłoszenie stron zmienionych w etapach 1–2.
 
-### Etap 5. Entity + E-E-A-T (kod + Ty)
+### Etap 5. Entity + E-E-A-T (kod + Ty) ✅ kod: `geo-aeo-5-changelog.md`; punkt 4 (Wikidata) czeka na niezależne źródła
 
 1. Strona „How KERSIVO Insights is written and checked” (zasady redakcyjne: źródła, data sprawdzenia, brak sponsorowanych treści, poprawki). Link z każdego artykułu i z `/about`. To E-E-A-T bez nazwiska założyciela.
 2. W Article JSON-LD: `publishingPrinciples` → ta strona, `citation` → źródła z sekcji References, `dateModified` = data sprawdzenia (już jest).
-3. Organization: `knowsAbout` (barbershop booking, deposits, no-shows itd.), `slogan` tylko z zatwierdzonych sformułowań, `sameAs` uzupełniane, gdy profile z etapu 3 będą aktywne.
+3. Organization: `knowsAbout` (barbershop booking, deposits, no-shows itd.), `slogan` tylko z zatwierdzonych sformułowań (brak zatwierdzonego sloganu, więc pominięty), `sameAs` uzupełniane, gdy profile z etapu 3 będą aktywne.
 4. Ty: Wikidata dopiero wtedy, gdy będą niezależne źródła o KERSIVO (bez nich wpis zostanie usunięty).
 
 ### Etap 6. llms.txt (kod, niski priorytet)
