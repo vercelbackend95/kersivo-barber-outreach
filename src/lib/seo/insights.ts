@@ -582,6 +582,8 @@ export function buildInsightsArticleJsonLd(article: {
   heroImage: string;
   ogImage?: string;
   categoryId: InsightsCategoryId;
+  /** Answer-first summary (src/lib/insights/insightsShortAnswers.ts), shown under the hero. */
+  abstract?: string;
 }) {
   const siteUrl = getPublicSiteUrl();
   const organizationId = getKersivoOrganizationId(siteUrl);
@@ -611,6 +613,9 @@ export function buildInsightsArticleJsonLd(article: {
     articleSection: categoryName,
     isAccessibleForFree: true,
   };
+  if (article.abstract) {
+    payload.abstract = article.abstract;
+  }
   return [
     buildKersivoEntityJsonLd(),
     payload,

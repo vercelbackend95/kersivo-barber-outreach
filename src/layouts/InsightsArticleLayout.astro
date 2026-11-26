@@ -7,6 +7,7 @@ import InsightsRelatedReading from '@/components/insights/InsightsRelatedReading
 import InsightsCommercialNext from '@/components/insights/InsightsCommercialNext.astro';
 import InsightsOwnerNote from '@/components/insights/InsightsOwnerNote.astro';
 import InsightsCta from '@/components/insights/InsightsCta.astro';
+import InsightsShortAnswer from '@/components/insights/InsightsShortAnswer.astro';
 import '@/styles/components/insights-preview.css';
 import {
   buildInsightsArticleJsonLd,
@@ -27,6 +28,7 @@ import {
   splitInsightsBodyAtMiddle,
 } from '@/lib/insights/insightsCta';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
+import { findInsightsShortAnswerSlot, getInsightsShortAnswer } from '@/lib/insights/insightsShortAnswers';
 
 interface Props {
   title: string;
@@ -87,11 +89,19 @@ const showCta = isPublic && hasInsightsCta(slug);
 const freePreviewEnabled = isFreePreviewFlowEnabled();
 const midCta = showCta ? getInsightsCta('mid', freePreviewEnabled) : undefined;
 const endCta = showCta ? getInsightsCta('end', freePreviewEnabled) : undefined;
+/** Answer-first block under the hero (GEO/AEO): question + quotable answer, also used as Article.abstract. */
+const shortAnswer = isPublic ? getInsightsShortAnswer(slug) : undefined;
+let bodyLead = '';
 let bodyMain: string | undefined;
 let bodyMid = '';
 let bodyRefs = '';
-if (isPublic && (ownerNote || showCta)) {
-  const html = await Astro.slots.render('default');
+if (isPublic && (shortAnswer || ownerNote || showCta)) {
+  let html = await Astro.slots.render('default');
+  const slot = shortAnswer ? findInsightsShortAnswerSlot(html) : -1;
+  if (slot >= 0) {
+    bodyLead = html.slice(0, slot);
+    html = html.slice(slot);
+  }
   const refsStart = findInsightsReferencesStart(html);
   const main = refsStart >= 0 ? html.slice(0, refsStart) : html;
   bodyRefs = refsStart >= 0 ? html.slice(refsStart) : '';
@@ -130,6 +140,7 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
           heroImage,
           ogImage,
           categoryId,
+          abstract: shortAnswer?.answer,
         })
       : undefined
   }
@@ -157,6 +168,8 @@ const socialAlt = ogImageAlt ?? coverImageAlt ?? headline;
         <div class="insights-article__body">
           {bodyMain !== undefined ? (
             <Fragment>
+              {bodyLead && <Fragment set:html={bodyLead} />}
+              {bodyLead && shortAnswer && <InsightsShortAnswer shortAnswer={shortAnswer} />}
               <Fragment set:html={bodyMain} />
               {midCta && bodyMid && <InsightsCta cta={midCta} />}
               {bodyMid && <Fragment set:html={bodyMid} />}

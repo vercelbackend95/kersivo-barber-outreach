@@ -4,6 +4,7 @@ import { RETAIL_PICKUP_LLMS_SUMMARY, RETAIL_PICKUP_PAGE_PATH } from '@/lib/seo/r
 import { KERSIVO_COMMISSION_CLAIM, NO_SETUP_FEE_SHORT, PRICE_VAT_DISCLAIMER, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { INSIGHTS_PUBLISHED_ARTICLES } from '@/lib/seo/insights';
+import { getInsightsShortAnswer } from '@/lib/insights/insightsShortAnswers';
 import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
 import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -92,7 +93,15 @@ export function buildLlmsTxt(siteUrl: string): string {
     ),
     '',
     '## Insights',
-    ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => link(article.path, article.headline, article.description)),
+    // Answer-first: the article's question and short answer, so an assistant can quote it without fetching the page.
+    ...INSIGHTS_PUBLISHED_ARTICLES.map((article) => {
+      const shortAnswer = getInsightsShortAnswer(article.slug);
+      return link(
+        article.path,
+        article.headline,
+        shortAnswer ? `${shortAnswer.question} ${shortAnswer.answer}` : article.description,
+      );
+    }),
     '',
     '## Optional',
     link('/terms', 'Terms', 'subscription terms'),

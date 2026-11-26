@@ -1,0 +1,15 @@
+---
+import { INSIGHTS_SHORT_ANSWER_LABEL, type InsightsShortAnswer } from '@/lib/insights/insightsShortAnswers';
+
+interface Props {
+  shortAnswer: InsightsShortAnswer;
+}
+
+const { shortAnswer } = Astro.props;
+---
+
+<section class="insights-short-answer" aria-labelledby="insights-short-answer-heading">
+  <p class="insights-short-answer__kicker">{INSIGHTS_SHORT_ANSWER_LABEL}</p>
+  <h2 id="insights-short-answer-heading" class="insights-short-answer__question">{shortAnswer.question}</h2>
+  <p class="insights-short-answer__answer">{shortAnswer.answer}</p>
+</section>
