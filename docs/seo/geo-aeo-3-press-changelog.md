@@ -26,7 +26,7 @@ The plan allowed either. A separate page would be thin (name, description, logos
 
 ## Screenshots
 
-`C:/tmp/kersivo-shots/geo-aeo-3-press/`: `before-` and `after-fees-cite-{375,768,1024,1440}.png` (fees report from "How to cite" down), `before-` and `after-about-press-{375,768,1024,1440}.png` (`/about` from "At a glance" down). Before = production, after = Vercel preview.
+`C:/tmp/kersivo-shots/geo-aeo-3-press/`: `before-` and `after-fees-cite-{375,768,1024,1440}.png` (fees report from "How to cite" down), `before-` and `after-about-press-{375,768,1024,1440}.png` (`/about` from "At a glance" down). Before = production (kersivo.co.uk), after = local dev server on this branch. No horizontal scroll at any width.
 
 ## After merge (founder)
 
