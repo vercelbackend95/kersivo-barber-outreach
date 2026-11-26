@@ -74,7 +74,7 @@ Ty (szczegóły w `ai-visibility-playbook.md`, sekcje 2–5):
 3. Organization: `knowsAbout` (barbershop booking, deposits, no-shows itd.), `slogan` tylko z zatwierdzonych sformułowań (brak zatwierdzonego sloganu, więc pominięty), `sameAs` uzupełniane, gdy profile z etapu 3 będą aktywne.
 4. Ty: Wikidata dopiero wtedy, gdy będą niezależne źródła o KERSIVO (bez nich wpis zostanie usunięty).
 
-### Etap 6. llms.txt (kod, niski priorytet)
+### Etap 6. llms.txt (kod, niski priorytet) ✅ `geo-aeo-6-changelog.md` (`/llms-full.txt`: odpowiedzi i FAQ z 25 stron produktu i porównań)
 
 1. Krótkie odpowiedzi z etapu 1 w `/llms.txt` (robione razem z etapem 1).
 2. Opcjonalnie `/llms-full.txt` z pełną treścią stron produktu i porównań. Mały wpływ na Google, ale tani w utrzymaniu, bo generowany z tych samych stałych.
