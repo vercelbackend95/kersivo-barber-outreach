@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
-import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { GET as getRobots } from '../../pages/robots.txt';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
@@ -45,7 +45,7 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(page).toContain('title={title}');
     expect(page).toContain('description={description}');
     expect(page).not.toMatch(/\bnoindex\b/i);
-    expect(resolveRobotsContent({noindex:false})).toBeUndefined();
+    expect(resolveRobotsContent({noindex:false})).toBe(INDEXABLE_ROBOTS_CONTENT);
   });
 
   it('includes one H1, the Timely-specific sections in order and an operable bill builder',()=>{

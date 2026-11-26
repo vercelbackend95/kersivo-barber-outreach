@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
-import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import {
   BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
   BARBERSHOP_WEBSITES_PAGE_H1,
@@ -48,7 +48,7 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_INDEXABLE).toBe(true);
     expect(livePage).toContain('noindex={!BARBERSHOP_WEBSITES_PAGE_INDEXABLE}');
     expect(livePage).toContain('robotsFollow');
-    expect(resolveRobotsContent({ noindex: !BARBERSHOP_WEBSITES_PAGE_INDEXABLE, robotsFollow: true })).toBeUndefined();
+    expect(resolveRobotsContent({ noindex: !BARBERSHOP_WEBSITES_PAGE_INDEXABLE, robotsFollow: true })).toBe(INDEXABLE_ROBOTS_CONTENT);
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
     expect(locs).toContain('https://kersivo.co.uk/barbershop-websites');
   });

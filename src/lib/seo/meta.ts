@@ -43,8 +43,17 @@ export function resolveOgImageUrl(ogImagePath: string = DEFAULT_OG_IMAGE_PATH): 
 
 export type ResolvedPageSeo = ReturnType<typeof resolvePageSeo>;
 
-export function resolveRobotsContent(seo: Pick<PageSeo, 'noindex' | 'robotsFollow'>): string | undefined {
-  if (!seo.noindex) return undefined;
+/**
+ * Indexable pages state snippet limits explicitly so Google, Bing and AI answer engines may quote
+ * a full passage, show a large image preview and any length of video preview.
+ * Without this, Google applies its default limits. Never block snippets on a public page.
+ * No `index, follow` here: they are the defaults, and an `X-Robots-Tag: noindex` header (vercel.json) on a
+ * route that still renders SeoHead without `noindex` must not be contradicted by the page.
+ */
+export const INDEXABLE_ROBOTS_CONTENT = 'max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+
+export function resolveRobotsContent(seo: Pick<PageSeo, 'noindex' | 'robotsFollow'>): string {
+  if (!seo.noindex) return INDEXABLE_ROBOTS_CONTENT;
   return seo.robotsFollow ? 'noindex, follow' : 'noindex, nofollow';
 }
 

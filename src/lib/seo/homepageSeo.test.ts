@@ -8,7 +8,7 @@ import { getRateCard1LandingLayout } from '@/lib/pricing/rateCard1Copy';
 import { buildBarberDemoJsonLd } from './barberDemoJsonLd';
 import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, SAAS_MONTHLY_GBP } from './defaults';
-import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
@@ -71,7 +71,7 @@ describe('homepage SEO phase 1: head', () => {
     expect(homepage).toContain('canonicalPath="/"');
     expect(resolveCanonicalUrl('/')).toBe('https://kersivo.co.uk/');
     expect(homepage).not.toMatch(/noindex/);
-    expect(resolveRobotsContent({ noindex: undefined, robotsFollow: undefined })).toBeUndefined();
+    expect(resolveRobotsContent({ noindex: undefined, robotsFollow: undefined })).toBe(INDEXABLE_ROBOTS_CONTENT);
     for (const file of homepageComponentFiles()) {
       expect(read(file.replace(ROOT, '')), file).not.toMatch(/name=["']keywords["']/);
     }

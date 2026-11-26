@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
-import { resolveCanonicalUrl, resolveRobotsContent } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from './kersivoEntityJsonLd';
 import { getKersivoSoftwareId } from './barberDemoJsonLd';
 import {
@@ -74,7 +74,7 @@ describe('/barbershop-online-booking metadata and indexing', () => {
     expect(BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE).toBe(true);
     expect(page).toContain('noindex={!BARBERSHOP_ONLINE_BOOKING_PAGE_INDEXABLE}');
     expect(page).toContain('robotsFollow');
-    expect(resolveRobotsContent({ noindex: false, robotsFollow: true })).toBeUndefined();
+    expect(resolveRobotsContent({ noindex: false, robotsFollow: true })).toBe(INDEXABLE_ROBOTS_CONTENT);
     const entry = buildMarketingSitemapEntries().find((item) => item.loc === 'https://kersivo.co.uk/barbershop-online-booking');
     expect(entry).toBeDefined();
     expect(getStaticPageLastModified(BARBERSHOP_ONLINE_BOOKING_PAGE_PATH)).toBe(BARBERSHOP_ONLINE_BOOKING_LAST_MODIFIED_ISO);
