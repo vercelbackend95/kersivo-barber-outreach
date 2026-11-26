@@ -49,7 +49,7 @@ describe('Insights publication safety', () => {
     const pageFiles = readdirSync(insightsPagesDir).filter((name) => name.endsWith('.astro'));
     // editorial-standards.astro is the publication's policy page (GEO/AEO stage 5), not an article.
     expect(pageFiles.sort()).toEqual(['[slug].astro', 'editorial-standards.astro', 'index.astro'].sort());
-    expect(INSIGHTS_PUBLISHED_ARTICLES.some((article) => article.slug === 'editorial-standards')).toBe(false);
+    expect(INSIGHTS_PUBLISHED_ARTICLES.some((article) => (article.slug as string) === 'editorial-standards')).toBe(false);
 
     const slugRoute = readFileSync(join(insightsPagesDir, '[slug].astro'), 'utf8');
     expect(slugRoute).toContain('export const prerender = true');
