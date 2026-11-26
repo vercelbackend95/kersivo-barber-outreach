@@ -5,7 +5,7 @@ import { describe,expect,it } from 'vitest';
 import { TREATWELL_ALTERNATIVE_PAGE_PATH,TREATWELL_ALTERNATIVE_TITLE,TREATWELL_ALTERNATIVE_DESCRIPTION,TREATWELL_ALTERNATIVE_FAQ_ITEMS,buildTreatwellAlternativeFaqJsonLd } from './treatwellAlternativeFaq';
 import { buildTreatwellAlternativeWebPageJsonLd,buildTreatwellAlternativeBreadcrumbJsonLd } from './treatwellAlternativeJsonLd';
 import { TREATWELL_COMPARE_SECTIONS,TREATWELL_SOURCES,requireVerifiedTreatwellFact,TREATWELL_UK_COMMERCIAL_FACTS } from './treatwellFacts';
-import { resolvePageSeo } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolvePageSeo } from './meta';
 import { TW_HERO_FACTS,TW_STARTING_POINTS,TW_SWITCHING_LEAD } from './treatwellAlternativeContent';
 import { GET as getRobots } from '../../pages/robots.txt';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
@@ -91,7 +91,7 @@ describe('Treatwell Alternative UK marketing page',()=>{
     canonicalPath: TREATWELL_ALTERNATIVE_PAGE_PATH,
   });
   expect(seo.canonical).toBe('https://kersivo.co.uk/treatwell-alternative');
-  expect(seo.robotsContent).toBeUndefined();
+  expect(seo.robotsContent).toBe(INDEXABLE_ROBOTS_CONTENT);
   expect(seo.ogImage).toMatch(/^https:\/\/kersivo.co.uk\//);
  });
  it('keeps main SEO facts in visible copy and FAQ rather than inaccessible scripts',()=>{

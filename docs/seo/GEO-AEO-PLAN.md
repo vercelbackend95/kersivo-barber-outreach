@@ -35,7 +35,7 @@ Cel: każdy artykuł Insights zaczyna się od odpowiedzi, którą AI może zacyt
 
 Miernik: CTR i kliknięcia dla pytań czatowych w GSC po 4–6 tygodniach; cytowania `/insights/*` w miesięcznym teście promptów.
 
-### Etap 2. Answer-first + query fan-out (kod) ← w trakcie: punkty 1–4 w `geo-aeo-2-fan-out-map.md`, punkt 5 osobno
+### Etap 2. Answer-first + query fan-out (kod) ✅ PR #316 (punkty 1–4, `geo-aeo-2-fan-out-map.md`); punkt 5: sekcje gotowe, artykuły czekają na Ciebie
 
 AI rozbija jedno pytanie na kilka podpytań („best barber booking software UK” → koszt dla 3 foteli, prowizje, depozyty, czy klient musi mieć aplikację, jak przenieść klientów, czy działa z Google). Strona, która odpowiada na podpytania w osobnych, nazwanych fragmentach, trafia do większej liczby z nich.
 
@@ -44,6 +44,7 @@ AI rozbija jedno pytanie na kilka podpytań („best barber booking software UK�
 3. Krótkie bloki odpowiedzi („In short” lub odpowiednik) na stronach, które ich jeszcze nie mają: `/`, `/starter`, `/barbershop-websites`, `/barbershop-online-booking`, `/barbershop-reports`, `/barbershop-retail-pickup`, `/booksy-vs-fresha`, `/kersivo-vs-booksy` (najpierw sprawdzić, które już mają definicję pod H1).
 4. Pytania czatowe z GSC (np. walk-ins w godzinach szczytu) jako H2 w istniejących artykułach, jeśli artykuł na nie odpowiada.
 5. Realizacja priorytetu P1 z `content-plan-buying-searches.md` (opłaty Booksy, jak odejść z Booksy, opłaty Fresha, własna strona vs marketplace, depozyty według systemu): każdy tekst pisany od razu w formie answer-first.
+   Stan 26.11.2026: sekcje już są na stronach — opłaty Booksy (`/booksy-alternative#booksy-pricing`), odejście z Booksy (`#switching`), opłaty Fresha (`/fresha-alternative#costs`), depozyty (`/compare#deposits`), opłaty kartowe (`/barber-booking-fees-uk#card-fees`). Zostaje nowy artykuł Insights „Booking website vs marketplace” (pozycja 4 planu treści): artykuły Insights publikujemy tylko po Twojej akceptacji w Notion, więc to osobny krok.
 
 ### Etap 3. Wzmianki o marce i earned media (kod + Ty)
 
@@ -59,9 +60,9 @@ Ty (szczegóły w `ai-visibility-playbook.md`, sekcje 2–5):
 4. Reddit (r/barber, r/UKBusiness) z ujawnieniem, kim jesteś.
 5. YouTube: 3–5 krótkich nagrań ekranu (rezerwacja klienta, panel właściciela, raporty) z tym samym opisem marki. Po publikacji Claude doda je na stronę z `VideoObject`.
 
-### Etap 4. Snippet eligibility + indeksacja (kod)
+### Etap 4. Snippet eligibility + indeksacja (kod) ✅ `geo-aeo-4-changelog.md`
 
-1. Jawna dyrektywa `max-snippet:-1, max-image-preview:large, max-video-preview:-1` na wszystkich indeksowanych stronach (dziś brak meta robots, więc Google stosuje domyślne limity) i test, że nigdzie na publicznych stronach nie ma `nosnippet` ani `data-nosnippet`.
+1. Jawna dyrektywa `max-snippet:-1, max-image-preview:large, max-video-preview:-1` na wszystkich indeksowanych stronach (dziś brak meta robots, więc Google stosuje domyślne limity) i test, że nigdzie na publicznych stronach nie ma `nosnippet` ani `data-nosnippet` (wyjątek: `data-nosnippet` na dwóch kontenerach widżetów demo z przykładowymi danymi).
 2. Test, że każda strona z sitemap ma 200, `index`, kanoniczny adres na siebie i nie jest zablokowana w `robots.txt` dla botów AI.
 3. Decyzja o `Google-Extended` i `GPTBot` (trening modeli): dziś nie są nazwane, więc są dopuszczone. Blokada nie wpływa na AI Overviews, ale wpływa na to, co modele „wiedzą” o KERSIVO bez wyszukiwania. Rekomendacja: zostawić dopuszczone.
 4. Ty: GSC i Bing, sprawdzenie raportu indeksowania i ręczne zgłoszenie stron zmienionych w etapach 1–2.

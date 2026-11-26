@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveOgImageUrl, resolvePageSeo, resolveRobotsContent } from './meta';
+import { INDEXABLE_ROBOTS_CONTENT, resolveOgImageUrl, resolvePageSeo, resolveRobotsContent } from './meta';
 
 describe('resolvePageSeo robots', () => {
   it('accepts absolute HTTPS Open Graph image URLs without rewriting the host', () => {
@@ -8,11 +8,11 @@ describe('resolvePageSeo robots', () => {
     expect(resolvePageSeo({ ogImagePath: absolute }).ogImage).toBe(absolute);
   });
 
-  it('omits robots meta when noindex is false', () => {
+  it('emits open snippet limits when noindex is false', () => {
     const seo = resolvePageSeo({ canonicalPath: '/' });
     expect(seo.noindex).toBe(false);
-    expect(seo.robotsContent).toBeUndefined();
-    expect(resolveRobotsContent({ noindex: false })).toBeUndefined();
+    expect(seo.robotsContent).toBe(INDEXABLE_ROBOTS_CONTENT);
+    expect(resolveRobotsContent({ noindex: false })).toBe(INDEXABLE_ROBOTS_CONTENT);
   });
 
   it('defaults admin-style noindex to noindex, nofollow', () => {
