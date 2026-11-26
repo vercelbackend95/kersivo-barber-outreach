@@ -6,9 +6,39 @@ import { KERSIVO_CONTACT_EMAIL } from '@/lib/seo/footerSocialLinks';
 import { SAAS_EXPORT_RETENTION_DAYS } from '@/lib/setup/saasEntitlement';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
-type LandingFaqItem = {
+export type LandingFaqItem = {
   question: string;
   answer: string;
+};
+
+/**
+ * Query fan-out answers (GEO/AEO stage 2): sub-questions AI assistants ask when an owner searches for
+ * booking software ("does it work with Google?", "are reminders included?", "can you move my clients?").
+ * Each one is answered once here and reused word for word on every page that needs it, so the visible
+ * FAQ and its FAQPage JSON-LD say the same thing everywhere. First sentence = the answer.
+ */
+export const BOOKING_LINK_CHANNELS_FAQ: LandingFaqItem = {
+  question: 'Can clients book from Google, Instagram or TikTok?',
+  answer:
+    'Yes, through your booking link. You can add it to your Google Business Profile with guided setup, paste it into your Instagram or TikTok bio, or print it as a QR code. The Google setup is a booking link, not a native Google booking integration.',
+};
+
+export const CONFIRMATIONS_REMINDERS_FAQ: LandingFaqItem = {
+  question: 'Do clients get booking confirmations and reminders?',
+  answer:
+    'Yes. Clients get a confirmation email and an automatic email reminder on both plans. Full KERSIVO adds SMS appointment reminders within a monthly allowance.',
+};
+
+export const MIGRATION_ASSISTANCE_FAQ: LandingFaqItem = {
+  question: 'Can you migrate me from Booksy, Fresha or another booking platform?',
+  answer:
+    'Full KERSIVO includes migration assistance for usable business data available from your current booking system, including supported CSV exports. The exact data that can be moved depends on what your current provider makes available and how complete the export is.',
+};
+
+export const NO_CUSTOMER_APP_FAQ: LandingFaqItem = {
+  question: 'Do clients need to download an app to book with KERSIVO?',
+  answer:
+    'No. KERSIVO has no customer app: clients book in the browser, on your own branded website with Full KERSIVO or a hosted KERSIVO booking page on Starter, so there is nothing to download. The trade-off is that there is no KERSIVO app or marketplace where new clients can discover your shop.',
 };
 
 export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
@@ -60,11 +90,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
     answer:
       'With Starter, you configure the core booking workspace and connect Stripe to launch public bookings. With Full KERSIVO, you complete client onboarding and KERSIVO prepares the wider branded setup for review. Starter has no monthly software fee; Full billing begins when you subscribe.',
   },
-  {
-    question: 'Can you migrate me from Booksy, Fresha or another booking platform?',
-    answer:
-      'Full KERSIVO includes migration assistance for usable business data available from your current booking system, including supported CSV exports. The exact data that can be moved depends on what your current provider makes available and how complete the export is.',
-  },
+  MIGRATION_ASSISTANCE_FAQ,
   {
     question: 'Will my clients need to download an app?',
     answer:
@@ -133,6 +159,8 @@ export const HOMEPAGE_FAQ_ITEMS: LandingFaqItem[] = [
     answer:
       "No. Clients book in their browser on your website. There's nothing to download and no account to create.",
   },
+  BOOKING_LINK_CHANNELS_FAQ,
+  CONFIRMATIONS_REMINDERS_FAQ,
   {
     question: 'Can I cancel?',
     answer: `Yes, anytime. Full KERSIVO stays active until the end of the paid month. You then choose to continue on KERSIVO Starter or leave. If you leave completely, a free CSV export of client contact details and booking history is available for ${SAAS_EXPORT_RETENTION_DAYS} days, and Full KERSIVO owners can also download it once from the dashboard settings.`,
@@ -195,16 +223,8 @@ export const ONLINE_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
     answer:
       'No. KERSIVO takes 0% commission on booking payments on both Starter and Full KERSIVO. Standard Stripe payment-processing fees apply to online card payments.',
   },
-  {
-    question: 'Can clients book from Google, Instagram or TikTok?',
-    answer:
-      'Yes, through your booking link. You can add it to your Google Business Profile with guided setup, paste it into your Instagram or TikTok bio, or print it as a QR code. The Google setup is a booking link, not a native Google booking integration.',
-  },
-  {
-    question: 'Do clients get booking confirmations and reminders?',
-    answer:
-      'Yes. Clients get a confirmation email and an automatic email reminder on both plans. Full KERSIVO adds SMS appointment reminders within a monthly allowance.',
-  },
+  BOOKING_LINK_CHANNELS_FAQ,
+  CONFIRMATIONS_REMINDERS_FAQ,
   {
     question: 'Can clients cancel or change a booking online?',
     answer:
@@ -214,7 +234,7 @@ export const ONLINE_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
     question: 'What is the difference between KERSIVO Starter and Full KERSIVO for online booking?',
     answer: `Starter is £0/month for up to 4 barbers, with a KERSIVO-hosted booking page and an online payment on every public booking. Full KERSIVO is £${SAAS_MONTHLY_GBP}/month per location and adds your own branded website and domain, Pay at shop as an option, SMS reminders within a monthly allowance, Reports, Retail and full booking history.`,
   },
-  BARBERSHOP_BOOKING_FAQ_ITEMS[10],
+  MIGRATION_ASSISTANCE_FAQ,
   BARBERSHOP_BOOKING_FAQ_ITEMS[12],
   BARBERSHOP_BOOKING_FAQ_ITEMS[13],
   {

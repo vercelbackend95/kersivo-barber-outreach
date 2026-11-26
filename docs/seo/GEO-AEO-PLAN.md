@@ -23,7 +23,7 @@ Search Console (15 października – 11 listopada 2026) pokazuje długie, „cza
 
 Kolejność zgodna z priorytetami z listy. Każdy etap to osobna gałąź i PR. „Kod” = robi Claude, „Ty” = działania poza repozytorium.
 
-### Etap 1. GEO / AEO: krótkie odpowiedzi na początku artykułów Insights (kod) ← w trakcie
+### Etap 1. GEO / AEO: krótkie odpowiedzi na początku artykułów Insights (kod) ✅ PR #315
 
 Cel: każdy artykuł Insights zaczyna się od odpowiedzi, którą AI może zacytować w całości.
 
@@ -35,7 +35,7 @@ Cel: każdy artykuł Insights zaczyna się od odpowiedzi, którą AI może zacyt
 
 Miernik: CTR i kliknięcia dla pytań czatowych w GSC po 4–6 tygodniach; cytowania `/insights/*` w miesięcznym teście promptów.
 
-### Etap 2. Answer-first + query fan-out (kod)
+### Etap 2. Answer-first + query fan-out (kod) ← w trakcie: punkty 1–4 w `geo-aeo-2-fan-out-map.md`, punkt 5 osobno
 
 AI rozbija jedno pytanie na kilka podpytań („best barber booking software UK” → koszt dla 3 foteli, prowizje, depozyty, czy klient musi mieć aplikację, jak przenieść klientów, czy działa z Google). Strona, która odpowiada na podpytania w osobnych, nazwanych fragmentach, trafia do większej liczby z nich.
 
