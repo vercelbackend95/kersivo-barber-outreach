@@ -12,6 +12,7 @@ import {
 } from '@/lib/insights/editorialStandards';
 import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
 import { LLMS_FULL_TXT_PATH } from '@/lib/seo/llmsFullTxt';
+import { FEES_REPORT_CSV_PATH } from '@/lib/seo/feesReport';
 import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
@@ -52,12 +53,13 @@ export function buildLlmsTxt(siteUrl: string): string {
       'the owner dashboard in Full KERSIVO: bookings, barbers, clients with a reliability score, retail sales, and booking reports (bookings, utilisation, cancelled and no-show rates, average booking value, peak day and hour) compared with the previous period, with what each metric means',
     ),
     link(KERSIVO_LIVE_DEMO_HREF, 'Live demo', 'Heritage Grooming, a fictional demo barbershop running on KERSIVO'),
-    link('/about', 'About KERSIVO', 'how setup, support and leaving work'),
+    link('/about', 'About KERSIVO', 'how setup, support and leaving work, plus logo files and facts for press'),
     '',
     '## Comparisons',
     link('/compare', 'Compare booking systems', '11 UK barber booking systems with sourced, dated prices'),
     link('/barber-software-cost-calculator', 'Cost calculator', 'monthly software and payment costs by team size'),
     link('/barber-booking-fees-uk', 'Booking software fees report', 'dated UK fees report: monthly cost by team size, marketplace new-client fees and card fees for 10 systems'),
+    link(FEES_REPORT_CSV_PATH, 'Fees report data (CSV)', 'every figure from the fees report tables, one per row, free to reuse under CC BY 4.0 with a link to the report'),
     link('/booksy-vs-fresha', 'Booksy vs Fresha', 'neutral head-to-head for UK barbershops: cost by team size, commission and card fees'),
     link('/booksy-alternative', 'Booksy alternative', 'KERSIVO compared with Booksy'),
     link('/fresha-alternative', 'Fresha alternative', 'KERSIVO compared with Fresha'),

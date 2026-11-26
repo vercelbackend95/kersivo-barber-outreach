@@ -24,6 +24,10 @@ import {
   ABOUT_PAGE_LAST_UPDATED_LABEL,
   ABOUT_PAGE_PATH,
   ABOUT_PAGE_TITLE,
+  ABOUT_PRESS_INTRO,
+  ABOUT_PRESS_LOGOS,
+  ABOUT_PRESS_NAME_NOTE,
+  ABOUT_PRESS_TITLE,
   ABOUT_PRICING_SUMMARY,
   ABOUT_WHAT_IT_IS_DETAIL,
   ABOUT_WHAT_IT_IS_LEAD,
@@ -35,6 +39,8 @@ import {
 } from '@/lib/seo/aboutPage';
 import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { EDITORIAL_STANDARDS_PATH } from '@/lib/insights/editorialStandards';
+import { FEES_REPORT_CSV_PATH, FEES_REPORT_PAGE_PATH } from '@/lib/seo/feesReport';
+import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import PageBreadcrumbs from '@/components/seo/PageBreadcrumbs.astro';
 import { ABOUT_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -230,6 +236,49 @@ const officialProfiles = getAboutOfficialProfiles();
       </div>
     </section>
 
+    <section id="press" class="fresha-alt__section" aria-labelledby="about-press-title">
+      <div class="container">
+        <header class="fresha-alt__intro">
+          <p class="fresha-alt__eyebrow">PRESS</p>
+          <h2 id="about-press-title" class="fresha-alt__h2">{ABOUT_PRESS_TITLE}</h2>
+        </header>
+        <p>{ABOUT_PRESS_INTRO}</p>
+        <div class="about-glance ks-glass-card">
+          <dl class="about-glance__list">
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Name</dt>
+              <dd>{ABOUT_PRESS_NAME_NOTE}</dd>
+            </div>
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Short description</dt>
+              <dd>{KERSIVO_ENTITY_DESCRIPTION}</dd>
+            </div>
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Logo files</dt>
+              <dd>
+                <ul class="about-press__assets">
+                  {ABOUT_PRESS_LOGOS.map((asset) => (
+                    <li><a href={asset.href} download>{asset.label}</a> <span class="about-press__detail">{asset.detail}</span></li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Data to cite</dt>
+              <dd>
+                <a href={FEES_REPORT_PAGE_PATH}>UK barber booking software fees report</a>, with dated sources, a ready-to-quote
+                paragraph and the <a href={FEES_REPORT_CSV_PATH} download>data as CSV</a>.
+              </dd>
+            </div>
+            <div class="about-glance__row">
+              <dt class="ks-eyebrow ks-eyebrow--neutral">Press contact</dt>
+              <dd><a href={`mailto:${KERSIVO_CONTACT_EMAIL}`}>{KERSIVO_CONTACT_EMAIL}</a></dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
     <FinalCta
       eyebrow="SEE IT FOR YOURSELF"
       heading="Explore the KERSIVO demo"
@@ -308,6 +357,19 @@ const officialProfiles = getAboutOfficialProfiles();
   .about-glance__row a:hover,
   .about-glance__row a:focus-visible {
     text-decoration-color: currentColor;
+  }
+
+  .about-press__assets {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about-press__detail {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.86rem;
   }
 
   .about-glance__profiles {
