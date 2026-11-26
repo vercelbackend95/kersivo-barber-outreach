@@ -25,7 +25,13 @@ export const KERSIVO_SOCIAL_BIO =
  * Off-site profiles (review sites, directories) that should join the footer socials in
  * Organization.sameAs once they are live and show the entity description. Add the public profile URL only.
  */
-export const KERSIVO_OFF_SITE_PROFILES: readonly string[] = [];
+export const KERSIVO_OFF_SITE_PROFILES: readonly string[] = [
+  // Gartner Digital Markets: Capterra product page and the GetApp listing (added 26 Nov 2026).
+  'https://www.capterra.com/p/10290243/KERSIVO/',
+  'https://www.getapp.com/all-software/a/kersivo/',
+  // G2 seller (company) profile (added 26 Nov 2026).
+  'https://www.g2.com/sellers/kersivo',
+];
 
 /**
  * Organization.knowsAbout: the subjects KERSIVO's product pages, comparisons, free tools and Insights cover.

@@ -9,6 +9,7 @@ import {
 } from './barberDemoJsonLd';
 import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
 import { getFooterSocialLinks } from './footerSocialLinks';
+import { KERSIVO_OFF_SITE_PROFILES } from './kersivoEntityJsonLd';
 import { DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, HOMEPAGE_LAST_UPDATED_ISO, SAAS_MONTHLY_GBP } from './defaults';
 import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
@@ -77,7 +78,18 @@ describe('buildBarberDemoJsonLd', () => {
       height: 512,
     });
     expect(JSON.stringify(organization.logo)).not.toContain('logo.jpg');
-    expect(organization.sameAs).toEqual(getFooterSocialLinks().map((link) => link.href));
+    // Footer socials first, then the off-site profiles (Capterra, GetApp, G2).
+    expect(organization.sameAs).toEqual([
+      ...getFooterSocialLinks().map((link) => link.href),
+      ...KERSIVO_OFF_SITE_PROFILES,
+    ]);
+    expect(organization.sameAs).toEqual(
+      expect.arrayContaining([
+        'https://www.capterra.com/p/10290243/KERSIVO/',
+        'https://www.getapp.com/all-software/a/kersivo/',
+        'https://www.g2.com/sellers/kersivo',
+      ]),
+    );
     expect(organization.contactPoint).toMatchObject({
       '@type': 'ContactPoint',
       contactType: 'customer support',
