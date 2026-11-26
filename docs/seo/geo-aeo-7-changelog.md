@@ -35,4 +35,4 @@ Already set up as the "AI assistants" channel in `docs/analytics/ga4-setup.md`; 
 
 `npm run claims:check` pass, `npm run typecheck` 0 errors, new tests pass. No site code or pages changed, so no build-affecting changes and no screenshots.
 
-`docs/seo/ROADMAP.md` is left unchanged here on purpose: PR #320 edits the same line, so the stage 7 pointer goes in after #320 is merged.
+`docs/seo/ROADMAP.md` points to this changelog.
