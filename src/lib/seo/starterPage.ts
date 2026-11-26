@@ -79,6 +79,11 @@ export const STARTER_FAQ_ITEMS: StarterFaqItem[] = [
       'Not for customer-created public Starter bookings. Starter uses a fixed payment-powered booking flow. Staff can still add manual bookings that are paid at the shop. Full KERSIVO unlocks editable booking-payment controls, including Pay at shop.',
   },
   {
+    question: 'Does KERSIVO Starter send booking reminders?',
+    answer:
+      'Yes, by email. Clients get a confirmation email and an automatic email reminder on KERSIVO Starter. SMS appointment reminders within a monthly allowance come with Full KERSIVO.',
+  },
+  {
     question: 'How many barbers can use KERSIVO Starter?',
     answer:
       'Starter supports up to 4 active bookable barbers at one physical shop location. If your shop needs more active bookable barbers, Full KERSIVO is the upgrade path.',

@@ -212,7 +212,7 @@ describe('Alternatives hub: structured data', () => {
   it('mirrors the visible FAQ in FAQPage and never fabricates ratings or reviews', () => {
     const faq = buildAlternativesHubFaqJsonLd() as { mainEntity: { name: string }[] };
     expect(faq.mainEntity.map((q) => q.name)).toEqual(ALTERNATIVES_HUB_FAQ_ITEMS.map((i) => i.question));
-    expect(ALTERNATIVES_HUB_FAQ_ITEMS).toHaveLength(7);
+    expect(ALTERNATIVES_HUB_FAQ_ITEMS).toHaveLength(8);
     const all = JSON.stringify([
       buildAlternativesHubCollectionPageJsonLd(siteUrl),
       buildAlternativesHubItemListJsonLd(siteUrl),

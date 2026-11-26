@@ -61,7 +61,7 @@ Pages: `/compare`, `/barber-software-cost-calculator`, 10 alternatives (`booksy`
 `/llms.txt`, square 512px logo for schema/OG, Facebook vanity URL in `sameAs`, one display typeface for H2s, nav simplification (only with GA4 click data), merge FAQPage into the main `@graph`.
 
 ## GEO / AEO (AI search) — in progress
-Seven-stage plan in `docs/seo/GEO-AEO-PLAN.md` (answer-first, query fan-out, brand mentions, snippet eligibility, entity/E-E-A-T, llms.txt, AI visibility metrics). Stage 1 (answer-first Insights): `docs/seo/geo-aeo-1-changelog.md`.
+Seven-stage plan in `docs/seo/GEO-AEO-PLAN.md` (answer-first, query fan-out, brand mentions, snippet eligibility, entity/E-E-A-T, llms.txt, AI visibility metrics). Stage 1 (answer-first Insights): `docs/seo/geo-aeo-1-changelog.md`. Stage 2 items 1–4 (query fan-out map, FAQ gaps): `docs/seo/geo-aeo-2-fan-out-map.md`.
 
 ## Small leftovers
 - New OG image (no "ZERO COMMISSION"; needs a design).

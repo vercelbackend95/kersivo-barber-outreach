@@ -1,4 +1,5 @@
 import { offer } from '@/content/offer';
+import { MIGRATION_ASSISTANCE_FAQ } from '@/lib/seo/barbershopBookingFaq';
 import {
   NO_PAUSE_CLAIM,
   PRICE_VAT_DISCLAIMER,
@@ -148,6 +149,7 @@ export const PRICING_FAQ_ITEMS: PricingFaqItem[] = [
     answer:
       'Yes. Starter is a real operating plan with a direct upgrade path to Full KERSIVO when the shop wants its own branded website and domain, a larger team, the wider business tools or control over how customers pay.',
   },
+  MIGRATION_ASSISTANCE_FAQ,
   {
     question: 'Can I cancel Full KERSIVO?',
     answer: `Yes, you can cancel anytime. ${NO_PAUSE_CLAIM} When Full ends, the owner explicitly chooses whether to continue on KERSIVO Starter or leave KERSIVO.`,

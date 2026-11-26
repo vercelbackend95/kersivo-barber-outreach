@@ -7,6 +7,7 @@ import {
 } from '@/lib/seo/booksyFacts';
 import { formatGbp, formatPercent } from '@/lib/seo/freshaFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { NO_CUSTOMER_APP_FAQ } from '@/lib/seo/barbershopBookingFaq';
 
 export type BooksyAlternativeFaqItem = {
   question: string;
@@ -99,11 +100,7 @@ export const BOOKSY_ALTERNATIVE_FAQ_ITEMS: BooksyAlternativeFaqItem[] = [
     question: 'Can clients book Booksy without the app?',
     answer: `Yes. Booksy’s UK Help Centre covers booking without the Booksy for Customers app, and Booksy lists booking through your Booksy Profile and direct booking link, Instagram and Facebook buttons, Reserve with Google and a widget on your own website. The customer app and Marketplace are still part of how Booksy presents your business. Checked against Booksy’s UK pages on ${BOOKSY_FACTS_CHECKED_DATE}.`,
   },
-  {
-    question: 'Do clients need to download an app to book with KERSIVO?',
-    answer:
-      'No. KERSIVO has no customer app: clients book in the browser, on your own branded website with Full KERSIVO or a hosted KERSIVO booking page on Starter, so there is nothing to download. The trade-off is that there is no KERSIVO app or marketplace where new clients can discover your shop.',
-  },
+  NO_CUSTOMER_APP_FAQ,
   {
     question: 'Does KERSIVO have a marketplace like Booksy?',
     answer:

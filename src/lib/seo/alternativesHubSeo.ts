@@ -1,5 +1,6 @@
 import { DATA_EXPORT_RETENTION_CLAIM, STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { NO_CUSTOMER_APP_FAQ } from '@/lib/seo/barbershopBookingFaq';
 import {
   BOOKSY_FACTS_CHECKED_DATE,
   estimateBooksyMonthlySubscription,
@@ -81,6 +82,7 @@ export const ALTERNATIVES_HUB_FAQ_ITEMS: AlternativesHubFaqItem[] = [
     question: 'Can I use my own domain for online bookings?',
     answer: `With Full KERSIVO (${PRICE}/month per location) your branded barbershop website and your own domain are included. Many other platforms offer a booking widget, profile page or paid website add-on instead; check each provider’s current terms for whether a custom domain is included.`,
   },
+  NO_CUSTOMER_APP_FAQ,
   {
     question: 'Which booking systems support larger barber teams?',
     answer:
