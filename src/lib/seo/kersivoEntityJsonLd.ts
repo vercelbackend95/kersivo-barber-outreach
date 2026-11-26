@@ -62,6 +62,8 @@ export function buildKersivoOrganizationNode(siteUrl = getPublicSiteUrl()): Reco
     name: KERSIVO_BRAND_SCHEMA_NAME,
     alternateName: 'Kersivo',
     url: `${siteUrl}/`,
+    /** The /about AboutPage, whose mainEntity is this node (audit P2-2: the about link lives here, not on author.url). */
+    mainEntityOfPage: { '@id': `${siteUrl}/about#webpage` },
     description: KERSIVO_ORGANIZATION_DESCRIPTION,
     contactPoint: {
       '@type': 'ContactPoint',

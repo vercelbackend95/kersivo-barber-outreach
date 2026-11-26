@@ -8,8 +8,12 @@ const FULL = gbp(SAAS_MONTHLY_GBP);
 const DEPOSIT = gbp(KERSIVO_BOOKING_DEPOSIT_GBP);
 const BOOKING_CHARGE_EXAMPLE = gbp(requireIllustrativeNearcutFact('freeForYouCustomerBookingFeeExample').amountGbp);
 export const NEARCUT_ALTERNATIVE_PAGE_PATH = '/nearcut-alternative';
-export const NEARCUT_ALTERNATIVE_TITLE = 'Nearcut Alternative UK: Own Site + Booking, Flat £39/mo';
-export const NEARCUT_ALTERNATIVE_DESCRIPTION = 'Leaving Nearcut? A custom UK barbershop website, online booking, deposits and retail pickup for £39/month flat. 0% KERSIVO commission (Stripe fees apply).';
+/**
+ * Search title: the query, the flat price, then the Nearcut pain: on its free plan the client pays a
+ * booking charge. KERSIVO adds no booking charge for clients. Audit P2-3.
+ */
+export const NEARCUT_ALTERNATIVE_TITLE = `Nearcut Alternative UK: ${FULL} Flat, No Client Booking Fees`;
+export const NEARCUT_ALTERNATIVE_DESCRIPTION = `Nearcut’s free plan adds a booking charge your clients pay. KERSIVO: your own site and booking, ${FULL}/month flat. 0% KERSIVO commission. Stripe fees apply.`;
 export const NEARCUT_ALTERNATIVE_LAST_UPDATED_ISO = '2026-11-14';
 export const NEARCUT_ALTERNATIVE_LAST_UPDATED_LABEL = '14 November 2026';
 export const NEARCUT_ALTERNATIVE_FAQ_ITEMS = [

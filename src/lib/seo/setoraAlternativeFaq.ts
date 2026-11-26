@@ -5,8 +5,12 @@ import { requireVerifiedSetoraFact, SETORA_FACTS_CHECKED_DATE } from './setoraFa
 const monthly = requireVerifiedSetoraFact('canonicalMonthlyGbp').value;
 const trial = requireVerifiedSetoraFact('trialDays').value;
 export const SETORA_ALTERNATIVE_PAGE_PATH = '/setora-alternative';
-export const SETORA_ALTERNATIVE_TITLE = 'Setora Alternative for UK Barbershops | KERSIVO';
-export const SETORA_ALTERNATIVE_DESCRIPTION = `Looking for a Setora alternative in the UK? Compare Setora and KERSIVO pricing, websites, bookings, deposits and switching for independent barbershops.`;
+/**
+ * Search title: the query, then the price gap between two flat per-location prices (Setora's from
+ * setoraFacts). Audit P2-3.
+ */
+export const SETORA_ALTERNATIVE_TITLE = `Setora Alternative UK: Flat £${SAAS_MONTHLY_GBP}/mo Instead of £${monthly}`;
+export const SETORA_ALTERNATIVE_DESCRIPTION = `Setora lists £${monthly}/month per location. Full KERSIVO is £${SAAS_MONTHLY_GBP}, with your own website and domain, booking and deposits. 0% KERSIVO commission. Stripe fees apply.`;
 export const SETORA_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-08';
 export const SETORA_ALTERNATIVE_LAST_UPDATED_LABEL = '8 October 2026';
 

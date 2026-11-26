@@ -43,6 +43,9 @@ export const BIRMINGHAM_CITY_PAGE: CityPage = {
     `From the Jewellery Quarter and Digbeth to Moseley and Sutton Coldfield: a custom-designed website on your shop’s own domain, online booking that can take a deposit, and a retail pickup shop for beard oil and clay. £${SAAS_MONTHLY_GBP}/month flat per location with 0% KERSIVO commission (Stripe fees apply), so the clients Google sends you book with you, not through a directory.`,
   hubSummary:
     'A £25 middle fade that moves with the postcode, three universities and a strong walk-in trade, with set-ups for the centre, Moseley to Harborne and Sutton Coldfield.',
+  seoTitle: `Barbershop Website Design Birmingham: £${SAAS_MONTHLY_GBP} Flat, Own Domain`,
+  seoDescription:
+    `On a £15 Birmingham fade, Booksy Boost’s £5 minimum takes a third. Own site, booking, deposits: £${SAAS_MONTHLY_GBP}/month flat. 0% KERSIVO commission (Stripe fees apply).`,
   targetQueries: [
     'barbershop website design Birmingham',
     'barber website Birmingham',

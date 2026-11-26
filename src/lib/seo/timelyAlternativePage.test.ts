@@ -39,7 +39,10 @@ describe('Timely alternative: on-page and technical SEO',()=>{
     expect(resolveCanonicalUrl(TIMELY_ALTERNATIVE_PAGE_PATH)).toBe(pageUrl);
     expect(TIMELY_ALTERNATIVE_TITLE).toContain('Timely Alternative UK');
     expect(TIMELY_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(65);
-    expect(TIMELY_ALTERNATIVE_DESCRIPTION).toContain('UK barbershops');
+    // Audit P2-3: Timely's weekly bill that rises with bookings, against one flat monthly price.
+    expect(TIMELY_ALTERNATIVE_TITLE).toBe('Timely Alternative UK: Flat £39/mo, However Busy You Get');
+    expect(TIMELY_ALTERNATIVE_DESCRIPTION).toBe('Timely bills weekly, and the price rises with bookings. KERSIVO: £39/month per location, flat, with your own website. Enter your Timely bill to compare.');
+    expect(TIMELY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
     expect(TIMELY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(165);
     expect(page).toContain('canonicalPath={path}');
     expect(page).toContain('title={title}');
@@ -68,7 +71,8 @@ describe('Timely alternative: on-page and technical SEO',()=>{
   it('is discoverable via the sitemap, menu and crawlable robots policy', async()=>{
     const entries=buildMarketingSitemapEntries().filter(x=>x.loc===pageUrl);
     expect(entries).toHaveLength(1);
-    expect(entries[0].lastmod).toBe(TIMELY_ALTERNATIVE_LAST_UPDATED_ISO);
+    // Title and description changed on 26 Nov 2026 (audit P2-3); the visible date stays.
+    expect(entries[0].lastmod).toBe('2026-11-26');
     expect(TIMELY_ALTERNATIVE_LAST_UPDATED_ISO).toBe('2026-11-14');
     expect(sources).toContain('datetime={TIMELY_FACTS_CHECKED_ISO}');
     expect(MARKETING_NAV_ITEMS.filter(x=>x.href===TIMELY_ALTERNATIVE_PAGE_PATH)).toHaveLength(1);

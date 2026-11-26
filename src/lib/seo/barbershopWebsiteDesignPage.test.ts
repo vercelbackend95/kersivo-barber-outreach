@@ -9,6 +9,7 @@ import {
   BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
   buildBarbershopWebsiteDesignFaqJsonLd,
   buildBarbershopWebsiteDesignJsonLd,
+  getBarbershopWebsiteDesignSeo,
 } from './barbershopWebsiteDesignPage';
 import { WD_AUDIT, WD_FAQS, WD_HERO_TITLE_LINES, WD_OFFER } from './barbershopWebsiteDesignContent';
 import { BARBERSHOP_WEBSITES_PAGE_H1, BARBERSHOP_WEBSITES_PAGE_TITLE } from './barbershopWebsitesPage';
@@ -21,9 +22,23 @@ const component = (name: string) => read(`../../components/websiteDesign/${name}
 
 describe('/barbershop-website-design — design-intent guide', () => {
   it('targets design intent and stays distinct from the /barbershop-websites pillar', () => {
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design UK | Custom Sites £39/mo');
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE.length).toBeLessThanOrEqual(60);
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION.length).toBeLessThanOrEqual(160);
+    // Audit P2-1: design guide and sales page; the snippet leads with the free preview while the flow is on.
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).toBe('Barbershop Website Design UK: Free Preview, Then £39/mo');
+    expect(getBarbershopWebsiteDesignSeo(true)).toEqual({
+      title: BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE,
+      description: BARBERSHOP_WEBSITE_DESIGN_PAGE_DESCRIPTION,
+    });
+    const withoutPreview = getBarbershopWebsiteDesignSeo(false);
+    expect(withoutPreview.title).toBe('Barbershop Website Design UK | Custom Sites £39/mo');
+    expect(`${withoutPreview.title} ${withoutPreview.description}`).not.toMatch(/preview/i);
+    for (const seo of [getBarbershopWebsiteDesignSeo(true), withoutPreview]) {
+      expect(seo.title.startsWith('Barbershop Website Design UK')).toBe(true);
+      expect(seo.title.length).toBeLessThanOrEqual(60);
+      expect(seo.description.length).toBeLessThanOrEqual(155);
+      expect(seo.description).toContain('£39/month');
+    }
+    expect(page).toContain('getBarbershopWebsiteDesignSeo(freePreview)');
+    expect(buildBarbershopWebsiteDesignJsonLd(undefined, false)).toMatchObject({ name: withoutPreview.title, description: withoutPreview.description });
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_H1).toBe(WD_HERO_TITLE_LINES.join(' '));
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_H1.toLowerCase()).toContain('barbershop website design');
     expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_TITLE).not.toBe(BARBERSHOP_WEBSITES_PAGE_TITLE);

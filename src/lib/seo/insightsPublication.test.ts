@@ -143,7 +143,7 @@ describe('Insights publication safety', () => {
       '@type': 'Organization',
       '@id': 'https://kersivo.co.uk/#organization',
       name: 'KERSIVO',
-      url: 'https://kersivo.co.uk/about',
+      url: 'https://kersivo.co.uk/',
     });
     expect(jsonLd.isPartOf).toEqual({ '@id': 'https://kersivo.co.uk/#website' });
     expect(JSON.stringify(jsonLd)).not.toContain('logo-kersivo.png');

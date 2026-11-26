@@ -30,6 +30,7 @@ import {
 } from '@/lib/seo/barbershopOnlineBookingPage';
 import { ONLINE_BOOKING_FAQ_ITEMS, buildOnlineBookingFaqJsonLd } from '@/lib/seo/barbershopBookingFaq';
 import { BOB_CHECKLIST, BOB_CLOSE, BOB_SETUP } from '@/lib/seo/barbershopOnlineBookingContent';
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from '@/lib/seo/cityPages';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import '@/styles/components/ks-glass-card.css';
 import '@/styles/components/barbershop-online-booking.css';
@@ -124,6 +125,14 @@ const ARROW =
             <>{i > 0 && ' · '}<a class="bob-link" href={tool.href}>{tool.label}</a></>
           ))}
         </p>
+        {PUBLISHED_CITY_PAGES.length > 0 && (
+          <p class="bob-setup__tools bob-setup__local">
+            Local guides:
+            {PUBLISHED_CITY_PAGES.map((city, i) => (
+              <>{i > 0 && ' · '}<a class="bob-link" href={getCityPagePath(city)}>booking and websites in {city.name}</a></>
+            ))}
+          </p>
+        )}
       </div>
     </section>
 

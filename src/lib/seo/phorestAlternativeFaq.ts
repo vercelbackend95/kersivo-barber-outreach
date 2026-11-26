@@ -1,7 +1,11 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 export const PHOREST_ALTERNATIVE_PAGE_PATH='/phorest-alternative';
-export const PHOREST_ALTERNATIVE_TITLE='Phorest Alternative UK for Barbershops: Flat £39/mo';
-export const PHOREST_ALTERNATIVE_DESCRIPTION='Switch from Phorest to KERSIVO: built for UK barbershops with your own website, online booking, deposits and a retail pickup shop for £39/month flat.';
+/**
+ * Search title: the query, the flat price, then the Phorest pain: no public price, every shop needs a
+ * quote (phorestFacts: monthly subscription is quote-only). Audit P2-3.
+ */
+export const PHOREST_ALTERNATIVE_TITLE='Phorest Alternative UK: £39 Flat, No Quote Needed';
+export const PHOREST_ALTERNATIVE_DESCRIPTION='Phorest is salon software priced by quote. KERSIVO is built for barbershops: £39/month per location, website and booking included, no setup fee.';
 export const PHOREST_ALTERNATIVE_LAST_UPDATED_ISO='2026-10-08';
 export const PHOREST_ALTERNATIVE_LAST_UPDATED_LABEL='8 October 2026';
 export const PHOREST_ALTERNATIVE_FAQ_ITEMS=[

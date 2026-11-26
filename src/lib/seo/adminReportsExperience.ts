@@ -19,8 +19,11 @@ export const KAR_PAGE_PATH = '/barbershop-reports';
 /** Date the page content last changed (sitemap lastmod and JSON-LD dateModified). */
 export const KAR_LAST_UPDATED_ISO = '2026-11-25';
 export const KAR_PUBLISHED_ISO = '2026-11-25';
-/** A hook, not the brand: the searcher's own questions (empty chairs, no-shows, who is busiest). */
-export const KAR_TITLE = 'Barbershop Reports: Find Empty Chairs, No-Shows & Your Busiest Barber';
+/**
+ * A hook, not the brand: the two problems an owner opens reports for (empty chairs, no-shows), then the
+ * price. Within 60 characters (audit P2-6: the earlier title ran to 69 and was cut off in results).
+ */
+export const KAR_TITLE = `Barbershop Reports: Find Empty Chairs & No-Shows | ${formatGbp(SAAS_MONTHLY_GBP)}/mo`;
 export const KAR_DESCRIPTION = `Which hours sit empty? Who carries Saturday? See bookings, utilisation, no-shows and each barber vs last week. ${formatGbp(SAAS_MONTHLY_GBP)}/month per location. Try the demo free.`;
 export const KAR_BREADCRUMB_NAME = 'Admin & reports';
 /** Opens the fictional demo shop's dashboard straight on Reports. */

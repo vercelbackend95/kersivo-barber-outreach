@@ -3361,6 +3361,10 @@
   font-size: 0.9rem;
 }
 
+.bob-setup__local {
+  margin-top: 0.6rem;
+}
+
 /* ---------- 10 Plans ---------- */
 
 .bob-plans {

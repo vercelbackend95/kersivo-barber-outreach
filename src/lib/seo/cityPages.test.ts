@@ -20,7 +20,7 @@ import { BOURNEMOUTH_CITY_PAGE as BOURNEMOUTH } from './cityPages/bournemouth';
 import { BIRMINGHAM_CITY_PAGE as BIRMINGHAM } from './cityPages/birmingham';
 import { STRIPE_FEES_NOTE } from '@/lib/pricing/claimsPolicy';
 import { MARKETING_SITEMAP_ENTRIES } from './marketingSitemap';
-import { getStaticPageLastModified } from './pageDates';
+import { CONTENT_CHANGED_ISO, getStaticPageLastModified } from './pageDates';
 import { calculateCityScenario, clampCityInput, describeNewClientFees } from '@/lib/cityPages/marketplaceMath';
 
 const read = (path: string) => readFileSync(path, 'utf8');
@@ -57,31 +57,41 @@ describe('city page registry', () => {
 });
 
 describe('city page metadata', () => {
-  it('uses the full title when it fits in 60 characters', () => {
-    expect(buildCityPageTitle('London')).toBe('Barbershop Website Design London | £39/mo | KERSIVO');
-    for (const city of PUBLISHED_CITY_PAGES) expect(buildCityPageTitle(city.name).length).toBeLessThanOrEqual(60);
+  it('gives every city its own search title: the query first, then a hook and the flat price, within 60 characters', () => {
+    expect(buildCityPageTitle(LONDON)).toBe('Barbershop Website Design London: £39 Flat, 1 Chair or 6');
+    for (const city of PUBLISHED_CITY_PAGES) {
+      const title = buildCityPageTitle(city);
+      expect(title, city.name).toBe(city.seoTitle);
+      expect(title.startsWith(`Barbershop Website Design ${city.name}: `), city.name).toBe(true);
+      expect(title, city.name).toContain('£39');
+      expect(title.length, city.name).toBeLessThanOrEqual(60);
+    }
+    const titles = PUBLISHED_CITY_PAGES.map((city) => city.seoTitle.replace(city.name, '{city}'));
+    expect(new Set(titles).size, 'no two cities share a title pattern').toBe(titles.length);
   });
 
-  it('falls back to the shorter title for long city names', () => {
-    expect(buildCityPageTitle('Newcastle upon Tyne')).toBe('Barbershop Websites Newcastle upon Tyne | £39/mo | KERSIVO');
-  });
-
-  it('keeps the meta description between 145 and 160 characters', () => {
-    expect(buildCityPageDescription('London')).toBe(
-      'Barbershop website design for London shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
+  it('gives every city its own description within 155 characters, ending on the commission with its Stripe qualifier', () => {
+    expect(buildCityPageDescription(LONDON)).toBe(
+      'London fades run £20–£42, so a percentage marketplace fee grows with them. Own site and booking: £39/month flat. 0% KERSIVO commission (Stripe fees apply).',
     );
     for (const city of PUBLISHED_CITY_PAGES) {
-      const length = buildCityPageDescription(city.name).length;
-      expect(length).toBeGreaterThanOrEqual(145);
-      expect(length).toBeLessThanOrEqual(160);
+      const description = buildCityPageDescription(city);
+      expect(description, city.name).toBe(city.seoDescription);
+      expect(description.length, city.name).toBeGreaterThanOrEqual(120);
+      expect(description.length, city.name).toBeLessThanOrEqual(155);
+      expect(description, city.name).toMatch(/£39\/month flat\. 0% KERSIVO commission \(Stripe fees apply\)\.$/);
     }
+    const hooks = PUBLISHED_CITY_PAGES.map((city) => city.seoDescription.split('. ')[0]);
+    expect(new Set(hooks).size).toBe(hooks.length);
   });
 
-  it('never puts the commission claim in a description without the Stripe qualifier', () => {
-    for (const name of [...PUBLISHED_CITY_PAGES.map((city) => city.name), 'Newcastle upon Tyne', 'Milton Keynes']) {
-      const description = buildCityPageDescription(name);
-      expect(description, name).toMatch(/0% KERSIVO commission \(Stripe fees apply\)\.$/);
-      expect(description, name).toContain(name);
+  it('only uses figures in a description that the city page itself shows', () => {
+    for (const city of PUBLISHED_CITY_PAGES) {
+      const pageCopy = [city.heroLead, city.hubSummary, ...city.marketIntro, ...city.prices.map((band) => band.value)].join(' ');
+      for (const figure of city.seoDescription.match(/£\d+(?:–£\d+)?/g) ?? []) {
+        if (figure === '£39') continue;
+        expect(pageCopy, `${city.name}: ${figure}`).toContain(figure);
+      }
     }
   });
 
@@ -103,13 +113,15 @@ describe('city page JSON-LD', () => {
     }
   });
 
-  it('points the SoftwareApplication block at the city page with Starter and Full KERSIVO offers', () => {
+  it('keeps the shared #software node, url and all, with Starter and Full KERSIVO offers', () => {
     for (const city of PUBLISHED_CITY_PAGES) {
       const app = buildCitySoftwareApplicationJsonLd(city);
       expect(app['@type']).toBe('SoftwareApplication');
       expect(app.applicationCategory).toBe('BusinessApplication');
       expect(app.operatingSystem).toBe('Web');
-      expect(app.url).toBe(`https://kersivo.co.uk/barbershop-websites/${city.slug}`);
+      expect(app['@id']).toBe('https://kersivo.co.uk/#software');
+      expect(app.url).toBe('https://kersivo.co.uk/');
+      expect(buildCityWebPageJsonLd(city).about).toEqual({ '@id': 'https://kersivo.co.uk/#software' });
       const offers = app.offers as Array<{ price: string; priceCurrency: string }>;
       expect(offers.map((offer) => [offer.price, offer.priceCurrency]).sort()).toEqual([
         ['0.00', 'GBP'],
@@ -302,11 +314,14 @@ describe('city page copy and links', () => {
 });
 
 describe('city pages in the sitemap', () => {
-  it('lists every published city with its research date as lastmod', () => {
+  it('lists every published city, with lastmod moved past the research date by the 26 Nov 2026 snippets', () => {
     for (const city of PUBLISHED_CITY_PAGES) {
       const path = getCityPagePath(city);
-      expect(MARKETING_SITEMAP_ENTRIES.find((entry) => entry.path === path)?.lastmod).toBe(city.checkedIso);
-      expect(getStaticPageLastModified(path)).toBe(city.checkedIso);
+      const lastmod = getStaticPageLastModified(path);
+      expect(MARKETING_SITEMAP_ENTRIES.find((entry) => entry.path === path)?.lastmod).toBe(lastmod);
+      expect(lastmod).toBe(CONTENT_CHANGED_ISO[path] > city.checkedIso ? CONTENT_CHANGED_ISO[path] : city.checkedIso);
+      // The page's visible research date and WebPage dateModified stay on the research check.
+      expect(buildCityWebPageJsonLd(city).dateModified).toBe(city.checkedIso);
     }
   });
 });
@@ -319,12 +334,12 @@ describe('Bournemouth city page', () => {
     expect(BOURNEMOUTH.checkedIso).toBe('2026-11-24');
   });
 
-  it('uses the full title and the full-form description within 160 characters', () => {
-    expect(buildCityPageTitle('Bournemouth')).toBe('Barbershop Website Design Bournemouth | £39/mo | KERSIVO');
-    expect(buildCityPageDescription('Bournemouth')).toBe(
-      'Barbershop website design for Bournemouth shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
+  it('leads its snippet on students in term and summer visitors, on its own .co.uk', () => {
+    expect(buildCityPageTitle(BOURNEMOUTH)).toBe('Barbershop Website Design Bournemouth: Own .co.uk, £39/mo');
+    expect(buildCityPageDescription(BOURNEMOUTH)).toBe(
+      'Students in term, visitors in summer: let them book your real free slots on your own .co.uk. £39/month flat. 0% KERSIVO commission (Stripe fees apply).',
     );
-    expect(buildCityPageDescription('Bournemouth')).toHaveLength(158);
+    expect(BOURNEMOUTH.marketIntro.join(' ')).toContain('A booking page that shows your real free slots');
   });
 
   it('builds Home > Barbershop Websites > Bournemouth', () => {
@@ -394,14 +409,12 @@ describe('Birmingham city page', () => {
     expect(BIRMINGHAM.checkedIso).toBe('2026-11-24');
   });
 
-  it('uses the exact title and the full-form description', () => {
-    expect(buildCityPageTitle('Birmingham')).toBe('Barbershop Website Design Birmingham | £39/mo | KERSIVO');
-    expect(buildCityPageTitle('Birmingham')).toHaveLength(55);
-    const description = buildCityPageDescription('Birmingham');
-    expect(description).toBe(
-      'Barbershop website design for Birmingham shops: own domain, online booking, deposits and retail pickup, £39/month. 0% KERSIVO commission (Stripe fees apply).',
+  it('leads its snippet on what a marketplace minimum costs on a cheap Birmingham fade', () => {
+    expect(buildCityPageTitle(BIRMINGHAM)).toBe('Barbershop Website Design Birmingham: £39 Flat, Own Domain');
+    expect(buildCityPageDescription(BIRMINGHAM)).toBe(
+      'On a £15 Birmingham fade, Booksy Boost’s £5 minimum takes a third. Own site, booking, deposits: £39/month flat. 0% KERSIVO commission (Stripe fees apply).',
     );
-    expect(description).toHaveLength(157);
+    expect(BIRMINGHAM.marketIntro.join(' ')).toContain('on a £15 fade that minimum takes a third of the ticket');
   });
 
   it('builds Home > Barbershop Websites > Birmingham', () => {

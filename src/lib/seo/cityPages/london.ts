@@ -33,6 +33,9 @@ export const LONDON_CITY_PAGE: CityPage = {
     `Your own domain, a website designed around your shop, online booking with deposits and a retail pickup shop for pomade, clay and beard oil. £${SAAS_MONTHLY_GBP}/month per location, flat, whether you run one chair in Walthamstow or six in Soho.`,
   hubSummary:
     'Fades from £20 to £42 at independent shops, a wider spread than in other UK cities, with set-ups for Soho, Walthamstow and the rest of the city.',
+  seoTitle: `Barbershop Website Design London: £${SAAS_MONTHLY_GBP} Flat, 1 Chair or 6`,
+  seoDescription:
+    `London fades run £20–£42, so a percentage marketplace fee grows with them. Own site and booking: £${SAAS_MONTHLY_GBP}/month flat. 0% KERSIVO commission (Stripe fees apply).`,
   targetQueries: [
     'barbershop website design London',
     'barber website London',

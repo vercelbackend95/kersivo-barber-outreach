@@ -16,10 +16,18 @@ export type BooksyAlternativeFaqItem = {
 
 export const BOOKSY_ALTERNATIVE_PAGE_PATH = '/booksy-alternative';
 
-/** Search title: the query first, then the two things a Booksy user is weighing (own site, flat price). */
-export const BOOKSY_ALTERNATIVE_TITLE = `Booksy Alternative UK for Barbers: Own Site, £${SAAS_MONTHLY_GBP}/Month`;
+/** Team size used in the search snippet: the page's own cost example opens on 3 barbers. */
+export const BOOKSY_SNIPPET_TEAM_SIZE = 3;
+const snippetBooksyMonthly = estimateBooksyMonthlySubscription(BOOKSY_SNIPPET_TEAM_SIZE);
 
-export const BOOKSY_ALTERNATIVE_DESCRIPTION = `Leaving Booksy? Your own site and domain, £${SAAS_MONTHLY_GBP}/month per location, no per-barber fees, help moving clients, 0% KERSIVO commission (Stripe fees apply).`;
+/**
+ * Search title: the query first, then the Booksy pain the page answers (a bill that grows with every
+ * barber) against one flat price. Audit P2-3: the page has the most impressions and a low CTR.
+ */
+export const BOOKSY_ALTERNATIVE_TITLE = `Booksy Alternative UK: £${SAAS_MONTHLY_GBP} Flat, No Per-Barber Fees`;
+
+/** Booksy's subscription for 3 barbers with VAT (from booksyFacts), then KERSIVO's offer and the commission with its Stripe qualifier. */
+export const BOOKSY_ALTERNATIVE_DESCRIPTION = `Booksy for ${BOOKSY_SNIPPET_TEAM_SIZE} barbers: ${formatGbp(snippetBooksyMonthly.incVatGbp)}/month with VAT. KERSIVO: £${SAAS_MONTHLY_GBP}/month flat, your own website, and help moving clients. 0% KERSIVO commission. Stripe fees apply.`;
 
 /** Visual line breaks of the hero H1; joined with spaces they form the exact H1 text. */
 export const BOOKSY_ALTERNATIVE_H1_LINES = [

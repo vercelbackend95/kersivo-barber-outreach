@@ -100,23 +100,23 @@ describe('marketing sitemap', () => {
     expect(byLoc['https://kersivo.co.uk/']).toBe(HOMEPAGE_LAST_UPDATED_ISO);
     expect(byLoc['https://kersivo.co.uk/pricing']).toBe('2026-11-26'); // rebuilt 14 Nov 2026, migration FAQ 26 Nov
     expect(byLoc['https://kersivo.co.uk/starter']).toBe('2026-11-26'); // reminders FAQ; visible date stays 14 Nov
-    expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-24'); // rebuilt 13 Nov, city cards 24 Nov
-    expect(byLoc['https://kersivo.co.uk/barbershop-website-design']).toBe('2026-11-25'); // rebuilt 25 Nov 2026
+    expect(byLoc['https://kersivo.co.uk/barbershop-websites']).toBe('2026-11-26'); // rebuilt 13 Nov, city cards 24 Nov, city links 26 Nov
+    expect(byLoc['https://kersivo.co.uk/barbershop-website-design']).toBe('2026-11-26'); // rebuilt 25 Nov, preview snippet and local guides 26 Nov
     expect(byLoc['https://kersivo.co.uk/barbershop-online-booking']).toBe('2026-11-26'); // rebuilt 25 Nov, title 26 Nov
     expect(byLoc['https://kersivo.co.uk/about']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/compare']).toBe('2026-11-26'); // deposits table, app FAQ; visible date stays 13 Nov
-    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-14');
-    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/booksy-alternative']).toBe('2026-11-26'); // audit P2-3 snippet; visible date stays
+    expect(byLoc['https://kersivo.co.uk/fresha-alternative']).toBe('2026-11-26');
     // "In short" answers (14 Nov 2026) and the new titles (26 Nov, audit P1) moved lastmod;
     // the visible "Last updated" dates stay as they were.
     expect(byLoc['https://kersivo.co.uk/vagaro-alternative']).toBe('2026-11-26');
-    expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/square-appointments-alternative']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/nearcut-alternative']).toBe('2026-11-26');
-    expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-11-14');
-    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/timely-alternative']).toBe('2026-11-26');
+    expect(byLoc['https://kersivo.co.uk/treatwell-alternative']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/phorest-alternative']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/squire-alternative']).toBe('2026-11-26');
-    expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-11-14');
+    expect(byLoc['https://kersivo.co.uk/setora-alternative']).toBe('2026-11-26');
     expect(byLoc['https://kersivo.co.uk/barber-software-cost-calculator']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-cancellation-policy-template']).toBe('2026-11-14');
     expect(byLoc['https://kersivo.co.uk/barbershop-no-show-calculator']).toBe('2026-11-14');

@@ -24,6 +24,7 @@ import {
 import { PRICING_BILLING_COLUMNS, PRICING_PLAN_CARDS } from '@/lib/pricing/pricingPlans';
 import {
   buildKersivoEntityJsonLd,
+  buildKersivoOrganizationNode,
   getKersivoOrganizationId,
   getKersivoWebsiteId,
 } from './kersivoEntityJsonLd';
@@ -159,6 +160,12 @@ describe('/about page', () => {
       publisher: { '@id': ORG_ID },
       mainEntity: { '@id': ORG_ID },
     });
+  });
+
+  it('links the Organization back to /about through mainEntityOfPage, keeping its url on the home page', () => {
+    const organization = buildKersivoOrganizationNode(SITE);
+    expect(organization.url).toBe(`${SITE}/`);
+    expect(organization.mainEntityOfPage).toEqual({ '@id': buildAboutPageJsonLd()['@id'] });
   });
 
   it('makes no founder, customer-count, launch-date or growth claims', () => {

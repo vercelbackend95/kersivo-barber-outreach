@@ -44,11 +44,20 @@ way to publish a city by name alone, so we never end up with thin, name-swapped 
    `*Facts.ts` (re-verify if older than 90 days; the test enforces 90 days against the city's check date).
 3. **Register it:** add the export to `PUBLISHED_CITY_PAGES` in `src/lib/seo/cityPages/index.ts`. The route,
    sitemap, lastmod and hub band follow. Add the URL to `EXPECTED_LOCS` in `marketingSitemap.test.ts`.
-4. **Check the title length.** `buildCityPageTitle` switches to "Barbershop Websites {City} | £39/mo | KERSIVO"
-   when the full form passes 60 characters. `buildCityPageDescription` drops "flat", then "Custom ", when a long
-   name pushes it past 160 characters (Bournemouth uses the first fallback; Birmingham fits the full form at 160); it must stay within 145–160 (tested).
+4. **Write the search snippet from the research** (audit P2-4: templated titles read as doorway pages). Set
+   `seoTitle` and `seoDescription` in the city file; `buildCityPageTitle` / `buildCityPageDescription` only return them.
+   - Title: "Barbershop Website Design {City}: " first, then a hook from this city's page and the flat price,
+     at most 60 characters (e.g. London "£39 Flat, 1 Chair or 6", from the hero).
+   - Description: one local pain point from the market notes (a price band, a marketplace minimum on a cheap
+     cut, a seasonal pattern), then "£39/month flat. 0% KERSIVO commission (Stripe fees apply)." at the end,
+     120–155 characters. Every £ figure must appear in the city's own copy, and the opening hook must differ
+     from every other city's (all tested).
    `cityPages.test.ts` also fails if any sentence of city copy (outside approved policy wording) is shared by two
    cities, so a new city cannot be a reworded copy of an existing one.
+   The city then appears automatically in the contextual links on `/barbershop-websites` (check-up section),
+   `/barbershop-website-design` (local guides under the FAQ), `/barbershop-online-booking` (setup section),
+   `/llms.txt` and `/llms-full.txt`. Add the city path to `CONTENT_CHANGED_ISO` only when its snippet changes
+   after launch.
 5. **Verify:** `npm run claims:check`, `npm test`, `npm run typecheck`, `npm run build`; screenshots at 375,
    768, 1024 and 1440 with no horizontal scroll; calculator and tabs work by keyboard; reduced motion.
 

@@ -8,8 +8,13 @@ const oldFee = requireVerifiedVagaroFact('fillMyBooksExistingClientPercent').val
 const inPersonRate = requireVerifiedVagaroFact('ukCardPresentPercent').value;
 const inPersonFixed = requireVerifiedVagaroFact('ukCardPresentFixedGbp').value;
 export const VAGARO_ALTERNATIVE_PAGE_PATH = '/vagaro-alternative';
-export const VAGARO_ALTERNATIVE_TITLE = 'Vagaro Alternative UK for Barbers: Flat £39/month | KERSIVO';
-export const VAGARO_ALTERNATIVE_DESCRIPTION = 'Leaving Vagaro? A custom UK barbershop website, online booking, deposits and retail pickup for £39/month flat. 0% KERSIVO commission (Stripe fees apply).';
+const mySite = requireVerifiedVagaroFact('monthlyMySiteAddOnGbp').value;
+/**
+ * Search title: the query, the flat price, then what Vagaro sells as add-ons (extra calendars and the
+ * MySite website, from vagaroFacts) and KERSIVO includes. Audit P2-3.
+ */
+export const VAGARO_ALTERNATIVE_TITLE = 'Vagaro Alternative UK: £39 Flat, Website Included';
+export const VAGARO_ALTERNATIVE_DESCRIPTION = `Vagaro adds £${additional} per extra calendar and £${mySite}/month for a MySite website. KERSIVO: site and booking, £39/month flat. 0% KERSIVO commission. Stripe fees apply.`;
 export const VAGARO_ALTERNATIVE_LAST_UPDATED_ISO = '2026-10-08';
 export const VAGARO_ALTERNATIVE_LAST_UPDATED_LABEL = '8 October 2026';
 export const VAGARO_ALTERNATIVE_FAQ_ITEMS = [

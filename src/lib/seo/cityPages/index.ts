@@ -9,7 +9,6 @@ import { getTreatwellSource } from '@/lib/seo/treatwellFacts';
 import { BOOKSY_FACTS_CHECKED_ISO } from '@/lib/seo/booksyFacts';
 import { FRESHA_FACTS_CHECKED_ISO } from '@/lib/seo/freshaFacts';
 import { TREATWELL_FACTS_CHECKED_ISO } from '@/lib/seo/treatwellFacts';
-import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import {
   BARBERSHOP_WEBSITES_BREADCRUMBS,
   buildBreadcrumbListJsonLd,
@@ -52,30 +51,25 @@ export function getCityPage(slug: string | undefined): CityPage | undefined {
 
 export const CITY_TITLE_MAX_LENGTH = 60;
 
-/** Full form first; the shorter form only when a long city name would push it past 60 characters. */
-export function buildCityPageTitle(name: string): string {
-  const full = `Barbershop Website Design ${name} | £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
-  if (full.length <= CITY_TITLE_MAX_LENGTH) return full;
-  return `Barbershop Websites ${name} | £${SAAS_MONTHLY_GBP}/mo | KERSIVO`;
+/**
+ * Each city writes its own search title (audit P2-4: templated "{City} | £39/mo | KERSIVO" titles read as
+ * doorway pages). The builder only returns it; tests hold every title to "Barbershop Website Design
+ * {City}" first, the flat price and 60 characters.
+ */
+export function buildCityPageTitle(city: Pick<CityPage, 'seoTitle'>): string {
+  return city.seoTitle;
 }
 
-export const CITY_DESCRIPTION_MAX_LENGTH = 160;
+export const CITY_DESCRIPTION_MAX_LENGTH = 155;
 
 /**
- * Every form ends with "0% KERSIVO commission (Stripe fees apply)": the commission claim never goes
- * out without the Stripe qualifier. Full form first; long city names move the city to the front,
- * then shorten to "websites", so the description stays within 160 characters
- * (London 153, Birmingham 157, Bournemouth 158 with the full form).
+ * Each city writes its own meta description around one pain point from its research. Tests hold every
+ * description to 155 characters, the flat price, figures that appear in the page copy and the ending
+ * "0% KERSIVO commission (Stripe fees apply).", so the commission claim never goes out without the
+ * Stripe qualifier.
  */
-export function buildCityPageDescription(name: string): string {
-  const offer = `own domain, online booking, deposits and retail pickup, £${SAAS_MONTHLY_GBP}/month`;
-  const commission = '0% KERSIVO commission (Stripe fees apply).';
-  const candidates = [
-    `Barbershop website design for ${name} shops: ${offer}. ${commission}`,
-    `${name} barbershop website design: ${offer}. ${commission}`,
-    `${name} barbershop websites: ${offer}. ${commission}`,
-  ];
-  return candidates.find((text) => text.length <= CITY_DESCRIPTION_MAX_LENGTH) ?? candidates[candidates.length - 1];
+export function buildCityPageDescription(city: Pick<CityPage, 'seoDescription'>): string {
+  return city.seoDescription;
 }
 
 export function buildCityPageH1(city: CityPage): string {
@@ -122,9 +116,9 @@ export function buildCityWebPageJsonLd(city: CityPage): Record<string, unknown> 
     '@type': 'WebPage',
     '@id': `${url}#webpage`,
     url,
-    name: buildCityPageTitle(city.name),
+    name: buildCityPageTitle(city),
     headline: buildCityPageH1(city),
-    description: buildCityPageDescription(city.name),
+    description: buildCityPageDescription(city),
     inLanguage: 'en-GB',
     dateModified: city.checkedIso,
     isPartOf: { '@id': getKersivoWebsiteId(siteUrl) },
@@ -137,12 +131,12 @@ export function buildCityWebPageJsonLd(city: CityPage): Record<string, unknown> 
 }
 
 /**
- * The shared KERSIVO SoftwareApplication block (Starter £0.00 and Full KERSIVO £39.00 offers, no ratings)
- * with `url` set to the city page, so the page's software block points at the page it is on.
- * The @id stays the shared #software node that WebPage.about references.
+ * The shared KERSIVO SoftwareApplication block (Starter £0.00 and Full KERSIVO £39.00 offers, no ratings),
+ * unchanged: `#software` is one entity with one url (the home page) on every page (audit P2-2). The city
+ * page points at it through WebPage.about instead of re-pointing its url.
  */
-export function buildCitySoftwareApplicationJsonLd(city: CityPage): Record<string, unknown> {
-  return { ...buildKersivoSoftwareApplicationJsonLd(), url: pageUrl(city) };
+export function buildCitySoftwareApplicationJsonLd(_city: CityPage): Record<string, unknown> {
+  return buildKersivoSoftwareApplicationJsonLd();
 }
 
 export function buildCityBreadcrumbJsonLd(city: CityPage): Record<string, unknown> {

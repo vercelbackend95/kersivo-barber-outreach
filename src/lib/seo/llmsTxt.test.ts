@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { GET, buildLlmsTxt } from '../../pages/llms.txt';
 import { buildHomepageJsonLd } from './barberDemoJsonLd';
 import { INSIGHTS_PUBLISHED_ARTICLES } from './insights';
+import { INSIGHTS_CATEGORIES } from '@/lib/insights/categories';
+import { PUBLISHED_CITY_PAGES, getCityPagePath } from './cityPages';
 
 const site = 'https://kersivo.co.uk';
 const body = buildLlmsTxt(site);
@@ -13,7 +15,7 @@ describe('/llms.txt', () => {
     const response = await GET({} as Parameters<typeof GET>[0]);
     expect(response.headers.get('Content-Type')).toBe('text/plain; charset=utf-8');
     expect(body.startsWith('# KERSIVO\n\n> ')).toBe(true);
-    for (const heading of ['## Product', '## Comparisons', '## Free tools', '## Insights', '## Optional']) {
+    for (const heading of ['## Product', '## Comparisons', '## Local guides', '## Free tools', '## Insights', '## Optional']) {
       expect(body).toContain(heading);
     }
   });
@@ -33,10 +35,29 @@ describe('/llms.txt', () => {
       const staticPage = path.endsWith('.html') && existsSync(join(process.cwd(), 'public', path.slice(1)));
       // Endpoints such as /barber-booking-fees-uk/fees.csv are served by a .ts route file.
       const endpoint = existsSync(`${base}.ts`);
-      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')) || staticPage || endpoint, path).toBe(true);
+      // City guides render from the [city].astro route for every published city.
+      const city =
+        PUBLISHED_CITY_PAGES.some((page) => getCityPagePath(page) === path) &&
+        existsSync(join(process.cwd(), 'src/pages/barbershop-websites/[city].astro'));
+      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')) || staticPage || endpoint || city, path).toBe(true);
     }
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) expect(paths).toContain(article.path);
     expect(body).not.toContain('/seo-growth');
+  });
+
+  it('lists the home page, Booksy vs own website, every city guide and the Insights hub with its categories (audit P2-5)', () => {
+    const linked = (path: string) => body.includes(`](${site}${path})`);
+    for (const path of ['/', '/kersivo-vs-booksy', '/insights', ...PUBLISHED_CITY_PAGES.map(getCityPagePath)]) {
+      expect(linked(path), path).toBe(true);
+    }
+    for (const category of INSIGHTS_CATEGORIES.filter((item) => item.indexable)) expect(linked(category.path), category.path).toBe(true);
+    expect(body).toContain('[Barbershop website design](');
+    expect(body).not.toContain('Barbershop website design guide');
+  });
+
+  it('lists /free-preview only while the free preview flow is on', () => {
+    expect(buildLlmsTxt(site, true)).toContain(`](${site}/free-preview)`);
+    expect(buildLlmsTxt(site, false)).not.toContain('/free-preview');
   });
 });
 

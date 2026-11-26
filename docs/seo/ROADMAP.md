@@ -66,6 +66,9 @@ Seven-stage plan in `docs/seo/GEO-AEO-PLAN.md` (answer-first, query fan-out, bra
 ## Audit of 26 Nov 2026 — P1 done
 Titles without zero-fees claims and descriptions with the Stripe qualifier (guarded by `claims-guard`), sitemap lastmod that follows content changes (`CONTENT_CHANGED_ISO` in `src/lib/seo/pageDates.ts`), 3-day IndexNow window, Insights article lastmod moved by the "Short answer" template change (`INSIGHTS_ARTICLE_TEMPLATE_REVISED_ISO`): `docs/seo/audit-p1-claims-lastmod-changelog.md`.
 
+## Audit of 26 Nov 2026 — P2 done
+Snippets with a pain point, a hook and the price on the ten alternatives, reports, retail pickup, online booking and website design (free-preview aware). Each city writes its own title and description, and the city pages now get contextual links from the three pillar pages. One `#software` / `#organization` entity graph. llms.txt and llms-full.txt list the home page, free preview, Booksy vs own website, city guides and the Insights hub: `docs/seo/audit-p2-changelog.md`.
+
 ## Small leftovers
 - New OG image (no "ZERO COMMISSION"; needs a design).
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).
@@ -73,4 +76,5 @@ Titles without zero-fees claims and descriptions with the Stripe qualifier (guar
 ## Founder actions (outside code)
 - GA4: follow `docs/analytics/ga4-setup.md` (internal traffic filter → Active, key events, "AI assistants" channel group, annotation, DebugView check). `setup_enquiry_submit` can also be a key event.
 - Search Console and Bing Webmaster Tools: resubmit the sitemap and request indexing for the list in `docs/seo/audit-p1-claims-lastmod-changelog.md` (P1-3), after that PR is live.
+- After the audit P2 PR is live: request indexing for the list in `docs/seo/audit-p2-changelog.md`, then in 2–4 weeks compare CTR per page in Search Console (alternatives and /barbershop-website-design first).
 - Off-site (not in this roadmap, high value): directory listings (Capterra/GetApp, G2, etc.) to fix the brand SERP.

@@ -103,6 +103,17 @@ export type CityPage = {
   heroLead: string;
   /** One-sentence, city-specific summary shown on the /barbershop-websites hub card (no shared wording). */
   hubSummary: string;
+  /**
+   * Search title, written for this city (audit P2-4): "Barbershop Website Design {City}" first, then a
+   * hook from this city's research and the flat price. At most 60 characters.
+   */
+  seoTitle: string;
+  /**
+   * Meta description, written for this city: one pain point from its own research (every figure must
+   * appear in the page copy), the flat price, then "0% KERSIVO commission (Stripe fees apply)."
+   * At most 155 characters.
+   */
+  seoDescription: string;
   /** High-intent queries this page targets (documentation; also checked in tests against the copy). */
   targetQueries: readonly string[];
   calculator: CityCalculatorDefaults;

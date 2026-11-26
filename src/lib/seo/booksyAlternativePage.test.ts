@@ -169,14 +169,19 @@ const renderedCorpus = [visibleCopy, ...bodySources].join('\n');
 describe('booksy-alternative: metadata and URL', () => {
   it('keeps the URL and uses a query-first title and a SERP-length description that sells the switch', () => {
     expect(BOOKSY_ALTERNATIVE_PAGE_PATH).toBe('/booksy-alternative');
-    expect(BOOKSY_ALTERNATIVE_TITLE).toBe(`Booksy Alternative UK for Barbers: Own Site, £${SAAS_MONTHLY_GBP}/Month`);
+    // Audit P2-3: the Booksy pain (a bill that grows per barber) against one flat price.
+    expect(BOOKSY_ALTERNATIVE_TITLE).toBe(`Booksy Alternative UK: £${SAAS_MONTHLY_GBP} Flat, No Per-Barber Fees`);
     expect(BOOKSY_ALTERNATIVE_TITLE.length).toBeLessThanOrEqual(60);
     expect(BOOKSY_ALTERNATIVE_H1).toBe('The Booksy alternative with your name on the door');
+    expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toBe(
+      'Booksy for 3 barbers: £60/month with VAT. KERSIVO: £39/month flat, your own website, and help moving clients. 0% KERSIVO commission. Stripe fees apply.',
+    );
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeGreaterThanOrEqual(120);
     expect(BOOKSY_ALTERNATIVE_DESCRIPTION.length).toBeLessThanOrEqual(155);
-    for (const phrase of ['Booksy', 'domain', `£${SAAS_MONTHLY_GBP}/month per location`, 'no per-barber fees', 'moving clients', '0% KERSIVO commission', 'Stripe fees apply']) {
-      expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toContain(phrase);
-    }
+    // The Booksy figure is the page's own 3-user worked example, computed from booksyFacts.
+    const threeUsers = BOOKSY_WORKED_EXAMPLES.find((row) => row.label === '3 users');
+    expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toContain(`${threeUsers?.booksyIncVat}/month with VAT`);
+    expect(BOOKSY_ALTERNATIVE_DESCRIPTION).toMatch(/0% KERSIVO commission\. Stripe fees apply\.$/);
   });
 
   it('wires LandingLayout with title, description, canonical and the JSON-LD blocks, without noindex', () => {
@@ -592,14 +597,11 @@ describe('booksy-alternative: freshness, sources and sitemap', () => {
   });
 
   it('feeds the Last updated date into the sitemap lastmod', () => {
+    // The new title and description (26 Nov 2026, audit P2-3) move lastmod past the visible date via CONTENT_CHANGED_ISO.
     const entry = buildMarketingSitemapEntries().find((item) => item.loc.endsWith('/booksy-alternative'));
-    expect(entry).toEqual({
-      loc: 'https://kersivo.co.uk/booksy-alternative',
-      lastmod: BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO,
-    });
-    expect(buildMarketingSitemapXml()).toContain(
-      `<loc>https://kersivo.co.uk/booksy-alternative</loc>\n    <lastmod>${BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO}</lastmod>`,
-    );
+    expect(entry).toEqual({ loc: 'https://kersivo.co.uk/booksy-alternative', lastmod: '2026-11-26' });
+    expect('2026-11-26' > BOOKSY_ALTERNATIVE_LAST_UPDATED_ISO).toBe(true);
+    expect(buildMarketingSitemapXml()).toContain('<loc>https://kersivo.co.uk/booksy-alternative</loc>\n    <lastmod>2026-11-26</lastmod>');
   });
 });
 
