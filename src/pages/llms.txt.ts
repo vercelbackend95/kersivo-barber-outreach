@@ -11,6 +11,7 @@ import {
   EDITORIAL_STANDARDS_SHORT_ANSWER,
 } from '@/lib/insights/editorialStandards';
 import { KERSIVO_NOT_FOR } from '@/lib/seo/inShortAnswer';
+import { LLMS_FULL_TXT_PATH } from '@/lib/seo/llmsFullTxt';
 import { KERSIVO_ENTITY_DESCRIPTION } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
@@ -114,6 +115,7 @@ export function buildLlmsTxt(siteUrl: string): string {
     ),
     '',
     '## Optional',
+    link(LLMS_FULL_TXT_PATH, 'Full answers', 'the direct answers and FAQs from every product and comparison page above, word for word, in one file'),
     link('/terms', 'Terms', 'subscription terms'),
     link('/privacy', 'Privacy policy', 'how personal data is handled'),
     '',
