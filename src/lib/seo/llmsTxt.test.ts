@@ -31,7 +31,9 @@ describe('/llms.txt', () => {
       const base = join(process.cwd(), 'src/pages', path.slice(1));
       // The Heritage Grooming live demo is static HTML under public/.
       const staticPage = path.endsWith('.html') && existsSync(join(process.cwd(), 'public', path.slice(1)));
-      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')) || staticPage, path).toBe(true);
+      // Endpoints such as /barber-booking-fees-uk/fees.csv are served by a .ts route file.
+      const endpoint = existsSync(`${base}.ts`);
+      expect(existsSync(`${base}.astro`) || existsSync(join(base, 'index.astro')) || staticPage || endpoint, path).toBe(true);
     }
     for (const article of INSIGHTS_PUBLISHED_ARTICLES) expect(paths).toContain(article.path);
     expect(body).not.toContain('/seo-growth');
