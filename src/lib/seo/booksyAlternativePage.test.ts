@@ -71,6 +71,7 @@ import { SAAS_MONTHLY_GBP } from './defaults';
 import { resolveCanonicalUrl } from './meta';
 import { buildMarketingSitemapEntries, buildMarketingSitemapXml } from './marketingSitemap';
 import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -527,9 +528,10 @@ describe('booksy-alternative: FAQ and schema', () => {
     const faqLd = buildBooksyAlternativeFaqJsonLd();
     expect(faqLd['@id']).toBe('https://kersivo.co.uk/booksy-alternative#faq');
     const entities = faqLd.mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
-    expect(entities.map((entity) => entity.name)).toEqual(BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => item.question));
+    const marked = BOOKSY_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/booksy-alternative'));
+    expect(entities.map((entity) => entity.name)).toEqual(marked.map((item) => item.question));
     expect(entities.map((entity) => entity.acceptedAnswer.text)).toEqual(
-      BOOKSY_ALTERNATIVE_FAQ_ITEMS.map((item) => item.answer),
+      marked.map((item) => item.answer),
     );
   });
 

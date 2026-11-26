@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -6,42 +6,27 @@ import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { INDEXABLE_ROBOTS_CONTENT, resolveCanonicalUrl, resolveRobotsContent } from './meta';
 import {
   BARBERSHOP_WEBSITES_PAGE_DESCRIPTION,
-  BARBERSHOP_WEBSITES_PAGE_H1,
   BARBERSHOP_WEBSITES_PAGE_INDEXABLE,
   BARBERSHOP_WEBSITES_PAGE_PATH,
   BARBERSHOP_WEBSITES_PAGE_TITLE,
-  BARBERSHOP_WEBSITES_V1_H1,
 } from './barbershopWebsitesPage';
 import { BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE } from './barbershopWebsiteDesignPage';
-import { HERITAGE_DEMO_SERVICES as DEMO_SERVICES } from '@/lib/demo/heritage/demoShapes';
 import { HERITAGE_LOCKUP } from '@/lib/demo/heritage/mock';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (path: string) => readFileSync(join(here, path), 'utf8');
-// The v1 hero components now render on the kept previous version; the live page is covered in barbershopWebsitesRedesign.test.ts.
-const page = read('../../pages/design-preview/barbershop-websites-v1.astro');
+// The live page sections are covered in barbershopWebsitesRedesign.test.ts.
 const livePage = read('../../pages/barbershop-websites/index.astro');
 const componentDir = '../../components/barbershop-websites/';
-const hero = read(`${componentDir}BarbershopWebsitesHero.astro`);
-const components = [
-  hero,
-  read(`${componentDir}BlacklineWebsitePreview.astro`),
-  read(`${componentDir}BookingPreview.astro`),
-  read(`${componentDir}WebsiteFeaturesPanel.astro`),
-  read(`${componentDir}HeroBenefits.astro`),
-];
 
-describe('/barbershop-websites previous (v1) hero', () => {
+describe('/barbershop-websites metadata and indexing', () => {
   it('uses the approved metadata and canonical URL', () => {
     expect(BARBERSHOP_WEBSITES_PAGE_PATH).toBe('/barbershop-websites');
     expect(resolveCanonicalUrl(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('https://kersivo.co.uk/barbershop-websites');
     expect(BARBERSHOP_WEBSITES_PAGE_TITLE).toBe('Barbershop Website UK with Online Booking – £39/mo | KERSIVO');
     expect(BARBERSHOP_WEBSITES_PAGE_DESCRIPTION).toContain('£39/month');
     expect(livePage).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
-    // The kept previous version canonicalises to the live page and stays out of the index.
-    expect(page).toContain('canonicalPath={BARBERSHOP_WEBSITES_PAGE_PATH}');
-    expect(page).toMatch(/^\s+noindex$/m);
   });
 
   it('publishes the canonical pillar for search and includes it in the sitemap', () => {
@@ -53,84 +38,22 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(locs).toContain('https://kersivo.co.uk/barbershop-websites');
   });
 
-  it('renders exactly one H1 built from the approved headline', () => {
-    const h1Count = [page, ...components].join('\n').match(/<h1\b/g) ?? [];
-    expect(h1Count).toHaveLength(1);
-    expect(hero).toContain('BARBERSHOP_WEBSITES_V1_H1 as BARBERSHOP_WEBSITES_PAGE_H1');
-    expect(BARBERSHOP_WEBSITES_V1_H1).toBe('Barbershop Websites with Online Booking');
+  it('has no working design-preview copies left in the site', () => {
+    expect(existsSync(join(here, '../../pages/design-preview'))).toBe(false);
   });
 
-  it('only draws the accent full stop inside the final headline line when the H1 ends with one', () => {
-    expect(hero).toContain("const endsWithFullStop = BARBERSHOP_WEBSITES_PAGE_H1.endsWith('.')");
-    expect(hero).toContain('endsWithFullStop && index === lines.length - 1');
-    expect(hero).not.toMatch(/<span>\{lineTwo\}<span class="bsw-accent">/);
+  it('publishes the companion website-design guide in the sitemap', () => {
+    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
+    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
+    expect(locs).toContain('https://kersivo.co.uk/barbershop-website-design');
   });
 
-  it('keeps the price line under the H1 and moves Stripe fees plus the refund line into pricing', () => {
-    expect(hero).toContain('your own domain');
-    expect(hero).not.toContain('a standard domain');
-    expect(hero).toContain('0% KERSIVO commission');
-    expect(hero).not.toContain('STRIPE_FEES_NOTE');
-    expect(hero).not.toContain('bsw-hero__price-note');
-    const offer = read(`${componentDir}FullOffer.astro`);
-    expect(offer).toContain('STRIPE_FEES_NOTE');
-    expect(offer).toContain('landingConditionsLine2');
-    expect(offer).toContain('How payment works');
-    expect(offer).toContain('part="primary"');
-    expect(offer).not.toContain('part="all"');
+  it('shares the marketing route family for page transitions', () => {
+    expect(getRouteFamily(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('marketing');
   });
+});
 
-  it('uses real demo data, no iframes, and labels Heritage Grooming as fictional', () => {
-    const source = components.join('\n');
-    expect(source).not.toMatch(/<iframe|<embed|<video/);
-    expect(source).not.toMatch(/<select|<input|<button/);
-    expect(hero).toContain('Heritage Grooming is a fictional demonstration shop');
-    for (const slug of ['haircut', 'beard-trim', 'skin-fade', 'hot-towel-shave']) {
-      expect(DEMO_SERVICES.some((service) => service.slug === slug)).toBe(true);
-    }
-  });
-
-  it('points all six feature links at the working demo and keeps guide pages in essentials', () => {
-    const panel = read(`${componentDir}WebsiteFeaturesPanel.astro`);
-    const essentials = read(`${componentDir}WebsiteEssentials.astro`);
-    expect(panel).toContain('Your website. Your business.');
-    const capabilities = ['Branding', 'Services', 'Your team', 'Retail shop', 'Online booking', 'Contact & location'];
-    for (const label of capabilities) expect(panel).toContain(`label: '${label}'`);
-    expect((panel.match(/key: '/g) ?? [])).toHaveLength(6);
-    expect(panel).not.toContain('Hero sections');
-    expect(panel).not.toContain("label: 'Gallery'");
-    expect(panel).toContain('aria-labelledby=');
-    expect(panel).toContain('class="bsw-thumb__booking-slots" aria-hidden="true"');
-    for (const route of ['DEMO_HOME_HREF', 'HERITAGE_DEMO_SERVICES_HREF', 'HERITAGE_DEMO_TEAM_HREF', 'DEMO_SHOP_HREF', 'DEMO_BOOK_HREF', 'DEMO_CONTACT_HREF']) {
-      expect(panel).toContain(route);
-    }
-    expect(panel).not.toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
-    expect(panel).not.toContain('BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
-    expect(essentials).toContain('BARBERSHOP_WEBSITE_DESIGN_PAGE_PATH');
-    expect(essentials).toContain('#your-team');
-    expect(essentials).toContain('BARBERSHOP_ONLINE_BOOKING_PAGE_PATH');
-  });
-
-  it('uses a visual-only calendar rail matching the real booking date picker', () => {
-    const preview = read(`${componentDir}BookingPreview.astro`);
-    const calendar = preview.split('<p class="bsw-step__label">Pick a date')[1]
-      ?.split('<p class="bsw-step__label">Choose a time')[0] ?? '';
-    expect(calendar).toContain('bsw-date-preview__header');
-    expect(calendar).toContain('bsw-date-preview__days');
-    expect(calendar).toContain("'is-selected': day.selected");
-    expect(calendar).toContain('dates.monthLabel');
-    expect(calendar).toContain('Example dates');
-    expect(calendar).toContain('not interactive');
-    expect(calendar).not.toMatch(/October|20\d{2}|<button|<input|<a\b|onClick|onChange/);
-    expect(preview).toContain('bookingPreviewDates');
-    expect(preview).toContain('Client booking flow');
-    expect(preview).toContain('Try the booking demo');
-    expect(preview).toContain('class="btn btn--primary btn--lg bsw-booking__cta"');
-    const css = read('../../styles/components/barbershop-websites-hero.css');
-    expect(css).toContain('.bsw-date-preview__day.is-selected');
-    expect(css).toContain('background: var(--accent);');
-  });
-
+describe('Heritage Grooming website preview (used on /free-preview)', () => {
   it('brands the website preview with the Heritage Grooming lockup image', () => {
     const preview = read(`${componentDir}BlacklineWebsitePreview.astro`);
     const brand = preview.match(/<a class="bsw-site__brand"[\s\S]*?<\/a>/)?.[0] ?? '';
@@ -146,26 +69,14 @@ describe('/barbershop-websites previous (v1) hero', () => {
     expect(css).not.toContain('.bsw-site__brand span');
   });
 
-  it('renders no BLACKLINE identity anywhere on the page', () => {
-    const sources = [page, ...readdirSync(join(here, componentDir)).map((file) => read(`${componentDir}${file}`))];
-    for (const source of sources) {
-      const markup = source.split(/^---$/m).slice(2).join('---') || source;
-      const visibleText = markup.replace(/<[^>]+>/g, ' ');
-      const accessibleText = [...markup.matchAll(/\b(?:aria-label|alt|title)=(["{`])([\s\S]*?)\1/g)]
-        .map((match) => match[2])
-        .join(' ');
-      expect(visibleText).not.toMatch(/blackline/i);
-      expect(accessibleText).not.toMatch(/blackline/i);
-    }
-  });
-
-  it('publishes the companion website-design guide in the sitemap', () => {
-    expect(BARBERSHOP_WEBSITE_DESIGN_PAGE_INDEXABLE).toBe(true);
-    const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs).toContain('https://kersivo.co.uk/barbershop-website-design');
-  });
-
-  it('shares the marketing route family for page transitions', () => {
-    expect(getRouteFamily(BARBERSHOP_WEBSITES_PAGE_PATH)).toBe('marketing');
+  it('renders no BLACKLINE identity in visible or accessible text', () => {
+    const source = read(`${componentDir}BlacklineWebsitePreview.astro`);
+    const markup = source.split(/^---$/m).slice(2).join('---') || source;
+    const visibleText = markup.replace(/<[^>]+>/g, ' ');
+    const accessibleText = [...markup.matchAll(/\b(?:aria-label|alt|title)=(["{`])([\s\S]*?)\1/g)]
+      .map((match) => match[2])
+      .join(' ');
+    expect(visibleText).not.toMatch(/blackline/i);
+    expect(accessibleText).not.toMatch(/blackline/i);
   });
 });

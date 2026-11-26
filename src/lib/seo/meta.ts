@@ -57,7 +57,18 @@ export function resolveRobotsContent(seo: Pick<PageSeo, 'noindex' | 'robotsFollo
   return seo.robotsFollow ? 'noindex, follow' : 'noindex, nofollow';
 }
 
+/**
+ * An indexable page without `canonicalPath` would silently canonicalise to the homepage.
+ * Dev and tests fail loudly instead; production keeps the `/` fallback so a page never breaks.
+ */
+export function assertIndexablePageHasCanonical(seo: Pick<PageSeo, 'canonicalPath' | 'noindex'>, isDev: boolean): void {
+  if (isDev && !seo.noindex && !seo.canonicalPath) {
+    throw new Error('SeoHead: indexable page is missing canonicalPath (pass canonicalPath="/" for the homepage).');
+  }
+}
+
 export function resolvePageSeo(seo: PageSeo = {}) {
+  assertIndexablePageHasCanonical(seo, Boolean(import.meta.env?.DEV));
   const title = seo.title ?? DEFAULT_TITLE;
   const description = seo.description ?? DEFAULT_DESCRIPTION;
   const canonicalPath = seo.canonicalPath ?? '/';

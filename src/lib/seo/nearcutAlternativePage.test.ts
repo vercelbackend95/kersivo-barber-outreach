@@ -8,6 +8,7 @@ import { MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
 import { GET as getRobots } from '../../pages/robots.txt';
 import { NEARCUT_COMPARE_SECTIONS, NEARCUT_SOURCES, requireVerifiedNearcutFact, requireIllustrativeNearcutFact } from './nearcutFacts';
 import { buildMarketingSitemapEntries } from './marketingSitemap';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 const dir=dirname(fileURLToPath(import.meta.url));
 const read=(path:string)=>readFileSync(join(dir,path),'utf8');
 const page=read('../../pages/nearcut-alternative/index.astro');
@@ -28,7 +29,7 @@ describe('Nearcut Alternative marketing page',()=>{
   expect(NEARCUT_ALTERNATIVE_FAQ_ITEMS.length).toBeGreaterThanOrEqual(8);
   const schema=buildNearcutAlternativeFaqJsonLd();
   expect(schema['@type']).toBe('FAQPage');
-  expect((schema.mainEntity as unknown[]).length).toBe(NEARCUT_ALTERNATIVE_FAQ_ITEMS.length);
+  expect((schema.mainEntity as unknown[]).length).toBe(NEARCUT_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/nearcut-alternative')).length);
   expect(page).toContain('faqs={NEARCUT_ALTERNATIVE_FAQ_ITEMS}');
  });
  it('leads with the website story, then costs, comparison and switching, with one h1',()=>{

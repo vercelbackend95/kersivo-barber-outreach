@@ -1,5 +1,6 @@
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { requireVerifiedVagaroFact, estimateVagaroDisplayedSubscriptionGbp } from './vagaroFacts';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 const monthly = requireVerifiedVagaroFact('oneCalendarDisplayedMonthlyGbp').value;
 const crossed = requireVerifiedVagaroFact('oneCalendarStruckThroughMonthlyGbp').value;
 const additional = requireVerifiedVagaroFact('additionalCalendarMonthlyGbp').value;
@@ -37,5 +38,5 @@ export const VAGARO_ALTERNATIVE_FAQ_ITEMS = [
 ];
 export function buildVagaroAlternativeFaqJsonLd(): Record<string,unknown> {
 const pageUrl = `${getPublicSiteUrl()}${VAGARO_ALTERNATIVE_PAGE_PATH}`;
-return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:VAGARO_ALTERNATIVE_FAQ_ITEMS.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
+return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:VAGARO_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/vagaro-alternative')).map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
 }

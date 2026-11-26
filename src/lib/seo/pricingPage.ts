@@ -11,6 +11,7 @@ import { formatGbp } from '@/lib/seo/freshaFacts';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { buildBreadcrumbListJsonLd, PRICING_BREADCRUMBS } from '@/lib/seo/breadcrumbs';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export const PRICING_PAGE_PATH = '/pricing';
 
@@ -211,7 +212,7 @@ export function buildPricingFaqJsonLd(freePreview = false): Record<string, unkno
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}${PRICING_PAGE_PATH}#faq`,
-    mainEntity: getPricingFaqItems(freePreview).map((item) => ({
+    mainEntity: getPricingFaqItems(freePreview).filter(ownedFaqSchemaItem(PRICING_PAGE_PATH)).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

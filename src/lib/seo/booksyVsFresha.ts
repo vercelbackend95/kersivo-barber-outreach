@@ -22,6 +22,7 @@ import {
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export const BOOKSY_VS_FRESHA_PAGE_PATH = '/booksy-vs-fresha';
 export const BOOKSY_VS_FRESHA_LAST_UPDATED_ISO = '2026-11-15';
@@ -241,7 +242,7 @@ export function buildBooksyVsFreshaJsonLd(): Record<string, unknown>[] {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
       '@id': `${url}#faq`,
-      mainEntity: BVF_FAQ_ITEMS.map((item) => ({
+      mainEntity: BVF_FAQ_ITEMS.filter(ownedFaqSchemaItem('/booksy-vs-fresha')).map((item) => ({
         '@type': 'Question',
         name: item.question,
         acceptedAnswer: { '@type': 'Answer', text: item.answer },

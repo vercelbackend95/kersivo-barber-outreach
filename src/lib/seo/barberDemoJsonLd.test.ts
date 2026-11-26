@@ -10,6 +10,7 @@ import {
 import { HOMEPAGE_FAQ_ITEMS, buildBarbershopBookingFaqJsonLd } from './barbershopBookingFaq';
 import { getFooterSocialLinks } from './footerSocialLinks';
 import { DEFAULT_TITLE, HOMEPAGE_DESCRIPTION, HOMEPAGE_LAST_UPDATED_ISO, SAAS_MONTHLY_GBP } from './defaults';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 describe('buildBarberDemoJsonLd', () => {
   it('emits a single valid @graph with Organization, WebSite, WebPage, and SoftwareApplication', () => {
@@ -144,9 +145,10 @@ describe('buildBarbershopBookingFaqJsonLd', () => {
       name: string;
       acceptedAnswer: { '@type': string; text: string };
     }>;
-    expect(entities.map((entity) => entity.name)).toEqual(HOMEPAGE_FAQ_ITEMS.map((item) => item.question));
+    const marked = HOMEPAGE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/'));
+    expect(entities.map((entity) => entity.name)).toEqual(marked.map((item) => item.question));
     expect(entities.map((entity) => entity.acceptedAnswer.text)).toEqual(
-      HOMEPAGE_FAQ_ITEMS.map((item) => item.answer),
+      marked.map((item) => item.answer),
     );
     expect(entities.map((entity) => entity.name)).toContain('How much does Full KERSIVO cost a shop?');
     expect(JSON.stringify(faq)).not.toMatch(/Review|AggregateRating|aggregateRating/);

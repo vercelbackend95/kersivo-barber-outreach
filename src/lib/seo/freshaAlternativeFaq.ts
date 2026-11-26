@@ -8,6 +8,7 @@ import {
   requireVerifiedFreshaFact,
 } from '@/lib/seo/freshaFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 export type FreshaAlternativeFaqItem = {
   question: string;
@@ -104,7 +105,7 @@ export function buildFreshaAlternativeFaqJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${siteUrl}${FRESHA_ALTERNATIVE_PAGE_PATH}#faq`,
-    mainEntity: FRESHA_ALTERNATIVE_FAQ_ITEMS.map((item) => ({
+    mainEntity: FRESHA_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/fresha-alternative')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {

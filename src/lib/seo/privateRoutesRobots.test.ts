@@ -19,6 +19,14 @@ describe('X-Robots-Tag on private and demo routes', () => {
     },
   );
 
+  it('checkout return pages under /setup/ send noindex, nofollow', () => {
+    expect(robotsHeaderFor('/setup/(.*)')).toBe('noindex, nofollow');
+  });
+
+  it.each(['/llms.txt', '/llms-full.txt'])('%s is fetchable by AI crawlers but kept out of the search index', (source) => {
+    expect(robotsHeaderFor(source)).toBe('noindex');
+  });
+
   it('/seo-growth stays noindex, follow (Google OAuth app homepage links to the privacy policy)', () => {
     expect(robotsHeaderFor('/seo-growth')).toBe('noindex, follow');
   });

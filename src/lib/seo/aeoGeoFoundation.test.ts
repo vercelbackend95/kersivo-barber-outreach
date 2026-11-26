@@ -35,6 +35,7 @@ import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261Monetizatio
 import { SMS_MONTHLY_ALLOWANCE_TERMS } from '@/lib/pricing/claimsPolicy';
 import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 import { MARKETING_NAV_DIRECT_LINKS, MARKETING_NAV_ITEMS } from '@/lib/nav/marketingNavigation';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
@@ -400,8 +401,8 @@ describe('internal links, routes and comparison FAQ schema', () => {
 
   it('keeps Booksy and Fresha FAQPage schema mirroring their visible FAQs', () => {
     for (const [build, items] of [
-      [buildBooksyAlternativeFaqJsonLd, BOOKSY_ALTERNATIVE_FAQ_ITEMS],
-      [buildFreshaAlternativeFaqJsonLd, FRESHA_ALTERNATIVE_FAQ_ITEMS],
+      [buildBooksyAlternativeFaqJsonLd, BOOKSY_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/booksy-alternative'))],
+      [buildFreshaAlternativeFaqJsonLd, FRESHA_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/fresha-alternative'))],
     ] as const) {
       const faq = build();
       const entities = faq.mainEntity as Array<{ name: string }>;

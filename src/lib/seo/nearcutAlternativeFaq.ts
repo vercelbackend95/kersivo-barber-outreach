@@ -2,6 +2,7 @@ import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { requireIllustrativeNearcutFact } from '@/lib/seo/nearcutFacts';
 import { FREE_PREVIEW_NOT_A_TEMPLATE_CLAIM } from '@/lib/pricing/claimsPolicy';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const gbp = (n: number) => Number.isInteger(n) ? `£${n}` : `£${n.toFixed(2)}`;
 const FULL = gbp(SAAS_MONTHLY_GBP);
@@ -35,5 +36,5 @@ export const NEARCUT_ALTERNATIVE_FAQ_ITEMS = [
 ];
 export function buildNearcutAlternativeFaqJsonLd(): Record<string,unknown> {
 const pageUrl = `${getPublicSiteUrl()}${NEARCUT_ALTERNATIVE_PAGE_PATH}`;
-return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:NEARCUT_ALTERNATIVE_FAQ_ITEMS.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
+return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:NEARCUT_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/nearcut-alternative')).map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
 }

@@ -85,7 +85,7 @@ export function getRouteFamily(pathname: string): RouteFamily {
     return 'minimal';
   }
 
-  // Published Insights hub + article routes (not /design-preview/insights).
+  // Published Insights hub + article routes.
   if (path === '/insights' || path.startsWith('/insights/')) {
     return 'marketing';
   }

@@ -41,6 +41,7 @@ import {
 import { buildMarketingSitemapEntries } from './marketingSitemap';
 import { requireVerifiedSetoraFact } from './setoraFacts';
 import { resolveCanonicalUrl } from './meta';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const componentDir = join(here, '../../components/costCalculator');
@@ -237,8 +238,9 @@ describe('barber software cost calculator structured data', () => {
   it('keeps FAQ JSON-LD identical to the visible FAQ', () => {
     expect(pageSource).toContain('faqs={BARBER_COST_CALCULATOR_FAQ_ITEMS}');
     const entities = byType('FAQPage').mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>;
-    expect(entities).toHaveLength(BARBER_COST_CALCULATOR_FAQ_ITEMS.length);
-    BARBER_COST_CALCULATOR_FAQ_ITEMS.forEach((item, index) => {
+    const marked = BARBER_COST_CALCULATOR_FAQ_ITEMS.filter(ownedFaqSchemaItem('/barber-software-cost-calculator'));
+    expect(entities).toHaveLength(marked.length);
+    marked.forEach((item, index) => {
       expect(entities[index].name).toBe(item.question);
       expect(entities[index].acceptedAnswer.text).toBe(item.answer);
     });

@@ -60,7 +60,7 @@ describe('/admin page with the flag off', () => {
 
   it('still renders the full admin exactly as before', () => {
     expect(src).toContain('<AdminPanel client:load initialSection={Astro.url.searchParams.get(\'section\')} />');
-    expect(src).toContain('title="Admin | Kersivo"');
+    expect(src).toContain('title="Admin | KERSIVO"');
     expect(src).not.toContain('admin-hub.css');
     expect(src).not.toContain('AdminHubShell');
   });

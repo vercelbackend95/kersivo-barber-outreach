@@ -8,6 +8,7 @@ import {
 } from '@/lib/seo/alternativesHubSeo';
 import { getKersivoOrganizationId, getKersivoWebsiteId } from '@/lib/seo/kersivoEntityJsonLd';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 function pageUrl(siteUrl: string): string {
   return `${siteUrl}${ALTERNATIVES_HUB_PAGE_PATH}`;
@@ -67,7 +68,7 @@ export function buildAlternativesHubFaqJsonLd(): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: ALTERNATIVES_HUB_FAQ_ITEMS.map((item) => ({
+    mainEntity: ALTERNATIVES_HUB_FAQ_ITEMS.filter(ownedFaqSchemaItem('/compare')).map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },

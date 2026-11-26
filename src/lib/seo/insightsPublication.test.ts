@@ -101,12 +101,8 @@ describe('Insights publication safety', () => {
     expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 
-  it('does not treat design-preview Insights as a published marketing surface', () => {
-    const preview = join(here, '../../pages/design-preview/insights/index.astro');
-    expect(existsSync(preview)).toBe(true);
-    const source = readFileSync(preview, 'utf8');
-    expect(source).toContain('noindex');
-    expect(source).toContain('canonicalPath={GATE1_PREVIEW_PATH}');
+  it('has no design-preview copy of the Insights hub', () => {
+    expect(existsSync(join(here, '../../pages/design-preview'))).toBe(false);
   });
 
   it('gates indexability and Article JSON-LD on registry membership in the shared layout', () => {

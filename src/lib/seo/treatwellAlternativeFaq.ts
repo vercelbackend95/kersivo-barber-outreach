@@ -1,6 +1,7 @@
 import { KERSIVO_BOOKING_DEPOSIT_GBP, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { TREATWELL_FACTS_CHECKED_DATE, requireVerifiedTreatwellFact } from '@/lib/seo/treatwellFacts';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { ownedFaqSchemaItem } from '@/lib/seo/faqSchemaOwners';
 
 const pct = (n: number) => `${n}%`;
 const gbp = (n: number) => Number.isInteger(n) ? `£${n}` : `£${n.toFixed(2)}`;
@@ -44,5 +45,5 @@ export const TREATWELL_ALTERNATIVE_FAQ_ITEMS = [
 ];
 export function buildTreatwellAlternativeFaqJsonLd(): Record<string,unknown> {
 const pageUrl = `${getPublicSiteUrl()}${TREATWELL_ALTERNATIVE_PAGE_PATH}`;
-return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:TREATWELL_ALTERNATIVE_FAQ_ITEMS.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
+return {'@context':'https://schema.org','@type':'FAQPage','@id':`${pageUrl}#faq`,mainEntity:TREATWELL_ALTERNATIVE_FAQ_ITEMS.filter(ownedFaqSchemaItem('/treatwell-alternative')).map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))};
 }
