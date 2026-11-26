@@ -47,7 +47,9 @@ describe('Insights publication safety', () => {
 
   it('uses a single registry-driven [slug] route and does not keep per-article page files', () => {
     const pageFiles = readdirSync(insightsPagesDir).filter((name) => name.endsWith('.astro'));
-    expect(pageFiles.sort()).toEqual(['[slug].astro', 'index.astro'].sort());
+    // editorial-standards.astro is the publication's policy page (GEO/AEO stage 5), not an article.
+    expect(pageFiles.sort()).toEqual(['[slug].astro', 'editorial-standards.astro', 'index.astro'].sort());
+    expect(INSIGHTS_PUBLISHED_ARTICLES.some((article) => article.slug === 'editorial-standards')).toBe(false);
 
     const slugRoute = readFileSync(join(insightsPagesDir, '[slug].astro'), 'utf8');
     expect(slugRoute).toContain('export const prerender = true');
@@ -90,7 +92,8 @@ describe('Insights publication safety', () => {
     ]);
 
     const locs = buildMarketingSitemapEntries().map((entry) => entry.loc);
-    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(1 + INSIGHTS_PUBLISHED_ARTICLES.length + categories.length);
+    // + 1 for /insights/editorial-standards (a static page, not an article).
+    expect(locs.filter((loc) => loc.includes('/insights')).length).toBe(2 + INSIGHTS_PUBLISHED_ARTICLES.length + categories.length);
     expect(locs.some((loc) => loc.includes('/design-preview/'))).toBe(false);
   });
 

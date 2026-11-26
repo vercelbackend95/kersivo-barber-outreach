@@ -27,6 +27,20 @@ export const KERSIVO_SOCIAL_BIO =
  */
 export const KERSIVO_OFF_SITE_PROFILES: readonly string[] = [];
 
+/**
+ * Organization.knowsAbout: the subjects KERSIVO's product pages, comparisons, free tools and Insights cover.
+ * Topics only, no claims. Keep in step with what the site actually publishes.
+ */
+export const KERSIVO_KNOWS_ABOUT: readonly string[] = [
+  'Barbershop booking software',
+  'Online booking for barbershops',
+  'Booking deposits and no-show protection',
+  'Barbershop websites',
+  'Card payment fees for barbershops',
+  'Booking platform fees in the UK',
+  'Running an independent barbershop in the UK',
+];
+
 /** Stable @id for schema.org cross-references (brand site). */
 export function getKersivoOrganizationId(siteUrl: string): string {
   return `${siteUrl}/#organization`;
@@ -65,6 +79,7 @@ export function buildKersivoOrganizationNode(siteUrl = getPublicSiteUrl()): Reco
     },
     email: KERSIVO_CONTACT_EMAIL,
     areaServed: { '@type': 'Country', name: 'United Kingdom', identifier: 'GB' },
+    knowsAbout: [...KERSIVO_KNOWS_ABOUT],
   };
   if (sameAs.length > 0) {
     organization.sameAs = sameAs;

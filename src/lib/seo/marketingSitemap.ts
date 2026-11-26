@@ -1,3 +1,4 @@
+import { EDITORIAL_STANDARDS_PATH } from '@/lib/insights/editorialStandards';
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from './barberCostCalculatorPage';
 import { CANCELLATION_POLICY_PAGE_PATH } from './cancellationPolicyTemplatePage';
 import { BOOKSY_ALTERNATIVE_PAGE_PATH } from './booksyAlternativeFaq';
@@ -73,6 +74,8 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   /** Retail pickup (click and collect) feature explainer. */
   staticPage(RETAIL_PICKUP_PAGE_PATH),
   staticPage(ABOUT_PAGE_PATH),
+  /** How KERSIVO Insights is written and checked (publishingPrinciples of every article). */
+  staticPage(EDITORIAL_STANDARDS_PATH),
   /** /free-preview 404s while FREE_PREVIEW_FLOW_ENABLED is off; the sitemap follows the flag at build time. */
   ...(isFreePreviewFlowEnabled() ? [staticPage(FREE_PREVIEW_PAGE_PATH)] : []),
   /** Alternatives Hub. */

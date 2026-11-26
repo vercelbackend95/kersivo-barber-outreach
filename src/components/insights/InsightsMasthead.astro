@@ -7,8 +7,10 @@ interface Props {
   /** e.g. "Updated 28 October 2026"; omitted when the article has no later revision. */
   updatedLabel?: string;
   currentLabel?: string;
+  /** Replaces the default line under the masthead on non-article pages (e.g. the editorial standards page). */
+  metaLine?: string;
 }
-const { page, category, categoryHref, dateLabel, updatedLabel, currentLabel = 'Article' } = Astro.props;
+const { page, category, categoryHref, dateLabel, updatedLabel, currentLabel = 'Article', metaLine } = Astro.props;
 ---
 <header class="insights-masthead">
   <div class="insights-shell">
@@ -59,6 +61,8 @@ const { page, category, categoryHref, dateLabel, updatedLabel, currentLabel = 'A
           </>
         )}
       </div>
+    ) : metaLine ? (
+      <p class="insights-article-meta">{metaLine}</p>
     ) : page === 'category' ? (
       <p class="insights-article-meta">Topic archive for independent UK barbershop owners.</p>
     ) : (

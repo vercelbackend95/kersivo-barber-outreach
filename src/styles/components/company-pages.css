@@ -221,3 +221,8 @@
     width: 100%;
   }
 }
+
+/* /about: link to the Insights editorial standards under Support and contact. */
+.company-insights-note {
+  margin-top: 1rem;
+}
