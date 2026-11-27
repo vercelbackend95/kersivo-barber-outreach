@@ -942,8 +942,7 @@
     flex-direction: column;
     justify-content: center;
     gap: clamp(0.9rem, 2.5svh, 1.5rem);
-    /* 1rem short of the bottom edge so iOS 26 Safari keeps its bottom bar clear. */
-    height: calc(100svh - var(--nav-sticky-offset, 3.75rem) - 1rem);
+    height: calc(100svh - var(--nav-sticky-offset, 3.75rem));
     padding-block: 0.75rem;
   }
 
