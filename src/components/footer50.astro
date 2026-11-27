@@ -1,134 +1,205 @@
 ---
-import { footerTradingNameLine } from '@/lib/legal/footerTradingName';
+/**
+ * The one KERSIVO marketing footer ("The Slash"), rendered identically on every marketing page.
+ *
+ * Layout: a poster cut by the red diagonal from the KERSIVO mark (a barber photo shows through it),
+ * a marquee of offer words, the link index, and the legal row.
+ *
+ * Callers may still pass the props of the older footer (showIntro, brandLine, heading, social, ...).
+ * They are ignored on purpose so the footer stays the same site-wide; only `className` is read.
+ * Links come from src/lib/nav/footerNavigation.ts, so SEO tests on that file keep covering it.
+ */
+import { offer } from '@/content/offer';
+import { KERSIVO_LIVE_DEMO_HREF } from '@/lib/demo/heritage/links';
 import { isFreePreviewFlowEnabled } from '@/lib/freePreview/config';
-import { getFooterColumns, type FooterColumnLink } from '@/lib/nav/footerNavigation';
 import {
-  KERSIVO_CONTACT_EMAIL,
-  getFooterSocialLinks,
-  type FooterSocialLink,
-  type FooterSocialPlatform,
-} from '@/lib/seo/footerSocialLinks';
+  FREE_PREVIEW_CTA_HREF,
+  FREE_PREVIEW_CTA_LABEL,
+  FREE_PREVIEW_CTA_TRACK,
+  SUBSCRIBE_NOW_CTA_HREF,
+  SUBSCRIBE_NOW_CTA_TRACK,
+} from '@/lib/freePreview/fullPlanCta';
+import { footerTradingNameLine } from '@/lib/legal/footerTradingName';
+import { getFooterColumns, type FooterColumnLink } from '@/lib/nav/footerNavigation';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import '../styles/components/footer50.css';
 
-interface NavItem {
-  name: string;
-  href: string;
-}
-
-interface Footer50Props {
-  heading?: string;
-  description?: string;
-  ctaText?: string;
-  ctaHref?: string;
-  ctaIsDemo?: boolean;
-  ctaTrack?: string;
-  showIntro?: boolean;
-  brandLine?: string;
-  contactEmail?: string;
-  copyright?: string;
-  navigation?: NavItem[];
-  social?: FooterSocialLink[];
-  legal?: NavItem[];
-  brandName?: string;
-  className?: string;
-}
+const { className = '' } = Astro.props as { className?: string };
 
 const currentYear = new Date().getFullYear();
+const freePreviewEnabled = isFreePreviewFlowEnabled();
+const footerColumns = getFooterColumns(freePreviewEnabled);
+const indexColumns = footerColumns.filter((column) => column.title !== 'Legal');
+const legalLinks = footerColumns.find((column) => column.title === 'Legal')?.links ?? [];
+const social = getFooterSocialLinks();
+const tradingNameLine = footerTradingNameLine();
 
-const {
-  heading = 'Ready to run bookings under your own brand?',
-  description = 'A branded website, online bookings and business tools built around your barbershop.',
-  ctaText = 'Start my KERSIVO subscription',
-  ctaHref = '/admin/launch',
-  ctaIsDemo = false,
-  ctaTrack = 'saas_subscribe_click',
-  showIntro = false,
-  brandLine = 'Own your brand. Own your bookings.',
-  contactEmail = KERSIVO_CONTACT_EMAIL,
-  copyright = `© ${currentYear} KERSIVO`,
-  social = getFooterSocialLinks(),
-  brandName = 'KERSIVO',
-  className = '',
-} = Astro.props as Footer50Props;
+const subscribeCta = {
+  label: offer.cta.subscribeDirect,
+  href: SUBSCRIBE_NOW_CTA_HREF,
+  track: SUBSCRIBE_NOW_CTA_TRACK,
+};
+const previewCta = {
+  label: FREE_PREVIEW_CTA_LABEL,
+  href: FREE_PREVIEW_CTA_HREF,
+  track: FREE_PREVIEW_CTA_TRACK,
+};
+const onPreviewPage = Astro.url.pathname.replace(/\/$/, '') === FREE_PREVIEW_CTA_HREF;
+// The free preview is the primary action; the paid route takes over when the flag is off or we are on /free-preview.
+const primaryCta = freePreviewEnabled && !onPreviewPage ? previewCta : subscribeCta;
+const planLink =
+  primaryCta === subscribeCta
+    ? { label: 'See pricing', href: '/pricing', track: undefined }
+    : { label: 'Start Full KERSIVO', href: SUBSCRIBE_NOW_CTA_HREF, track: SUBSCRIBE_NOW_CTA_TRACK };
 
-const footerClassName = [
-  'footer50',
-  !showIntro && 'footer50--compact',
-  className,
-].filter(Boolean).join(' ');
+const marqueeWords = [
+  { text: '0% KERSIVO commission', outline: false },
+  { text: 'Free preview', outline: true },
+  { text: 'Barbershop websites', outline: false },
+  { text: 'Online booking & deposits', outline: true },
+  { text: 'Your brand', outline: false },
+  { text: 'Retail pickup shop', outline: true },
+];
 
 function isExternalHref(href: string): boolean {
   return /^https?:\/\//i.test(href);
 }
 
-const tradingNameLine = footerTradingNameLine();
-const footerColumns = getFooterColumns(isFreePreviewFlowEnabled());
-
 function isCookieSettings(item: FooterColumnLink): boolean {
   return item.href === '#cookie-settings';
 }
 
-function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string {
-  switch (id) {
-    case 'tiktok':
-      return 'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z';
-    case 'facebook':
-      return 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z';
-  }
-}
+const footerClassName = ['footer50', className].filter(Boolean).join(' ');
+const slashPath = 'M56 6L56 9.65L25.2 40.45L25.2 22.06L41.26 6Z';
 ---
 
 <footer class={footerClassName} aria-label="Footer">
-  {showIntro ? (
-    <div class="container footer50__intro">
-      <h2>{heading}</h2>
-      <p>{description}</p>
-      <div>
+  <section class="footer50__poster" aria-labelledby="footer50-title">
+    <div class="footer50__cut" aria-hidden="true">
+      <picture>
+        <source type="image/webp" srcset="/images/footer/footer-slash-cut.webp" />
+        <img
+          src="/images/footer/footer-slash-cut.jpg"
+          alt=""
+          width="1600"
+          height="1000"
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
+    </div>
+
+    <h2 id="footer50-title" class="sr-only">Own your brand. Own your bookings.</h2>
+    <p class="footer50__line footer50__line--one" aria-hidden="true">Own your <br class="footer50__br" />brand.</p>
+    <p class="footer50__line footer50__line--two" aria-hidden="true">Own your <br class="footer50__br" />bookings.</p>
+
+    <div class="footer50__pitch">
+      <p class="footer50__lede">
+        A branded website, online bookings and business tools built around your barbershop. Typically ready in a few
+        days once we receive all required information.
+      </p>
+      <div class="footer50__actions">
         <a
-          class="btn btn--primary btn--md footer50__cta"
-          href={ctaHref}
-          data-demo-cta={ctaIsDemo ? true : undefined}
-          data-track={ctaTrack || undefined}
+          class="btn btn--primary btn--lg footer50__cta"
+          href={primaryCta.href}
+          data-track={primaryCta.track}
+          data-track-placement="footer"
         >
-          {ctaText}
+          <span>{primaryCta.label}</span>
+          <span class="footer50__arrow" aria-hidden="true">→</span>
+        </a>
+        <a
+          class="btn btn--outline btn--lg footer50__cta"
+          href={KERSIVO_LIVE_DEMO_HREF}
+          data-track="view_live_demo_click"
+          data-track-placement="footer"
+        >
+          See the live demo
         </a>
       </div>
     </div>
-  ) : null}
 
-  <div class="container footer50__main">
+    <div class="footer50__plan">
+      <p class="footer50__eyebrow"><span class="footer50__dot" aria-hidden="true"></span>Full KERSIVO</p>
+      <p class="footer50__price">
+        <span class="footer50__price-figure">£{SAAS_MONTHLY_GBP}</span>
+        <span class="footer50__price-unit">/month per location</span>
+      </p>
+      <p class="footer50__plan-note">0% KERSIVO commission, Stripe fees apply. No setup fee.</p>
+      <a
+        class="footer50__plan-link"
+        href={planLink.href}
+        data-track={planLink.track}
+        data-track-placement={planLink.track ? 'footer_plan' : undefined}
+      >
+        {planLink.label} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="footer50__marquee" data-footer-marquee>
+    <div class="footer50__track" aria-hidden="true">
+      {[0, 1].map(() => (
+        <ul class="footer50__words">
+          {marqueeWords.map((word) => (
+            <li class:list={['footer50__word', word.outline && 'footer50__word--outline']}>
+              {word.text}
+              <svg class="footer50__glyph" viewBox="25.2 6 30.8 34.45" focusable="false">
+                <path d={slashPath} />
+              </svg>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
+    <button type="button" class="footer50__marquee-toggle" aria-pressed="false" data-footer-marquee-toggle>
+      <span class="sr-only" data-footer-marquee-label>Pause the moving banner</span>
+      <svg class="footer50__icon-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <rect x="4" y="3" width="2.5" height="10" rx="0.5"></rect>
+        <rect x="9.5" y="3" width="2.5" height="10" rx="0.5"></rect>
+      </svg>
+      <svg class="footer50__icon-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8A.5.5 0 0 0 5 3.2Z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="footer50__directory">
     <div class="footer50__identity">
-      {brandLine ? <p class="footer50__brand-line">{brandLine}</p> : null}
-      {contactEmail ? (
-        <p class="footer50__contact">
-          <span class="footer50__contact-label">Contact</span>
-          <a class="footer50__email" href={`mailto:${contactEmail}`}>{contactEmail}</a>
-        </p>
-      ) : null}
+      <a class="footer50__mark" href="/" aria-label="KERSIVO home">
+        <svg viewBox="8 6 48 52" aria-hidden="true" focusable="false">
+          <path
+            class="footer50__mark-ink"
+            d="M22 6L22 20.74L8 34.74L8 6ZM22 25.26L22 58L8 58L8 39.26ZM56 47.39L56 58L45.39 58L28.78 41.39L39.39 30.78Z"
+          ></path>
+          <path class="footer50__mark-cut" d={slashPath}></path>
+        </svg>
+      </a>
+      <p class="footer50__summary">Booking software and branded websites for independent UK barbershops.</p>
+      <a class="footer50__email" href={`mailto:${KERSIVO_CONTACT_EMAIL}`}>{KERSIVO_CONTACT_EMAIL}</a>
+      <a class="footer50__starter" href="/starter">KERSIVO Starter: £0/month for up to 4 barbers <span aria-hidden="true">→</span></a>
     </div>
 
-    <nav class="footer50__navigation" aria-label="Footer navigation">
-      {footerColumns.map((column) => (
-        <div class:list={['footer50__group', column.title === 'Legal' && 'footer50__group--legal']}>
-          <p class="footer50__group-title">{column.title}</p>
-          <ul class:list={['footer50__menu', column.title === 'Legal' && 'footer50__legal']}>
+    <nav class="footer50__index" aria-label="Footer navigation">
+      {indexColumns.map((column, index) => (
+        <div class="footer50__row">
+          <p class="footer50__row-title">
+            <span class="footer50__row-number">{String(index + 1).padStart(2, '0')}</span>
+            {column.title}
+          </p>
+          <ul class="footer50__links">
             {column.links.map((item) => (
               <li>
-                {isCookieSettings(item) ? (
-                  <button type="button" class="footer50__cookie-settings" data-cookie-settings>
-                    {item.name}
-                  </button>
-                ) : (
-                  <a
-                    class:list={['footer50__nav-link', item.accent && 'footer50__nav-link--accent']}
-                    href={item.href}
-                    data-track={item.track}
-                    data-track-placement={item.track === 'preview_cta_click' ? 'footer' : undefined}
-                    {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  >
-                    {item.name}
-                  </a>
-                )}
+                <a
+                  class:list={['footer50__link', item.accent && 'footer50__link--accent']}
+                  href={item.href}
+                  data-track={item.track}
+                  data-track-placement={item.track ? 'footer' : undefined}
+                  {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  {item.name}
+                </a>
               </li>
             ))}
           </ul>
@@ -137,9 +208,39 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
     </nav>
   </div>
 
+  <div class="footer50__base">
+    <ul class="footer50__legal" aria-label="Legal">
+      <li class="footer50__copyright">© {currentYear} KERSIVO</li>
+      {legalLinks.map((item) => (
+        <li>
+          {isCookieSettings(item) ? (
+            <button type="button" class="footer50__small footer50__cookie-settings" data-cookie-settings>
+              {item.name}
+            </button>
+          ) : (
+            <a class="footer50__small" href={item.href}>{item.name}</a>
+          )}
+        </li>
+      ))}
+    </ul>
+    {social.length > 0 ? (
+      <ul class="footer50__social" aria-label="Social media">
+        {social.map((item) => (
+          <li>
+            <a class="footer50__small" href={item.href} target="_blank" rel="noopener noreferrer">
+              {item.name}<span class="sr-only"> (opens in a new tab)</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : null}
+    {tradingNameLine ? <p class="footer50__trading-name">{tradingNameLine}</p> : null}
+  </div>
+
   <script>
     import { CONSENT_OPEN_EVENT } from '@/lib/consent/config';
-    const bindCookieSettings = () => {
+
+    const bindFooter = () => {
       document.querySelectorAll<HTMLElement>('[data-cookie-settings]').forEach((el) => {
         if (el.dataset.cookieSettingsBound === 'true') return;
         el.dataset.cookieSettingsBound = 'true';
@@ -147,42 +248,28 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
           window.dispatchEvent(new CustomEvent(CONSENT_OPEN_EVENT, { detail: { trigger: el } }));
         });
       });
+
+      document.querySelectorAll<HTMLElement>('[data-footer-marquee]').forEach((band) => {
+        const toggle = band.querySelector<HTMLButtonElement>('[data-footer-marquee-toggle]');
+        const label = band.querySelector<HTMLElement>('[data-footer-marquee-label]');
+        if (!toggle || toggle.dataset.bound === 'true') return;
+        toggle.dataset.bound = 'true';
+        toggle.addEventListener('click', () => {
+          const paused = band.classList.toggle('is-paused');
+          toggle.setAttribute('aria-pressed', String(paused));
+          if (label) label.textContent = paused ? 'Play the moving banner' : 'Pause the moving banner';
+        });
+
+        // Stop the loop while the band is off screen.
+        if ('IntersectionObserver' in window) {
+          new IntersectionObserver(([entry]) => {
+            band.classList.toggle('is-offscreen', !entry.isIntersecting);
+          }).observe(band);
+        }
+      });
     };
 
-    bindCookieSettings();
-    document.addEventListener('astro:page-load', bindCookieSettings);
+    bindFooter();
+    document.addEventListener('astro:page-load', bindFooter);
   </script>
-
-  <div class="footer50__brand" aria-label={brandName}>
-    <span class="footer50__brand-name">{brandName}</span>
-    {social.length > 0 ? (
-      <ul class="footer50__social-icons" aria-label="Social media">
-        {social.map((item) => (
-          <li>
-            <a
-              href={item.href}
-              class="footer50__social-icon"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={item.name}
-            >
-              {item.id === 'instagram' ? (
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2" />
-                  <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" />
-                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path fill="currentColor" d={socialIconPath(item.id)} />
-                </svg>
-              )}
-            </a>
-          </li>
-        ))}
-      </ul>
-    ) : null}
-    {copyright ? <p class="footer50__copyright">{copyright}</p> : null}
-    {tradingNameLine ? <p class="footer50__trading-name">{tradingNameLine}</p> : null}
-  </div>
 </footer>
