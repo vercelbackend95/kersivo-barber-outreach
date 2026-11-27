@@ -28,7 +28,8 @@ export function formatGbpPence(value: number): string {
 /** Money to put aside is rounded up to the next pound, so rounding never leaves you short. */
 export function formatSetAside(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return '—';
-  return wholePounds.format(Math.ceil(Math.max(0, value) - 1e-9));
+  // `|| 0` turns Math.ceil(-1e-9) = -0 into 0, so a nil bill never shows as "-£0".
+  return wholePounds.format(Math.max(0, Math.ceil(value - 1e-9)) || 0);
 }
 
 /** Cost lines are shown as negative amounts. */
@@ -36,7 +37,7 @@ const cost = (value: number) => (Math.round(value) === 0 ? formatGbp(0) : `−${
 
 /** "9p": pence of every £1 clients pay, rounded up. */
 export function formatPencePerPound(share: number): string {
-  return `${Math.ceil(Math.max(0, share) * 100 - 1e-9)}p`;
+  return `${Math.max(0, Math.ceil(share * 100 - 1e-9)) || 0}p`;
 }
 
 export function formatPercent(share: number): string {
@@ -91,7 +92,9 @@ export function januaryDetailText(result: BarberTaxResult): string {
         : `The rest of your ${rates.label} bill: ${bill} less ${formatGbp(inputs.paymentsOnAccountPaidGbp)} already paid on account`;
   switch (result.paymentsOnAccount) {
     case 'required':
-      return `${billPart}, plus the first payment on account for ${rates.nextLabel} (${formatGbp(result.paymentOnAccountEach)}).`;
+      return result.overpaid > 0
+        ? `Nothing more for ${rates.label}: you paid ${formatGbp(result.overpaid)} more on account than the bill. Left against what you owe, it comes off the first payment on account for ${rates.nextLabel} (${formatGbp(result.paymentOnAccountEach)}).`
+        : `${billPart}, plus the first payment on account for ${rates.nextLabel} (${formatGbp(result.paymentOnAccountEach)}).`;
     case 'bill-under-minimum':
       return `${billPart}. No payments on account for ${rates.nextLabel}, because the bill is under ${formatGbp(PAYMENTS_ON_ACCOUNT.minimumBillGbp)}.`;
     default:
@@ -111,7 +114,46 @@ export const RESULTS_DISCLAIMER = `Estimates from the numbers you entered, using
 export type ResultView = {
   text: Record<string, string>;
   hidden: Record<string, boolean>;
+  /** 0–1 widths for the "where every £1 goes" bar, keyed by segment. */
+  shares: Record<string, number>;
 };
+
+export const SPLIT_SEGMENTS = [
+  { key: 'costs', label: 'Costs' },
+  { key: 'income-tax', label: 'Income Tax' },
+  { key: 'ni', label: 'National Insurance' },
+  { key: 'yours', label: 'Yours to keep' },
+] as const;
+
+/**
+ * How every £1 clients pay splits into actual costs, Income Tax, Class 4 NI and what is left.
+ * Pence use largest-remainder rounding so the four always add up to 100p.
+ */
+export function splitOfEveryPound(result: BarberTaxResult): { shares: Record<string, number>; pence: Record<string, number> } {
+  const turnover = result.turnover;
+  const keys = SPLIT_SEGMENTS.map((segment) => segment.key);
+  if (turnover <= 0) {
+    return { shares: Object.fromEntries(keys.map((k) => [k, 0])), pence: Object.fromEntries(keys.map((k) => [k, 0])) };
+  }
+  const costs = Math.min(result.expenses, turnover);
+  const raw: Record<string, number> = {
+    costs,
+    'income-tax': result.incomeTax,
+    ni: result.class4,
+    yours: Math.max(0, turnover - costs - result.incomeTax - result.class4),
+  };
+  const shares = Object.fromEntries(keys.map((k) => [k, raw[k] / turnover]));
+  const exact = keys.map((k) => shares[k] * 100);
+  const floors = exact.map(Math.floor);
+  let left = 100 - floors.reduce((sum, value) => sum + value, 0);
+  const order = exact.map((value, index) => ({ index, rest: value - floors[index] })).sort((a, b) => b.rest - a.rest);
+  for (const { index } of order) {
+    if (left <= 0) break;
+    floors[index] += 1;
+    left -= 1;
+  }
+  return { shares, pence: Object.fromEntries(keys.map((k, index) => [k, floors[index]])) };
+}
 
 export function buildResultView(result: BarberTaxResult): ResultView {
   const { rates, inputs } = result;
@@ -146,6 +188,10 @@ export function buildResultView(result: BarberTaxResult): ResultView {
     'mtd-status': makingTaxDigitalText(result),
   };
 
+  const split = splitOfEveryPound(result);
+  for (const segment of SPLIT_SEGMENTS) text[`split-${segment.key}`] = `${split.pence[segment.key]}p`;
+  text['split-summary'] = SPLIT_SEGMENTS.map((segment) => `${segment.label} ${split.pence[segment.key]}p`).join(', ');
+
   result.scenarios.forEach((row, index) => {
     text[`sc-${index}-takings`] = formatGbp(row.weeklyTakingsGbp);
     text[`sc-${index}-bill`] = formatGbp(row.bill);
@@ -166,6 +212,7 @@ export function buildResultView(result: BarberTaxResult): ResultView {
       'vat-note': !result.vatThresholdExceeded,
       'income-tax-note': incomeTaxNote(result) === '',
     },
+    shares: split.shares,
   };
 }
 
@@ -187,6 +234,7 @@ export function buildSummaryText(result: BarberTaxResult, pageUrl: string): stri
     `Tax bill: ${view.bill} (${view['share-of-profit']} of profit)`,
     '',
     `Put aside: ${view['per-week']} a working week (${view['per-pound']} of every £1 clients pay)`,
+    `Where every £1 goes: ${view['split-summary']}`,
     `${view['jan-date']}: ${view['jan-amount']}. ${view['jan-detail']}`,
   ];
   if (result.paymentsOnAccount === 'required') lines.push(`${view['jul-date']}: ${view['jul-amount']}. ${view['jul-detail']}`);
