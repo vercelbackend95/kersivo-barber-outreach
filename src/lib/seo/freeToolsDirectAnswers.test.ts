@@ -9,6 +9,7 @@ import {
 import { NO_SHOW_CALCULATOR_TITLE, NO_SHOW_HERO, NO_SHOW_HOW_TO_USE } from './noShowCalculatorPage';
 import { CHAIR_RENT_CALCULATOR_TITLE, CHAIR_RENT_HERO, HOW_TO_USE_SECTION } from './chairRentCalculatorPage';
 import { PRICE_CALCULATOR_DIRECT_ANSWER, PRICE_CALCULATOR_HOW_TO_USE, PRICE_CALCULATOR_TITLE } from './priceCalculatorPage';
+import { BARBER_TAX_CALCULATOR_DIRECT_ANSWER, BARBER_TAX_CALCULATOR_TITLE, BARBER_TAX_HOW_TO_USE } from './barberTaxCalculatorPage';
 
 const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8');
 const words = (text: string) => text.trim().split(/\s+/).length;
@@ -64,6 +65,17 @@ const TOOLS = [
     steps: PRICE_CALCULATOR_HOW_TO_USE,
     stepsTemplate: 'src/pages/barber-price-calculator/index.astro',
     stepsExpression: '{PRICE_CALCULATOR_HOW_TO_USE.steps.map(',
+  },
+  {
+    name: 'self-employed barber tax calculator',
+    title: BARBER_TAX_CALCULATOR_TITLE,
+    search: /self-employed barber tax calculator/i,
+    answer: BARBER_TAX_CALCULATOR_DIRECT_ANSWER,
+    template: 'src/pages/self-employed-barber-tax-calculator/index.astro',
+    expression: '{BARBER_TAX_CALCULATOR_DIRECT_ANSWER}',
+    steps: BARBER_TAX_HOW_TO_USE,
+    stepsTemplate: 'src/pages/self-employed-barber-tax-calculator/index.astro',
+    stepsExpression: '{BARBER_TAX_HOW_TO_USE.steps.map(',
   },
 ] as const;
 

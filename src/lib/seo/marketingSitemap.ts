@@ -21,6 +21,7 @@ import { ALTERNATIVES_HUB_PAGE_PATH } from './alternativesHubSeo';
 import { buildAbsoluteUrl } from './meta';
 import { NO_SHOW_CALCULATOR_PAGE_PATH } from './noShowCalculatorPage';
 import { CHAIR_RENT_CALCULATOR_PAGE_PATH } from './chairRentCalculatorPage';
+import { BARBER_TAX_CALCULATOR_PAGE_PATH } from './barberTaxCalculatorPage';
 import { PRICE_CALCULATOR_PAGE_PATH } from './priceCalculatorPage';
 import { FREE_TOOLS_PAGE_PATH } from './freeToolsPage';
 import { RETAIL_PICKUP_PAGE_PATH } from './retailPickupPage';
@@ -99,6 +100,7 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   staticPage(NO_SHOW_CALCULATOR_PAGE_PATH),
   staticPage(CHAIR_RENT_CALCULATOR_PAGE_PATH),
   staticPage(PRICE_CALCULATOR_PAGE_PATH),
+  staticPage(BARBER_TAX_CALCULATOR_PAGE_PATH),
   staticPage(FREE_TOOLS_PAGE_PATH),
   staticPage('/privacy'),
   staticPage('/cookies'),

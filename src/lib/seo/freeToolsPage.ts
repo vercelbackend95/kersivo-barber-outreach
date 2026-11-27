@@ -11,18 +11,19 @@ import { NO_SHOW_CALCULATOR_PAGE_PATH } from '@/lib/seo/noShowCalculatorPage';
 import { CANCELLATION_POLICY_PAGE_PATH } from '@/lib/seo/cancellationPolicyTemplatePage';
 import { CHAIR_RENT_CALCULATOR_PAGE_PATH } from '@/lib/seo/chairRentCalculatorPage';
 import { BARBER_COST_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberCostCalculatorPage';
+import { BARBER_TAX_CALCULATOR_PAGE_PATH } from '@/lib/seo/barberTaxCalculatorPage';
 
 export const FREE_TOOLS_PAGE_PATH = '/free-tools';
-export const FREE_TOOLS_LAST_UPDATED_ISO = '2026-11-24';
-export const FREE_TOOLS_LAST_UPDATED_LABEL = '24 November 2026';
+export const FREE_TOOLS_LAST_UPDATED_ISO = '2026-11-27';
+export const FREE_TOOLS_LAST_UPDATED_LABEL = '27 November 2026';
 export const FREE_TOOLS_BREADCRUMB_NAME = 'Free tools';
 export const FREE_TOOLS_TITLE = 'Free Tools for UK Barbershops: Calculators & Templates';
 export const FREE_TOOLS_DESCRIPTION =
-  'Free calculators and templates for UK barbers: what to charge, no-show costs, chair rent vs commission, price lists and cancellation policies. No sign-up.';
+  'Free calculators and templates for UK barbers: prices, no-show costs, chair rent vs commission, self-employed tax, price lists and cancellation policies.';
 export const FREE_TOOLS_H1 = 'Free tools for barbershops';
 export const FREE_TOOLS_EYEBROW = 'Free tools · No sign-up';
 export const FREE_TOOLS_LEAD =
-  'Calculators and templates for the sums and paperwork behind a busy chair: what to charge, what no-shows cost, chair rent or commission, and the price list and cancellation policy your clients see. All free, with no account or email needed.';
+  'Calculators and templates for the sums and paperwork behind a busy chair: what to charge, what no-shows cost, chair rent or commission, the tax to put aside, and the price list and cancellation policy your clients see. All free, with no account or email needed.';
 
 export type FreeToolKind = 'Calculator' | 'Template';
 
@@ -56,6 +57,18 @@ export const FREE_TOOL_GROUPS: readonly FreeToolGroup[] = [
         label: 'Price list template',
         kind: 'Template',
         description: 'Lay out your services and prices to print for the wall or copy for Instagram and Google.',
+      },
+    ],
+  },
+  {
+    id: 'tax',
+    heading: 'Putting money aside for tax',
+    tools: [
+      {
+        href: BARBER_TAX_CALCULATOR_PAGE_PATH,
+        label: 'Self-employed barber tax calculator',
+        kind: 'Calculator',
+        description: 'Work out your Income Tax and National Insurance, what to put aside each week and what is due in January.',
       },
     ],
   },

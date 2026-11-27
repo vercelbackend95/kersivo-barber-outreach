@@ -75,6 +75,11 @@ const RELATED: Record<string, InsightsRelatedLink[]> = {
   ],
   [INSIGHTS_MTD_BARBERS.slug]: [
     {
+      href: '/self-employed-barber-tax-calculator',
+      label: 'Work out the tax to put aside each week',
+      kind: 'tool',
+    },
+    {
       href: INSIGHTS_OWNER_EARNINGS.path,
       label: 'What UK barbershop owners can actually take home',
       kind: 'article',

@@ -72,6 +72,9 @@ Snippets with a pain point, a hook and the price on the ten alternatives, report
 ## Reindexing check of 26 Nov 2026 — done
 Production crawl after P3 (66/66 sitemap URLs indexable, JSON-LD valid, IndexNow returning 200), the founder's step-by-step reindexing list for Search Console, Bing and AI: `docs/seo/reindex-2026-11-26.md`. Follow-up: old URLs that Bingbot still requested now redirect permanently, the Insights hub and three archives get their own lastmod, and the Capterra, GetApp and G2 profiles are in `sameAs`: `docs/seo/old-urls-insights-lastmod-changelog.md`.
 
+## Free tool: self-employed barber tax calculator (27 Nov 2026)
+`/self-employed-barber-tax-calculator`: what a chair renter or self-employed barber puts aside each week, the bill for 2025/26 or 2026/27 (England, Wales and NI or Scotland) and the January and July payments, with rates from GOV.UK in one dated file. Linked from `/free-tools`, the header and footer, `/llms.txt` and the MTD article: `docs/seo/barber-tax-calculator-changelog.md`. Add 2027/28 rates before 6 April 2027.
+
 ## Small leftovers
 - New OG image (no "ZERO COMMISSION"; needs a design).
 - Virtual office address → `LEGAL_OPERATOR_SERVICE_ADDRESS` in `src/lib/legal/businessIdentity.ts` (footer line appears automatically).

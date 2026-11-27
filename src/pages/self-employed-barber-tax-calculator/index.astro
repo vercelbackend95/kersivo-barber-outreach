@@ -1,0 +1,386 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import Faq4 from '@/components/faq4.astro';
+import Footer50 from '@/components/footer50.astro';
+import ComparisonFinalCta from '@/components/comparison/ComparisonFinalCta.astro';
+import TaxCalcField from '@/components/barberTaxCalculator/TaxCalcField.astro';
+import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
+import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { TAX_REGIONS, SELF_EMPLOYED_RATE_SOURCES } from '@/data/self-employed-tax-rates';
+import { DEFAULT_INPUTS, calculateTax } from '@/lib/barberTaxCalculator/engine';
+import { REGION_LABELS, RESULTS_DISCLAIMER, TAX_YEAR_OPTIONS, buildResultView } from '@/lib/barberTaxCalculator/view';
+import { FREE_TOOLS_PAGE_PATH } from '@/lib/seo/freeToolsPage';
+import {
+  BARBER_TAX_CALCULATOR_BREADCRUMB_NAME,
+  BARBER_TAX_CALCULATOR_DESCRIPTION,
+  BARBER_TAX_CALCULATOR_DIRECT_ANSWER,
+  BARBER_TAX_CALCULATOR_EYEBROW,
+  BARBER_TAX_CALCULATOR_H1,
+  BARBER_TAX_CALCULATOR_LAST_UPDATED_ISO,
+  BARBER_TAX_CALCULATOR_LAST_UPDATED_LABEL,
+  BARBER_TAX_CALCULATOR_PAGE_PATH,
+  BARBER_TAX_CALCULATOR_TITLE,
+  BARBER_TAX_CALCULATOR_TRUST_SIGNALS,
+  BARBER_TAX_FAQ_ITEMS,
+  BARBER_TAX_FORM_COPY as FORM,
+  BARBER_TAX_HOW_TO_USE,
+  BARBER_TAX_METHOD,
+  BARBER_TAX_MTD_COPY as MTD,
+  BARBER_TAX_RELATED_LINKS,
+  BARBER_TAX_RESULTS_COPY as RESULTS,
+  BARBER_TAX_SCENARIOS_COPY as SCEN,
+  buildBarberTaxCalculatorJsonLd,
+} from '@/lib/seo/barberTaxCalculatorPage';
+import '@/styles/components/ks-glass-card.css';
+import '@/styles/components/data-report.css';
+import '@/styles/components/price-calculator.css';
+import '@/styles/components/barber-tax-calculator.css';
+
+const currentYear = new Date().getFullYear();
+const result = calculateTax(DEFAULT_INPUTS);
+const { text, hidden } = buildResultView(result);
+const rateSourceLinks = [...new Set(Object.values(SELF_EMPLOYED_RATE_SOURCES).map((entry) => entry.source))];
+const sourceLabel = (href: string) => {
+  const url = new URL(href);
+  return `${url.hostname.replace('www.', '')}${url.pathname}`;
+};
+---
+
+<LandingLayout
+  title={BARBER_TAX_CALCULATOR_TITLE}
+  description={BARBER_TAX_CALCULATOR_DESCRIPTION}
+  canonicalPath={BARBER_TAX_CALCULATOR_PAGE_PATH}
+  jsonLd={[buildKersivoEntityJsonLd(), ...buildBarberTaxCalculatorJsonLd()]}
+>
+  <main class="dr-page pc-page tc-page landing-overflow-guard">
+    <header class="dr-hero">
+      <div class="dr-shell">
+        <nav class="dr-breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li aria-hidden="true">/</li>
+            <li><a href={FREE_TOOLS_PAGE_PATH}>Free tools</a></li>
+            <li aria-hidden="true">/</li>
+            <li><span aria-current="page">{BARBER_TAX_CALCULATOR_BREADCRUMB_NAME}</span></li>
+          </ol>
+        </nav>
+        <p class="ks-eyebrow">{BARBER_TAX_CALCULATOR_EYEBROW}</p>
+        <h1 class="dr-hero__title">{BARBER_TAX_CALCULATOR_H1}</h1>
+        <p class="dr-hero__lead">{BARBER_TAX_CALCULATOR_DIRECT_ANSWER}</p>
+        <ul class="dr-hero__meta" aria-label="About this calculator">
+          {BARBER_TAX_CALCULATOR_TRUST_SIGNALS.map((signal) => <li>{signal}</li>)}
+        </ul>
+        <p class="dr-note">
+          Updated <time datetime={BARBER_TAX_CALCULATOR_LAST_UPDATED_ISO}>{BARBER_TAX_CALCULATOR_LAST_UPDATED_LABEL}</time>
+        </p>
+      </div>
+    </header>
+
+    <section id="calculator" class="dr-section" aria-label="Calculator">
+      <div class="dr-shell pc-tool">
+        <form id="tc-form" class="ks-glass-card pc-form" aria-labelledby="tc-form-title" data-tc-form novalidate>
+          <div class="pc-form__head">
+            <h2 id="tc-form-title" class="pc-form__title">Your numbers</h2>
+            <p class="pc-form__examples">{FORM.examples}</p>
+          </div>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.yearLegend}</legend>
+            <fieldset class="tc-choice">
+              <legend class="pc-label">{FORM.yearLabel}</legend>
+              <div class="tc-segmented">
+                {TAX_YEAR_OPTIONS.map((option) => (
+                  <label class="tc-segmented__option">
+                    <input type="radio" name="taxYear" value={option.value} checked={option.value === DEFAULT_INPUTS.taxYear} />
+                    <span class="tc-segmented__face">
+                      <span class="tc-segmented__label">{option.label}</span>
+                      <span class="tc-segmented__hint">{option.hint}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset class="tc-choice" aria-describedby="tc-region-helper">
+              <legend class="pc-label">{FORM.regionLabel}</legend>
+              <div class="tc-segmented">
+                {TAX_REGIONS.map((region) => (
+                  <label class="tc-segmented__option">
+                    <input type="radio" name="region" value={region} checked={region === DEFAULT_INPUTS.region} />
+                    <span class="tc-segmented__face">
+                      <span class="tc-segmented__label">{REGION_LABELS[region]}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p id="tc-region-helper" class="pc-helper">{FORM.regionHelper}</p>
+            </fieldset>
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.takingsLegend}</legend>
+            <TaxCalcField name="weeklyTakingsGbp" label={FORM.takingsLabel} helper={FORM.takingsHelper} prefix="£" step={10} />
+            <div class="pc-pair">
+              <TaxCalcField name="weeklyTipsGbp" label={FORM.tipsLabel} helper={FORM.tipsHelper} prefix="£" step={5} />
+              <TaxCalcField name="weeksWorked" label={FORM.weeksLabel} helper={FORM.weeksHelper} suffix="wks" />
+            </div>
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.costsLegend}</legend>
+            <div class="pc-pair">
+              <TaxCalcField name="weeklyChairRentGbp" label={FORM.rentLabel} prefix="£" step={5} />
+              <TaxCalcField name="rentWeeksPerYear" label={FORM.rentWeeksLabel} helper={FORM.rentWeeksHelper} suffix="wks" />
+            </div>
+            <TaxCalcField name="otherCostsMonthlyGbp" label={FORM.otherLabel} helper={FORM.otherHelper} prefix="£" step={10} />
+          </fieldset>
+
+          <fieldset class="pc-fieldset">
+            <legend class="pc-legend">{FORM.moreLegend}</legend>
+            <TaxCalcField name="employmentIncomeGbp" label={FORM.jobLabel} helper={FORM.jobHelper} prefix="£" step={100} />
+            <TaxCalcField name="paymentsOnAccountPaidGbp" label={FORM.poaLabel} helper={FORM.poaHelper} prefix="£" step={10} />
+          </fieldset>
+        </form>
+
+        <section id="tc-results" class="ks-glass-card ks-glass-card--accent pc-results tc-results" aria-labelledby="tc-results-title">
+          <p class="ks-eyebrow">{RESULTS.eyebrow}</p>
+          <h2 id="tc-results-title" class="pc-results__title">{RESULTS.heading}</h2>
+          <p class="sr-only" aria-live="polite" aria-atomic="true" data-tc-announce></p>
+
+          <dl class="ks-facts pc-facts">
+            <div class="ks-facts__value">
+              <dt>{RESULTS.perWeekLabel}</dt>
+              <dd data-slot="per-week">{text['per-week']}</dd>
+            </div>
+            <div class="ks-facts__value">
+              <dt>{RESULTS.perPoundLabel}</dt>
+              <dd data-slot="per-pound">{text['per-pound']}</dd>
+            </div>
+          </dl>
+
+          <dl class="tc-breakdown" aria-label={RESULTS.breakdownLabel}>
+            <div class="tc-breakdown__row">
+              <dt>{RESULTS.turnoverRow}</dt>
+              <dd data-slot="turnover">{text.turnover}</dd>
+            </div>
+            <div class="tc-breakdown__row" data-hide="row-chair-rent" hidden={hidden['row-chair-rent']}>
+              <dt>{RESULTS.rentRow}</dt>
+              <dd data-slot="chair-rent">{text['chair-rent']}</dd>
+            </div>
+            <div class="tc-breakdown__row" data-hide="row-other-costs" hidden={hidden['row-other-costs']}>
+              <dt>{RESULTS.otherRow}</dt>
+              <dd data-slot="other-costs">{text['other-costs']}</dd>
+            </div>
+            <div class="tc-breakdown__row" data-hide="row-allowance" hidden={hidden['row-allowance']}>
+              <dt>{RESULTS.allowanceRow}</dt>
+              <dd data-slot="allowance">{text.allowance}</dd>
+            </div>
+            <div class="tc-breakdown__row tc-breakdown__row--sum">
+              <dt>{RESULTS.profitRow}</dt>
+              <dd data-slot="profit">{text.profit}</dd>
+            </div>
+            <div class="tc-breakdown__row">
+              <dt>
+                {RESULTS.incomeTaxRow}
+                <span class="tc-breakdown__note" data-slot="income-tax-note" data-hide="income-tax-note" hidden={hidden['income-tax-note']}>{text['income-tax-note']}</span>
+              </dt>
+              <dd data-slot="income-tax">{text['income-tax']}</dd>
+            </div>
+            <div class="tc-breakdown__row">
+              <dt>{RESULTS.class4Row}</dt>
+              <dd data-slot="class4">{text.class4}</dd>
+            </div>
+            <div class="tc-breakdown__row tc-breakdown__row--total">
+              <dt>
+                {RESULTS.billRow} <span data-slot="year-label">{text['year-label']}</span>
+                <span class="tc-breakdown__note"><span data-slot="share-of-profit">{text['share-of-profit']}</span> of profit</span>
+              </dt>
+              <dd data-slot="bill">{text.bill}</dd>
+            </div>
+            <div class="tc-breakdown__row">
+              <dt>
+                {RESULTS.takeHomeRow}
+                <span class="tc-breakdown__note" data-slot="take-home-month">{text['take-home-month']}</span>
+              </dt>
+              <dd data-slot="take-home">{text['take-home']}</dd>
+            </div>
+          </dl>
+
+          <div class="tc-dates">
+            <h3 class="tc-dates__title">{RESULTS.datesHeading}</h3>
+            <ol class="tc-dates__list">
+              <li class="tc-dates__item">
+                <p class="tc-dates__when"><span data-slot="jan-date">{text['jan-date']}</span></p>
+                <p class="tc-dates__amount" data-slot="jan-amount">{text['jan-amount']}</p>
+                <p class="tc-dates__detail" data-slot="jan-detail">{text['jan-detail']}</p>
+              </li>
+              <li class="tc-dates__item" data-hide="row-july" hidden={hidden['row-july']}>
+                <p class="tc-dates__when"><span data-slot="jul-date">{text['jul-date']}</span></p>
+                <p class="tc-dates__amount" data-slot="jul-amount">{text['jul-amount']}</p>
+                <p class="tc-dates__detail" data-slot="jul-detail">{text['jul-detail']}</p>
+              </li>
+            </ol>
+            <p class="tc-note" data-slot="first-year-note" data-hide="first-year-note" hidden={hidden['first-year-note']}>{text['first-year-note']}</p>
+          </div>
+
+          <p class="tc-note" data-slot="allowance-note" data-hide="allowance-note" hidden={hidden['allowance-note']}>{text['allowance-note']}</p>
+          <p class="tc-note" data-slot="loss-note" data-hide="loss-note" hidden={hidden['loss-note']}>{text['loss-note']}</p>
+          <p class="tc-note" data-slot="class2-note" data-hide="class2-note" hidden={hidden['class2-note']}>{text['class2-note']}</p>
+          <p class="tc-note" data-slot="vat-note" data-hide="vat-note" hidden={hidden['vat-note']}>{text['vat-note']}</p>
+
+          <div class="pc-actions">
+            <button type="button" class="btn btn--primary btn--md" data-tc-copy>{RESULTS.copy}</button>
+            <button type="button" class="btn btn--secondary btn--md" data-tc-print>{RESULTS.print}</button>
+            <p class="pc-status" data-tc-status role="status" aria-live="polite"></p>
+          </div>
+          <a class="dr-link pc-results__link" href="/barber-price-calculator">{RESULTS.priceLink} <span aria-hidden="true">→</span></a>
+          <p class="pc-disclaimer">{RESULTS_DISCLAIMER}</p>
+        </section>
+      </div>
+
+      <div class="dr-shell dr-split pc-extras">
+        <article class="ks-glass-card dr-card" aria-labelledby="tc-scen-title">
+          <p class="ks-eyebrow ks-eyebrow--neutral">{SCEN.eyebrow}</p>
+          <h3 id="tc-scen-title">{SCEN.heading}</h3>
+          <p class="pc-card__lead">{SCEN.lead}</p>
+          <table class="pc-table pc-table--compact">
+            <caption class="sr-only">Tax bill and weekly amount to put aside with weekly takings 20% lower, as entered and 20% higher</caption>
+            <thead>
+              <tr>
+                <th scope="col">{SCEN.takingsColumn}</th>
+                <th scope="col">{SCEN.billColumn}</th>
+                <th scope="col">{SCEN.weekColumn}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.scenarios.map((row, index) => (
+                <tr data-current={String(index === 1)}>
+                  <th scope="row">
+                    <span data-slot={`sc-${index}-takings`}>{text[`sc-${index}-takings`]}</span>
+                    <span class="pc-table__sub">{row.label}</span>
+                  </th>
+                  <td data-slot={`sc-${index}-bill`}>{text[`sc-${index}-bill`]}</td>
+                  <td data-slot={`sc-${index}-week`}>{text[`sc-${index}-week`]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </article>
+
+        <article class="ks-glass-card dr-card" aria-labelledby="tc-mtd-title">
+          <p class="ks-eyebrow ks-eyebrow--neutral">{MTD.eyebrow}</p>
+          <h3 id="tc-mtd-title">{MTD.heading}</h3>
+          <p class="pc-card__lead">{MTD.lead}</p>
+          <ul class="tc-phases">
+            {MTD.phases.map((phase) => <li>{phase}</li>)}
+          </ul>
+          <p class="pc-rise__result" data-slot="mtd-status">{text['mtd-status']}</p>
+          <a class="dr-link" href={MTD.articleHref}>{MTD.articleLabel} <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+
+      <div class="pc-dock" data-tc-dock hidden>
+        <a href="#tc-results" class="pc-dock__link">
+          <span class="pc-dock__service">Put aside a week</span>
+          <span class="pc-dock__price" data-slot="per-week">{text['per-week']}</span>
+          <span class="pc-dock__more">Full results <span aria-hidden="true">↓</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section id="how-to-use" class="dr-section" aria-labelledby="tc-use-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Three steps</p>
+          <h2 id="tc-use-title" class="dr-h2">{BARBER_TAX_HOW_TO_USE.heading}</h2>
+        </div>
+        <ol class="dr-list dr-list--steps pc-steps">
+          {BARBER_TAX_HOW_TO_USE.steps.map((step) => <li>{step}</li>)}
+        </ol>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="dr-section" aria-labelledby="tc-method-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow ks-eyebrow--neutral">Method</p>
+          <h2 id="tc-method-title" class="dr-h2">{BARBER_TAX_METHOD.heading}</h2>
+        </div>
+        <dl class="pc-method">
+          {BARBER_TAX_METHOD.steps.map((step) => (
+            <div class="pc-method__row">
+              <dt>{step.title}</dt>
+              <dd>{step.body}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="dr-note">{BARBER_TAX_METHOD.limits}</p>
+        <p class="dr-note tc-sources">
+          Rates and dates checked {BARBER_TAX_CALCULATOR_LAST_UPDATED_LABEL} on GOV.UK:
+          {rateSourceLinks.map((href, index) => (
+            <>
+              {index > 0 ? '; ' : ' '}
+              <a href={href} rel="noopener noreferrer" target="_blank">{sourceLabel(href)}<span class="sr-only"> (opens in a new tab)</span></a>
+            </>
+          ))}.
+        </p>
+      </div>
+    </section>
+
+    <section class="dr-section" aria-labelledby="tc-related-title">
+      <div class="dr-shell">
+        <div class="dr-section__head">
+          <p class="ks-eyebrow">Keep going</p>
+          <h2 id="tc-related-title" class="dr-h2">Related free tools</h2>
+        </div>
+        <ul class="dr-related">
+          {BARBER_TAX_RELATED_LINKS.map((link) => (
+            <li>
+              <a href={link.href}>
+                <span class="dr-related__label">{link.label}</span>
+                <span class="dr-related__desc">{link.description}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p class="dr-note"><a class="dr-link" href={FREE_TOOLS_PAGE_PATH}>See all free tools for barbershops</a></p>
+      </div>
+    </section>
+
+    <Faq4
+      className="faq4--landing"
+      heading="Self-employed barber tax questions"
+      subHeading="Putting money aside, chair rent, tips, payments on account and Making Tax Digital."
+      supportHeading="Clients still booking by DM?"
+      supportText="Full KERSIVO gives a barbershop its own website with online booking, so clients book themselves."
+      supportLinkLabel="See Full KERSIVO pricing"
+      supportLinkHref="/pricing#plan"
+      faqs={[...BARBER_TAX_FAQ_ITEMS]}
+    />
+
+    <ComparisonFinalCta placement="barber_tax_calculator" />
+
+    <div class="dr-end"></div>
+
+    <Footer50
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
+      social={getFooterSocialLinks()}
+    />
+  </main>
+</LandingLayout>
+
+<script>
+  import { initBarberTaxCalculator } from '@/lib/barberTaxCalculator/initBarberTaxCalculator';
+  import { onPageReady } from '@/lib/navigation/pageReady';
+
+  onPageReady(initBarberTaxCalculator);
+</script>
+
+<style is:global>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

@@ -129,6 +129,11 @@ export function buildLlmsTxt(siteUrl: string, freePreview = isFreePreviewFlowEna
       'Chair rent vs commission calculator',
       "free chair rent vs commission calculator for UK barbershops: what one chair leaves the shop either way, including minimum wage top-ups, holiday pay, employer's National Insurance and pension, plus the break-even rent",
     ),
+    link(
+      '/self-employed-barber-tax-calculator',
+      'Self-employed barber tax calculator',
+      'free UK tax calculator for chair renters and other self-employed barbers: 2025/26 or 2026/27 Income Tax (Scottish rates included) and Class 4 National Insurance on profit after chair rent and costs, what to put aside each working week, the 31 January and 31 July payments including payments on account, and the Making Tax Digital test, with nothing stored',
+    ),
     '',
     '## Insights',
     link(INSIGHTS_INDEX_PATH, 'KERSIVO Insights', INSIGHTS_INDEX_DESCRIPTION),

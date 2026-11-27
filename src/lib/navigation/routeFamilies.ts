@@ -41,6 +41,7 @@ export const MARKETING_CONTENT_PATHS: readonly string[] = [
   '/barbershop-no-show-calculator',
   '/chair-rent-vs-commission-calculator',
   '/barber-price-calculator',
+  '/self-employed-barber-tax-calculator',
   '/free-tools',
   '/pricing',
   '/starter',

@@ -133,6 +133,7 @@ describe('marketing navigation config', () => {
     expect(tools.featured.map((item) => item.href)).toEqual(['/barber-software-cost-calculator']);
     expect(tools.sections.find((section) => section.id === 'calculators')?.items.map((item) => item.href)).toEqual([
       '/barber-price-calculator',
+      '/self-employed-barber-tax-calculator',
       '/barbershop-no-show-calculator',
       '/chair-rent-vs-commission-calculator',
     ]);
