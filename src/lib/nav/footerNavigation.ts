@@ -60,6 +60,7 @@ export const FOOTER_COLUMNS: readonly FooterColumn[] = [
       { name: 'Website design guide', href: '/barbershop-website-design' },
       { name: 'Cancellation policy template', href: '/barbershop-cancellation-policy-template' },
       { name: 'Chair rent vs commission calculator', href: '/chair-rent-vs-commission-calculator' },
+      { name: 'Self-employed barber tax calculator', href: '/self-employed-barber-tax-calculator' },
       { name: 'About KERSIVO', href: '/about' },
       { name: 'Contact', href: '/#contact' },
     ],

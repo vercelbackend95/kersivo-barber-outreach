@@ -63,6 +63,7 @@ const FREE_TOOL_PATHS = [
   '/barbershop-cancellation-policy-template',
   '/chair-rent-vs-commission-calculator',
   '/barber-software-cost-calculator',
+  '/self-employed-barber-tax-calculator',
 ];
 
 const BUYER_ADJACENT = [

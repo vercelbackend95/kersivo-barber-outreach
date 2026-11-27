@@ -421,6 +421,16 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
     keywords: ['haircut price', 'what to charge', 'pricing', 'price rise', 'rates'],
   },
   {
+    id: 'tools-tax-calculator',
+    label: 'Self-employed tax calculator',
+    description: 'What to put aside for tax each week and your January bill.',
+    href: '/self-employed-barber-tax-calculator',
+    group: 'tools',
+    section: 'calculators',
+    icon: 'calculator',
+    keywords: ['tax', 'self assessment', 'HMRC', 'national insurance', 'chair renter', 'making tax digital'],
+  },
+  {
     id: 'resources-no-show-calculator',
     label: 'No-show cost calculator',
     description: 'See what missed appointments cost and whether a deposit pays.',
