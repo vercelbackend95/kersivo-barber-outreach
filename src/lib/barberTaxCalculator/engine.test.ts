@@ -125,10 +125,10 @@ describe('payments on account', () => {
     expect(result.januaryDue).toBeCloseTo(3_590.3, 6);
   });
 
-  it('reports an overpayment when payments on account were more than the bill', () => {
+  it('sets an overpayment on account against the first payment on account for next year', () => {
     const result = calculateTax({ ...DEFAULT_INPUTS, paymentsOnAccountPaidGbp: 4_000 });
     expect(result.overpaid).toBeCloseTo(939.8, 6);
-    expect(result.januaryDue).toBeCloseTo(1_530.1, 6);
+    expect(result.januaryDue).toBeCloseTo(1_530.1 - 939.8, 6);
   });
 
   it('only charges the extra tax when the barber also has a job', () => {
@@ -160,6 +160,13 @@ describe('allowances, thresholds and edge cases', () => {
     expect(result.usesTradingAllowance).toBe(true);
     expect(result.deduction).toBe(1_000);
     expect(result.profit).toBe(1_000);
+    // Take-home uses the real £300 of costs, not the £1,000 allowance.
+    expect(result.takeHome).toBeCloseTo(2_000 - 300 - result.bill, 6);
+  });
+
+  it('shows a negative take-home when costs are higher than takings', () => {
+    const result = calculateTax({ ...DEFAULT_INPUTS, weeklyTakingsGbp: 100, weeklyTipsGbp: 0, weeksWorked: 46 });
+    expect(result.takeHome).toBe(4_600 - 9_240);
   });
 
   it('leaves turnover under £1,000 tax-free', () => {

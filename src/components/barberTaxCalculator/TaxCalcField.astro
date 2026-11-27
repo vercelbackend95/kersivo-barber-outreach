@@ -28,7 +28,7 @@ const helperId = helper ? `${id}-helper` : undefined;
     <input
       id={id}
       type="number"
-      inputmode="decimal"
+      inputmode={limit.integer ? 'numeric' : 'decimal'}
       name={name}
       value={DEFAULT_INPUTS[name]}
       min={limit.min}

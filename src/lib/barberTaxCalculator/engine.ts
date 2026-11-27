@@ -171,6 +171,7 @@ export type BarberTaxResult = {
   shareOfTurnover: number;
   perWorkingWeek: number | null;
   perMonth: number;
+  /** Takings and tips less actual costs and the bill (negative when costs exceed takings). */
   takeHome: number;
   paymentsOnAccount: PaymentsOnAccountReason;
   paymentOnAccountEach: number;
@@ -254,12 +255,14 @@ function computeCore(inputs: BarberTaxInputs): CoreResult {
     shareOfTurnover: turnover > 0 ? bill / turnover : 0,
     perWorkingWeek: inputs.weeksWorked > 0 ? bill / inputs.weeksWorked : null,
     perMonth: bill / 12,
-    takeHome: profit - bill,
+    // Money actually left: what clients paid less the real costs (not the trading allowance) and the bill.
+    takeHome: turnover - expenses - bill,
     paymentsOnAccount,
     paymentOnAccountEach,
     balancingPayment,
     overpaid: Math.max(0, -balancingPayment),
-    januaryDue: Math.max(0, balancingPayment) + paymentOnAccountEach,
+    // An overpayment on account is set against the first payment on account for next year.
+    januaryDue: Math.max(0, balancingPayment + paymentOnAccountEach),
     julyDue: paymentOnAccountEach,
     makingTaxDigital,
     makingTaxDigitalMayStart2027: inputs.taxYear === '2026-27' && april2027 !== undefined && turnover > april2027.overGbp,

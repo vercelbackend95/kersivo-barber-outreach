@@ -52,6 +52,7 @@ export function initBarberTaxCalculator(): (() => void) | void {
     slots.set(name, [...(slots.get(name) ?? []), el]);
   }
   const hideables = [...page.querySelectorAll<HTMLElement>('[data-hide]')];
+  const shareBars = [...page.querySelectorAll<HTMLElement>('[data-share]')];
   const announce = results.querySelector<HTMLElement>('[data-tc-announce]');
   const status = results.querySelector<HTMLElement>('[data-tc-status]');
   const dock = page.querySelector<HTMLElement>('[data-tc-dock]');
@@ -67,6 +68,7 @@ export function initBarberTaxCalculator(): (() => void) | void {
       for (const el of slots.get(name) ?? []) if (el.textContent !== value) el.textContent = value;
     }
     for (const el of hideables) el.hidden = Boolean(view.hidden[el.dataset.hide!]);
+    for (const el of shareBars) el.style.setProperty('--share', String(view.shares[el.dataset.share!] ?? 0));
 
     if (fromUser) {
       if (announce) announce.textContent = announceText(current);

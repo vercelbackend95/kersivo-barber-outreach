@@ -8,7 +8,7 @@ import { buildKersivoEntityJsonLd } from '@/lib/seo/kersivoEntityJsonLd';
 import { KERSIVO_CONTACT_EMAIL, getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { TAX_REGIONS, SELF_EMPLOYED_RATE_SOURCES } from '@/data/self-employed-tax-rates';
 import { DEFAULT_INPUTS, calculateTax } from '@/lib/barberTaxCalculator/engine';
-import { REGION_LABELS, RESULTS_DISCLAIMER, TAX_YEAR_OPTIONS, buildResultView } from '@/lib/barberTaxCalculator/view';
+import { REGION_LABELS, RESULTS_DISCLAIMER, SPLIT_SEGMENTS, TAX_YEAR_OPTIONS, buildResultView } from '@/lib/barberTaxCalculator/view';
 import { FREE_TOOLS_PAGE_PATH } from '@/lib/seo/freeToolsPage';
 import {
   BARBER_TAX_CALCULATOR_BREADCRUMB_NAME,
@@ -38,7 +38,7 @@ import '@/styles/components/barber-tax-calculator.css';
 
 const currentYear = new Date().getFullYear();
 const result = calculateTax(DEFAULT_INPUTS);
-const { text, hidden } = buildResultView(result);
+const { text, hidden, shares } = buildResultView(result);
 const rateSourceLinks = [...new Set(Object.values(SELF_EMPLOYED_RATE_SOURCES).map((entry) => entry.source))];
 const sourceLabel = (href: string) => {
   const url = new URL(href);
@@ -156,6 +156,23 @@ const sourceLabel = (href: string) => {
               <dd data-slot="per-pound">{text['per-pound']}</dd>
             </div>
           </dl>
+
+          <figure class="tc-split" aria-labelledby="tc-split-title">
+            <figcaption id="tc-split-title" class="tc-split__title">Where every £1 goes</figcaption>
+            <div class="tc-split__bar" aria-hidden="true">
+              {SPLIT_SEGMENTS.map((segment) => (
+                <span class={`tc-split__seg tc-split__seg--${segment.key}`} data-share={segment.key} style={`--share: ${shares[segment.key]}`}></span>
+              ))}
+            </div>
+            <ul class="tc-split__legend">
+              {SPLIT_SEGMENTS.map((segment) => (
+                <li class={`tc-split__key tc-split__key--${segment.key}`}>
+                  <span class="tc-split__label">{segment.label}</span>
+                  <span class="tc-split__value" data-slot={`split-${segment.key}`}>{text[`split-${segment.key}`]}</span>
+                </li>
+              ))}
+            </ul>
+          </figure>
 
           <dl class="tc-breakdown" aria-label={RESULTS.breakdownLabel}>
             <div class="tc-breakdown__row">
